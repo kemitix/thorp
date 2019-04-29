@@ -1,0 +1,13 @@
+* s3thorp
+
+Synchronisation of files with S3 using the hash of the file contents.
+
+Based on Alex Kudlick's JavaScript implementation [[https://github.com/akud/aws-s3-sync-by-hash][aws-s3-sync-by-hash]].
+
+The normal ~aws s3 sync ...~ command only uses the time stamp of files
+to decide what files need to be copied. This utility looks at the md5
+hash of the file contents.
+
+
+
+
