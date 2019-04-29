@@ -7,7 +7,9 @@ import cats.syntax.all._
 object Main extends IOApp {
 
   def exec(args: List[String]): IO[ExitCode] =
-    IO(println("S3Thorp - hashed sync for s3")).as(ExitCode.Success)
+    for {
+      ec <- IO(println("S3Thorp - hashed sync for s3")).as(ExitCode.Success)
+    } yield ec
 
   override def run(args: List[String]): IO[ExitCode] =
     exec(args).guaranteeCase {
