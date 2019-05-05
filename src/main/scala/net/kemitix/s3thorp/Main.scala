@@ -8,7 +8,7 @@ object Main extends IOApp {
 
   override def run(args: List[String]): IO[ExitCode] =
     (for {
-      ec <- IO(println("S3Thorp - hashed sync for s3")).as(ExitCode.Success)
+      ec <- S3Thorp(args).as(ExitCode.Success)
     } yield ec).guaranteeCase {
         case Canceled => IO(println("Interrupted"))
         case Error(e) => IO(println("ERROR: " + e))
