@@ -1,4 +1,6 @@
 *.iml
-/.idea/
-/project/
-/target/
+.idea/
+project/
+target/
+.bloop/
+.metals/
