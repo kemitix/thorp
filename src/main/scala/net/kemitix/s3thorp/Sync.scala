@@ -44,22 +44,25 @@ object Sync {
       flatMap(recurseIntoSubDirectories)
   }
 
-  case class S3MetaData()
+  case class S3MetaData(localPath: Path)
 
-  private def enrichWithS3MetaData: Path => Stream[IO, S3MetaData] = path => {
+  private def enrichWithS3MetaData: Path => Stream[IO, S3MetaData] = path => Stream.eval(for {
+    _ <- putStrLn(s"enrich: $path")
     // HEAD(bucket, prefix, relative(path))
     // create blank S3MetaData records (sealed trait?)
-    }
+  } yield S3MetaData(localPath = path))
 
   private def uploadRequiredFilter: S3MetaData => Stream[IO, Path] =
-    s3Metadata => {
+    s3Metadata => Stream.eval(for {
+      _ <- putStrLn(s"upload required: ${s3Metadata.localPath}")
       //md5File(localFile)
       //filter(localHash => options.force || localHash != metadataHash)
-    }
+    } yield s3Metadata.localPath)
 
   private def performUpload: Path => Stream[IO, Promise[Unit]] =
-    path => {
+    path => Stream.eval(for {
+      _ <- putStrLn(s"upload: $path")
       // upload
-      IO.unit
-    }
+      p = Promise[Unit]()
+    } yield p)
 }
