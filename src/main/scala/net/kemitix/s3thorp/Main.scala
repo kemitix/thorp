@@ -7,16 +7,11 @@ object Main extends IOApp {
 
   def putStrLn(value: String) = IO { println(value) }
 
-  def sync(c: Config): IO[Unit] =
-    for {
-      _ <- putStrLn(s"Bucket: ${c.bucket}, Prefix: ${c.prefix}, Source: ${c.source}")
-    } yield ()
-
   def program(args: List[String]): IO[ExitCode] =
     for {
       _ <- putStrLn("S3Thorp - hashed sync for s3")
       a <- ParseArgs(args)
-      _ <- sync(a)
+      _ <- Sync(a)
     } yield ExitCode.Success
 
   override def run(args: List[String]): IO[ExitCode] =
