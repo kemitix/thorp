@@ -11,7 +11,7 @@ object ParseArgs {
     import parserBuilder._
     sequence(
       programName("S3Thorp"),
-      head("s3thorp", "0.1.0"),
+      head("s3thorp"),
       opt[String]('s', "source")
         .action((str, c) => c.copy(source = str))
         .required()
