@@ -6,8 +6,6 @@ import cats.effect.IO
 
 object ParseArgs {
 
-  val defaultConfig = Config("def-bucket", "def-prefix", "def-source")
-
   val configParser: OParser[Unit, Config] = {
     val parserBuilder = builder[Config]
     import parserBuilder._
@@ -27,7 +25,7 @@ object ParseArgs {
   }
 
   def apply(args: List[String]): IO[Config] =
-    parse(configParser, args, defaultConfig) match {
+    parse(configParser, args, Config()) match {
       case Some(config) => IO.pure(config)
       case _ => IO.raiseError(new IllegalArgumentException)
     }
