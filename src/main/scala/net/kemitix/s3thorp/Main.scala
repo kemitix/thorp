@@ -7,10 +7,18 @@ object Main extends IOApp {
 
   def parseArgs(args: List[String]): IO[Config] = IO.pure(Config("", ""))
 
-  def program(args: List[String]): IO[ExitCode] = for {
-    a <- parseArgs(args)
-    _ <- S3Thorp(a)
-  } yield ExitCode.Success
+  def putStrLn(value: String) = IO { println(value) }
+
+  def sync(c: Config): IO[Unit] =
+    for {
+      _ <- putStrLn("S3Thorp - hashed sync for s3")
+    } yield ()
+
+  def program(args: List[String]): IO[ExitCode] =
+    for {
+      a <- parseArgs(args)
+      _ <- sync(a)
+    } yield ExitCode.Success
 
   override def run(args: List[String]): IO[ExitCode] =
     program(args)
