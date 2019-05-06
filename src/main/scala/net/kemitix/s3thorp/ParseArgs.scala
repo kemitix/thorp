@@ -14,9 +14,11 @@ object ParseArgs {
       head("s3thorp", "0.1.0"),
       opt[String]('s', "source")
         .action((str, c) => c.copy(source = str))
+        .required()
         .text("Source directory to sync to S3"),
       opt[String]('b', "bucket")
         .action((str, c) => c.copy(bucket = str))
+        .required()
         .text("S3 bucket name"),
       opt[String]('p', "prefix")
         .action((str, c) => c.copy(prefix = str))
