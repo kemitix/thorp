@@ -1,6 +1,7 @@
 package net.kemitix.s3thorp
 
 import java.nio.file.{DirectoryStream, Files, Path, Paths}
+import java.time.Instant
 
 import cats.effect._
 import fs2.Stream
@@ -44,13 +45,21 @@ object Sync {
       flatMap(recurseIntoSubDirectories)
   }
 
-  case class S3MetaData(localPath: Path)
+  type LocalPath = Path
+  type RemotePath = String
+  type Hash = String // an MD5 hash
+  type LastModified = Instant // or scala equivalent
+
+  case class S3MetaData(localPath: LocalPath,
+                        remotePath: RemotePath,
+                        remoteHash: Hash,
+                        remoteLastModified: LastModified)
 
   private def enrichWithS3MetaData: Path => Stream[IO, S3MetaData] = path => Stream.eval(for {
     _ <- putStrLn(s"enrich: $path")
     // HEAD(bucket, prefix, relative(path))
     // create blank S3MetaData records (sealed trait?)
-  } yield S3MetaData(localPath = path))
+  } yield S3MetaData(path, "", "", Instant.now()))
 
   private def uploadRequiredFilter: S3MetaData => Stream[IO, Path] =
     s3Metadata => Stream.eval(for {
