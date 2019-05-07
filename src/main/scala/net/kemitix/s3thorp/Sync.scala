@@ -7,7 +7,6 @@ import cats.effect._
 import fs2.Stream
 import net.kemitix.s3thorp.Main.putStrLn
 
-import scala.collection.JavaConverters._
 import scala.concurrent.Promise
 
 object Sync extends LocalFileStream with S3MetaDataEnricher {
@@ -25,11 +24,6 @@ object Sync extends LocalFileStream with S3MetaDataEnricher {
   type RemotePath = String
   type Hash = String // an MD5 hash
   type LastModified = Instant // or scala equivalent
-
-  case class S3MetaData(localPath: LocalPath,
-                        remotePath: RemotePath,
-                        remoteHash: Hash,
-                        remoteLastModified: LastModified)
 
   private def uploadRequiredFilter: S3MetaData => Stream[IO, Path] = s3Metadata => Stream.eval(for {
       _ <- putStrLn(s"upload required: ${s3Metadata.localPath}")

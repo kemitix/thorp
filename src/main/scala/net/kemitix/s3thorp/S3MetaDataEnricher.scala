@@ -4,7 +4,6 @@ import java.nio.file.Path
 import java.time.Instant
 import fs2.Stream
 import cats.effect.IO
-import net.kemitix.s3thorp.Sync.S3MetaData
 import Main.putStrLn
 
 trait S3MetaDataEnricher {
