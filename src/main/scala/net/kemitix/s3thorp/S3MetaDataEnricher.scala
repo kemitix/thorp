@@ -6,7 +6,7 @@ import fs2.Stream
 import cats.effect.IO
 import Main.putStrLn
 
-trait S3MetaDataEnricher {
+trait S3MetaDataEnricher extends S3Client {
 
   def enrichWithS3MetaData: Path => Stream[IO, S3MetaData] =
     path => Stream.eval(for {

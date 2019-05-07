@@ -37,4 +37,6 @@ object Sync extends LocalFileStream with S3MetaDataEnricher {
       // upload
       p = Promise[Unit]()
     } yield p)
+
+  override def objectHead(bucket: String, key: String): (Hash, LastModified) = ???
 }
