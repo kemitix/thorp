@@ -1,6 +1,6 @@
 package net.kemitix.s3thorp
 
-import java.nio.file.{DirectoryStream, Files, Path, Paths}
+import java.nio.file.{Path, Paths}
 import java.time.Instant
 
 import cats.effect._
@@ -10,7 +10,7 @@ import net.kemitix.s3thorp.Main.putStrLn
 import scala.collection.JavaConverters._
 import scala.concurrent.Promise
 
-object Sync {
+object Sync extends LocalFileStream {
   def apply(c: Config): IO[Unit] = for {
     _ <- putStrLn(s"Bucket: ${c.bucket}, Prefix: ${c.prefix}, Source: ${c.source}")
     _ <- {
@@ -20,30 +20,6 @@ object Sync {
         performUpload).compile.drain
     }
   } yield ()
-
-  private def streamDirectoryPaths(path: Path): Stream[IO, Path] = {
-
-    def acquire: Path => IO[DirectoryStream[Path]] =
-      p => IO(Files.newDirectoryStream(p))
-
-    def release: DirectoryStream[Path] => IO[Unit] =
-      ds => IO(ds.close())
-
-    def openDirectory: Path => Stream[IO, Path] =
-      p => Stream.bracket(acquire(p))(release).
-        map(ds => ds.iterator()).
-        map(ji => ji.asScala).
-        flatMap(it => Stream.fromIterator[IO, Path](it))
-
-    def recurseIntoSubDirectories: Path => Stream[IO, Path] =
-      p =>
-        if (p.toFile.isDirectory) streamDirectoryPaths(p)
-        else Stream(p)
-
-    Stream.eval(IO(path)).
-      flatMap(openDirectory).
-      flatMap(recurseIntoSubDirectories)
-  }
 
   type LocalPath = Path
   type RemotePath = String
