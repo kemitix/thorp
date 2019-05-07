@@ -20,8 +20,9 @@ object Sync extends LocalFileStream with S3MetaDataEnricher {
     }
   } yield ()
 
-  type LocalPath = Path
-  type RemotePath = String
+  type Bucket = String // the S3 bucket name
+  type LocalPath = Path // fully qualified path to a file or directory
+  type RemotePath = String // path within an S3 bucket
   type Hash = String // an MD5 hash
   type LastModified = Instant // or scala equivalent
 
