@@ -1,8 +1,10 @@
 package net.kemitix.s3thorp
 
-import scopt.OParser
-import scopt.OParser.{builder,sequence, parse}
+import java.nio.file.Paths
+
 import cats.effect.IO
+import scopt.OParser
+import scopt.OParser.{builder, parse, sequence}
 
 object ParseArgs {
 
@@ -13,7 +15,7 @@ object ParseArgs {
       programName("S3Thorp"),
       head("s3thorp"),
       opt[String]('s', "source")
-        .action((str, c) => c.copy(source = str))
+        .action((str, c) => c.copy(source = Paths.get(str)))
         .required()
         .text("Source directory to sync to S3"),
       opt[String]('b', "bucket")
@@ -26,8 +28,8 @@ object ParseArgs {
     )
   }
 
-  def apply(args: List[String]): IO[Config] =
-    parse(configParser, args, Config()) match {
+  def apply(args: List[String], defaultConfig: Config): IO[Config] =
+    parse(configParser, args, defaultConfig) match {
       case Some(config) => IO.pure(config)
       case _ => IO.raiseError(new IllegalArgumentException)
     }

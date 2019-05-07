@@ -1,6 +1,6 @@
 package net.kemitix.s3thorp
 
-import java.nio.file.{Path, Paths}
+import java.nio.file.Path
 import java.time.Instant
 
 import cats.effect._
@@ -13,7 +13,7 @@ object Sync extends LocalFileStream with S3MetaDataEnricher {
   def apply(c: Config): IO[Unit] = for {
     _ <- putStrLn(s"Bucket: ${c.bucket}, Prefix: ${c.prefix}, Source: ${c.source}")
     _ <- {
-      streamDirectoryPaths(Paths.get(c.source)).flatMap(
+      streamDirectoryPaths(c.source).flatMap(
         enrichWithS3MetaData).flatMap(
         uploadRequiredFilter).flatMap(
         performUpload).compile.drain
