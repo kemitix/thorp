@@ -15,7 +15,7 @@ object ParseArgs {
       programName("S3Thorp"),
       head("s3thorp"),
       opt[String]('s', "source")
-        .action((str, c) => c.copy(source = Paths.get(str)))
+        .action((str, c) => c.copy(source = Paths.get(str).toFile))
         .required()
         .text("Source directory to sync to S3"),
       opt[String]('b', "bucket")

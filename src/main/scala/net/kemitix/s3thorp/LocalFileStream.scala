@@ -1,35 +1,29 @@
 package net.kemitix.s3thorp
 
-import java.nio.file.{DirectoryStream, Files, Path}
+import java.io.File
+
 import fs2.Stream
-import scala.collection.JavaConverters._
+
 import cats.effect.IO
 
 trait LocalFileStream {
 
-  def streamDirectoryPaths(path: Path): Stream[IO, Path] =
+  def streamDirectoryPaths(file: File): Stream[IO, File] =
   {
-    Stream.eval(IO(path)).
-      flatMap(openDirectory).
+    Stream.eval(IO(file)).
+      flatMap(file => Stream.fromIterator[IO, File](dirPaths(file))).
       flatMap(recurseIntoSubDirectories)
   }
 
-  private def acquire: Path => IO[DirectoryStream[Path]] =
-    p => IO(Files.newDirectoryStream(p))
+  private def dirPaths(file: File): Iterator[File] = {
+    Option(file.listFiles).map(_.iterator).
+      getOrElse(throw new IllegalArgumentException(s"Directory not found $file"))
+  }
 
-  private def release: DirectoryStream[Path] => IO[Unit] =
-    ds => IO(ds.close())
-
-  private def openDirectory: Path => Stream[IO, Path] =
-    p => Stream.bracket(acquire(p))(release).
-      map(ds => ds.iterator()).
-      map(ji => ji.asScala).
-      flatMap(it => Stream.fromIterator[IO, Path](it))
-
-  private def recurseIntoSubDirectories: Path => Stream[IO, Path] =
-    p =>
-      if (p.toFile.isDirectory) streamDirectoryPaths(p)
-      else Stream(p)
+  private def recurseIntoSubDirectories: File => Stream[IO, File] =
+    file =>
+      if (file.isDirectory) streamDirectoryPaths(file)
+      else Stream(file)
 
 
 }

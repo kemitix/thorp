@@ -10,7 +10,7 @@ object Main extends IOApp {
   def putStrLn(value: String) = IO { println(value) }
 
   val defaultConfig: Config =
-    Config("(none)", "", Paths.get(".").toAbsolutePath)
+    Config("(none)", "", Paths.get(".").toFile)
 
   def program(args: List[String]): IO[ExitCode] =
     for {

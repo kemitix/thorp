@@ -1,5 +1,6 @@
 package net.kemitix.s3thorp
 
+import java.io.File
 import java.nio.file.Path
 import java.time.Instant
 
@@ -21,19 +22,20 @@ object Sync extends LocalFileStream with S3MetaDataEnricher {
   } yield ()
 
   type Bucket = String // the S3 bucket name
-  type LocalPath = Path // fully qualified path to a file or directory
+  type LocalFile = File // the file or directory
   type RemotePath = String // path within an S3 bucket
   type Hash = String // an MD5 hash
   type LastModified = Instant // or scala equivalent
 
-  private def uploadRequiredFilter: S3MetaData => Stream[IO, Path] = s3Metadata => Stream.eval(for {
-      _ <- putStrLn(s"upload required: ${s3Metadata.localPath}")
+  private def uploadRequiredFilter: S3MetaData => Stream[IO, File] = s3Metadata => Stream.eval(for {
+      _ <- putStrLn(s"upload required: ${s3Metadata.localFile}")
       //md5File(localFile)
       //filter(localHash => options.force || localHash != metadataHash)
-    } yield s3Metadata.localPath)
+    } yield s3Metadata.localFile)
 
-  private def performUpload: Path => Stream[IO, Promise[Unit]] = path => Stream.eval(for {
-      _ <- putStrLn(s"upload: $path")
+  private def performUpload: File => Stream[IO, Promise[Unit]] =
+    file => Stream.eval(for {
+      _ <- putStrLn(s"upload: $file")
       // upload
       p = Promise[Unit]()
     } yield p)
