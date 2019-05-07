@@ -61,15 +61,13 @@ object Sync {
     // create blank S3MetaData records (sealed trait?)
   } yield S3MetaData(path, "", "", Instant.now()))
 
-  private def uploadRequiredFilter: S3MetaData => Stream[IO, Path] =
-    s3Metadata => Stream.eval(for {
+  private def uploadRequiredFilter: S3MetaData => Stream[IO, Path] = s3Metadata => Stream.eval(for {
       _ <- putStrLn(s"upload required: ${s3Metadata.localPath}")
       //md5File(localFile)
       //filter(localHash => options.force || localHash != metadataHash)
     } yield s3Metadata.localPath)
 
-  private def performUpload: Path => Stream[IO, Promise[Unit]] =
-    path => Stream.eval(for {
+  private def performUpload: Path => Stream[IO, Promise[Unit]] = path => Stream.eval(for {
       _ <- putStrLn(s"upload: $path")
       // upload
       p = Promise[Unit]()
