@@ -1,8 +1,10 @@
 package net.kemitix.s3thorp
 
-case class Config(bucket: String = "",
+import net.kemitix.s3thorp.Sync.{Bucket, LocalPath}
+
+case class Config(bucket: Bucket = "",
                   prefix: String = "",
-                  source: String = ""
+                  source: LocalPath
                ) {
 
 }
