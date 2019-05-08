@@ -17,6 +17,6 @@ class ReactiveS3Client extends S3Client {
     for {
       response <- s3Client.headObject(request)
       // TODO catch 404 error when key doesn't exist
-    } yield (response.eTag(), response.lastModified())
+    } yield Some((response.eTag(), response.lastModified()))
   }
 }

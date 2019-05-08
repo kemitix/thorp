@@ -12,14 +12,16 @@ trait S3MetaDataEnricher extends S3Client {
     s"${c.prefix}/${c.source.toPath.relativize(file.toPath)}"
   }
 
-  def enrichWithS3MetaData(c: Config): File => Stream[IO, S3MetaData] = {
+  def enrichWithS3MetaData(c: Config): File => Stream[IO, Either[File, S3MetaData]] = {
     val fileToString = generateKey(c)_
     file =>
       Stream.eval(for {
         _ <- putStrLn(s"enrich: $file")
         key = fileToString(file)
         head <- objectHead(c.bucket, key)
-        (hash, lastModified) = head
-      } yield S3MetaData(file, key, hash, lastModified))
+      } yield head.map {
+        case (hash,lastModified) =>
+          Right(S3MetaData(file, key, hash, lastModified))
+      }.getOrElse(Left(file)))
   }
 }

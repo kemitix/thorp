@@ -24,12 +24,15 @@ class Sync(s3Client: S3Client) extends LocalFileStream with S3MetaDataEnricher {
     }
   } yield ()
 
-  private def uploadRequiredFilter: S3MetaData => Stream[IO, File] = s3Metadata => Stream.eval(for {
-    _ <- putStrLn(s"upload required: ${s3Metadata.localFile}")
-    //md5File(localFile)
-    //filter(localHash => options.force || localHash != metadataHash)
-  } yield s3Metadata.localFile)
-
+  private def uploadRequiredFilter: Either[File, S3MetaData] => Stream[IO, File] = {
+    case Left(file) => Stream(file)
+    case Right(s3Metadata) =>
+      Stream.eval(for {
+        _ <- putStrLn(s"upload required: ${s3Metadata.localFile}")
+        //md5File(localFile)
+        //filter(localHash => options.force || localHash != metadataHash)
+      } yield s3Metadata.localFile)
+  }
   private def performUpload: File => Stream[IO, Promise[Unit]] =
     file => Stream.eval(for {
       _ <- putStrLn(s"upload: $file")

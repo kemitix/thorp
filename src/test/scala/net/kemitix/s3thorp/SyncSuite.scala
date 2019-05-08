@@ -11,11 +11,11 @@ class SyncSuite extends FunSpec {
     val hash = "hash"
     val lastModified = Instant.now()
     val sync = new Sync(new S3Client {
-      override def objectHead(bucket: String, key: String) = IO((hash, lastModified))
+      override def objectHead(bucket: String, key: String) = IO(Some((hash, lastModified)))
     })
     describe("objectHead") {
       it("return the hash and lastModified expected") {
-        assertResult((hash, lastModified))(sync.objectHead("", "").unsafeRunSync())
+        assertResult(Some((hash, lastModified)))(sync.objectHead("", "").unsafeRunSync())
       }
     }
   }
