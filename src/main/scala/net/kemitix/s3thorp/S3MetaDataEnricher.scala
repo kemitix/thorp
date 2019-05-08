@@ -1,7 +1,6 @@
 package net.kemitix.s3thorp
 
 import java.io.File
-import java.time.Instant
 
 import fs2.Stream
 import cats.effect.IO
@@ -9,11 +8,18 @@ import Main.putStrLn
 
 trait S3MetaDataEnricher extends S3Client {
 
-  def enrichWithS3MetaData: File => Stream[IO, S3MetaData] =
-    file => Stream.eval(for {
-      _ <- putStrLn(s"enrich: $file")
-      // HEAD(bucket, prefix, relative(file))
-      // create blank S3MetaData records (sealed trait?)
-    } yield S3MetaData(file, "", "", Instant.now()))
+  def generateKey(c: Config)(file: File): String = {
+    s"${c.prefix}/${c.source.toPath.relativize(file.toPath)}"
+  }
 
+  def enrichWithS3MetaData(c: Config): File => Stream[IO, S3MetaData] = {
+    val fileToString = generateKey(c)_
+    file =>
+      Stream.eval(for {
+        _ <- putStrLn(s"enrich: $file")
+        key = fileToString(file)
+        head <- IO(objectHead(c.bucket, key))
+        (hash, lastModified) = head
+      } yield S3MetaData(file, key, hash, lastModified))
+  }
 }

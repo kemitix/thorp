@@ -15,7 +15,7 @@ object Sync extends LocalFileStream with S3MetaDataEnricher {
     _ <- putStrLn(s"Bucket: ${c.bucket}, Prefix: ${c.prefix}, Source: ${c.source}")
     _ <- {
       streamDirectoryPaths(c.source).flatMap(
-        enrichWithS3MetaData).flatMap(
+        enrichWithS3MetaData(c)).flatMap(
         uploadRequiredFilter).flatMap(
         performUpload).compile.drain
     }
