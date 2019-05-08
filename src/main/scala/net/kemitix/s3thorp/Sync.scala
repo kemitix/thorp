@@ -1,19 +1,18 @@
 package net.kemitix.s3thorp
 
 import java.io.File
-import java.nio.file.Path
 import java.time.Instant
 
 import cats.effect._
 import fs2.Stream
 import net.kemitix.s3thorp.Main.putStrLn
-import net.kemitix.s3thorp.Sync.{Hash, LastModified}
 
 import scala.concurrent.Promise
 
-class Sync extends LocalFileStream with S3MetaDataEnricher {
+class Sync(s3Client: S3Client) extends LocalFileStream with S3MetaDataEnricher {
 
-  override def objectHead(bucket: String, key: String): (Hash, LastModified) = ???
+  override def objectHead(bucket: String, key: String)=
+    s3Client.objectHead(bucket, key)
 
   def run(c: Config): IO[Unit] = for {
     _ <- putStrLn(s"Bucket: ${c.bucket}, Prefix: ${c.prefix}, Source: ${c.source}")

@@ -12,7 +12,7 @@ object Main extends IOApp {
   val defaultConfig: Config =
     Config("(none)", "", Paths.get(".").toFile)
 
-  val sync = new Sync()
+  val sync = new Sync(new ReactiveS3Client())
 
   def program(args: List[String]): IO[ExitCode] =
     for {

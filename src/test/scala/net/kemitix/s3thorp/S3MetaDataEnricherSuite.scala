@@ -3,7 +3,6 @@ package net.kemitix.s3thorp
 import java.io.File
 import java.nio.file.Paths
 
-import net.kemitix.s3thorp.Sync.{Hash, LastModified}
 import org.scalatest.FunSpec
 
 class S3MetaDataEnricherSuite extends FunSpec {
@@ -34,6 +33,6 @@ class S3MetaDataEnricherSuite extends FunSpec {
         }
       }
     }
-    override def objectHead(bucket: String, key: String): (Hash, LastModified) = ???
+    override def objectHead(bucket: String, key: String) = ???
   }
 }

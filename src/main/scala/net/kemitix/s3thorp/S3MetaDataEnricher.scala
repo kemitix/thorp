@@ -18,7 +18,7 @@ trait S3MetaDataEnricher extends S3Client {
       Stream.eval(for {
         _ <- putStrLn(s"enrich: $file")
         key = fileToString(file)
-        head <- IO(objectHead(c.bucket, key))
+        head <- objectHead(c.bucket, key)
         (hash, lastModified) = head
       } yield S3MetaData(file, key, hash, lastModified))
   }
