@@ -12,11 +12,13 @@ object Main extends IOApp {
   val defaultConfig: Config =
     Config("(none)", "", Paths.get(".").toFile)
 
+  val sync = new Sync()
+
   def program(args: List[String]): IO[ExitCode] =
     for {
       _ <- putStrLn("S3Thorp - hashed sync for s3")
       a <- ParseArgs(args, defaultConfig)
-      _ <- Sync(a)
+      _ <- sync.run(a)
     } yield ExitCode.Success
 
   override def run(args: List[String]): IO[ExitCode] =
