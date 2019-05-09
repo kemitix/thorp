@@ -4,7 +4,6 @@ import java.io.File
 
 import fs2.Stream
 import cats.effect.IO
-import Main.putStrLn
 
 trait S3MetaDataEnricher extends S3Client {
 
@@ -15,13 +14,14 @@ trait S3MetaDataEnricher extends S3Client {
   def enrichWithS3MetaData(c: Config): File => Stream[IO, Either[File, S3MetaData]] = {
     val fileToString = generateKey(c)_
     file =>
-      Stream.eval(for {
-        _ <- putStrLn(s"enrich: $file")
-        key = fileToString(file)
-        head <- objectHead(c.bucket, key)
-      } yield head.map {
-        case (hash,lastModified) =>
-          Right(S3MetaData(file, key, hash, lastModified))
-      }.getOrElse(Left(file)))
+      Stream.eval({
+        val key = fileToString(file)
+        for {
+          head <- objectHead(c.bucket, key)
+        } yield head.map {
+          case (hash,lastModified) =>
+            Right(S3MetaData(file, key, hash, lastModified))
+        }.getOrElse(Left(file))
+      })
   }
 }
