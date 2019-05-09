@@ -9,10 +9,10 @@ import net.kemitix.s3thorp.awssdk.S3Client
 trait S3MetaDataEnricher extends S3Client with KeyGenerator {
 
   def enrichWithS3MetaData(c: Config): File => Stream[IO, Either[File, S3MetaData]] = {
-    val fileToString = generateKey(c)_
+    val remoteKey = generateKey(c)_
     file =>
       Stream.eval({
-        val key = fileToString(file)
+        val key = remoteKey(file)
         for {
           head <- objectHead(c.bucket, key)
         } yield head.map {
