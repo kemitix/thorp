@@ -6,6 +6,7 @@ import java.time.Instant
 import cats.effect._
 import fs2.Stream
 import net.kemitix.s3thorp.Main.putStrLn
+import net.kemitix.s3thorp.awssdk.S3Client
 
 import scala.concurrent.Promise
 

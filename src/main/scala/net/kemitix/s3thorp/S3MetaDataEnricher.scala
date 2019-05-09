@@ -4,6 +4,7 @@ import java.io.File
 
 import fs2.Stream
 import cats.effect.IO
+import net.kemitix.s3thorp.awssdk.S3Client
 
 trait S3MetaDataEnricher extends S3Client {
 

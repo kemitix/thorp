@@ -3,6 +3,7 @@ package net.kemitix.s3thorp
 import java.time.Instant
 
 import cats.effect.IO
+import net.kemitix.s3thorp.awssdk.S3Client
 import org.scalatest.FunSpec
 
 class SyncSuite extends FunSpec {
