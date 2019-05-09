@@ -1,11 +1,11 @@
 package net.kemitix.s3thorp.awssdk
 
 import cats.effect.IO
-import net.kemitix.s3thorp.Sync.{Hash, LastModified}
+import net.kemitix.s3thorp.Sync.{Bucket, MD5Hash, LastModified, LocalFile, RemoteKey}
 
 trait S3Client {
 
-  def objectHead(bucket: String, key: String): IO[Option[(Hash, LastModified)]]
+  def objectHead(bucket: Bucket, remoteKey: RemoteKey): IO[Option[(MD5Hash, LastModified)]]
 
 }
 
