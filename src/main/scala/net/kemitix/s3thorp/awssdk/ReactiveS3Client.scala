@@ -22,6 +22,7 @@ private class ReactiveS3Client
         _ <- putStrLn(s"  -- ${response.eTag()} : ${response.lastModified()}")
       } yield Some((response.eTag(), response.lastModified()))
     } catch {
+      //FIXME: this isn't catching the exception
       case _: NoSuchKeyException => IO(None)
     }
   }
