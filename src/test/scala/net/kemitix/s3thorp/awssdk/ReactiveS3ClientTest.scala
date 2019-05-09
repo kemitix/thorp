@@ -5,7 +5,7 @@ import java.time.Instant
 import cats.effect.IO
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
 import org.scalatest.FunSpec
-import software.amazon.awssdk.services.s3.model.{HeadObjectRequest, HeadObjectResponse}
+import software.amazon.awssdk.services.s3.model.{HeadObjectRequest, HeadObjectResponse, NoSuchKeyException}
 
 class ReactiveS3ClientTest extends FunSpec {
 
@@ -31,15 +31,20 @@ class ReactiveS3ClientTest extends FunSpec {
               build())
         }
       }
-
     }
-//    describe("when throws NoSuchKeyException") {
-//      new ReactiveS3Client with S3CatsIOClientProvider { self =>
-//        it("should return None") {
-//          assertResult(None)(result)
-//        }
-//      }
-//    }
+
+    describe("when throws NoSuchKeyException") {
+      new ReactiveS3Client { self: S3Client =>
+        it("should return None") {
+          val result = invoke(self)
+          assertResult(None)(result)
+        }
+        override def s3Client: S3CatsIOClient = new S3CatsIOClient with UnderlyingS3AsyncClient {
+          override def headObject(headObjectRequest: HeadObjectRequest): IO[HeadObjectResponse] =
+            throw NoSuchKeyException.builder().build()
+        }
+      }
+    }
   }
 
 }
