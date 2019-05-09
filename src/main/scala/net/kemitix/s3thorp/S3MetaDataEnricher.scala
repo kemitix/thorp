@@ -8,7 +8,10 @@ import cats.effect.IO
 trait S3MetaDataEnricher extends S3Client {
 
   def generateKey(c: Config)(file: File): String = {
-    s"${c.prefix}/${c.source.toPath.relativize(file.toPath)}"
+    val otherPath = file.toPath.toAbsolutePath
+    val sourcePath = c.source.toPath
+    val relativePath = sourcePath.relativize(otherPath)
+    s"${c.prefix}/$relativePath"
   }
 
   def enrichWithS3MetaData(c: Config): File => Stream[IO, Either[File, S3MetaData]] = {
