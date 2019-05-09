@@ -19,8 +19,7 @@ class ReactiveS3ClientTest extends FunSpec {
       val expectedLastModified = Instant.now
       new ReactiveS3Client { self: S3Client => {
           it("should return Some(expected values)") {
-            val result: Option[(String, Instant)] = invoke(self)
-            assertResult(Some((expectedHash, expectedLastModified)))(result)
+            assertResult(Some((expectedHash, expectedLastModified)))(invoke(self))
           }
         }
         override def s3Client: S3CatsIOClient = new S3CatsIOClient with UnderlyingS3AsyncClient {
@@ -36,8 +35,7 @@ class ReactiveS3ClientTest extends FunSpec {
     describe("when throws NoSuchKeyException") {
       new ReactiveS3Client { self: S3Client =>
         it("should return None") {
-          val result = invoke(self)
-          assertResult(None)(result)
+          assertResult(None)(invoke(self))
         }
         override def s3Client: S3CatsIOClient = new S3CatsIOClient with UnderlyingS3AsyncClient {
           override def headObject(headObjectRequest: HeadObjectRequest): IO[HeadObjectResponse] =
