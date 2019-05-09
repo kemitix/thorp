@@ -40,20 +40,29 @@ class S3MetaDataEnricherSuite extends FunSpec {
   }
 
   describe("enrich with metadata") {
+    val local = "localFile"
+    val localFile = new File(sourcePath + local)
     describe("when remote exists") {
       val hash = "hash"
       val lastModified = Instant.now()
       new S3MetaDataEnricher {
         override def objectHead(bucket: String, key: String) = IO(Some((hash, lastModified)))
         it("returns metadata") {
-          val local = "localFile"
-          val localFile = new File(sourcePath + local)
           val expectedMetadata = S3MetaData(localFile, s"$prefix/$local", hash, lastModified)
 
-          val result: Either[File, S3MetaData] =
-            enrichWithS3MetaData(config)(localFile).compile.toList.unsafeRunSync().head
+          val result = enrichWithS3MetaData(config)(localFile).compile.toList.unsafeRunSync().head
           assertResult(Right(expectedMetadata))(result)
         }
       }
     }
+    describe("when remote doesn't exist") {
+      new S3MetaDataEnricher {
+        override def objectHead(bucket: String, key: String) = IO(None)
+        it("returns file to upload") {
+          val result = enrichWithS3MetaData(config)(localFile).compile.toList.unsafeRunSync().head
+          assertResult(Left(localFile))(result)
+        }
+      }
+    }
+  }
 }
