@@ -26,7 +26,7 @@ class Sync(s3Client: S3Client)
       streamDirectoryPaths(c.source).flatMap(
         enrichWithS3MetaData(c)).flatMap(
         uploadRequiredFilter).flatMap(
-        performUpload).compile.drain
+        performUpload(c)).compile.drain
     }
   } yield ()
 
