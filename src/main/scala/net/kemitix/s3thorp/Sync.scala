@@ -4,16 +4,14 @@ import java.io.File
 import java.time.Instant
 
 import cats.effect._
-import fs2.Stream
 import net.kemitix.s3thorp.Main.putStrLn
 import net.kemitix.s3thorp.awssdk.S3Client
-
-import scala.concurrent.Promise
 
 class Sync(s3Client: S3Client)
   extends LocalFileStream
     with S3MetaDataEnricher
-    with UploadSelectionFilter {
+    with UploadSelectionFilter
+    with S3Uploader {
 
   override def objectHead(bucket: String, key: String)=
     s3Client.objectHead(bucket, key)
@@ -27,13 +25,6 @@ class Sync(s3Client: S3Client)
         performUpload).compile.drain
     }
   } yield ()
-
-  private def performUpload: File => Stream[IO, Promise[Unit]] =
-    file => Stream.eval(for {
-      _ <- putStrLn(s"upload: $file")
-      // upload
-      p = Promise[Unit]()
-    } yield p)
 
 }
 
