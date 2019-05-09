@@ -35,12 +35,10 @@ private class ReactiveS3Client extends S3Client {
       .key(remoteKey)
       .build()
     val body = AsyncRequestBody.fromFile(localFile)
-    try {
-      for {
-        _ <- putStrLn(s"S3:PutObject: $bucket : $remoteKey")
-        _ <- s3Client.putObject(request, body)
-        _ <- putStrLn("  -- Done")
-      } yield ()
-    }
+    for {
+      _ <- putStrLn(s"S3:PutObject: $bucket : $remoteKey")
+      _ <- s3Client.putObject(request, body)
+      _ <- putStrLn("  -- Done")
+    } yield ()
   }
 }
