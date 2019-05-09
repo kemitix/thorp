@@ -3,8 +3,9 @@ package net.kemitix.s3thorp.awssdk
 import cats.effect.IO
 import com.github.j5ik2o.reactive.aws.s3.S3AsyncClient
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
-import software.amazon.awssdk.services.s3.model.{HeadObjectRequest, NoSuchKeyException}
 import net.kemitix.s3thorp.Sync.{Bucket, LocalFile, RemoteKey}
+import software.amazon.awssdk.core.async.AsyncRequestBody
+import software.amazon.awssdk.services.s3.model.{HeadObjectRequest, NoSuchKeyException, PutObjectRequest}
 import software.amazon.awssdk.services.s3.{S3AsyncClient => JavaS3AsyncClient}
 
 private class ReactiveS3Client extends S3Client {
@@ -22,6 +23,19 @@ private class ReactiveS3Client extends S3Client {
       } yield Some((response.eTag(), response.lastModified()))
     } catch {
       case _: NoSuchKeyException => IO(None)
+    }
+  }
+
+  override def upload(localFile: LocalFile, bucket: Bucket, remoteKey: RemoteKey): IO[Unit] = {
+    val request = PutObjectRequest.builder()
+      .bucket(bucket)
+      .key(remoteKey)
+      .build()
+    val body = AsyncRequestBody.fromFile(localFile)
+    try {
+      for {
+        _ <- s3Client.putObject(request, body)
+      } yield ()
     }
   }
 }

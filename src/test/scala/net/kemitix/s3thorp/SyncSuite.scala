@@ -11,7 +11,7 @@ class SyncSuite extends FunSpec {
   describe("s3client thunk") {
     val hash = "hash"
     val lastModified = Instant.now()
-    val sync = new Sync(new S3Client {
+    val sync = new Sync(new S3Client with DummyS3Client {
       override def objectHead(bucket: String, key: String) = IO(Some((hash, lastModified)))
     })
     describe("objectHead") {

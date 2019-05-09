@@ -14,7 +14,7 @@ class S3MetaDataEnricherSuite extends FunSpec {
   private val prefix = "prefix"
   private val config = Config("bucket", prefix, source)
 
-  new S3MetaDataEnricher {
+  new S3MetaDataEnricher with DummyS3Client {
     describe("key generator") {
       val subject = generateKey(config)_
 
@@ -36,7 +36,6 @@ class S3MetaDataEnricherSuite extends FunSpec {
         }
       }
     }
-    override def objectHead(bucket: String, key: String) = ???
   }
 
   describe("enrich with metadata") {
@@ -45,7 +44,7 @@ class S3MetaDataEnricherSuite extends FunSpec {
     describe("when remote exists") {
       val hash = "hash"
       val lastModified = Instant.now()
-      new S3MetaDataEnricher {
+      new S3MetaDataEnricher with DummyS3Client {
         override def objectHead(bucket: String, key: String) = IO(Some((hash, lastModified)))
         it("returns metadata") {
           val expectedMetadata = S3MetaData(localFile, s"$prefix/$local", hash, lastModified)
@@ -56,7 +55,7 @@ class S3MetaDataEnricherSuite extends FunSpec {
       }
     }
     describe("when remote doesn't exist") {
-      new S3MetaDataEnricher {
+      new S3MetaDataEnricher with DummyS3Client {
         override def objectHead(bucket: String, key: String) = IO(None)
         it("returns file to upload") {
           val result = enrichWithS3MetaData(config)(localFile).compile.toList.unsafeRunSync().head
