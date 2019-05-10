@@ -14,7 +14,7 @@ class ReactiveS3ClientTest extends FunSpec {
       self.objectHead("bucket", "remoteKey").unsafeRunSync()
     }
 
-    describe("when response is okay") {
+    describe("when underlying client response is okay") {
       val expectedHash = "hash"
       val expectedLastModified = Instant.now
       new ReactiveS3Client { self: S3Client => {
@@ -32,7 +32,7 @@ class ReactiveS3ClientTest extends FunSpec {
       }
     }
 
-    describe("when throws NoSuchKeyException") {
+    describe("when underlying client throws NoSuchKeyException") {
       new ReactiveS3Client { self: S3Client =>
         it("should return None") {
           assertResult(None)(invoke(self))
