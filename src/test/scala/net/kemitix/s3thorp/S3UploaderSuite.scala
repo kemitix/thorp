@@ -10,7 +10,7 @@ class S3UploaderSuite extends FunSpec {
 
   new S3Uploader {
     override def objectHead(bucket: String, key: String): IO[Option[(MD5Hash, LastModified)]] = ???
-    override def upload(localFile: LocalFile, bucket: Bucket, remoteKey: RemoteKey): IO[Unit] = IO()
+    override def upload(localFile: LocalFile, bucket: Bucket, remoteKey: RemoteKey): IO[Unit] = IO.unit
 
     describe("upload") {
       val config: Config = Config("bucket", "prefix", new File("/path/to/files"))
