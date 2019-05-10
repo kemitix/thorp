@@ -8,47 +8,24 @@ The normal ~aws s3 sync ...~ command only uses the time stamp of files
 to decide what files need to be copied. This utility looks at the md5
 hash of the file contents.
 
-* How does aws-s3-sync-by-hash do it?
+* Usage
 
-The following is a rough, first draft, pseudo-scala, impression of the process.
+#+begin_example
+s3thorp
+Usage: S3Thorp [options]
 
-** constructor
+  -s, --source <value>  Source directory to sync to S3
+  -b, --bucket <value>  S3 bucket name
+  -p, --prefix <value>  Prefix within the S3 Bucket
+#+end_example
 
-val options = Load command line arguments and AWS security keys.
+* TODO
 
-** def sync(): Promise[Upload]
-
-val uploadPromise = createUploadPromise()
-if options contains delete then createDeletePromise()
-else return uploadPromise
-
-** def createUploadPromise(): Promise[Upload]
-
-readdir(options(root))
-loadS3MetaData
-filterByHash
-uploadFile
-callback(file => uploadedFiles += file)
-
-** def loadS3MetaData: Stream[S3MetaData]
-
-HEAD(bucket, key)
-map (metadata => S3MetaData(localFile, bucket, key, metadata.hash, metadata.lastModified))
-
-** def filterByHash(p: S3MetaData => Boolean): Stream[S3MetaData]
-
-md5File(localFile)
-filter(localHash => options.force || localHash != metadataHash)
-
-** def uploadFile(upload: Upload): IO[Unit]
-
-S3Upload(bucket, key, localFile)
-
-** def createDeletePromise(): Promise[Delete]
-
-S3AllKeys(bucket, key)
-filter(remoteKey => localFileExists(remoteFile).negate)
-
-** def deleteFile(delete: Delete): IO[Unit]
-
-S3Delete(bucket, key, remoteKey)
+- [ ] Improve test coverage
+- [ ] Create os-native binaries
+- [ ] Replace println with real logging
+- [ ] Add support for logging options
+- [ ] Add support for exclusion filters
+- [ ] Add support for multi-part uploads for large files
+- [ ] Add support for upload progress - may only be available with
+  multi-part uploads
