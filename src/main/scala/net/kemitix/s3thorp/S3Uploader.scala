@@ -15,10 +15,11 @@ trait S3Uploader
     val remoteKey = generateKey(c) _
     file => {
       val key = remoteKey(file)
-      val shortFile = c.source.toPath.relativize(file.toPath)
+      val shortFile = c.relativePath(file)
       Stream.eval(for {
-        _ <- putStrLn(s"Uploading: $shortFile")
+        _ <- putStrLn(s"    Upload: $shortFile")
         _ <- upload(file, c.bucket, key)
+        _ <- putStrLn(s"      Done: $shortFile")
       } yield ())
     }
   }

@@ -25,7 +25,7 @@ class Sync(s3Client: S3Client)
     _ <- {
       streamDirectoryPaths(c.source).flatMap(
         enrichWithS3MetaData(c)).flatMap(
-        uploadRequiredFilter).flatMap(
+        uploadRequiredFilter(c)).flatMap(
         performUpload(c)).compile.drain
     }
   } yield ()

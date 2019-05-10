@@ -18,14 +18,22 @@ trait UploadSelectionFilter {
     md5.digest.map("%02x".format(_)).mkString
   }
 
-  def uploadRequiredFilter: Either[File, S3MetaData] => Stream[IO, File] = {
-    case Left(file) => Stream(file)
+  def uploadRequiredFilter(c: Config): Either[File, S3MetaData] => Stream[IO, File] = {
+    case Left(file) => {
+      println(s"   Created: ${c.relativePath(file)}")
+      Stream(file)
+    }
     case Right(s3Metadata) =>
       Stream.eval(for {
         localHash <- IO(md5File(s3Metadata.localFile))
       } yield (s3Metadata.localFile, localHash)).
         filter { case (_, localHash) => localHash != s3Metadata.remoteHash }.
-        map {case (localFile,_) => localFile}
+        map {
+          case (localFile,_) => {
+            println(s"   Updated: ${c.relativePath(localFile)}")
+            localFile
+          }
+        }
   }
 
 }

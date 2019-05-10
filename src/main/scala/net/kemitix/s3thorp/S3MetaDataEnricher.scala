@@ -12,6 +12,7 @@ trait S3MetaDataEnricher extends S3Client with KeyGenerator {
     val remoteKey = generateKey(c)_
     file =>
       Stream.eval({
+        println(s"- Consider: ${c.relativePath(file)}")
         val key = remoteKey(file)
         for {
           head <- objectHead(c.bucket, key)
