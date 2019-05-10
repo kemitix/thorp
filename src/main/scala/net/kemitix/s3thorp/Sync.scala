@@ -17,7 +17,7 @@ class Sync(s3Client: S3Client)
   override def objectHead(bucket: Bucket, remoteKey: RemoteKey)=
     s3Client.objectHead(bucket, remoteKey)
 
-  override def upload(localFile: LocalFile, bucket: Bucket, remoteKey: RemoteKey): IO[Unit] =
+  override def upload(localFile: LocalFile, bucket: Bucket, remoteKey: RemoteKey) =
     s3Client.upload(localFile, bucket, remoteKey)
 
   def run(c: Config): IO[Unit] = for {

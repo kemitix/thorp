@@ -4,11 +4,10 @@ import java.io.File
 import java.time.Instant
 
 import cats.effect.IO
-import com.github.j5ik2o.reactive.aws.s3.S3AsyncClient
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
 import net.kemitix.s3thorp.Sync.{Bucket, LocalFile, RemoteKey}
 import org.scalatest.FunSpec
-import software.amazon.awssdk.services.s3.model.{HeadObjectRequest, HeadObjectResponse, NoSuchKeyException, PutObjectRequest, PutObjectResponse}
+import software.amazon.awssdk.services.s3.model._
 
 class S3ClientSuite extends FunSpec {
 
@@ -44,19 +43,21 @@ class S3ClientSuite extends FunSpec {
 
   }
 
-
   describe("upload") {
+    def invoke(s3Client: ThropS3Client, localFile: LocalFile, bucket: Bucket, remoteKey: RemoteKey) =
+      s3Client.upload(localFile, bucket, remoteKey).unsafeRunSync
     describe("when uploading a file") {
+      val md5Hash = "the-md5hash"
       val s3Client = new ThropS3Client(
         new S3CatsIOClient with JavaClientWrapper {
           override def putObject(putObjectRequest: PutObjectRequest, requestBody: RB) =
-            IO(PutObjectResponse.builder().build())
+            IO(PutObjectResponse.builder().eTag(md5Hash).build())
         })
       val localFile: LocalFile = new File("/some/file")
       val bucket: Bucket = "a-bucket"
       val remoteKey: RemoteKey = "prefix/file"
-      it("should not throw any exceptions") {
-        s3Client.upload(localFile, bucket, remoteKey)
+      it("should return hash of uploaded file") {
+        assertResult(Right(md5Hash))(invoke(s3Client, localFile, bucket, remoteKey))
       }
     }
   }

@@ -8,7 +8,7 @@ trait S3Client {
 
   def objectHead(bucket: Bucket, remoteKey: RemoteKey): IO[Option[(MD5Hash, LastModified)]]
 
-  def upload(localFile: LocalFile, bucket: Bucket, remoteKey: RemoteKey): IO[Unit]
+  def upload(localFile: LocalFile, bucket: Bucket, remoteKey: RemoteKey): IO[Either[Throwable, MD5Hash]]
 
 }
 
