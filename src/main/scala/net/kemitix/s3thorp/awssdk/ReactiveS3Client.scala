@@ -4,7 +4,7 @@ import cats.effect.IO
 import net.kemitix.s3thorp.Main.putStrLn
 import net.kemitix.s3thorp.Sync.{Bucket, LocalFile, RemoteKey}
 import software.amazon.awssdk.core.async.AsyncRequestBody
-import software.amazon.awssdk.services.s3.model.{HeadObjectRequest, NoSuchKeyException, PutObjectRequest}
+import software.amazon.awssdk.services.s3.model.{HeadObjectRequest, HeadObjectResponse, PutObjectRequest}
 
 private class ReactiveS3Client
   extends S3Client
@@ -15,15 +15,16 @@ private class ReactiveS3Client
       .bucket(bucket)
       .key(remoteKey)
       .build()
-    try {
-      for {
-        _ <- putStrLn(s"S3:HeadObject: $bucket : $remoteKey")
-        response <- s3Client.headObject(request)
-        _ <- putStrLn(s"  -- ${response.eTag()} : ${response.lastModified()}")
-      } yield Some((response.eTag(), response.lastModified()))
-    } catch {
-      //FIXME: this isn't catching the exception
-      case _: NoSuchKeyException => IO(None)
+    println(s"S3:HeadObject: $bucket : $remoteKey")
+    s3Client.headObject(request).attempt.map {
+      case Right(response) => {
+        println(s"  -- ${response.eTag()} : ${response.lastModified()}")
+        Some((response.eTag(), response.lastModified()))
+      }
+      case Left(_) => {
+        println("  -- Not found in S3")
+        None
+      }
     }
   }
 
