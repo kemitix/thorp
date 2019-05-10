@@ -13,13 +13,13 @@ trait S3Uploader
 
   def performUpload(c: Config): File => Stream[IO, Unit] = {
     val remoteKey = generateKey(c) _
-    file =>
+    file => {
+      val key = remoteKey(file)
+      val shortFile = c.source.toPath.relativize(file.toPath)
       Stream.eval(for {
-        _ <- putStrLn(s"uploading: $file")
-        key = remoteKey(file)
+        _ <- putStrLn(s"Uploading: $shortFile")
         _ <- upload(file, c.bucket, key)
-        _ <- putStrLn(s"uploaded: ${c.bucket}/$key")
       } yield ())
+    }
   }
-
 }
