@@ -1,7 +1,8 @@
 package net.kemitix.s3thorp.awssdk
 
 import cats.effect.IO
-import net.kemitix.s3thorp.Sync.{Bucket, MD5Hash, LastModified, LocalFile, RemoteKey}
+import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
+import net.kemitix.s3thorp.Sync.{Bucket, LastModified, LocalFile, MD5Hash, RemoteKey}
 
 trait S3Client {
 
@@ -13,6 +14,8 @@ trait S3Client {
 
 object S3Client {
 
-  val defaultClient: S3Client = new ReactiveS3Client
+  val defaultClient: S3Client =
+    new ThropS3Client(
+      S3CatsIOClient(new JavaClientWrapper {}.underlying))
 
 }
