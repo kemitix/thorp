@@ -16,8 +16,10 @@ trait S3MetaDataEnricher extends S3Client with KeyGenerator {
         for {
           head <- objectHead(c.bucket, key)
         } yield head.map {
-          case (hash,lastModified) =>
-            Right(S3MetaData(file, key, hash, lastModified))
+          case (hash, lastModified) => {
+            val cleanHash = hash.filter{c=>c!='"'}
+            Right(S3MetaData(file, key, cleanHash, lastModified))
+          }
         }.getOrElse(Left(file))
       })
   }
