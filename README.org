@@ -26,6 +26,8 @@ Usage: S3Thorp [options]
 - [ ] Replace println with real logging
 - [ ] Add support for logging options
 - [ ] Add support for exclusion filters
+- [ ] Bulk fetching of Hash values from S3
+- [ ] ? When lastModified matches local file, skip calculating local MD5 ?
 - [ ] Add support for multi-part uploads for large files
 - [ ] Add support for upload progress - may only be available with
   multi-part uploads
