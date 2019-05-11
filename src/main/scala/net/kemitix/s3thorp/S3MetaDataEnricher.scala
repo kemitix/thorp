@@ -6,13 +6,16 @@ import fs2.Stream
 import cats.effect.IO
 import net.kemitix.s3thorp.awssdk.S3Client
 
-trait S3MetaDataEnricher extends S3Client with KeyGenerator {
+trait S3MetaDataEnricher
+  extends S3Client
+    with KeyGenerator
+    with Logging {
 
   def enrichWithS3MetaData(c: Config): File => Stream[IO, Either[File, S3MetaData]] = {
     val remoteKey = generateKey(c)_
     file =>
       Stream.eval({
-        println(s"- Consider: ${c.relativePath(file)}")
+        logger.info(s"- Consider: ${c.relativePath(file)}")
         val key = remoteKey(file)
         for {
           head <- objectHead(c.bucket, key)

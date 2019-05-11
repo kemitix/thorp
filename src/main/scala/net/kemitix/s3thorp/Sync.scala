@@ -11,7 +11,8 @@ class Sync(s3Client: S3Client)
   extends LocalFileStream
     with S3MetaDataEnricher
     with UploadSelectionFilter
-    with S3Uploader {
+    with S3Uploader
+    with Logging {
 
   override def objectHead(bucket: Bucket, remoteKey: RemoteKey)=
     s3Client.objectHead(bucket, remoteKey)
@@ -20,7 +21,7 @@ class Sync(s3Client: S3Client)
     s3Client.upload(localFile, bucket, remoteKey)
 
   def run(c: Config): IO[Unit] = {
-    println(s"Bucket: ${c.bucket}, Prefix: ${c.prefix}, Source: ${c.source}")
+    logger.info(s"Bucket: ${c.bucket}, Prefix: ${c.prefix}, Source: ${c.source}")
     streamDirectoryPaths(c.source).flatMap(
       enrichWithS3MetaData(c)).flatMap(
       uploadRequiredFilter(c)).flatMap(

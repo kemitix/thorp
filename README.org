@@ -23,7 +23,7 @@ Usage: S3Thorp [options]
 
 - [x] Improve test coverage
 - [ ] Create os-native binaries
-- [ ] Replace println with real logging
+- [x] Replace println with real logging
 - [ ] Add support for logging options
 - [ ] Add support for exclusion filters
 - [ ] Bulk fetching of Hash values from S3

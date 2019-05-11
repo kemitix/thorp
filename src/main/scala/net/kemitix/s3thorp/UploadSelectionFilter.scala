@@ -6,7 +6,8 @@ import net.kemitix.s3thorp.Sync.{MD5Hash, LocalFile}
 import java.security.{MessageDigest, DigestInputStream}
 import java.io.{File, FileInputStream}
 
-trait UploadSelectionFilter {
+trait UploadSelectionFilter
+  extends Logging {
 
   private def md5File(localFile: LocalFile): MD5Hash =  {
     val buffer = new Array[Byte](8192)
@@ -20,7 +21,7 @@ trait UploadSelectionFilter {
 
   def uploadRequiredFilter(c: Config): Either[File, S3MetaData] => Stream[IO, File] = {
     case Left(file) => {
-      println(s"   Created: ${c.relativePath(file)}")
+      logger.info(s"   Created: ${c.relativePath(file)}")
       Stream(file)
     }
     case Right(s3Metadata) =>
@@ -30,7 +31,7 @@ trait UploadSelectionFilter {
         filter { case (_, localHash) => localHash != s3Metadata.remoteHash }.
         map {
           case (localFile,_) => {
-            println(s"   Updated: ${c.relativePath(localFile)}")
+            logger.info(s"   Updated: ${c.relativePath(localFile)}")
             localFile
           }
         }

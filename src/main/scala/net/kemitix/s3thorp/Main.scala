@@ -6,9 +6,7 @@ import cats.effect.ExitCase.{Canceled, Completed, Error}
 import cats.effect.{ExitCode, IO, IOApp}
 import net.kemitix.s3thorp.awssdk.S3Client
 
-object Main extends IOApp {
-
-  def putStrLn(value: String) = IO { println(value) }
+object Main extends IOApp with Logging {
 
   val defaultConfig: Config =
     Config("(none)", "", Paths.get(".").toFile)
@@ -17,7 +15,7 @@ object Main extends IOApp {
 
   def program(args: List[String]): IO[ExitCode] =
     for {
-      _ <- putStrLn("S3Thorp - hashed sync for s3")
+      _ <- IO(logger.info("S3Thorp - hashed sync for s3"))
       a <- ParseArgs(args, defaultConfig)
       _ <- sync.run(a)
     } yield ExitCode.Success
@@ -25,9 +23,9 @@ object Main extends IOApp {
   override def run(args: List[String]): IO[ExitCode] =
     program(args)
       .guaranteeCase {
-        case Canceled => IO(println("Interrupted"))
-        case Error(e) => IO(println("ERROR: " + e.getMessage))
-        case Completed => IO(println("Done"))
+        case Canceled => IO(logger.warn("Interrupted"))
+        case Error(e) => IO(logger.error(e.getMessage))
+        case Completed => IO(logger.info("Done"))
       }
 
 }
