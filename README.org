@@ -19,6 +19,24 @@ Usage: S3Thorp [options]
   -p, --prefix <value>  Prefix within the S3 Bucket
 #+end_example
 
+* Creating Native Images
+
+  - Download and install GraalVM
+    - https://github.com/oracle/graal/releases
+  - Install ~native-image~ using the graal updater
+    #+begin_example bash
+      gu install native-image
+    #+end_example
+  - Create native image
+    #+begin_example bash
+      native-image -cp `sbt 'export runtime:fullClasspath'|tail -n 1` \
+                   -H:Name=s3thorp \
+                   -H:Class=net.kemitix.s3thorp.Main \
+                   --allow-incomplete-classpath \
+                   --force-fallback
+    #+end_example
+  - Resulting file requires a JDK for execution
+
 * TO DO
 
 - [x] Improve test coverage
