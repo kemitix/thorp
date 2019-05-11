@@ -9,7 +9,7 @@ class UploadSelectionFilterSuite extends FunSpec {
 
   new UploadSelectionFilter {
     describe("uploadRequiredFilter") {
-      val localFile = new File("src/test/scala/net/kemitix/s3thorp/test-file-for-hash.txt")
+      val localFile = Resource(this, "test-file-for-hash.txt")
       val localHash = "0cbfe978783bd7950d5da4ff85e4af37"
       val config = Config("bucket", "prefix", localFile.getParentFile)
       def invokeSubject(input: Either[File, S3MetaData]) =

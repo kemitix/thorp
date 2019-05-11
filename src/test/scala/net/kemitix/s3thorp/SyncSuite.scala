@@ -49,7 +49,7 @@ class SyncSuite extends FunSpec {
   }
   describe("run") {
     val testBucket = "bucket"
-    val source = new File(Sync.getClass.getResource("upload").getPath)
+    val source = Resource(this, "upload")
     // source contains the files root-file and subdir/leaf-file
     val config = Config("bucket", "prefix", source)
     describe("when all files should be uploaded") {
