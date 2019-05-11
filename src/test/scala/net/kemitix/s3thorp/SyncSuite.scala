@@ -48,6 +48,52 @@ class SyncSuite extends FunSpec {
     }
   }
   describe("run") {
-
+    val testBucket = "bucket"
+    val source = new File(Sync.getClass.getResource("upload").getPath)
+    // source contains the files root-file and subdir/leaf-file
+    val config = Config("bucket", "prefix", source)
+    describe("when all files should be uploaded") {
+      var uploadsRecord: Map[String, RemoteKey] = Map()
+      val sync = new Sync(new S3Client {
+        override def objectHead(bucket: Bucket, remoteKey: RemoteKey) =
+          IO(None)
+        override def upload(localFile: LocalFile, bucket: Bucket, remoteKey: RemoteKey) = {
+          if (bucket == testBucket)
+            uploadsRecord += (source.toPath.relativize(localFile.toPath).toString -> remoteKey)
+          IO(Right("some hash value"))
+        }
+      })
+      it("uploads all files") {
+        sync.run(config).unsafeRunSync
+        val expected = Map(
+          "subdir/leaf-file" -> "prefix/subdir/leaf-file",
+          "root-file" -> "prefix/root-file"
+        )
+        assertResult(expected)(uploadsRecord)
+      }
+    }
+    describe("when no files should be uploaded") {
+      val rootHash = "a3a6ac11a0eb577b81b3bb5c95cc8a6e"
+      val leafHash = "208386a650bdec61cfcd7bd8dcb6b542"
+      var uploadsRecord: Map[String, RemoteKey] = Map()
+      val sync = new Sync(new S3Client {
+        override def objectHead(bucket: Bucket, remoteKey: RemoteKey) = IO(
+          remoteKey match {
+            case "prefix/root-file" => Some((rootHash, Instant.now))
+            case "prefix/subdir/leaf-file" => Some((leafHash, Instant.now))
+            case _ => None
+          })
+        override def upload(localFile: LocalFile, bucket: Bucket, remoteKey: RemoteKey) = {
+          if (bucket == testBucket)
+            uploadsRecord += (source.toPath.relativize(localFile.toPath).toString -> remoteKey)
+          IO(Right("some hash value"))
+        }
+      })
+      it("uploads nothing") {
+        sync.run(config).unsafeRunSync
+        val expected = Map()
+        assertResult(expected)(uploadsRecord)
+      }
+    }
   }
 }
