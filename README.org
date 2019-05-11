@@ -19,9 +19,9 @@ Usage: S3Thorp [options]
   -p, --prefix <value>  Prefix within the S3 Bucket
 #+end_example
 
-* TODO
+* TO DO
 
-- [ ] Improve test coverage
+- [x] Improve test coverage
 - [ ] Create os-native binaries
 - [ ] Replace println with real logging
 - [ ] Add support for logging options
