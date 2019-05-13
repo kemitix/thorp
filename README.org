@@ -39,9 +39,9 @@ Usage: S3Thorp [options]
 
 * TO DO
 
-- [x] Improve test coverage
-- [ ] Create os-native binaries
-- [x] Replace println with real logging
+- [X] Improve test coverage
+- [X] Create os-native binaries
+- [X] Replace println with real logging
 - [ ] Add support for logging options
 - [ ] Add support for exclusion filters
 - [ ] Bulk fetching of Hash values from S3
