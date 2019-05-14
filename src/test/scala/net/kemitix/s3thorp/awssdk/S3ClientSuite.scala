@@ -19,7 +19,7 @@ class S3ClientSuite extends FunSpec {
     describe("when underlying client response is okay") {
       val expectedHash = "hash"
       val expectedLastModified = Instant.now
-      val s3Client = new ThropS3Client(new S3CatsIOClient with JavaClientWrapper {
+      val s3Client = new ThorpS3Client(new S3CatsIOClient with JavaClientWrapper {
         override def headObject(headObjectRequest: HeadObjectRequest) =
           IO(HeadObjectResponse.builder().
             eTag(expectedHash).
@@ -32,7 +32,7 @@ class S3ClientSuite extends FunSpec {
     }
 
     describe("when underlying client throws NoSuchKeyException") {
-      val s3Client = new ThropS3Client(new S3CatsIOClient with JavaClientWrapper {
+      val s3Client = new ThorpS3Client(new S3CatsIOClient with JavaClientWrapper {
         override def headObject(headObjectRequest: HeadObjectRequest) =
           IO(throw NoSuchKeyException.builder().build())
       })
@@ -44,11 +44,11 @@ class S3ClientSuite extends FunSpec {
   }
 
   describe("upload") {
-    def invoke(s3Client: ThropS3Client, localFile: LocalFile, bucket: Bucket, remoteKey: RemoteKey) =
+    def invoke(s3Client: ThorpS3Client, localFile: LocalFile, bucket: Bucket, remoteKey: RemoteKey) =
       s3Client.upload(localFile, bucket, remoteKey).unsafeRunSync
     describe("when uploading a file") {
       val md5Hash = "the-md5hash"
-      val s3Client = new ThropS3Client(
+      val s3Client = new ThorpS3Client(
         new S3CatsIOClient with JavaClientWrapper {
           override def putObject(putObjectRequest: PutObjectRequest, requestBody: RB) =
             IO(PutObjectResponse.builder().eTag(md5Hash).build())

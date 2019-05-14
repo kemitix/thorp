@@ -15,7 +15,7 @@ trait S3Client {
 object S3Client {
 
   val defaultClient: S3Client =
-    new ThropS3Client(
+    new ThorpS3Client(
       S3CatsIOClient(new JavaClientWrapper {}.underlying))
 
 }

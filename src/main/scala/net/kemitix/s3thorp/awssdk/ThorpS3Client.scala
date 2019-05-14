@@ -6,7 +6,7 @@ import net.kemitix.s3thorp.Sync._
 import software.amazon.awssdk.core.async.AsyncRequestBody
 import software.amazon.awssdk.services.s3.model.{HeadObjectRequest, PutObjectRequest}
 
-private class ThropS3Client(s3Client: S3CatsIOClient) extends S3Client {
+private class ThorpS3Client(s3Client: S3CatsIOClient) extends S3Client {
 
   def objectHead(bucket: Bucket, remoteKey: RemoteKey) = {
     val request = HeadObjectRequest.builder().bucket(bucket).key(remoteKey).build()
