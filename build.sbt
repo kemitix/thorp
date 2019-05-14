@@ -17,7 +17,7 @@ libraryDependencies += "com.github.j5ik2o" %% "reactive-aws-s3-cats" % "1.1.3"
 
 // Logging
 libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2"
-libraryDependencies += "org.slf4j" % "slf4j-log4j12" % "1.7.25"
+libraryDependencies += "org.slf4j" % "slf4j-log4j12" % "1.7.26"
 
 // testing
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.7" % "test"
