@@ -4,7 +4,7 @@ import java.io.File
 import java.nio.file.Paths
 import java.time.Instant
 
-import cats.effect.IO
+import net.kemitix.s3thorp.awssdk.HashLookup
 import org.scalatest.FunSpec
 
 class S3MetaDataEnricherSuite extends FunSpec {
@@ -40,26 +40,30 @@ class S3MetaDataEnricherSuite extends FunSpec {
 
   describe("enrich with metadata") {
     val local = "localFile"
-    val localFile = new File(sourcePath + local)
+    val fileWithRemote = new File(sourcePath + local)
+    val fileWithNoRemote = new File(sourcePath + "noRemote")
+    val remoteKey = prefix + "/" + local
+    val hash = "hash"
+    val lastModified = Instant.now()
+    val hashLookup = HashLookup(
+      byHash = Map(hash -> (remoteKey, lastModified)),
+      byKey = Map(remoteKey -> (hash, lastModified))
+    )
     describe("when remote exists") {
-      val hash = "hash"
-      val lastModified = Instant.now()
       new S3MetaDataEnricher with DummyS3Client {
-        override def objectHead(bucket: String, key: String) = IO(Some((hash, lastModified)))
         it("returns metadata") {
-          val expectedMetadata = S3MetaData(localFile, s"$prefix/$local", hash, lastModified)
+          val expectedMetadata = S3MetaData(fileWithRemote, remoteKey, hash, lastModified)
 
-          val result = enrichWithS3MetaData(config)(localFile).compile.toList.unsafeRunSync().head
+          val result = enrichWithS3MetaData(config)(hashLookup)(fileWithRemote)
           assertResult(Right(expectedMetadata))(result)
         }
       }
     }
     describe("when remote doesn't exist") {
       new S3MetaDataEnricher with DummyS3Client {
-        override def objectHead(bucket: String, key: String) = IO(None)
         it("returns file to upload") {
-          val result = enrichWithS3MetaData(config)(localFile).compile.toList.unsafeRunSync().head
-          assertResult(Left(localFile))(result)
+          val result = enrichWithS3MetaData(config)(hashLookup)(fileWithNoRemote)
+          assertResult(Left(fileWithNoRemote))(result)
         }
       }
     }

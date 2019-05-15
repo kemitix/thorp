@@ -5,7 +5,7 @@ import java.time.Instant
 
 import cats.effect.IO
 import net.kemitix.s3thorp.Sync.{Bucket, LocalFile, MD5Hash, RemoteKey}
-import net.kemitix.s3thorp.awssdk.S3Client
+import net.kemitix.s3thorp.awssdk.{HashLookup, S3Client}
 import org.scalatest.FunSpec
 
 class SyncSuite extends FunSpec {
@@ -13,22 +13,6 @@ class SyncSuite extends FunSpec {
   describe("s3client thunk") {
     val testBucket = "bucket"
     val testRemoteKey = "prefix/file"
-    describe("objectHead") {
-      val md5Hash = "md5Hash"
-      val lastModified = Instant.now()
-      val sync = new Sync(new S3Client with DummyS3Client {
-        override def objectHead(bucket: String, key: String) = {
-          assert(bucket == testBucket)
-          assert(key == testRemoteKey)
-          IO(Some((md5Hash, lastModified)))
-        }
-      })
-      it("delegates unmodified to the S3Client") {
-        assertResult(Some((md5Hash, lastModified)))(
-          sync.objectHead(testBucket, testRemoteKey).
-            unsafeRunSync())
-      }
-    }
     describe("upload") {
       val md5Hash = "the-hash"
       val testLocalFile = new File("file")
@@ -54,9 +38,11 @@ class SyncSuite extends FunSpec {
     val config = Config("bucket", "prefix", source)
     describe("when all files should be uploaded") {
       var uploadsRecord: Map[String, RemoteKey] = Map()
-      val sync = new Sync(new S3Client {
-        override def objectHead(bucket: Bucket, remoteKey: RemoteKey) =
-          IO(None)
+      val sync = new Sync(new DummyS3Client{
+        override def listObjects(bucket: Bucket, prefix: RemoteKey) = IO(
+          HashLookup(
+            byHash = Map(),
+            byKey = Map()))
         override def upload(localFile: LocalFile, bucket: Bucket, remoteKey: RemoteKey) = {
           if (bucket == testBucket)
             uploadsRecord += (source.toPath.relativize(localFile.toPath).toString -> remoteKey)
@@ -75,14 +61,13 @@ class SyncSuite extends FunSpec {
     describe("when no files should be uploaded") {
       val rootHash = "a3a6ac11a0eb577b81b3bb5c95cc8a6e"
       val leafHash = "208386a650bdec61cfcd7bd8dcb6b542"
+      val lastModified = Instant.now
       var uploadsRecord: Map[String, RemoteKey] = Map()
-      val sync = new Sync(new S3Client {
-        override def objectHead(bucket: Bucket, remoteKey: RemoteKey) = IO(
-          remoteKey match {
-            case "prefix/root-file" => Some((rootHash, Instant.now))
-            case "prefix/subdir/leaf-file" => Some((leafHash, Instant.now))
-            case _ => None
-          })
+      val sync = new Sync(new S3Client with DummyS3Client {
+        override def listObjects(bucket: Bucket, prefix: RemoteKey) = IO(
+          HashLookup(
+            byHash = Map(rootHash -> ("prefix/root-file", lastModified), leafHash -> ("prefix/subdir/leaf-file", lastModified)),
+            byKey = Map("prefix/root-file" -> (rootHash, lastModified), "prefix/subdir/leaf-file" -> (leafHash, lastModified))))
         override def upload(localFile: LocalFile, bucket: Bucket, remoteKey: RemoteKey) = {
           if (bucket == testBucket)
             uploadsRecord += (source.toPath.relativize(localFile.toPath).toString -> remoteKey)

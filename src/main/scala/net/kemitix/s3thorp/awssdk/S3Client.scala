@@ -6,7 +6,10 @@ import net.kemitix.s3thorp.Sync.{Bucket, LastModified, LocalFile, MD5Hash, Remot
 
 trait S3Client {
 
-  def objectHead(bucket: Bucket, remoteKey: RemoteKey): IO[Option[(MD5Hash, LastModified)]]
+  final def objectHead(remoteKey: RemoteKey)(implicit hashLookup: HashLookup): Option[(MD5Hash, LastModified)] =
+    hashLookup.byKey.get(remoteKey)
+
+  def listObjects(bucket: Bucket, prefix: RemoteKey): IO[HashLookup]
 
   def upload(localFile: LocalFile, bucket: Bucket, remoteKey: RemoteKey): IO[Either[Throwable, MD5Hash]]
 

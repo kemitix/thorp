@@ -4,22 +4,11 @@ import cats.effect.IO
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
 import net.kemitix.s3thorp.Sync._
 import software.amazon.awssdk.core.async.AsyncRequestBody
-import software.amazon.awssdk.services.s3.model.{HeadObjectRequest, ListObjectsV2Request, PutObjectRequest, S3Object}
+import software.amazon.awssdk.services.s3.model.{ListObjectsV2Request, PutObjectRequest, S3Object}
 
 import scala.collection.JavaConverters._
 
 private class ThorpS3Client(s3Client: S3CatsIOClient) extends S3Client {
-
-  def objectHead(bucket: Bucket, remoteKey: RemoteKey): IO[Option[(MD5Hash, LastModified)]] = {
-    val request = HeadObjectRequest.builder()
-      .bucket(bucket)
-      .key(remoteKey)
-      .build()
-    s3Client.headObject(request).attempt.map {
-      case Right(r) => Some((r.eTag(), r.lastModified()))
-      case Left(_) => None
-    }
-  }
 
   def upload(localFile: LocalFile, bucket: Bucket, remoteKey: RemoteKey): IO[Either[Throwable, MD5Hash]] = {
     val request = PutObjectRequest.builder()

@@ -1,10 +1,9 @@
 package net.kemitix.s3thorp
 
-import fs2.Stream
-import cats.effect.IO
-import net.kemitix.s3thorp.Sync.{MD5Hash, LocalFile}
-import java.security.{MessageDigest, DigestInputStream}
 import java.io.{File, FileInputStream}
+import java.security.{DigestInputStream, MessageDigest}
+
+import net.kemitix.s3thorp.Sync.{LocalFile, MD5Hash}
 
 trait UploadSelectionFilter
   extends Logging {
@@ -19,22 +18,18 @@ trait UploadSelectionFilter
     md5.digest.map("%02x".format(_)).mkString
   }
 
-  def uploadRequiredFilter(c: Config): Either[File, S3MetaData] => Stream[IO, File] = {
+  def uploadRequiredFilter(c: Config): Either[File, S3MetaData] => Stream[File] = {
     case Left(file) => {
       logger.info(s"   Created: ${c.relativePath(file)}")
       Stream(file)
     }
-    case Right(s3Metadata) =>
-      Stream.eval(for {
-        localHash <- IO(md5File(s3Metadata.localFile))
-      } yield (s3Metadata.localFile, localHash)).
-        filter { case (_, localHash) => localHash != s3Metadata.remoteHash }.
-        map {
-          case (localFile,_) => {
-            logger.info(s"   Updated: ${c.relativePath(localFile)}")
-            localFile
-          }
-        }
+    case Right(s3Metadata) => {
+      val localHash: MD5Hash = md5File(s3Metadata.localFile)
+      if (localHash != s3Metadata.remoteHash) {
+        logger.info(s"   Updated: ${c.relativePath(s3Metadata.localFile)}")
+        Stream(s3Metadata.localFile)
+      }
+      else Stream.empty
+    }
   }
-
 }

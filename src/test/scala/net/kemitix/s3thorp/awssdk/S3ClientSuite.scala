@@ -12,34 +12,30 @@ import software.amazon.awssdk.services.s3.model._
 class S3ClientSuite extends FunSpec {
 
   describe("objectHead") {
-    def invoke(self: S3Client) = {
-      self.objectHead("bucket", "remoteKey").unsafeRunSync()
+    val key = "key"
+    val hash = "hash"
+    val lastModified = Instant.now
+    val hashLookup: HashLookup = HashLookup(
+      byHash = Map(hash -> (key, lastModified)),
+      byKey = Map(key -> (hash, lastModified)))
+
+    def invoke(self: S3Client, remoteKey: RemoteKey) = {
+      self.objectHead(remoteKey)(hashLookup)
     }
 
-    describe("when underlying client response is okay") {
-      val expectedHash = "hash"
-      val expectedLastModified = Instant.now
-      val s3Client = new ThorpS3Client(new S3CatsIOClient with JavaClientWrapper {
-        override def headObject(headObjectRequest: HeadObjectRequest) =
-          IO(HeadObjectResponse.builder().
-            eTag(expectedHash).
-            lastModified(expectedLastModified).
-            build())
-      })
+    describe("when remote key exists") {
+      val s3Client = S3Client.defaultClient
       it("should return Some(expected values)") {
-        assertResult(Some((expectedHash, expectedLastModified)))(invoke(s3Client))
+        assertResult(Some((hash, lastModified)))(invoke(s3Client, key))
       }
     }
 
-    describe("when underlying client throws NoSuchKeyException") {
-      val s3Client = new ThorpS3Client(new S3CatsIOClient with JavaClientWrapper {
-        override def headObject(headObjectRequest: HeadObjectRequest) =
-          IO(throw NoSuchKeyException.builder().build())
-      })
-        it("should return None") {
-          assertResult(None)(invoke(s3Client))
-        }
+    describe("when remote key does not exist") {
+      val s3Client = S3Client.defaultClient
+      it("should return None") {
+        assertResult(None)(invoke(s3Client, "missing-key"))
       }
+    }
 
   }
 

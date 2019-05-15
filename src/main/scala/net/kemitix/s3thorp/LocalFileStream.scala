@@ -2,28 +2,18 @@ package net.kemitix.s3thorp
 
 import java.io.File
 
-import fs2.Stream
-
-import cats.effect.IO
-
 trait LocalFileStream {
 
-  def streamDirectoryPaths(file: File): Stream[IO, File] =
-  {
-    Stream.eval(IO(file)).
-      flatMap(file => Stream.fromIterator[IO, File](dirPaths(file))).
-      flatMap(recurseIntoSubDirectories)
-  }
+  def streamDirectoryPaths(file: File): Stream[File] =
+    dirPaths(file)
+        .flatMap(f => recurseIntoSubDirectories(f))
 
-  private def dirPaths(file: File): Iterator[File] = {
-    Option(file.listFiles).map(_.iterator).
-      getOrElse(throw new IllegalArgumentException(s"Directory not found $file"))
-  }
+  private def dirPaths(file: File): Stream[File] = Option(file.listFiles)
+    .getOrElse(throw new IllegalArgumentException(s"Directory not found $file")).toStream
 
-  private def recurseIntoSubDirectories: File => Stream[IO, File] =
+  private def recurseIntoSubDirectories: File => Stream[File] =
     file =>
       if (file.isDirectory) streamDirectoryPaths(file)
       else Stream(file)
-
 
 }

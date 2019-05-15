@@ -13,7 +13,7 @@ class UploadSelectionFilterSuite extends FunSpec {
       val localHash = "0cbfe978783bd7950d5da4ff85e4af37"
       val config = Config("bucket", "prefix", localFile.getParentFile)
       def invokeSubject(input: Either[File, S3MetaData]) =
-        uploadRequiredFilter(config)(input).compile.toList.unsafeRunSync()
+        uploadRequiredFilter(config)(input).toList
       describe("when supplied a file") {
         val input = Left(localFile)
         it("should be marked for upload") {
