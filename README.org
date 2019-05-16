@@ -2,7 +2,7 @@
 
 Synchronisation of files with S3 using the hash of the file contents.
 
-Based on Alex Kudlick's JavaScript implementation [[https://github.com/akud/aws-s3-sync-by-hash][aws-s3-sync-by-hash]].
+Originally based on Alex Kudlick's [[https://github.com/akud/aws-s3-sync-by-hash][aws-s3-sync-by-hash]].
 
 The normal ~aws s3 sync ...~ command only uses the time stamp of files
 to decide what files need to be copied. This utility looks at the md5
@@ -10,14 +10,14 @@ hash of the file contents.
 
 * Usage
 
-#+begin_example
-s3thorp
-Usage: S3Thorp [options]
+  #+begin_example
+    s3thorp
+    Usage: S3Thorp [options]
 
-  -s, --source <value>  Source directory to sync to S3
-  -b, --bucket <value>  S3 bucket name
-  -p, --prefix <value>  Prefix within the S3 Bucket
-#+end_example
+      -s, --source <value>  Source directory to sync to S3
+      -b, --bucket <value>  S3 bucket name
+      -p, --prefix <value>  Prefix within the S3 Bucket
+  #+end_example
 
 * Creating Native Images
 
