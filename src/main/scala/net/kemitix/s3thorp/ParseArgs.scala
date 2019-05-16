@@ -12,7 +12,7 @@ object ParseArgs {
     val parserBuilder = builder[Config]
     import parserBuilder._
     sequence(
-      programName("S3Thorp"),
+      programName("s3thorp"),
       head("s3thorp"),
       opt[String]('s', "source")
         .action((str, c) => c.copy(source = Paths.get(str).toFile))
