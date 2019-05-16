@@ -1,1 +1,3 @@
 language: scala
+env:
+  - AWS_REGION=eu-west-1
