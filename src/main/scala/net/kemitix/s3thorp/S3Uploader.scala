@@ -16,7 +16,7 @@ trait S3Uploader
     file => {
       val key = remoteKey(file)
       val shortFile = c.relativePath(file)
-      logger.info(s"    Upload: $shortFile")
+      log4(s"    Upload: $shortFile")(c)
       (file, upload(file, c.bucket, key))
     }
   }

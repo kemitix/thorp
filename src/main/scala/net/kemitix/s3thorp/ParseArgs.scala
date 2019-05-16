@@ -12,7 +12,7 @@ object ParseArgs {
     val parserBuilder = builder[Config]
     import parserBuilder._
     sequence(
-      programName("S3Thorp"),
+      programName("s3thorp"),
       head("s3thorp"),
       opt[String]('s', "source")
         .action((str, c) => c.copy(source = Paths.get(str).toFile))
@@ -24,7 +24,13 @@ object ParseArgs {
         .text("S3 bucket name"),
       opt[String]('p', "prefix")
         .action((str, c) => c.copy(prefix = str))
-        .text("Prefix within the S3 Bucket")
+        .text("Prefix within the S3 Bucket"),
+      opt[Int]('v', "verbose")
+        .validate(i =>
+          if (i >= 1 && i <= 5) Right(Unit)
+          else Left("Verbosity level must be between 1 and 5"))
+        .action((i, c) => c.copy(verbose = i))
+        .text("Verbosity level (1-5)")
     )
   }
 

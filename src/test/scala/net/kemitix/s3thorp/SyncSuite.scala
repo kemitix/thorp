@@ -35,7 +35,7 @@ class SyncSuite extends FunSpec {
     val testBucket = "bucket"
     val source = Resource(this, "upload")
     // source contains the files root-file and subdir/leaf-file
-    val config = Config("bucket", "prefix", source)
+    val config = Config("bucket", "prefix", source = source)
     describe("when all files should be uploaded") {
       var uploadsRecord: Map[String, RemoteKey] = Map()
       val sync = new Sync(new DummyS3Client{
