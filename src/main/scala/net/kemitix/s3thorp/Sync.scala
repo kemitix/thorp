@@ -18,7 +18,8 @@ class Sync(s3Client: S3Client)
     s3Client.upload(localFile, bucket, remoteKey)
 
   def run(c: Config): IO[Unit] = {
-    logger.info(s"Bucket: ${c.bucket}, Prefix: ${c.prefix}, Source: ${c.source}")
+    implicit val config: Config = c
+    log1(s"Bucket: ${c.bucket}, Prefix: ${c.prefix}, Source: ${c.source}")
     s3Client.listObjects(c.bucket, c.prefix).map { hashLookup => {
       val stream: Stream[(File, IO[Either[Throwable, MD5Hash]])] = streamDirectoryPaths(c.source).map(
         enrichWithS3MetaData(c)(hashLookup)).flatMap(
@@ -26,10 +27,10 @@ class Sync(s3Client: S3Client)
         performUpload(c))
       val count: Int = stream.foldLeft(0)((a: Int, io) => {
         io._2.unsafeRunSync
-        logger.info(s"-     Done: ${io._1}")
+        log1(s"-     Done: ${io._1}")
         a + 1
       })
-      logger.info(s"Uploaded $count files")
+      log1(s"Uploaded $count files")
     }}
   }
 

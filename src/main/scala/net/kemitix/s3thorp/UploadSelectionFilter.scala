@@ -20,13 +20,13 @@ trait UploadSelectionFilter
 
   def uploadRequiredFilter(c: Config): Either[File, S3MetaData] => Stream[File] = {
     case Left(file) => {
-      logger.info(s"   Created: ${c.relativePath(file)}")
+      log5(s"   Created: ${c.relativePath(file)}")(c)
       Stream(file)
     }
     case Right(s3Metadata) => {
       val localHash: MD5Hash = md5File(s3Metadata.localFile)
       if (localHash != s3Metadata.remoteHash) {
-        logger.info(s"   Updated: ${c.relativePath(s3Metadata.localFile)}")
+        log5(s"   Updated: ${c.relativePath(s3Metadata.localFile)}")(c)
         Stream(s3Metadata.localFile)
       }
       else Stream.empty

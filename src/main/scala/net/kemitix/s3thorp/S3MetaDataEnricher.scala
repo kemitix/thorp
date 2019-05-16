@@ -13,7 +13,7 @@ trait S3MetaDataEnricher
   def enrichWithS3MetaData(c: Config)(implicit hashLookup: HashLookup): File => Either[File, S3MetaData] = {
     val remoteKey = generateKey(c)_
     file => {
-      logger.info(s"- Consider: ${c.relativePath(file)}")
+      log3(s"- Consider: ${c.relativePath(file)}")(c)
       val key = remoteKey(file)
       objectHead(key).map {
         hlm: (MD5Hash, LastModified) => {

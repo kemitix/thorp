@@ -9,14 +9,14 @@ import net.kemitix.s3thorp.awssdk.S3Client
 object Main extends IOApp with Logging {
 
   val defaultConfig: Config =
-    Config("(none)", "", Paths.get(".").toFile)
+    Config(source = Paths.get(".").toFile)
 
   val sync = new Sync(S3Client.defaultClient)
 
   def program(args: List[String]): IO[ExitCode] =
     for {
-      _ <- IO(logger.info("S3Thorp - hashed sync for s3"))
       a <- ParseArgs(args, defaultConfig)
+      _ <- IO(log1("S3Thorp - hashed sync for s3")(a))
       _ <- sync.run(a)
     } yield ExitCode.Success
 
