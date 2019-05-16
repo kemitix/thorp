@@ -1,0 +1,25 @@
+* Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [[https://keepachangelog.com/en/1.0.0/][Keep a Changelog]], and this project adheres to
+[[https://semver.org/spec/v2.0.0.html][Semantic Versioning]].
+
+* [Unreleased]
+
+** Added
+
+   - Display count of the number of files uploaded
+
+** Changed
+
+   - Improved performance by fetching all MD5 hashes from S3 in single
+     request at startup
+
+* [0.1.0] - 2019-05-13
+
+** Added
+
+   - Initial Release
+   - Synchronise files with an S3 bucket, using an MD5 hash to
+     identify when the file has changed and needs to be uploaded
