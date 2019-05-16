@@ -7,6 +7,7 @@ import net.kemitix.s3thorp.Sync.{Bucket, LocalFile}
 
 case class Config(bucket: Bucket = "",
                   prefix: String = "",
+                  verbose: Int = 1,
                   source: LocalFile
                ) {
 
