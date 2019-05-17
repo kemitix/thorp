@@ -52,13 +52,13 @@ class SyncSuite extends FunSpec {
           Right("some hash value")
         }
       })
+      sync.run(config).unsafeRunSync
       it("uploads all files") {
-        sync.run(config).unsafeRunSync
-        val expected = Map(
+        val expectedUploads = Map(
           "subdir/leaf-file" -> "prefix/subdir/leaf-file",
           "root-file" -> "prefix/root-file"
         )
-        assertResult(expected)(uploadsRecord)
+        assertResult(expectedUploads)(uploadsRecord)
       }
     }
     describe("when no files should be uploaded") {
@@ -82,10 +82,10 @@ class SyncSuite extends FunSpec {
           Right("some hash value")
         }
       })
+      sync.run(config).unsafeRunSync
       it("uploads nothing") {
-        sync.run(config).unsafeRunSync
-        val expected = Map()
-        assertResult(expected)(uploadsRecord)
+        val expectedUploads = Map()
+        assertResult(expectedUploads)(uploadsRecord)
       }
     }
   }
