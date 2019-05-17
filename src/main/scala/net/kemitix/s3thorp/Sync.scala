@@ -16,13 +16,16 @@ class Sync(s3Client: S3Client)
     implicit val config: Config = c
     log1(s"Bucket: ${c.bucket}, Prefix: ${c.prefix}, Source: ${c.source}")
     listObjects(c.bucket, c.prefix).map { hashLookup => {
-      val stream: Stream[(File, IO[Either[Throwable, MD5Hash]])] = streamDirectoryPaths(c.source).map(
-        enrichWithS3MetaData(c)(hashLookup)).flatMap(
-        uploadRequiredFilter(c)).map(
-        performUpload(c))
-      val count: Int = stream.foldLeft(0)((a: Int, io) => {
-        io._2.unsafeRunSync
-        log1(s"-     Done: ${io._1}")
+      val actions = for {
+        file <- streamDirectoryPaths(c.source)
+        meta = enrichWithS3MetaData(c)(hashLookup)(file)
+        toUp <- uploadRequiredFilter(c)(meta)
+        ioUp = performUpload(c)(toUp)
+      } yield ioUp
+      val count = actions.foldLeft(0)((a: Int, ioUp: IO[(File, Either[Throwable, MD5Hash])]) => {
+        val uploadedFile: (File, Either[Throwable, MD5Hash]) = ioUp.unsafeRunSync
+        //if (uploadedFile._2.isLeft) // TODO log error message
+        log1(s"-     Done: $uploadedFile")
         a + 1
       })
       log1(s"Uploaded $count files")

@@ -9,21 +9,21 @@ trait S3MetaDataEnricher
     with KeyGenerator
     with Logging {
 
-  def enrichWithS3MetaData(c: Config)(implicit hashLookup: HashLookup): File => Either[File, S3MetaData] = {
+  def enrichWithS3MetaData(c: Config)(implicit hashLookup: HashLookup): File => S3MetaData = {
     val remoteKey = generateKey(c)_
     file => {
       log3(s"- Consider: ${c.relativePath(file)}")(c)
       val key = remoteKey(file)
       objectHead(key).map {
         hlm: (MD5Hash, LastModified) => {
-          Right(
             S3MetaData(
               localFile = file,
-              remotePath = key,
-              remoteHash = MD5Hash(hlm._1.hash.filter { c => c != '"' }),
-              remoteLastModified = hlm._2))
+              remote = Some((
+                key,
+                MD5Hash(hlm._1.hash.filter { c => c != '"' }),
+                hlm._2)))
         }
-      }.getOrElse(Left(file))
+      }.getOrElse(S3MetaData(localFile = file, remote = None))
     }
   }
 }
