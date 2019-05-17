@@ -186,14 +186,17 @@ class SyncSuite extends FunSpec {
       })
       sync.run(config).unsafeRunSync
       it("uploads nothing") {
+        pending
         val expectedUploads = Map()
         assertResult(expectedUploads)(uploadsRecord)
       }
       it("copies the file") {
+        pending
         val expectedCopies = Map("prefix/root-file-old" -> "prefix/root-file")
         assertResult(expectedCopies)(copiesRecord)
       }
       it("deletes the original") {
+        pending
         val expectedDeletions = Set("prefix/root-file-old")
         assertResult(expectedDeletions)(deletionsRecord)
       }
