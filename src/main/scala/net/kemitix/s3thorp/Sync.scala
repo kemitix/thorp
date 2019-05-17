@@ -14,7 +14,7 @@ class Sync(s3Client: S3Client)
 
   def run(c: Config): IO[Unit] = {
     implicit val config: Config = c
-    log1(s"Bucket: ${c.bucket}, Prefix: ${c.prefix}, Source: ${c.source}")
+    log1(s"Bucket: ${c.bucket.name}, Prefix: ${c.prefix.key}, Source: ${c.source}")
     listObjects(c.bucket, c.prefix).map { hashLookup => {
       val s3Actions: Stream[IO[S3Action]] = for {
         file <- streamDirectoryPaths(c.source)
