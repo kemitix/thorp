@@ -23,7 +23,7 @@ object ParseArgs {
         .required()
         .text("S3 bucket name"),
       opt[String]('p', "prefix")
-        .action((str, c) => c.copy(prefix = str))
+        .action((str, c) => c.copy(prefix = RemoteKey(str)))
         .text("Prefix within the S3 Bucket"),
       opt[Int]('v', "verbose")
         .validate(i =>

@@ -6,7 +6,7 @@ import java.nio.file.Path
 import net.kemitix.s3thorp.Sync.LocalFile
 
 case class Config(bucket: Bucket = Bucket(""),
-                  prefix: String = "",
+                  prefix: RemoteKey = RemoteKey(""),
                   verbose: Int = 1,
                   source: LocalFile
                ) {

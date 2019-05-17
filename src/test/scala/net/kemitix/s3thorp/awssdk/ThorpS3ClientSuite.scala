@@ -6,7 +6,7 @@ import scala.collection.JavaConverters._
 import cats.effect.IO
 import com.github.j5ik2o.reactive.aws.s3.S3AsyncClient
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
-import net.kemitix.s3thorp.Bucket
+import net.kemitix.s3thorp.{Bucket, RemoteKey}
 import org.scalatest.FunSpec
 import software.amazon.awssdk.services.s3
 import software.amazon.awssdk.services.s3.model.{ListObjectsV2Request, ListObjectsV2Response, S3Object}
@@ -15,13 +15,13 @@ class ThorpS3ClientSuite extends FunSpec {
 
   describe("listObjectsInPrefix") {
     val h1 = "hash1"
-    val k1 = "key1"
+    val k1 = RemoteKey("key1")
     val lm1 = Instant.now
-    val o1 = S3Object.builder.eTag(h1).key(k1).lastModified(lm1).build
+    val o1 = S3Object.builder.eTag(h1).key(k1.key).lastModified(lm1).build
     val h2 = "hash2"
-    val k2 = "key2"
+    val k2 = RemoteKey("key2")
     val lm2 = Instant.now.minusSeconds(200)
-    val o2 = S3Object.builder.eTag(h2).key(k2).lastModified(lm2).build
+    val o2 = S3Object.builder.eTag(h2).key(k2.key).lastModified(lm2).build
     val myFakeResponse: IO[ListObjectsV2Response] = IO{
       ListObjectsV2Response.builder()
         .contents(List(o1, o2).asJava)
@@ -39,10 +39,14 @@ class ThorpS3ClientSuite extends FunSpec {
         myFakeResponse
     })
     it("should build list of hash lookups") {
-      val result: HashLookup = subject.listObjects(Bucket("bucket"), "prefix").unsafeRunSync()
+      val result: HashLookup = subject.listObjects(Bucket("bucket"), RemoteKey("prefix")).unsafeRunSync()
       val expected = HashLookup(
-        Map(h1 -> (k1, lm1), h2 -> (k2, lm2)),
-        Map(k1 -> (h1, lm1), k2 -> (h2, lm2)))
+        Map(
+          h1 -> (k1, lm1),
+          h2 -> (k2, lm2)),
+        Map(
+          k1 -> (h1, lm1),
+          k2 -> (h2, lm2)))
       assertResult(expected)(result)
     }
   }

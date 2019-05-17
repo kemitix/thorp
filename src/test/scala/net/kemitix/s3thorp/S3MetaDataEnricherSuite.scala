@@ -11,7 +11,7 @@ class S3MetaDataEnricherSuite extends FunSpec {
 
   private val sourcePath = "/root/from/here/"
   private val source = Paths.get(sourcePath).toFile
-  private val prefix = "prefix"
+  private val prefix = RemoteKey("prefix")
   private val config = Config(Bucket("bucket"), prefix, source = source)
 
   new S3MetaDataEnricher with DummyS3Client {
@@ -25,14 +25,14 @@ class S3MetaDataEnricherSuite extends FunSpec {
       describe("when file is within source") {
         it("has a valid key") {
           val subdir = "subdir"
-          assertResult(s"$prefix/$subdir")(subject(resolve(subdir)))
+          assertResult(RemoteKey(s"${prefix.key}/$subdir"))(subject(resolve(subdir)))
         }
       }
 
       describe("when file is deeper within source") {
         it("has a valid key") {
           val subdir = "subdir/deeper/still"
-          assertResult(s"$prefix/$subdir")(subject(resolve(subdir)))
+          assertResult(RemoteKey(s"${prefix.key}/$subdir"))(subject(resolve(subdir)))
         }
       }
     }
@@ -42,7 +42,7 @@ class S3MetaDataEnricherSuite extends FunSpec {
     val local = "localFile"
     val fileWithRemote = new File(sourcePath + local)
     val fileWithNoRemote = new File(sourcePath + "noRemote")
-    val remoteKey = prefix + "/" + local
+    val remoteKey = RemoteKey(prefix.key + "/" + local)
     val hash = "hash"
     val lastModified = Instant.now()
     val hashLookup = HashLookup(

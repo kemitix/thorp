@@ -4,7 +4,7 @@ import java.io.File
 import java.time.Instant
 
 import cats.effect.IO
-import net.kemitix.s3thorp.Sync.{LocalFile, MD5Hash, RemoteKey}
+import net.kemitix.s3thorp.Sync.{LocalFile, MD5Hash}
 import net.kemitix.s3thorp.awssdk.{HashLookup, S3Client}
 import org.scalatest.FunSpec
 
@@ -12,7 +12,7 @@ class SyncSuite extends FunSpec {
 
   describe("s3client thunk") {
     val testBucket = Bucket("bucket")
-    val testRemoteKey = "prefix/file"
+    val testRemoteKey = RemoteKey("prefix/file")
     describe("upload") {
       val md5Hash = "the-hash"
       val testLocalFile = new File("file")
@@ -35,7 +35,7 @@ class SyncSuite extends FunSpec {
     val testBucket = Bucket("bucket")
     val source = Resource(this, "upload")
     // source contains the files root-file and subdir/leaf-file
-    val config = Config(Bucket("bucket"), "prefix", source = source)
+    val config = Config(Bucket("bucket"), RemoteKey("prefix"), source = source)
     describe("when all files should be uploaded") {
       var uploadsRecord: Map[String, RemoteKey] = Map()
       var copiesRecord: Map[RemoteKey, RemoteKey] = Map()
@@ -73,8 +73,8 @@ class SyncSuite extends FunSpec {
       sync.run(config).unsafeRunSync
       it("uploads all files") {
         val expectedUploads = Map(
-          "subdir/leaf-file" -> "prefix/subdir/leaf-file",
-          "root-file" -> "prefix/root-file"
+          "subdir/leaf-file" -> RemoteKey("prefix/subdir/leaf-file"),
+          "root-file" -> RemoteKey("prefix/root-file")
         )
         assertResult(expectedUploads)(uploadsRecord)
       }
@@ -99,8 +99,12 @@ class SyncSuite extends FunSpec {
                                  prefix: RemoteKey
                                 ) = IO(
           HashLookup(
-            byHash = Map(rootHash -> ("prefix/root-file", lastModified), leafHash -> ("prefix/subdir/leaf-file", lastModified)),
-            byKey = Map("prefix/root-file" -> (rootHash, lastModified), "prefix/subdir/leaf-file" -> (leafHash, lastModified))))
+            byHash = Map(
+              rootHash -> (RemoteKey("prefix/root-file"), lastModified),
+              leafHash -> (RemoteKey("prefix/subdir/leaf-file"), lastModified)),
+            byKey = Map(
+              RemoteKey("prefix/root-file") -> (rootHash, lastModified),
+              RemoteKey("prefix/subdir/leaf-file") -> (leafHash, lastModified))))
         override def upload(localFile: LocalFile,
                             bucket: Bucket,
                             remoteKey: RemoteKey
@@ -154,11 +158,11 @@ class SyncSuite extends FunSpec {
                                 ) = IO {
           HashLookup(
             byHash = Map(
-              rootHash -> ("prefix/root-file-old", lastModified),
-              leafHash -> ("prefix/subdir/leaf-file", lastModified)),
+              rootHash -> (RemoteKey("prefix/root-file-old"), lastModified),
+              leafHash -> (RemoteKey("prefix/subdir/leaf-file"), lastModified)),
             byKey = Map(
-              "prefix/root-file-old" -> (rootHash, lastModified),
-              "prefix/subdir/leaf-file" -> (leafHash, lastModified)))}
+              RemoteKey("prefix/root-file-old") -> (rootHash, lastModified),
+              RemoteKey("prefix/subdir/leaf-file") -> (leafHash, lastModified)))}
         override def upload(localFile: LocalFile,
                             bucket: Bucket,
                             remoteKey: RemoteKey

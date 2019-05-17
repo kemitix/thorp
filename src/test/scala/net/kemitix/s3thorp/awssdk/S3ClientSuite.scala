@@ -5,15 +5,15 @@ import java.time.Instant
 
 import cats.effect.IO
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
-import net.kemitix.s3thorp.Bucket
-import net.kemitix.s3thorp.Sync.{LocalFile, RemoteKey}
+import net.kemitix.s3thorp.{Bucket, RemoteKey}
+import net.kemitix.s3thorp.Sync.LocalFile
 import org.scalatest.FunSpec
 import software.amazon.awssdk.services.s3.model.{PutObjectRequest, PutObjectResponse}
 
 class S3ClientSuite extends FunSpec {
 
   describe("objectHead") {
-    val key = "key"
+    val key = RemoteKey("key")
     val hash = "hash"
     val lastModified = Instant.now
     val hashLookup: HashLookup = HashLookup(
@@ -34,7 +34,7 @@ class S3ClientSuite extends FunSpec {
     describe("when remote key does not exist") {
       val s3Client = S3Client.defaultClient
       it("should return None") {
-        assertResult(None)(invoke(s3Client, "missing-key"))
+        assertResult(None)(invoke(s3Client, RemoteKey("missing-key")))
       }
     }
 
@@ -52,7 +52,7 @@ class S3ClientSuite extends FunSpec {
         })
       val localFile: LocalFile = new File("/some/file")
       val bucket: Bucket = Bucket("a-bucket")
-      val remoteKey: RemoteKey = "prefix/file"
+      val remoteKey: RemoteKey = RemoteKey("prefix/file")
       it("should return hash of uploaded file") {
         assertResult(Right(md5Hash))(invoke(s3Client, localFile, bucket, remoteKey))
       }

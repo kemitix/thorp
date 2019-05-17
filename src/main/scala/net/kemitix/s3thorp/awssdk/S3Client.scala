@@ -2,8 +2,8 @@ package net.kemitix.s3thorp.awssdk
 
 import cats.effect.IO
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
-import net.kemitix.s3thorp.Bucket
-import net.kemitix.s3thorp.Sync.{LastModified, LocalFile, MD5Hash, RemoteKey}
+import net.kemitix.s3thorp.{Bucket, RemoteKey}
+import net.kemitix.s3thorp.Sync.{LastModified, LocalFile, MD5Hash}
 
 trait S3Client {
 
