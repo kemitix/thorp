@@ -10,7 +10,10 @@ import scala.collection.JavaConverters._
 
 private class ThorpS3Client(s3Client: S3CatsIOClient) extends S3Client {
 
-  def upload(localFile: LocalFile, bucket: Bucket, remoteKey: RemoteKey): IO[Either[Throwable, MD5Hash]] = {
+  override def upload(localFile: LocalFile,
+                      bucket: Bucket,
+                      remoteKey: RemoteKey
+                     ): IO[Either[Throwable, MD5Hash]] = {
     val request = PutObjectRequest.builder()
       .bucket(bucket)
       .key(remoteKey)

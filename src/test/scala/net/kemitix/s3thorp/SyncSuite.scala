@@ -43,10 +43,13 @@ class SyncSuite extends FunSpec {
           HashLookup(
             byHash = Map(),
             byKey = Map()))
-        override def upload(localFile: LocalFile, bucket: Bucket, remoteKey: RemoteKey) = {
+        override def upload(localFile: LocalFile,
+                            bucket: Bucket,
+                            remoteKey: RemoteKey
+                           ) = IO {
           if (bucket == testBucket)
             uploadsRecord += (source.toPath.relativize(localFile.toPath).toString -> remoteKey)
-          IO(Right("some hash value"))
+          Right("some hash value")
         }
       })
       it("uploads all files") {
@@ -64,14 +67,19 @@ class SyncSuite extends FunSpec {
       val lastModified = Instant.now
       var uploadsRecord: Map[String, RemoteKey] = Map()
       val sync = new Sync(new S3Client with DummyS3Client {
-        override def listObjects(bucket: Bucket, prefix: RemoteKey) = IO(
+        override def listObjects(bucket: Bucket,
+                                 prefix: RemoteKey
+                                ) = IO(
           HashLookup(
             byHash = Map(rootHash -> ("prefix/root-file", lastModified), leafHash -> ("prefix/subdir/leaf-file", lastModified)),
             byKey = Map("prefix/root-file" -> (rootHash, lastModified), "prefix/subdir/leaf-file" -> (leafHash, lastModified))))
-        override def upload(localFile: LocalFile, bucket: Bucket, remoteKey: RemoteKey) = {
+        override def upload(localFile: LocalFile,
+                            bucket: Bucket,
+                            remoteKey: RemoteKey
+                           ) = IO {
           if (bucket == testBucket)
             uploadsRecord += (source.toPath.relativize(localFile.toPath).toString -> remoteKey)
-          IO(Right("some hash value"))
+          Right("some hash value")
         }
       })
       it("uploads nothing") {

@@ -6,7 +6,12 @@ import net.kemitix.s3thorp.awssdk.{HashLookup, S3Client}
 
 trait DummyS3Client extends S3Client {
 
-  override def upload(localFile: LocalFile, bucket: Bucket, remoteKey: RemoteKey): IO[Either[Throwable, MD5Hash]] = ???
+  override def upload(localFile: LocalFile,
+                      bucket: Bucket,
+                      remoteKey: RemoteKey
+                     ): IO[Either[Throwable, MD5Hash]] = ???
 
-  override def listObjects(bucket: Bucket, prefix: RemoteKey): IO[HashLookup] = ???
+  override def listObjects(bucket: Bucket,
+                           prefix: RemoteKey
+                          ): IO[HashLookup] = ???
 }
