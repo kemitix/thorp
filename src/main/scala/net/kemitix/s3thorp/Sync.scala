@@ -14,13 +14,10 @@ class Sync(s3Client: S3Client)
     with S3Uploader
     with Logging {
 
-  override def upload(localFile: LocalFile, bucket: Bucket, remoteKey: RemoteKey) =
-    s3Client.upload(localFile, bucket, remoteKey)
-
   def run(c: Config): IO[Unit] = {
     implicit val config: Config = c
     log1(s"Bucket: ${c.bucket}, Prefix: ${c.prefix}, Source: ${c.source}")
-    s3Client.listObjects(c.bucket, c.prefix).map { hashLookup => {
+    listObjects(c.bucket, c.prefix).map { hashLookup => {
       val stream: Stream[(File, IO[Either[Throwable, MD5Hash]])] = streamDirectoryPaths(c.source).map(
         enrichWithS3MetaData(c)(hashLookup)).flatMap(
         uploadRequiredFilter(c)).map(
@@ -34,7 +31,15 @@ class Sync(s3Client: S3Client)
     }}
   }
 
-  override def listObjects(bucket: Bucket, prefix: RemoteKey): IO[HashLookup] = ???
+  override def upload(localFile: LocalFile,
+                      bucket: Bucket,
+                      remoteKey: RemoteKey) =
+    s3Client.upload(localFile, bucket, remoteKey)
+
+  override def listObjects(bucket: Bucket,
+                           prefix: RemoteKey
+                          ) =
+    s3Client.listObjects(bucket, prefix)
 }
 
 object Sync {
