@@ -55,6 +55,5 @@ class Sync(s3Client: S3Client)
 object Sync {
 
   type LocalFile = File // the file or directory
-  type LastModified = Instant // or scala equivalent
 
 }

@@ -44,7 +44,7 @@ class S3MetaDataEnricherSuite extends FunSpec {
     val fileWithNoRemote = new File(sourcePath + "noRemote")
     val remoteKey = RemoteKey(prefix.key + "/" + local)
     val hash = MD5Hash("hash")
-    val lastModified = Instant.now()
+    val lastModified = LastModified(Instant.now())
     val hashLookup = HashLookup(
       byHash = Map(hash -> (remoteKey, lastModified)),
       byKey = Map(remoteKey -> (hash, lastModified))

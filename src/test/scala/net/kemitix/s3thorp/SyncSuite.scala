@@ -90,7 +90,7 @@ class SyncSuite extends FunSpec {
     describe("when no files should be uploaded") {
       val rootHash = MD5Hash("a3a6ac11a0eb577b81b3bb5c95cc8a6e")
       val leafHash = MD5Hash("208386a650bdec61cfcd7bd8dcb6b542")
-      val lastModified = Instant.now
+      val lastModified = LastModified(Instant.now)
       var uploadsRecord: Map[String, RemoteKey] = Map()
       var copiesRecord: Map[RemoteKey, RemoteKey] = Map()
       var deletionsRecord: Set[RemoteKey] = Set()
@@ -148,7 +148,7 @@ class SyncSuite extends FunSpec {
       // 'root-file-old' should be renamed as 'root-file'
       val rootHash = MD5Hash("a3a6ac11a0eb577b81b3bb5c95cc8a6e")
       val leafHash = MD5Hash("208386a650bdec61cfcd7bd8dcb6b542")
-      val lastModified = Instant.now
+      val lastModified = LastModified(Instant.now)
       var uploadsRecord: Map[String, RemoteKey] = Map()
       var copiesRecord: Map[RemoteKey, RemoteKey] = Map()
       var deletionsRecord: Set[RemoteKey] = Set()

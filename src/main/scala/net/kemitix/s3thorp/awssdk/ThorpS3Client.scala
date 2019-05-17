@@ -2,7 +2,7 @@ package net.kemitix.s3thorp.awssdk
 
 import cats.effect.IO
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
-import net.kemitix.s3thorp.{Bucket, MD5Hash, RemoteKey}
+import net.kemitix.s3thorp.{Bucket, LastModified, MD5Hash, RemoteKey}
 import net.kemitix.s3thorp.Sync._
 import software.amazon.awssdk.core.async.AsyncRequestBody
 import software.amazon.awssdk.services.s3.model.{CopyObjectRequest, DeleteObjectRequest, ListObjectsV2Request, PutObjectRequest, S3Object}
@@ -53,10 +53,10 @@ private class ThorpS3Client(s3Client: S3CatsIOClient) extends S3Client {
     os => HashLookup(byHash(os), byKey(os))
 
   private def byHash(os: Stream[S3Object]) =
-    os.map{o => (MD5Hash(o.eTag), (RemoteKey(o.key), o.lastModified))}.toMap
+    os.map{o => (MD5Hash(o.eTag), (RemoteKey(o.key), LastModified(o.lastModified)))}.toMap
 
   private def byKey(os: Stream[S3Object]) =
-    os.map{o => (RemoteKey(o.key()), (MD5Hash(o.eTag()), o.lastModified()))}.toMap
+    os.map{o => (RemoteKey(o.key()), (MD5Hash(o.eTag()), LastModified(o.lastModified())))}.toMap
 
   def listObjects(bucket: Bucket, prefix: RemoteKey): IO[HashLookup] = {
     val request = ListObjectsV2Request.builder()

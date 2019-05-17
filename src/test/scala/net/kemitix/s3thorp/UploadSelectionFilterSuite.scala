@@ -22,13 +22,13 @@ class UploadSelectionFilterSuite extends FunSpec {
       }
       describe("when supplied S3MetaData") {
         describe("when hash is different") {
-          val input = Right(S3MetaData(localFile, RemoteKey(""), MD5Hash("doesn't match any hash"), Instant.now))
+          val input = Right(S3MetaData(localFile, RemoteKey(""), MD5Hash("doesn't match any hash"), LastModified(Instant.now)))
           it("should be marked for upload") {
             assertResult(List(localFile))(invokeSubject(input))
           }
         }
         describe("when hash is the same") {
-          val input = Right(S3MetaData(localFile, RemoteKey(""), localHash, Instant.now))
+          val input = Right(S3MetaData(localFile, RemoteKey(""), localHash, LastModified(Instant.now)))
           it("should not be marked for upload") {
             assertResult(List())(invokeSubject(input))
           }

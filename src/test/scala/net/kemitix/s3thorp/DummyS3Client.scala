@@ -1,7 +1,7 @@
 package net.kemitix.s3thorp
 
 import cats.effect.IO
-import net.kemitix.s3thorp.Sync.{LocalFile}
+import net.kemitix.s3thorp.Sync.LocalFile
 import net.kemitix.s3thorp.awssdk.{HashLookup, S3Client}
 
 trait DummyS3Client extends S3Client {

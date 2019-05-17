@@ -1,7 +1,6 @@
 package net.kemitix.s3thorp.awssdk
 
-import net.kemitix.s3thorp.{MD5Hash, RemoteKey}
-import net.kemitix.s3thorp.Sync.LastModified
+import net.kemitix.s3thorp.{LastModified, MD5Hash, RemoteKey}
 
 /**
   * A list of objects and their MD5 hash values.
