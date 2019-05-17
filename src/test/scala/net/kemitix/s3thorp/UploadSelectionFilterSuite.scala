@@ -10,7 +10,7 @@ class UploadSelectionFilterSuite extends FunSpec {
   new UploadSelectionFilter {
     describe("uploadRequiredFilter") {
       val localFile = Resource(this, "test-file-for-hash.txt")
-      val localHash = "0cbfe978783bd7950d5da4ff85e4af37"
+      val localHash = MD5Hash("0cbfe978783bd7950d5da4ff85e4af37")
       val config = Config(Bucket("bucket"), RemoteKey("prefix"), source = localFile.getParentFile)
       def invokeSubject(input: Either[File, S3MetaData]) =
         uploadRequiredFilter(config)(input).toList
@@ -22,7 +22,7 @@ class UploadSelectionFilterSuite extends FunSpec {
       }
       describe("when supplied S3MetaData") {
         describe("when hash is different") {
-          val input = Right(S3MetaData(localFile, RemoteKey(""), "doesn't match any hash", Instant.now))
+          val input = Right(S3MetaData(localFile, RemoteKey(""), MD5Hash("doesn't match any hash"), Instant.now))
           it("should be marked for upload") {
             assertResult(List(localFile))(invokeSubject(input))
           }

@@ -3,7 +3,7 @@ package net.kemitix.s3thorp
 import java.io.{File, FileInputStream}
 import java.security.{DigestInputStream, MessageDigest}
 
-import net.kemitix.s3thorp.Sync.{LocalFile, MD5Hash}
+import net.kemitix.s3thorp.Sync.LocalFile
 
 trait UploadSelectionFilter
   extends Logging {
@@ -15,7 +15,7 @@ trait UploadSelectionFilter
     val dis = new DigestInputStream(new FileInputStream(localFile), md5)
     try { while (dis.read(buffer) != -1) { } } finally { dis.close() }
 
-    md5.digest.map("%02x".format(_)).mkString
+    MD5Hash(md5.digest.map("%02x".format(_)).mkString)
   }
 
   def uploadRequiredFilter(c: Config): Either[File, S3MetaData] => Stream[File] = {

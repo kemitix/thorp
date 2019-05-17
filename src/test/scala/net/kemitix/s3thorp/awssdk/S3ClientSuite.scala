@@ -5,7 +5,7 @@ import java.time.Instant
 
 import cats.effect.IO
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
-import net.kemitix.s3thorp.{Bucket, RemoteKey}
+import net.kemitix.s3thorp.{Bucket, MD5Hash, RemoteKey}
 import net.kemitix.s3thorp.Sync.LocalFile
 import org.scalatest.FunSpec
 import software.amazon.awssdk.services.s3.model.{PutObjectRequest, PutObjectResponse}
@@ -14,7 +14,7 @@ class S3ClientSuite extends FunSpec {
 
   describe("objectHead") {
     val key = RemoteKey("key")
-    val hash = "hash"
+    val hash = MD5Hash("hash")
     val lastModified = Instant.now
     val hashLookup: HashLookup = HashLookup(
       byHash = Map(hash -> (key, lastModified)),
@@ -44,11 +44,11 @@ class S3ClientSuite extends FunSpec {
     def invoke(s3Client: ThorpS3Client, localFile: LocalFile, bucket: Bucket, remoteKey: RemoteKey) =
       s3Client.upload(localFile, bucket, remoteKey).unsafeRunSync
     describe("when uploading a file") {
-      val md5Hash = "the-md5hash"
+      val md5Hash = MD5Hash("the-md5hash")
       val s3Client = new ThorpS3Client(
         new S3CatsIOClient with JavaClientWrapper {
           override def putObject(putObjectRequest: PutObjectRequest, requestBody: RB) =
-            IO(PutObjectResponse.builder().eTag(md5Hash).build())
+            IO(PutObjectResponse.builder().eTag(md5Hash.hash).build())
         })
       val localFile: LocalFile = new File("/some/file")
       val bucket: Bucket = Bucket("a-bucket")

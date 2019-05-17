@@ -4,7 +4,7 @@ import java.io.File
 import java.time.Instant
 
 import cats.effect._
-import net.kemitix.s3thorp.Sync.{LocalFile, MD5Hash}
+import net.kemitix.s3thorp.Sync.LocalFile
 import net.kemitix.s3thorp.awssdk.S3Client
 
 class Sync(s3Client: S3Client)
@@ -55,7 +55,6 @@ class Sync(s3Client: S3Client)
 object Sync {
 
   type LocalFile = File // the file or directory
-  type MD5Hash = String // an MD5 hash
   type LastModified = Instant // or scala equivalent
 
 }

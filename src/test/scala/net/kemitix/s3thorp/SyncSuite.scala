@@ -4,7 +4,7 @@ import java.io.File
 import java.time.Instant
 
 import cats.effect.IO
-import net.kemitix.s3thorp.Sync.{LocalFile, MD5Hash}
+import net.kemitix.s3thorp.Sync.LocalFile
 import net.kemitix.s3thorp.awssdk.{HashLookup, S3Client}
 import org.scalatest.FunSpec
 
@@ -14,7 +14,7 @@ class SyncSuite extends FunSpec {
     val testBucket = Bucket("bucket")
     val testRemoteKey = RemoteKey("prefix/file")
     describe("upload") {
-      val md5Hash = "the-hash"
+      val md5Hash = MD5Hash("the-hash")
       val testLocalFile = new File("file")
       val sync = new Sync(new S3Client with DummyS3Client {
         override def upload(localFile: LocalFile, bucket: Bucket, remoteKey: RemoteKey): IO[Either[Throwable, MD5Hash]] = {
@@ -51,7 +51,7 @@ class SyncSuite extends FunSpec {
                            ) = IO {
           if (bucket == testBucket)
             uploadsRecord += (source.toPath.relativize(localFile.toPath).toString -> remoteKey)
-          Right("some hash value")
+          Right(MD5Hash("some hash value"))
         }
         override def copy(bucket: Bucket,
                           sourceKey: RemoteKey,
@@ -88,8 +88,8 @@ class SyncSuite extends FunSpec {
       }
     }
     describe("when no files should be uploaded") {
-      val rootHash = "a3a6ac11a0eb577b81b3bb5c95cc8a6e"
-      val leafHash = "208386a650bdec61cfcd7bd8dcb6b542"
+      val rootHash = MD5Hash("a3a6ac11a0eb577b81b3bb5c95cc8a6e")
+      val leafHash = MD5Hash("208386a650bdec61cfcd7bd8dcb6b542")
       val lastModified = Instant.now
       var uploadsRecord: Map[String, RemoteKey] = Map()
       var copiesRecord: Map[RemoteKey, RemoteKey] = Map()
@@ -111,7 +111,7 @@ class SyncSuite extends FunSpec {
                            ) = IO {
           if (bucket == testBucket)
             uploadsRecord += (source.toPath.relativize(localFile.toPath).toString -> remoteKey)
-          Right("some hash value")
+          Right(MD5Hash("some hash value"))
         }
         override def copy(bucket: Bucket,
                           sourceKey: RemoteKey,
@@ -146,8 +146,8 @@ class SyncSuite extends FunSpec {
     }
     describe("when a file is renamed it is moved on S3 with no upload") {
       // 'root-file-old' should be renamed as 'root-file'
-      val rootHash = "a3a6ac11a0eb577b81b3bb5c95cc8a6e"
-      val leafHash = "208386a650bdec61cfcd7bd8dcb6b542"
+      val rootHash = MD5Hash("a3a6ac11a0eb577b81b3bb5c95cc8a6e")
+      val leafHash = MD5Hash("208386a650bdec61cfcd7bd8dcb6b542")
       val lastModified = Instant.now
       var uploadsRecord: Map[String, RemoteKey] = Map()
       var copiesRecord: Map[RemoteKey, RemoteKey] = Map()
@@ -169,7 +169,7 @@ class SyncSuite extends FunSpec {
                            ) = IO {
           if (bucket == testBucket)
             uploadsRecord += (source.toPath.relativize(localFile.toPath).toString -> remoteKey)
-          Right("some hash value")
+          Right(MD5Hash("some hash value"))
         }
         override def copy(bucket: Bucket,
                           sourceKey: RemoteKey,

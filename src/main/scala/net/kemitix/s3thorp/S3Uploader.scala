@@ -3,7 +3,6 @@ package net.kemitix.s3thorp
 import java.io.File
 
 import cats.effect.IO
-import net.kemitix.s3thorp.Sync.MD5Hash
 import net.kemitix.s3thorp.awssdk.S3Client
 
 trait S3Uploader
