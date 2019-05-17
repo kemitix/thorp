@@ -10,9 +10,10 @@ trait S3Uploader
     with KeyGenerator
     with Logging {
 
-  def performUpload(c: Config): File => IO[(File, Either[Throwable, MD5Hash])] = {
+  def performUpload(c: Config): ToUpload => IO[(File, Either[Throwable, MD5Hash])] = {
     val remoteKey = generateKey(c) _
-    file => {
+    toUpload => {
+      val file = toUpload.file
       val key = remoteKey(file)
       val shortFile = c.relativePath(file)
       log4(s"    Upload: $shortFile")(c)
