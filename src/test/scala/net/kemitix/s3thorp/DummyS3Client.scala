@@ -11,7 +11,18 @@ trait DummyS3Client extends S3Client {
                       remoteKey: RemoteKey
                      ): IO[Either[Throwable, MD5Hash]] = ???
 
+  override def copy(bucket: Bucket,
+                    sourceKey: RemoteKey,
+                    hash: MD5Hash,
+                    targetKey: RemoteKey
+                   ): IO[Either[Throwable, RemoteKey]] = ???
+
+  override def delete(bucket: Bucket,
+                      remoteKey: RemoteKey
+                     ): IO[Either[Throwable, RemoteKey]] = ???
+
   override def listObjects(bucket: Bucket,
                            prefix: RemoteKey
                           ): IO[HashLookup] = ???
+
 }

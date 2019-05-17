@@ -19,6 +19,16 @@ trait S3Client {
              remoteKey: RemoteKey
             ): IO[Either[Throwable, MD5Hash]]
 
+  def copy(bucket: Bucket,
+           sourceKey: RemoteKey,
+           hash: MD5Hash,
+           targetKey: RemoteKey
+          ): IO[Either[Throwable, RemoteKey]]
+
+  def delete(bucket: Bucket,
+             remoteKey: RemoteKey
+            ): IO[Either[Throwable, RemoteKey]]
+
 }
 
 object S3Client {

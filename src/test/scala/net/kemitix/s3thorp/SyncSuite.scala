@@ -38,6 +38,8 @@ class SyncSuite extends FunSpec {
     val config = Config("bucket", "prefix", source = source)
     describe("when all files should be uploaded") {
       var uploadsRecord: Map[String, RemoteKey] = Map()
+      var copiesRecord: Map[RemoteKey, RemoteKey] = Map()
+      var deletionsRecord: Set[RemoteKey] = Set()
       val sync = new Sync(new DummyS3Client{
         override def listObjects(bucket: Bucket, prefix: RemoteKey) = IO(
           HashLookup(
@@ -51,6 +53,22 @@ class SyncSuite extends FunSpec {
             uploadsRecord += (source.toPath.relativize(localFile.toPath).toString -> remoteKey)
           Right("some hash value")
         }
+        override def copy(bucket: Bucket,
+                          sourceKey: RemoteKey,
+                          hash: MD5Hash,
+                          targetKey: RemoteKey
+                         ) = {
+          if (bucket == testBucket)
+            copiesRecord += (sourceKey -> targetKey)
+          IO(Right(targetKey))
+        }
+        override def delete(bucket: Bucket,
+                            remoteKey: RemoteKey
+                           ) = {
+          if (bucket == testBucket)
+            deletionsRecord += remoteKey
+          IO(Right(remoteKey))
+        }
       })
       sync.run(config).unsafeRunSync
       it("uploads all files") {
@@ -60,12 +78,22 @@ class SyncSuite extends FunSpec {
         )
         assertResult(expectedUploads)(uploadsRecord)
       }
+      it("copies nothing") {
+        val expectedCopies = Map()
+        assertResult(expectedCopies)(copiesRecord)
+      }
+      it("deletes nothing") {
+        val expectedDeletions = Set()
+        assertResult(expectedDeletions)(deletionsRecord)
+      }
     }
     describe("when no files should be uploaded") {
       val rootHash = "a3a6ac11a0eb577b81b3bb5c95cc8a6e"
       val leafHash = "208386a650bdec61cfcd7bd8dcb6b542"
       val lastModified = Instant.now
       var uploadsRecord: Map[String, RemoteKey] = Map()
+      var copiesRecord: Map[RemoteKey, RemoteKey] = Map()
+      var deletionsRecord: Set[RemoteKey] = Set()
       val sync = new Sync(new S3Client with DummyS3Client {
         override def listObjects(bucket: Bucket,
                                  prefix: RemoteKey
@@ -81,12 +109,95 @@ class SyncSuite extends FunSpec {
             uploadsRecord += (source.toPath.relativize(localFile.toPath).toString -> remoteKey)
           Right("some hash value")
         }
+        override def copy(bucket: Bucket,
+                          sourceKey: RemoteKey,
+                          hash: MD5Hash,
+                          targetKey: RemoteKey
+                         ): IO[Either[Throwable, RemoteKey]] = IO {
+          if (bucket == testBucket)
+            copiesRecord += (sourceKey -> targetKey)
+          Right(targetKey)
+        }
+        override def delete(bucket: Bucket,
+                            remoteKey: RemoteKey
+                           ) = IO {
+          if (bucket == testBucket)
+            deletionsRecord += remoteKey
+          Right(remoteKey)
+        }
       })
       sync.run(config).unsafeRunSync
       it("uploads nothing") {
         val expectedUploads = Map()
         assertResult(expectedUploads)(uploadsRecord)
       }
+      it("copies nothing") {
+        val expectedCopies = Map()
+        assertResult(expectedCopies)(copiesRecord)
+      }
+      it("deletes nothing") {
+        val expectedDeletions = Set()
+        assertResult(expectedDeletions)(deletionsRecord)
+      }
     }
+    describe("when a file is renamed it is moved on S3 with no upload") {
+      // 'root-file-old' should be renamed as 'root-file'
+      val rootHash = "a3a6ac11a0eb577b81b3bb5c95cc8a6e"
+      val leafHash = "208386a650bdec61cfcd7bd8dcb6b542"
+      val lastModified = Instant.now
+      var uploadsRecord: Map[String, RemoteKey] = Map()
+      var copiesRecord: Map[RemoteKey, RemoteKey] = Map()
+      var deletionsRecord: Set[RemoteKey] = Set()
+      val sync = new Sync(new S3Client with DummyS3Client {
+        override def listObjects(bucket: Bucket,
+                                 prefix: RemoteKey
+                                ) = IO {
+          HashLookup(
+            byHash = Map(
+              rootHash -> ("prefix/root-file-old", lastModified),
+              leafHash -> ("prefix/subdir/leaf-file", lastModified)),
+            byKey = Map(
+              "prefix/root-file-old" -> (rootHash, lastModified),
+              "prefix/subdir/leaf-file" -> (leafHash, lastModified)))}
+        override def upload(localFile: LocalFile,
+                            bucket: Bucket,
+                            remoteKey: RemoteKey
+                           ) = IO {
+          if (bucket == testBucket)
+            uploadsRecord += (source.toPath.relativize(localFile.toPath).toString -> remoteKey)
+          Right("some hash value")
+        }
+        override def copy(bucket: Bucket,
+                          sourceKey: RemoteKey,
+                          hash: MD5Hash,
+                          targetKey: RemoteKey
+                         ) = IO {
+          if (bucket == testBucket)
+            copiesRecord += (sourceKey -> targetKey)
+          Right(targetKey)
+        }
+        override def delete(bucket: Bucket,
+                            remoteKey: RemoteKey
+                           ) = IO {
+          if (bucket == testBucket)
+            deletionsRecord += remoteKey
+          Right(remoteKey)
+        }
+      })
+      sync.run(config).unsafeRunSync
+      it("uploads nothing") {
+        val expectedUploads = Map()
+        assertResult(expectedUploads)(uploadsRecord)
+      }
+      it("copies the file") {
+        val expectedCopies = Map("prefix/root-file-old" -> "prefix/root-file")
+        assertResult(expectedCopies)(copiesRecord)
+      }
+      it("deletes the original") {
+        val expectedDeletions = Set("prefix/root-file-old")
+        assertResult(expectedDeletions)(deletionsRecord)
+      }
+    }
+    describe("when a file is copied it is copied on S3 with no upload") {}
   }
 }

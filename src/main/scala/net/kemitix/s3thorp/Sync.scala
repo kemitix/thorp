@@ -36,6 +36,16 @@ class Sync(s3Client: S3Client)
                       remoteKey: RemoteKey) =
     s3Client.upload(localFile, bucket, remoteKey)
 
+  override def copy(bucket: Bucket,
+                    sourceKey: RemoteKey,
+                    hash: MD5Hash,
+                    targetKey: RemoteKey) =
+    s3Client.copy(bucket, sourceKey, hash, targetKey)
+
+  override def delete(bucket: Bucket,
+                      remoteKey: RemoteKey) =
+    s3Client.delete(bucket, remoteKey)
+
   override def listObjects(bucket: Bucket,
                            prefix: RemoteKey
                           ) =
