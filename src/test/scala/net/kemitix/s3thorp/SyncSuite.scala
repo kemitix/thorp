@@ -16,15 +16,13 @@ class SyncSuite extends FunSpec {
       val md5Hash = MD5Hash("the-hash")
       val testLocalFile = new File("file")
       val sync = new Sync(new S3Client with DummyS3Client {
-        override def upload(localFile: File, bucket: Bucket, remoteKey: RemoteKey): IO[Either[Throwable, MD5Hash]] = {
-          assert(localFile == testLocalFile)
+        override def upload(localFile: File, bucket: Bucket, remoteKey: RemoteKey) = IO {
           assert(bucket == testBucket)
-          assert(remoteKey == testRemoteKey)
-          IO(Right(md5Hash))
+          UploadS3Action(remoteKey, md5Hash)
         }
       })
       it("delegates unmodified to the S3Client") {
-        assertResult(Right(md5Hash))(
+        assertResult(UploadS3Action(testRemoteKey, md5Hash))(
           sync.upload(testLocalFile, testBucket, testRemoteKey).
             unsafeRunSync())
       }
@@ -50,7 +48,7 @@ class SyncSuite extends FunSpec {
                            ) = IO {
           if (bucket == testBucket)
             uploadsRecord += (source.toPath.relativize(localFile.toPath).toString -> remoteKey)
-          Right(MD5Hash("some hash value"))
+          UploadS3Action(remoteKey, MD5Hash("some hash value"))
         }
         override def copy(bucket: Bucket,
                           sourceKey: RemoteKey,
@@ -110,7 +108,7 @@ class SyncSuite extends FunSpec {
                            ) = IO {
           if (bucket == testBucket)
             uploadsRecord += (source.toPath.relativize(localFile.toPath).toString -> remoteKey)
-          Right(MD5Hash("some hash value"))
+          UploadS3Action(remoteKey, MD5Hash("some hash value"))
         }
         override def copy(bucket: Bucket,
                           sourceKey: RemoteKey,
@@ -168,7 +166,7 @@ class SyncSuite extends FunSpec {
                            ) = IO {
           if (bucket == testBucket)
             uploadsRecord += (source.toPath.relativize(localFile.toPath).toString -> remoteKey)
-          Right(MD5Hash("some hash value"))
+          UploadS3Action(remoteKey, MD5Hash("some hash value"))
         }
         override def copy(bucket: Bucket,
                           sourceKey: RemoteKey,

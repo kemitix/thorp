@@ -4,7 +4,7 @@ import java.io.File
 
 import cats.effect.IO
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
-import net.kemitix.s3thorp.{Bucket, LastModified, MD5Hash, RemoteKey}
+import net.kemitix.s3thorp.{Bucket, LastModified, MD5Hash, RemoteKey, S3Action, UploadS3Action}
 import software.amazon.awssdk.core.async.AsyncRequestBody
 import software.amazon.awssdk.services.s3.model._
 
@@ -15,13 +15,16 @@ private class ThorpS3Client(s3Client: S3CatsIOClient) extends S3Client {
   override def upload(localFile: File,
                       bucket: Bucket,
                       remoteKey: RemoteKey
-                     ): IO[Either[Throwable, MD5Hash]] = {
+                     ): IO[UploadS3Action] = {
     val request = PutObjectRequest.builder()
       .bucket(bucket.name)
       .key(remoteKey.key)
       .build()
     val body = AsyncRequestBody.fromFile(localFile)
-    s3Client.putObject(request, body).map(r => Right(MD5Hash(r.eTag())))
+    s3Client.putObject(request, body)
+      .map(_.eTag)
+      .map(MD5Hash)
+      .map(md5Hash => UploadS3Action(remoteKey, md5Hash))
   }
 
   override def copy(bucket: Bucket,

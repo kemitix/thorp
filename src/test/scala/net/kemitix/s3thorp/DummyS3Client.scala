@@ -10,7 +10,7 @@ trait DummyS3Client extends S3Client {
   override def upload(localFile: File,
                       bucket: Bucket,
                       remoteKey: RemoteKey
-                     ): IO[Either[Throwable, MD5Hash]] = ???
+                     ): IO[UploadS3Action] = ???
 
   override def copy(bucket: Bucket,
                     sourceKey: RemoteKey,
