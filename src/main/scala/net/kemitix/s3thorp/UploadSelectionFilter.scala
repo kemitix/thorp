@@ -3,12 +3,10 @@ package net.kemitix.s3thorp
 import java.io.{File, FileInputStream}
 import java.security.{DigestInputStream, MessageDigest}
 
-import net.kemitix.s3thorp.Sync.LocalFile
-
 trait UploadSelectionFilter
   extends Logging {
 
-  private def md5File(localFile: LocalFile): MD5Hash =  {
+  private def md5File(localFile: File): MD5Hash =  {
     val buffer = new Array[Byte](8192)
     val md5 = MessageDigest.getInstance("MD5")
 

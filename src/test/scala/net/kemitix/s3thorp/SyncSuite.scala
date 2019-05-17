@@ -4,7 +4,6 @@ import java.io.File
 import java.time.Instant
 
 import cats.effect.IO
-import net.kemitix.s3thorp.Sync.LocalFile
 import net.kemitix.s3thorp.awssdk.{HashLookup, S3Client}
 import org.scalatest.FunSpec
 
@@ -17,7 +16,7 @@ class SyncSuite extends FunSpec {
       val md5Hash = MD5Hash("the-hash")
       val testLocalFile = new File("file")
       val sync = new Sync(new S3Client with DummyS3Client {
-        override def upload(localFile: LocalFile, bucket: Bucket, remoteKey: RemoteKey): IO[Either[Throwable, MD5Hash]] = {
+        override def upload(localFile: File, bucket: Bucket, remoteKey: RemoteKey): IO[Either[Throwable, MD5Hash]] = {
           assert(localFile == testLocalFile)
           assert(bucket == testBucket)
           assert(remoteKey == testRemoteKey)
@@ -45,7 +44,7 @@ class SyncSuite extends FunSpec {
           HashLookup(
             byHash = Map(),
             byKey = Map()))
-        override def upload(localFile: LocalFile,
+        override def upload(localFile: File,
                             bucket: Bucket,
                             remoteKey: RemoteKey
                            ) = IO {
@@ -105,7 +104,7 @@ class SyncSuite extends FunSpec {
             byKey = Map(
               RemoteKey("prefix/root-file") -> (rootHash, lastModified),
               RemoteKey("prefix/subdir/leaf-file") -> (leafHash, lastModified))))
-        override def upload(localFile: LocalFile,
+        override def upload(localFile: File,
                             bucket: Bucket,
                             remoteKey: RemoteKey
                            ) = IO {
@@ -163,7 +162,7 @@ class SyncSuite extends FunSpec {
             byKey = Map(
               RemoteKey("prefix/root-file-old") -> (rootHash, lastModified),
               RemoteKey("prefix/subdir/leaf-file") -> (leafHash, lastModified)))}
-        override def upload(localFile: LocalFile,
+        override def upload(localFile: File,
                             bucket: Bucket,
                             remoteKey: RemoteKey
                            ) = IO {

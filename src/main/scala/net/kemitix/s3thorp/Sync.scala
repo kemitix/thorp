@@ -1,10 +1,8 @@
 package net.kemitix.s3thorp
 
 import java.io.File
-import java.time.Instant
 
 import cats.effect._
-import net.kemitix.s3thorp.Sync.LocalFile
 import net.kemitix.s3thorp.awssdk.S3Client
 
 class Sync(s3Client: S3Client)
@@ -31,7 +29,7 @@ class Sync(s3Client: S3Client)
     }}
   }
 
-  override def upload(localFile: LocalFile,
+  override def upload(localFile: File,
                       bucket: Bucket,
                       remoteKey: RemoteKey) =
     s3Client.upload(localFile, bucket, remoteKey)
@@ -50,10 +48,4 @@ class Sync(s3Client: S3Client)
                            prefix: RemoteKey
                           ) =
     s3Client.listObjects(bucket, prefix)
-}
-
-object Sync {
-
-  type LocalFile = File // the file or directory
-
 }

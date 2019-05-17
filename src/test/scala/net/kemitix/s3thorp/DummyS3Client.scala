@@ -1,12 +1,13 @@
 package net.kemitix.s3thorp
 
+import java.io.File
+
 import cats.effect.IO
-import net.kemitix.s3thorp.Sync.LocalFile
 import net.kemitix.s3thorp.awssdk.{HashLookup, S3Client}
 
 trait DummyS3Client extends S3Client {
 
-  override def upload(localFile: LocalFile,
+  override def upload(localFile: File,
                       bucket: Bucket,
                       remoteKey: RemoteKey
                      ): IO[Either[Throwable, MD5Hash]] = ???
