@@ -12,7 +12,7 @@ class S3MetaDataEnricherSuite extends FunSpec {
   private val sourcePath = "/root/from/here/"
   private val source = Paths.get(sourcePath).toFile
   private val prefix = "prefix"
-  private val config = Config("bucket", prefix, source = source)
+  private val config = Config(Bucket("bucket"), prefix, source = source)
 
   new S3MetaDataEnricher with DummyS3Client {
     describe("key generator") {

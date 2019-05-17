@@ -4,14 +4,14 @@ import java.io.File
 import java.time.Instant
 
 import cats.effect.IO
-import net.kemitix.s3thorp.Sync.{Bucket, LocalFile, MD5Hash, RemoteKey}
+import net.kemitix.s3thorp.Sync.{LocalFile, MD5Hash, RemoteKey}
 import net.kemitix.s3thorp.awssdk.{HashLookup, S3Client}
 import org.scalatest.FunSpec
 
 class SyncSuite extends FunSpec {
 
   describe("s3client thunk") {
-    val testBucket = "bucket"
+    val testBucket = Bucket("bucket")
     val testRemoteKey = "prefix/file"
     describe("upload") {
       val md5Hash = "the-hash"
@@ -32,10 +32,10 @@ class SyncSuite extends FunSpec {
     }
   }
   describe("run") {
-    val testBucket = "bucket"
+    val testBucket = Bucket("bucket")
     val source = Resource(this, "upload")
     // source contains the files root-file and subdir/leaf-file
-    val config = Config("bucket", "prefix", source = source)
+    val config = Config(Bucket("bucket"), "prefix", source = source)
     describe("when all files should be uploaded") {
       var uploadsRecord: Map[String, RemoteKey] = Map()
       var copiesRecord: Map[RemoteKey, RemoteKey] = Map()

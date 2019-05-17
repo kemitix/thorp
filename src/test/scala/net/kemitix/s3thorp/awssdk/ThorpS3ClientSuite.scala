@@ -1,11 +1,12 @@
 package net.kemitix.s3thorp.awssdk
 
 import java.time.Instant
-import scala.collection.JavaConverters._
 
+import scala.collection.JavaConverters._
 import cats.effect.IO
 import com.github.j5ik2o.reactive.aws.s3.S3AsyncClient
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
+import net.kemitix.s3thorp.Bucket
 import org.scalatest.FunSpec
 import software.amazon.awssdk.services.s3
 import software.amazon.awssdk.services.s3.model.{ListObjectsV2Request, ListObjectsV2Response, S3Object}
@@ -38,7 +39,7 @@ class ThorpS3ClientSuite extends FunSpec {
         myFakeResponse
     })
     it("should build list of hash lookups") {
-      val result: HashLookup = subject.listObjects("bucket", "prefix").unsafeRunSync()
+      val result: HashLookup = subject.listObjects(Bucket("bucket"), "prefix").unsafeRunSync()
       val expected = HashLookup(
         Map(h1 -> (k1, lm1), h2 -> (k2, lm2)),
         Map(k1 -> (h1, lm1), k2 -> (h2, lm2)))

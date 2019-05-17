@@ -19,7 +19,7 @@ object ParseArgs {
         .required()
         .text("Source directory to sync to S3"),
       opt[String]('b', "bucket")
-        .action((str, c) => c.copy(bucket = str))
+        .action((str, c) => c.copy(bucket = Bucket(str)))
         .required()
         .text("S3 bucket name"),
       opt[String]('p', "prefix")

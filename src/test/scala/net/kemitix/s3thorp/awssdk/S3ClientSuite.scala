@@ -5,9 +5,10 @@ import java.time.Instant
 
 import cats.effect.IO
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
-import net.kemitix.s3thorp.Sync.{Bucket, LocalFile, RemoteKey}
+import net.kemitix.s3thorp.Bucket
+import net.kemitix.s3thorp.Sync.{LocalFile, RemoteKey}
 import org.scalatest.FunSpec
-import software.amazon.awssdk.services.s3.model._
+import software.amazon.awssdk.services.s3.model.{PutObjectRequest, PutObjectResponse}
 
 class S3ClientSuite extends FunSpec {
 
@@ -50,7 +51,7 @@ class S3ClientSuite extends FunSpec {
             IO(PutObjectResponse.builder().eTag(md5Hash).build())
         })
       val localFile: LocalFile = new File("/some/file")
-      val bucket: Bucket = "a-bucket"
+      val bucket: Bucket = Bucket("a-bucket")
       val remoteKey: RemoteKey = "prefix/file"
       it("should return hash of uploaded file") {
         assertResult(Right(md5Hash))(invoke(s3Client, localFile, bucket, remoteKey))
