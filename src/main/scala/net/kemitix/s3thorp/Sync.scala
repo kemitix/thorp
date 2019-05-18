@@ -22,14 +22,24 @@ class Sync(s3Client: S3Client)
         toUp <- uploadRequiredFilter(c)(meta)
         s3Action = enquedUpload(c)(toUp)
       } yield s3Action
-      val count = s3Actions.foldLeft(0)((a: Int, ioS3Action: IO[S3Action]) => {
+      val counter = s3Actions.foldLeft(Counters())((counters: Counters, ioS3Action: IO[S3Action]) => {
         val s3Action = ioS3Action.unsafeRunSync
-        log1(s"-     Done: ${s3Action.remoteKey.key}")
-        a + 1
+        s3Action match {
+          case UploadS3Action(_, _) => {
+            log1(s"- Uploaded: ${s3Action.remoteKey.key}")
+            counters.copy(uploaded = counters.uploaded + 1)
+          }
+          case _ => counters
+        }
       })
-      log1(s"Uploaded $count files")
+      log1(s"Uploaded ${counter.uploaded} files")
     }}
   }
+
+  case class Counters(uploaded: Int = 0,
+                      deleted: Int = 0,
+                      copied: Int = 0,
+                      moved: Int = 0)
 
   override def upload(localFile: File,
                       bucket: Bucket,
