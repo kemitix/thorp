@@ -4,7 +4,7 @@ import java.io.File
 
 import cats.effect.IO
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
-import net.kemitix.s3thorp.{Bucket, LastModified, MD5Hash, RemoteKey, S3Action, UploadS3Action}
+import net.kemitix.s3thorp.{Bucket, HashModified, LastModified, MD5Hash, RemoteKey, S3Action, UploadS3Action}
 import software.amazon.awssdk.core.async.AsyncRequestBody
 import software.amazon.awssdk.services.s3.model._
 
@@ -60,7 +60,7 @@ private class ThorpS3Client(s3Client: S3CatsIOClient) extends S3Client {
     os.map{o => (MD5Hash(o.eTag), (RemoteKey(o.key), LastModified(o.lastModified)))}.toMap
 
   private def byKey(os: Stream[S3Object]) =
-    os.map{o => (RemoteKey(o.key()), (MD5Hash(o.eTag()), LastModified(o.lastModified())))}.toMap
+    os.map{o => (RemoteKey(o.key()), HashModified(MD5Hash(o.eTag()), LastModified(o.lastModified())))}.toMap
 
   def listObjects(bucket: Bucket, prefix: RemoteKey): IO[HashLookup] = {
     val request = ListObjectsV2Request.builder()

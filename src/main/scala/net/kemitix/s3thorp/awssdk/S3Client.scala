@@ -4,12 +4,12 @@ import java.io.File
 
 import cats.effect.IO
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
-import net.kemitix.s3thorp.{Bucket, LastModified, MD5Hash, RemoteKey, UploadS3Action}
+import net.kemitix.s3thorp._
 
 trait S3Client {
 
   final def objectHead(remoteKey: RemoteKey)
-                      (implicit hashLookup: HashLookup): Option[(MD5Hash, LastModified)] =
+                      (implicit hashLookup: HashLookup): Option[HashModified] =
     hashLookup.byKey.get(remoteKey)
 
   def listObjects(bucket: Bucket,

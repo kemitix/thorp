@@ -6,7 +6,7 @@ import scala.collection.JavaConverters._
 import cats.effect.IO
 import com.github.j5ik2o.reactive.aws.s3.S3AsyncClient
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
-import net.kemitix.s3thorp.{Bucket, LastModified, MD5Hash, RemoteKey}
+import net.kemitix.s3thorp.{Bucket, HashModified, LastModified, MD5Hash, RemoteKey}
 import org.scalatest.FunSpec
 import software.amazon.awssdk.services.s3
 import software.amazon.awssdk.services.s3.model.{ListObjectsV2Request, ListObjectsV2Response, S3Object}
@@ -45,8 +45,8 @@ class ThorpS3ClientSuite extends FunSpec {
           h1 -> (k1, lm1),
           h2 -> (k2, lm2)),
         Map(
-          k1 -> (h1, lm1),
-          k2 -> (h2, lm2)))
+          k1 -> HashModified(h1, lm1),
+          k2 -> HashModified(h2, lm2)))
       assertResult(expected)(result)
     }
   }

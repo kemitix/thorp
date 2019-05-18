@@ -5,7 +5,7 @@ import java.time.Instant
 
 import cats.effect.IO
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
-import net.kemitix.s3thorp.{Bucket, LastModified, MD5Hash, RemoteKey, UploadS3Action}
+import net.kemitix.s3thorp.{Bucket, HashModified, LastModified, MD5Hash, RemoteKey, UploadS3Action}
 import org.scalatest.FunSpec
 import software.amazon.awssdk.services.s3.model.{PutObjectRequest, PutObjectResponse}
 
@@ -17,7 +17,7 @@ class S3ClientSuite extends FunSpec {
     val lastModified = LastModified(Instant.now)
     val hashLookup: HashLookup = HashLookup(
       byHash = Map(hash -> (key, lastModified)),
-      byKey = Map(key -> (hash, lastModified)))
+      byKey = Map(key -> HashModified(hash, lastModified)))
 
     def invoke(self: S3Client, remoteKey: RemoteKey) = {
       self.objectHead(remoteKey)(hashLookup)

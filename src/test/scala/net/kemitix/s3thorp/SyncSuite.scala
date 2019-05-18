@@ -100,8 +100,8 @@ class SyncSuite extends FunSpec {
               rootHash -> (RemoteKey("prefix/root-file"), lastModified),
               leafHash -> (RemoteKey("prefix/subdir/leaf-file"), lastModified)),
             byKey = Map(
-              RemoteKey("prefix/root-file") -> (rootHash, lastModified),
-              RemoteKey("prefix/subdir/leaf-file") -> (leafHash, lastModified))))
+              RemoteKey("prefix/root-file") -> HashModified(rootHash, lastModified),
+              RemoteKey("prefix/subdir/leaf-file") -> HashModified(leafHash, lastModified))))
         override def upload(localFile: File,
                             bucket: Bucket,
                             remoteKey: RemoteKey
@@ -158,8 +158,8 @@ class SyncSuite extends FunSpec {
               rootHash -> (RemoteKey("prefix/root-file-old"), lastModified),
               leafHash -> (RemoteKey("prefix/subdir/leaf-file"), lastModified)),
             byKey = Map(
-              RemoteKey("prefix/root-file-old") -> (rootHash, lastModified),
-              RemoteKey("prefix/subdir/leaf-file") -> (leafHash, lastModified)))}
+              RemoteKey("prefix/root-file-old") -> HashModified(rootHash, lastModified),
+              RemoteKey("prefix/subdir/leaf-file") -> HashModified(leafHash, lastModified)))}
         override def upload(localFile: File,
                             bucket: Bucket,
                             remoteKey: RemoteKey

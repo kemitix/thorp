@@ -47,7 +47,7 @@ class S3MetaDataEnricherSuite extends FunSpec {
     val lastModified = LastModified(Instant.now())
     val hashLookup = HashLookup(
       byHash = Map(hash -> (remoteKey, lastModified)),
-      byKey = Map(remoteKey -> (hash, lastModified))
+      byKey = Map(remoteKey -> HashModified(hash, lastModified))
     )
     describe("when remote exists") {
       new S3MetaDataEnricher with DummyS3Client {

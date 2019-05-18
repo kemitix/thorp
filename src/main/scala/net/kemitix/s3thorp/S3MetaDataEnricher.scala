@@ -14,16 +14,15 @@ trait S3MetaDataEnricher
     file => {
       log4(s"- Consider: ${c.relativePath(file)}")(c)
       val key = remoteKey(file)
-      objectHead(key).map {
-        hlm: (MD5Hash, LastModified) => {
-            S3MetaData(
-              localFile = file,
-              remote = Some((
-                key,
-                MD5Hash(hlm._1.hash.filter { c => c != '"' }),
-                hlm._2)))
-        }
-      }.getOrElse(S3MetaData(localFile = file, remote = None))
+      objectHead(key)
+        .map(whenFound(file, key))
+        .getOrElse(S3MetaData(localFile = file, remote = None))
     }
   }
+
+  private def whenFound(file: File, remoteKey: RemoteKey): HashModified => S3MetaData = {
+    case HashModified(hash, modified) =>
+      S3MetaData(file, Some((remoteKey, removeQuotes(hash), modified)))
+  }
+  private def removeQuotes(in: MD5Hash) = MD5Hash(in.hash.filter({ c=>c!='"'}))
 }
