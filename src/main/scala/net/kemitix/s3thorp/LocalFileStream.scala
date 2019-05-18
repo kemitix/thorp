@@ -4,7 +4,7 @@ import java.io.File
 
 trait LocalFileStream extends Logging {
 
-  def streamDirectoryPaths(file: File)(implicit c: Config): Stream[File] =
+  def findFiles(file: File)(implicit c: Config): Stream[File] =
     dirPaths(file)
       .map { f => {
         log4(s"- Consider: ${c.relativePath(f)}")(c)
@@ -17,7 +17,7 @@ trait LocalFileStream extends Logging {
 
   private def recurseIntoSubDirectories(c: Config): File => Stream[File] =
     file =>
-      if (file.isDirectory) streamDirectoryPaths(file)(c)
+      if (file.isDirectory) findFiles(file)(c)
       else Stream(file)
 
 }
