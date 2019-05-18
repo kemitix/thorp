@@ -3,9 +3,9 @@ package net.kemitix.s3thorp.awssdk
 import java.io.File
 import java.time.Instant
 
-import cats.effect.IO
+import cats.effect.{IO, Sync}
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
-import net.kemitix.s3thorp.{Bucket, HashModified, KeyGenerator, LastModified, LocalFile, MD5Hash, RemoteKey, UploadS3Action}
+import net.kemitix.s3thorp.{Bucket, Config, HashModified, KeyGenerator, KeyModified, LastModified, LocalFile, MD5Hash, RemoteKey, Resource, UploadS3Action}
 import org.scalatest.FunSpec
 import software.amazon.awssdk.services.s3.model.{PutObjectRequest, PutObjectResponse}
 
@@ -13,29 +13,44 @@ class S3ClientSuite
   extends FunSpec
     with KeyGenerator {
 
-  describe("objectHead") {
-    val key = RemoteKey("key")
+  val source = Resource(this, "../upload")
+
+  private val prefix = RemoteKey("prefix")
+  implicit private val config: Config = Config(Bucket("bucket"), prefix, source = source)
+  private val fileToKey = generateKey(config.source, config.prefix) _
+  def aLocalFileWithHash(path: String, myHash: MD5Hash): LocalFile =
+    new LocalFile(source.toPath.resolve(path).toFile, source, fileToKey) {
+      override def hash: MD5Hash = myHash
+    }
+
+  describe("getS3Status") {
     val hash = MD5Hash("hash")
+    val localFile = aLocalFileWithHash("the-file", hash)
+    val key = localFile.remoteKey
     val lastModified = LastModified(Instant.now)
     val s3ObjectsData: S3ObjectsData = S3ObjectsData(
-      byHash = Map(hash -> (key, lastModified)),
+      byHash = Map(hash -> Set(KeyModified(key, lastModified))),
       byKey = Map(key -> HashModified(hash, lastModified)))
 
-    def invoke(self: S3Client, remoteKey: RemoteKey) = {
-      self.objectHead(remoteKey)(s3ObjectsData)
+    def invoke(self: S3Client, localFile: LocalFile) = {
+      self.getS3Status(localFile)(s3ObjectsData)
     }
 
     describe("when remote key exists") {
       val s3Client = S3Client.defaultClient
       it("should return Some(expected values)") {
-        assertResult(Some(HashModified(hash, lastModified)))(invoke(s3Client, key))
+        assertResult(
+          (Some(HashModified(hash, lastModified)),
+          Set(KeyModified(key, lastModified)))
+        )(invoke(s3Client, localFile))
       }
     }
 
     describe("when remote key does not exist") {
       val s3Client = S3Client.defaultClient
       it("should return None") {
-        assertResult(None)(invoke(s3Client, RemoteKey("missing-key")))
+        pending
+        assertResult(None)(invoke(s3Client, localFile))
       }
     }
 

@@ -20,6 +20,22 @@ hash of the file contents.
       -v, --verbose <value>  Verbosity level (1-5)
   #+end_example
 
+* Behaviour
+
+When considering a local file, the following table governs what should happen:
+
+|---+------------+------------------+--------------------+---------------------|
+| # | remote key | hash of same key | hash of other keys | action              |
+|---+------------+------------------+--------------------+---------------------|
+| 1 | exists     | no match         | matches            | copy from other key |
+| 2 | exists     | no match         | no matches         | upload              |
+| 3 | exists     | matches          | matches            | do nothing          |
+| 4 | exists     | matches          | no matches         | do nothing          |
+| 5 | is missing | no match         | matches            | copy from other key |
+| 6 | is missing | no match         | no matches         | upload              |
+| 7 | is missing | matches          | matches            | invalid combination |
+| 8 | is missing | matches          | no matches         | invalid combination |
+|---+------------+------------------+--------------------+---------------------|
 * Creating Native Images
 
   - Download and install GraalVM

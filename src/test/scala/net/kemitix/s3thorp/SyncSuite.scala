@@ -100,8 +100,8 @@ class SyncSuite
                                 ) = IO(
           S3ObjectsData(
             byHash = Map(
-              rootHash -> (RemoteKey("prefix/root-file"), lastModified),
-              leafHash -> (RemoteKey("prefix/subdir/leaf-file"), lastModified)),
+              rootHash -> Set(KeyModified(RemoteKey("prefix/root-file"), lastModified)),
+              leafHash -> Set(KeyModified(RemoteKey("prefix/subdir/leaf-file"), lastModified))),
             byKey = Map(
               RemoteKey("prefix/root-file") -> HashModified(rootHash, lastModified),
               RemoteKey("prefix/subdir/leaf-file") -> HashModified(leafHash, lastModified))))
@@ -158,8 +158,8 @@ class SyncSuite
                                 ) = IO {
           S3ObjectsData(
             byHash = Map(
-              rootHash -> (RemoteKey("prefix/root-file-old"), lastModified),
-              leafHash -> (RemoteKey("prefix/subdir/leaf-file"), lastModified)),
+              rootHash -> Set(KeyModified(RemoteKey("prefix/root-file-old"), lastModified)),
+              leafHash -> Set(KeyModified(RemoteKey("prefix/subdir/leaf-file"), lastModified))),
             byKey = Map(
               RemoteKey("prefix/root-file-old") -> HashModified(rootHash, lastModified),
               RemoteKey("prefix/subdir/leaf-file") -> HashModified(leafHash, lastModified)))}

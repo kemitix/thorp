@@ -1,12 +1,13 @@
 package net.kemitix.s3thorp.awssdk
 
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 import scala.collection.JavaConverters._
 import cats.effect.IO
 import com.github.j5ik2o.reactive.aws.s3.S3AsyncClient
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
-import net.kemitix.s3thorp.{Bucket, HashModified, LastModified, MD5Hash, RemoteKey}
+import net.kemitix.s3thorp.{Bucket, HashModified, KeyModified, LastModified, MD5Hash, RemoteKey}
 import org.scalatest.FunSpec
 import software.amazon.awssdk.services.s3
 import software.amazon.awssdk.services.s3.model.{ListObjectsV2Request, ListObjectsV2Response, S3Object}
@@ -15,9 +16,11 @@ class ThorpS3ClientSuite extends FunSpec {
 
   describe("listObjectsInPrefix") {
     val h1 = MD5Hash("hash1")
-    val k1 = RemoteKey("key1")
-    val lm1 = LastModified(Instant.now)
-    val o1 = S3Object.builder.eTag(h1.hash).key(k1.key).lastModified(lm1.when).build
+    val k1a = RemoteKey("key1a")
+    val k1b = RemoteKey("key1b")
+    val lm1a = LastModified(Instant.now)
+    val lm1b = LastModified(Instant.now.minus(10, ChronoUnit.MINUTES))
+    val o1 = S3Object.builder.eTag(h1.hash).key(k1a.key).lastModified(lm1a.when).build
     val h2 = MD5Hash("hash2")
     val k2 = RemoteKey("key2")
     val lm2 = LastModified(Instant.now.minusSeconds(200))
@@ -42,10 +45,10 @@ class ThorpS3ClientSuite extends FunSpec {
       val result: S3ObjectsData = subject.listObjects(Bucket("bucket"), RemoteKey("prefix")).unsafeRunSync()
       val expected = S3ObjectsData(
         Map(
-          h1 -> (k1, lm1),
-          h2 -> (k2, lm2)),
+          h1 -> Set(KeyModified(k1a, lm1a), KeyModified(k1b, lm1b)),
+          h2 -> Set(KeyModified(k2, lm2))),
         Map(
-          k1 -> HashModified(h1, lm1),
+          k1a -> HashModified(h1, lm1a),
           k2 -> HashModified(h2, lm2)))
       assertResult(expected)(result)
     }

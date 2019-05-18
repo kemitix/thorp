@@ -1,11 +1,11 @@
 package net.kemitix.s3thorp.awssdk
 
-import net.kemitix.s3thorp.{HashModified, LastModified, MD5Hash, RemoteKey}
+import net.kemitix.s3thorp.{HashModified, KeyModified, MD5Hash, RemoteKey}
 
 /**
   * A list of objects and their MD5 hash values.
   */
-case class S3ObjectsData(byHash: Map[MD5Hash, (RemoteKey, LastModified)],
+case class S3ObjectsData(byHash: Map[MD5Hash, Set[KeyModified]],
                          byKey: Map[RemoteKey, HashModified]) {
 
 }
