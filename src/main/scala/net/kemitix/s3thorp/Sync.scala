@@ -17,7 +17,7 @@ class Sync(s3Client: S3Client)
     log1(s"Bucket: ${c.bucket.name}, Prefix: ${c.prefix.key}, Source: ${c.source}")
     listObjects(c.bucket, c.prefix).map { hashLookup => {
       val s3Actions: Stream[IO[S3Action]] = for {
-        file <- streamDirectoryPaths(c.source)
+        file <- streamDirectoryPaths(c)(c.source)
         meta = enrichWithS3MetaData(c)(hashLookup)(file)
         toUp <- uploadRequiredFilter(c)(meta)
         s3Action = enquedUpload(c)(toUp)

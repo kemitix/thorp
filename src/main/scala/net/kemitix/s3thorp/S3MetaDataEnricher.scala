@@ -12,7 +12,6 @@ trait S3MetaDataEnricher
   def enrichWithS3MetaData(c: Config)(implicit hashLookup: HashLookup): File => S3MetaData = {
     val remoteKey = generateKey(c)_
     file => {
-      log4(s"- Consider: ${c.relativePath(file)}")(c)
       val key = remoteKey(file)
       objectHead(key)
         .map(whenFound(file, key))
