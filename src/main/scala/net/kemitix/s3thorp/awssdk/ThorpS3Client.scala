@@ -51,8 +51,8 @@ private class ThorpS3Client(s3Client: S3CatsIOClient) extends S3Client {
       .map(_ => Right(remoteKey))
   }
 
-  private def asHashLookup: Stream[S3Object] => HashLookup =
-    os => HashLookup(byHash(os), byKey(os))
+  private def asS3ObjectsData: Stream[S3Object] => S3ObjectsData =
+    os => S3ObjectsData(byHash(os), byKey(os))
 
   private def byHash(os: Stream[S3Object]) =
     os.map{o => (MD5Hash(o.eTag), (RemoteKey(o.key), LastModified(o.lastModified)))}.toMap
@@ -60,14 +60,14 @@ private class ThorpS3Client(s3Client: S3CatsIOClient) extends S3Client {
   private def byKey(os: Stream[S3Object]) =
     os.map{o => (RemoteKey(o.key()), HashModified(MD5Hash(o.eTag()), LastModified(o.lastModified())))}.toMap
 
-  def listObjects(bucket: Bucket, prefix: RemoteKey): IO[HashLookup] = {
+  def listObjects(bucket: Bucket, prefix: RemoteKey): IO[S3ObjectsData] = {
     val request = ListObjectsV2Request.builder()
       .bucket(bucket.name)
       .prefix(prefix.key)
       .build()
     s3Client.listObjectsV2(request)
       .map(r => r.contents.asScala.toStream)
-      .map(asHashLookup)
+      .map(asS3ObjectsData)
   }
 
 }

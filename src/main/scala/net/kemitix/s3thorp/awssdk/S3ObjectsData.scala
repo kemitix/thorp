@@ -5,7 +5,7 @@ import net.kemitix.s3thorp.{HashModified, LastModified, MD5Hash, RemoteKey}
 /**
   * A list of objects and their MD5 hash values.
   */
-case class HashLookup(byHash: Map[MD5Hash, (RemoteKey, LastModified)],
-                      byKey: Map[RemoteKey, HashModified]) {
+case class S3ObjectsData(byHash: Map[MD5Hash, (RemoteKey, LastModified)],
+                         byKey: Map[RemoteKey, HashModified]) {
 
 }

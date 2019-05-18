@@ -3,7 +3,7 @@ package net.kemitix.s3thorp
 import java.io.File
 import java.time.Instant
 
-import net.kemitix.s3thorp.awssdk.HashLookup
+import net.kemitix.s3thorp.awssdk.S3ObjectsData
 import org.scalatest.FunSpec
 
 class S3MetaDataEnricherSuite
@@ -44,7 +44,7 @@ class S3MetaDataEnricherSuite
     val remoteKey = RemoteKey(prefix.key + "/" + local)
     val hash = MD5Hash("hash")
     val lastModified = LastModified(Instant.now())
-    implicit val hashLookup: HashLookup = HashLookup(
+    implicit val s3ObjectsData: S3ObjectsData = S3ObjectsData(
       byHash = Map(hash -> (remoteKey, lastModified)),
       byKey = Map(remoteKey -> HashModified(hash, lastModified))
     )

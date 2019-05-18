@@ -1,7 +1,7 @@
 package net.kemitix.s3thorp
 
 import cats.effect.IO
-import net.kemitix.s3thorp.awssdk.{HashLookup, S3Client}
+import net.kemitix.s3thorp.awssdk.{S3ObjectsData, S3Client}
 
 trait DummyS3Client extends S3Client {
 
@@ -22,6 +22,6 @@ trait DummyS3Client extends S3Client {
 
   override def listObjects(bucket: Bucket,
                            prefix: RemoteKey
-                          ): IO[HashLookup] = ???
+                          ): IO[S3ObjectsData] = ???
 
 }

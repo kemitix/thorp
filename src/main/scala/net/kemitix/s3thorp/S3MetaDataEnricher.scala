@@ -1,13 +1,13 @@
 package net.kemitix.s3thorp
 
-import net.kemitix.s3thorp.awssdk.{HashLookup, S3Client}
+import net.kemitix.s3thorp.awssdk.{S3ObjectsData, S3Client}
 
 trait S3MetaDataEnricher
   extends S3Client
     with Logging {
 
   def getMetadata(localFile: LocalFile)
-                 (implicit c: Config, hashLookup: HashLookup): S3MetaData = {
+                 (implicit c: Config, s3ObjectsData: S3ObjectsData): S3MetaData = {
     objectHead(localFile.remoteKey)
       .map(asS3MetaData(localFile))
       .getOrElse(S3MetaData(localFile = localFile, remote = None))

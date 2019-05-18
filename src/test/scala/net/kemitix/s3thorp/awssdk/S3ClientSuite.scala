@@ -17,12 +17,12 @@ class S3ClientSuite
     val key = RemoteKey("key")
     val hash = MD5Hash("hash")
     val lastModified = LastModified(Instant.now)
-    val hashLookup: HashLookup = HashLookup(
+    val s3ObjectsData: S3ObjectsData = S3ObjectsData(
       byHash = Map(hash -> (key, lastModified)),
       byKey = Map(key -> HashModified(hash, lastModified)))
 
     def invoke(self: S3Client, remoteKey: RemoteKey) = {
-      self.objectHead(remoteKey)(hashLookup)
+      self.objectHead(remoteKey)(s3ObjectsData)
     }
 
     describe("when remote key exists") {

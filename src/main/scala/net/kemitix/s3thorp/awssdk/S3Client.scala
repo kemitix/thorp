@@ -7,12 +7,12 @@ import net.kemitix.s3thorp._
 trait S3Client {
 
   final def objectHead(remoteKey: RemoteKey)
-                      (implicit hashLookup: HashLookup): Option[HashModified] =
-    hashLookup.byKey.get(remoteKey)
+                      (implicit s3ObjectsData: S3ObjectsData): Option[HashModified] =
+    s3ObjectsData.byKey.get(remoteKey)
 
   def listObjects(bucket: Bucket,
                   prefix: RemoteKey
-                 ): IO[HashLookup]
+                 ): IO[S3ObjectsData]
 
   def upload(localFile: LocalFile,
              bucket: Bucket,

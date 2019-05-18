@@ -13,7 +13,7 @@ class Sync(s3Client: S3Client)
   def run(implicit c: Config): IO[Unit] = {
     log1(s"Bucket: ${c.bucket.name}, Prefix: ${c.prefix.key}, Source: ${c.source}")
     listObjects(c.bucket, c.prefix)
-      .map { implicit hashLookup => {
+      .map { implicit s3ObjectsData => {
         val counters = (
           for {
             file <- findFiles(c.source)

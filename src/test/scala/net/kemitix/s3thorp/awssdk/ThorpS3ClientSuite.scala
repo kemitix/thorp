@@ -39,8 +39,8 @@ class ThorpS3ClientSuite extends FunSpec {
         myFakeResponse
     })
     it("should build list of hash lookups") {
-      val result: HashLookup = subject.listObjects(Bucket("bucket"), RemoteKey("prefix")).unsafeRunSync()
-      val expected = HashLookup(
+      val result: S3ObjectsData = subject.listObjects(Bucket("bucket"), RemoteKey("prefix")).unsafeRunSync()
+      val expected = S3ObjectsData(
         Map(
           h1 -> (k1, lm1),
           h2 -> (k2, lm2)),

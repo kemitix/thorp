@@ -4,7 +4,7 @@ import java.io.File
 import java.time.Instant
 
 import cats.effect.IO
-import net.kemitix.s3thorp.awssdk.{HashLookup, S3Client}
+import net.kemitix.s3thorp.awssdk.{S3ObjectsData, S3Client}
 import org.scalatest.FunSpec
 
 class SyncSuite
@@ -42,7 +42,7 @@ class SyncSuite
       var deletionsRecord: Set[RemoteKey] = Set()
       val sync = new Sync(new DummyS3Client{
         override def listObjects(bucket: Bucket, prefix: RemoteKey) = IO(
-          HashLookup(
+          S3ObjectsData(
             byHash = Map(),
             byKey = Map()))
         override def upload(localFile: LocalFile,
@@ -98,7 +98,7 @@ class SyncSuite
         override def listObjects(bucket: Bucket,
                                  prefix: RemoteKey
                                 ) = IO(
-          HashLookup(
+          S3ObjectsData(
             byHash = Map(
               rootHash -> (RemoteKey("prefix/root-file"), lastModified),
               leafHash -> (RemoteKey("prefix/subdir/leaf-file"), lastModified)),
@@ -156,7 +156,7 @@ class SyncSuite
         override def listObjects(bucket: Bucket,
                                  prefix: RemoteKey
                                 ) = IO {
-          HashLookup(
+          S3ObjectsData(
             byHash = Map(
               rootHash -> (RemoteKey("prefix/root-file-old"), lastModified),
               leafHash -> (RemoteKey("prefix/subdir/leaf-file"), lastModified)),
