@@ -19,7 +19,5 @@ trait ActionGenerator
       case _ => Stream.empty
     }
 
-  private def uploadFile(localFile: File)= {
-    Stream(ToUpload(localFile))
-  }
+  private def uploadFile(localFile: File) = Stream(ToUpload(localFile))
 }
