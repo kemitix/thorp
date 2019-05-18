@@ -24,10 +24,9 @@ class Sync(s3Client: S3Client)
           .foldLeft(Counters())((counters: Counters, ioS3Action: IO[S3Action]) => {
             val s3Action = ioS3Action.unsafeRunSync
             s3Action match {
-              case UploadS3Action(_, _) => {
+              case UploadS3Action(_, _) =>
                 log1(s"- Uploaded: ${s3Action.remoteKey.key}")
                 counters.copy(uploaded = counters.uploaded + 1)
-              }
               case _ => counters
             }
           })
