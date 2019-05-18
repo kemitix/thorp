@@ -8,10 +8,12 @@ trait ActionSubmitter
     with KeyGenerator
     with Logging {
 
-  def submitAction(toUpload: ToUpload)
+  def submitAction(action: Action)
                   (implicit c: Config): IO[S3Action] = {
-    val file = toUpload.file
-    log4(s"    Upload: ${c.relativePath(file)}")
-    upload(file, c.bucket, generateKey(file))
+    action match {
+      case ToUpload(file) =>
+        log4(s"    Upload: ${c.relativePath(file)}")
+        upload(file, c.bucket, generateKey(file))
+    }
   }
 }

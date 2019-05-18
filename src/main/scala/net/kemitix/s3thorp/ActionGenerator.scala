@@ -5,7 +5,7 @@ trait ActionGenerator
   with Logging {
 
   def createActions(s3MetaData: S3MetaData)
-                   (implicit c: Config): Stream[ToUpload] =
+                   (implicit c: Config): Stream[Action] =
     s3MetaData match {
       case S3MetaData(localFile, None) => {
         log5(s"   Created: ${c.relativePath(localFile)}")(c)
