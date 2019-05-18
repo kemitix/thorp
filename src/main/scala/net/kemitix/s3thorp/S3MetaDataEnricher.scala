@@ -20,7 +20,7 @@ trait S3MetaDataEnricher
   private def whenFound(file: File,
                         remoteKey: RemoteKey): HashModified => S3MetaData = {
     case HashModified(hash, modified) =>
-      S3MetaData(file, Some((remoteKey, removeQuotes(hash), modified)))
+      S3MetaData(file, Some(RemoteMetaData(remoteKey, removeQuotes(hash), modified)))
   }
   private def removeQuotes(in: MD5Hash) = MD5Hash(in.hash.filter({ c=>c!='"'}))
 }

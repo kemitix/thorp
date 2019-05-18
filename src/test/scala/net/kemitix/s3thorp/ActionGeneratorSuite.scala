@@ -22,13 +22,13 @@ class ActionGeneratorSuite extends FunSpec {
       }
       describe("when supplied S3MetaData") {
         describe("when hash is different") {
-          val input = S3MetaData(localFile, Some((RemoteKey(""), MD5Hash("doesn't match any hash"), LastModified(Instant.now))))
+          val input = S3MetaData(localFile, Some(RemoteMetaData(RemoteKey(""), MD5Hash("doesn't match any hash"), LastModified(Instant.now))))
           it("should be marked for upload") {
             assertResult(List(ToUpload(localFile)))(invokeSubject(input))
           }
         }
         describe("when hash is the same") {
-          val input = S3MetaData(localFile, Some((RemoteKey(""), localHash, LastModified(Instant.now))))
+          val input = S3MetaData(localFile, Some(RemoteMetaData(RemoteKey(""), localHash, LastModified(Instant.now))))
           it("should not be marked for upload") {
             assertResult(List())(invokeSubject(input))
           }

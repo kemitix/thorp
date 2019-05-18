@@ -50,7 +50,7 @@ class S3MetaDataEnricherSuite extends FunSpec {
     describe("when remote exists") {
       new S3MetaDataEnricher with DummyS3Client {
         it("returns metadata") {
-          val expectedMetadata = S3MetaData(fileWithRemote, Some((remoteKey, hash, lastModified)))
+          val expectedMetadata = S3MetaData(fileWithRemote, Some(RemoteMetaData(remoteKey, hash, lastModified)))
 
           val result = getMetadata(fileWithRemote)
           assertResult(expectedMetadata)(result)

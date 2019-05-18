@@ -13,7 +13,7 @@ trait ActionGenerator
       case S3MetaData(localFile, None) => uploadFile(localFile)
 
       // There is a local file and an s3 file with the same name, but different content - Upload
-      case S3MetaData(localFile, Some((_, remoteHash, _)))
+      case S3MetaData(localFile, Some(RemoteMetaData(_, remoteHash, _)))
         if md5File(localFile) != remoteHash => uploadFile(localFile)
 
       case _ => Stream.empty
