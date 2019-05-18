@@ -8,34 +8,36 @@ import net.kemitix.s3thorp.awssdk.S3Client
 class Sync(s3Client: S3Client)
   extends LocalFileStream
     with S3MetaDataEnricher
-    with UploadSelectionFilter
-    with S3Uploader
+    with ActionGenerator
+    with ActionSubmitter
     with Logging {
 
   def run(implicit c: Config): IO[Unit] = {
     log1(s"Bucket: ${c.bucket.name}, Prefix: ${c.prefix.key}, Source: ${c.source}")
-    listObjects(c.bucket, c.prefix).map { implicit hashLookup => {
-      val s3Actions: Stream[IO[S3Action]] = for {
-        file <- findFiles(c.source)
-        meta = getMetadata(file)
-        toUp <- uploadRequiredFilter(meta)
-        s3Action = enquedUpload(toUp)
-      } yield s3Action
-      val counter = s3Actions.foldLeft(Counters())((counters: Counters, ioS3Action: IO[S3Action]) => {
-        val s3Action = ioS3Action.unsafeRunSync
-        s3Action match {
-          case UploadS3Action(_, _) => {
-            log1(s"- Uploaded: ${s3Action.remoteKey.key}")
-            counters.copy(uploaded = counters.uploaded + 1)
-          }
-          case _ => counters
-        }
-      })
-      log1(s"Uploaded ${counter.uploaded} files")
-      log1(s"Copied   ${counter.copied} files")
-      log1(s"Moved    ${counter.moved} files")
-      log1(s"Deleted  ${counter.deleted} files")
-    }}
+    listObjects(c.bucket, c.prefix)
+      .map { implicit hashLookup => {
+        val counters = (
+          for {
+            file <- findFiles(c.source)
+            meta = getMetadata(file)
+            action <- createActions(meta)
+            ioS3Action = submitAction(action)
+          } yield ioS3Action)
+          .foldLeft(Counters())((counters: Counters, ioS3Action: IO[S3Action]) => {
+            val s3Action = ioS3Action.unsafeRunSync
+            s3Action match {
+              case UploadS3Action(_, _) => {
+                log1(s"- Uploaded: ${s3Action.remoteKey.key}")
+                counters.copy(uploaded = counters.uploaded + 1)
+              }
+              case _ => counters
+            }
+          })
+        log1(s"Uploaded ${counters.uploaded} files")
+        log1(s"Copied   ${counters.copied} files")
+        log1(s"Moved    ${counters.moved} files")
+        log1(s"Deleted  ${counters.deleted} files")
+      }}
   }
 
   case class Counters(uploaded: Int = 0,

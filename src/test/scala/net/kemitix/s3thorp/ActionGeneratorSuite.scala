@@ -5,15 +5,15 @@ import java.time.Instant
 
 import org.scalatest.FunSpec
 
-class UploadSelectionFilterSuite extends FunSpec {
+class ActionGeneratorSuite extends FunSpec {
 
-  new UploadSelectionFilter {
-    describe("uploadRequiredFilter") {
+  new ActionGenerator {
+    describe("create actions") {
       val localFile = Resource(this, "test-file-for-hash.txt")
       val localHash = MD5Hash("0cbfe978783bd7950d5da4ff85e4af37")
       implicit val config: Config = Config(Bucket("bucket"), RemoteKey("prefix"), source = localFile.getParentFile)
       def invokeSubject(input: S3MetaData) =
-        uploadRequiredFilter(input).toList
+        createActions(input).toList
       describe("when supplied a file") {
         val input = S3MetaData(localFile, None)
         it("should be marked for upload") {
