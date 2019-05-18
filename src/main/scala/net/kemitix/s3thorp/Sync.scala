@@ -12,15 +12,14 @@ class Sync(s3Client: S3Client)
     with S3Uploader
     with Logging {
 
-  def run(c: Config): IO[Unit] = {
-    implicit val config: Config = c
+  def run(implicit c: Config): IO[Unit] = {
     log1(s"Bucket: ${c.bucket.name}, Prefix: ${c.prefix.key}, Source: ${c.source}")
-    listObjects(c.bucket, c.prefix).map { hashLookup => {
+    listObjects(c.bucket, c.prefix).map { implicit hashLookup => {
       val s3Actions: Stream[IO[S3Action]] = for {
-        file <- streamDirectoryPaths(c)(c.source)
-        meta = enrichWithS3MetaData(c)(hashLookup)(file)
-        toUp <- uploadRequiredFilter(c)(meta)
-        s3Action = enquedUpload(c)(toUp)
+        file <- streamDirectoryPaths(c.source)
+        meta = enrichWithS3MetaData(file)
+        toUp <- uploadRequiredFilter(meta)
+        s3Action = enquedUpload(toUp)
       } yield s3Action
       val counter = s3Actions.foldLeft(Counters())((counters: Counters, ioS3Action: IO[S3Action]) => {
         val s3Action = ioS3Action.unsafeRunSync

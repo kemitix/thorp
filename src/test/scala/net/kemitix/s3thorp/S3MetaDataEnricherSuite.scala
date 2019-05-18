@@ -12,12 +12,10 @@ class S3MetaDataEnricherSuite extends FunSpec {
   private val sourcePath = "/root/from/here/"
   private val source = Paths.get(sourcePath).toFile
   private val prefix = RemoteKey("prefix")
-  private val config = Config(Bucket("bucket"), prefix, source = source)
+  implicit private val config: Config = Config(Bucket("bucket"), prefix, source = source)
 
   new S3MetaDataEnricher with DummyS3Client {
     describe("key generator") {
-      val subject = generateKey(config)_
-
       def resolve(subdir: String): File = {
         source.toPath.resolve(subdir).toFile
       }
@@ -25,14 +23,14 @@ class S3MetaDataEnricherSuite extends FunSpec {
       describe("when file is within source") {
         it("has a valid key") {
           val subdir = "subdir"
-          assertResult(RemoteKey(s"${prefix.key}/$subdir"))(subject(resolve(subdir)))
+          assertResult(RemoteKey(s"${prefix.key}/$subdir"))(generateKey(resolve(subdir)))
         }
       }
 
       describe("when file is deeper within source") {
         it("has a valid key") {
           val subdir = "subdir/deeper/still"
-          assertResult(RemoteKey(s"${prefix.key}/$subdir"))(subject(resolve(subdir)))
+          assertResult(RemoteKey(s"${prefix.key}/$subdir"))(generateKey(resolve(subdir)))
         }
       }
     }
@@ -45,7 +43,7 @@ class S3MetaDataEnricherSuite extends FunSpec {
     val remoteKey = RemoteKey(prefix.key + "/" + local)
     val hash = MD5Hash("hash")
     val lastModified = LastModified(Instant.now())
-    val hashLookup = HashLookup(
+    implicit val hashLookup: HashLookup = HashLookup(
       byHash = Map(hash -> (remoteKey, lastModified)),
       byKey = Map(remoteKey -> HashModified(hash, lastModified))
     )
@@ -54,7 +52,7 @@ class S3MetaDataEnricherSuite extends FunSpec {
         it("returns metadata") {
           val expectedMetadata = S3MetaData(fileWithRemote, Some((remoteKey, hash, lastModified)))
 
-          val result = enrichWithS3MetaData(config)(hashLookup)(fileWithRemote)
+          val result = enrichWithS3MetaData(fileWithRemote)
           assertResult(expectedMetadata)(result)
         }
       }
@@ -62,7 +60,7 @@ class S3MetaDataEnricherSuite extends FunSpec {
     describe("when remote doesn't exist") {
       new S3MetaDataEnricher with DummyS3Client {
         it("returns file to upload") {
-          val result = enrichWithS3MetaData(config)(hashLookup)(fileWithNoRemote)
+          val result = enrichWithS3MetaData(fileWithNoRemote)
           assertResult(S3MetaData(fileWithNoRemote, None))(result)
         }
       }

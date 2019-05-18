@@ -16,18 +16,17 @@ trait UploadSelectionFilter
     MD5Hash(md5.digest.map("%02x".format(_)).mkString)
   }
 
-  def uploadRequiredFilter(c: Config): S3MetaData => Stream[ToUpload] = {
-    case S3MetaData(localFile, None) => {
-      log5(s"   Created: ${c.relativePath(localFile)}")(c)
-      Stream(ToUpload(localFile))
-    }
-    case S3MetaData(localFile, Some((remoteKey, remoteHash, lastModified))) => {
-      val localHash: MD5Hash = md5File(localFile)
-      if (localHash != remoteHash) {
-        log5(s"   Updated: ${c.relativePath(localFile)}")(c)
+  def uploadRequiredFilter(s3MetaData: S3MetaData)(implicit c: Config): Stream[ToUpload] =
+    s3MetaData match {
+      case S3MetaData(localFile, None) => {
+        log5(s"   Created: ${c.relativePath(localFile)}")(c)
         Stream(ToUpload(localFile))
       }
-      else Stream.empty
+      case S3MetaData(localFile, Some((remoteKey, remoteHash, lastModified))) =>
+        if (md5File(localFile) != remoteHash) {
+          log5(s"   Updated: ${c.relativePath(localFile)}")(c)
+          Stream(ToUpload(localFile))
+        }
+        else Stream.empty
     }
-  }
 }

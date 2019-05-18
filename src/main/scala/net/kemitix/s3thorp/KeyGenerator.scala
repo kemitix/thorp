@@ -4,7 +4,7 @@ import java.io.File
 
 trait KeyGenerator {
 
-  def generateKey(c: Config)(file: File): RemoteKey = {
+  def generateKey(file: File)(implicit c: Config): RemoteKey = {
     val otherPath = file.toPath.toAbsolutePath
     val sourcePath = c.source.toPath
     val relativePath = sourcePath.relativize(otherPath)

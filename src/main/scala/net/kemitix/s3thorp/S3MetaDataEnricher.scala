@@ -9,14 +9,11 @@ trait S3MetaDataEnricher
     with KeyGenerator
     with Logging {
 
-  def enrichWithS3MetaData(c: Config)(implicit hashLookup: HashLookup): File => S3MetaData = {
-    val remoteKey = generateKey(c)_
-    file => {
-      val key = remoteKey(file)
-      objectHead(key)
-        .map(whenFound(file, key))
-        .getOrElse(S3MetaData(localFile = file, remote = None))
-    }
+  def enrichWithS3MetaData(file: File)(implicit c: Config, hashLookup: HashLookup): S3MetaData = {
+    val key = generateKey(file)(c)
+    objectHead(key)
+      .map(whenFound(file, key))
+      .getOrElse(S3MetaData(localFile = file, remote = None))
   }
 
   private def whenFound(file: File, remoteKey: RemoteKey): HashModified => S3MetaData = {
