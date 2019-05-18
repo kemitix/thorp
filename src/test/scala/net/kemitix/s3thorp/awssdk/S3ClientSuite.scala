@@ -26,7 +26,7 @@ class S3ClientSuite extends FunSpec {
     describe("when remote key exists") {
       val s3Client = S3Client.defaultClient
       it("should return Some(expected values)") {
-        assertResult(Some((hash, lastModified)))(invoke(s3Client, key))
+        assertResult(Some(HashModified(hash, lastModified)))(invoke(s3Client, key))
       }
     }
 

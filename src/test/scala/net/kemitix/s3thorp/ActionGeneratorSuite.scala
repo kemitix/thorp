@@ -17,14 +17,14 @@ class ActionGeneratorSuite extends FunSpec {
       describe("when supplied a file") {
         val input = S3MetaData(localFile, None)
         it("should be marked for upload") {
-          assertResult(List(Action(localFile)))(invokeSubject(input))
+          assertResult(List(ToUpload(localFile)))(invokeSubject(input))
         }
       }
       describe("when supplied S3MetaData") {
         describe("when hash is different") {
           val input = S3MetaData(localFile, Some((RemoteKey(""), MD5Hash("doesn't match any hash"), LastModified(Instant.now))))
           it("should be marked for upload") {
-            assertResult(List(Action(localFile)))(invokeSubject(input))
+            assertResult(List(ToUpload(localFile)))(invokeSubject(input))
           }
         }
         describe("when hash is the same") {
