@@ -33,6 +33,9 @@ class Sync(s3Client: S3Client)
         }
       })
       log1(s"Uploaded ${counter.uploaded} files")
+      log1(s"Copied   ${counter.copied} files")
+      log1(s"Moved    ${counter.moved} files")
+      log1(s"Deleted  ${counter.deleted} files")
     }}
   }
 
