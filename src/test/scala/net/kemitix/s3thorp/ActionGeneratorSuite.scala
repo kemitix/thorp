@@ -1,17 +1,20 @@
 package net.kemitix.s3thorp
 
-import java.io.File
 import java.time.Instant
 
 import org.scalatest.FunSpec
 
-class ActionGeneratorSuite extends FunSpec {
+class ActionGeneratorSuite
+  extends FunSpec
+    with KeyGenerator {
 
   new ActionGenerator {
     describe("create actions") {
-      val localFile = Resource(this, "test-file-for-hash.txt")
+      val resource = Resource(this, "test-file-for-hash.txt")
       val localHash = MD5Hash("0cbfe978783bd7950d5da4ff85e4af37")
-      implicit val config: Config = Config(Bucket("bucket"), RemoteKey("prefix"), source = localFile.getParentFile)
+      implicit val config: Config = Config(Bucket("bucket"), RemoteKey("prefix"), source = resource.getParentFile)
+      val fileToKey = generateKey(config.source, config.prefix) _
+      val localFile = LocalFile(resource, config.source, fileToKey)
       def invokeSubject(input: S3MetaData) =
         createActions(input).toList
       describe("when supplied a file") {

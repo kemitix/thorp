@@ -1,7 +1,5 @@
 package net.kemitix.s3thorp
 
-import java.io.File
-
 trait ActionGenerator
   extends MD5HashGenerator {
 
@@ -14,10 +12,10 @@ trait ActionGenerator
 
       // There is a local file and an s3 file with the same name, but different content - Upload
       case S3MetaData(localFile, Some(RemoteMetaData(_, remoteHash, _)))
-        if md5File(localFile) != remoteHash => uploadFile(localFile)
+        if localFile.hash != remoteHash => uploadFile(localFile)
 
       case _ => Stream.empty
     }
 
-  private def uploadFile(localFile: File) = Stream(ToUpload(localFile))
+  private def uploadFile(localFile: LocalFile) = Stream(ToUpload(localFile))
 }

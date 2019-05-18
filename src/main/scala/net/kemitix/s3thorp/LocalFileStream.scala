@@ -2,18 +2,19 @@ package net.kemitix.s3thorp
 
 import java.io.File
 
-trait LocalFileStream extends Logging {
+trait LocalFileStream
+  extends MD5HashGenerator
+    with KeyGenerator
+    with Logging {
 
   def findFiles(file: File)
-               (implicit c: Config): Stream[File] = {
-    log3(s"- Entering: $file")
-    val files = dirPaths(file)
-      .map { f => {
-        if (f.isFile) log4(s"- Consider: ${c.relativePath(f)}")(c)
-        f
-      }}
-      .flatMap(f => recurseIntoSubDirectories(f))
-    log3(s"-  Leaving: $file")
+               (implicit c: Config): Stream[LocalFile] = {
+    log5(s"- Entering: $file")
+    val files = for {
+      f <- dirPaths(file)
+      fs <- recurseIntoSubDirectories(f)
+      } yield fs
+    log5(s"-  Leaving: $file")
     files
   }
 
@@ -22,8 +23,8 @@ trait LocalFileStream extends Logging {
       .getOrElse(throw new IllegalArgumentException(s"Directory not found $file")).toStream
   }
 
-  private def recurseIntoSubDirectories(file: File)(implicit c: Config): Stream[File] =
+  private def recurseIntoSubDirectories(file: File)(implicit c: Config): Stream[LocalFile] =
     if (file.isDirectory) findFiles(file)(c)
-    else Stream(file)
+    else Stream(LocalFile(file, c.source, generateKey(c.source, c.prefix)))
 
 }

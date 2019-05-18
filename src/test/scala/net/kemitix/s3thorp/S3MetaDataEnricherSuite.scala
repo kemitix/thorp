@@ -1,18 +1,19 @@
 package net.kemitix.s3thorp
 
 import java.io.File
-import java.nio.file.Paths
 import java.time.Instant
 
 import net.kemitix.s3thorp.awssdk.HashLookup
 import org.scalatest.FunSpec
 
-class S3MetaDataEnricherSuite extends FunSpec {
+class S3MetaDataEnricherSuite
+  extends FunSpec
+    with KeyGenerator {
 
-  private val sourcePath = "/root/from/here/"
-  private val source = Paths.get(sourcePath).toFile
+  private val source = Resource(this, "upload")
   private val prefix = RemoteKey("prefix")
   implicit private val config: Config = Config(Bucket("bucket"), prefix, source = source)
+  private val fileToKey = generateKey(config.source, config.prefix) _
 
   new S3MetaDataEnricher with DummyS3Client {
     describe("key generator") {
@@ -23,14 +24,14 @@ class S3MetaDataEnricherSuite extends FunSpec {
       describe("when file is within source") {
         it("has a valid key") {
           val subdir = "subdir"
-          assertResult(RemoteKey(s"${prefix.key}/$subdir"))(generateKey(resolve(subdir)))
+          assertResult(RemoteKey(s"${prefix.key}/$subdir"))(fileToKey(resolve(subdir)))
         }
       }
 
       describe("when file is deeper within source") {
         it("has a valid key") {
           val subdir = "subdir/deeper/still"
-          assertResult(RemoteKey(s"${prefix.key}/$subdir"))(generateKey(resolve(subdir)))
+          assertResult(RemoteKey(s"${prefix.key}/$subdir"))(fileToKey(resolve(subdir)))
         }
       }
     }
@@ -38,8 +39,8 @@ class S3MetaDataEnricherSuite extends FunSpec {
 
   describe("enrich with metadata") {
     val local = "localFile"
-    val fileWithRemote = new File(sourcePath + local)
-    val fileWithNoRemote = new File(sourcePath + "noRemote")
+    val fileWithRemote = LocalFile(source.toPath.resolve(local).toFile, source, fileToKey)
+    val fileWithNoRemote = LocalFile(source.toPath.resolve("noRemote").toFile, source, fileToKey)
     val remoteKey = RemoteKey(prefix.key + "/" + local)
     val hash = MD5Hash("hash")
     val lastModified = LastModified(Instant.now())

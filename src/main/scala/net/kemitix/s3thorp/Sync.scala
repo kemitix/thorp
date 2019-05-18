@@ -1,8 +1,6 @@
 package net.kemitix.s3thorp
 
-import java.io.File
-
-import cats.effect.{IO, _}
+import cats.effect.IO
 import net.kemitix.s3thorp.awssdk.S3Client
 
 class Sync(s3Client: S3Client)
@@ -45,7 +43,7 @@ class Sync(s3Client: S3Client)
                       copied: Int = 0,
                       moved: Int = 0)
 
-  override def upload(localFile: File,
+  override def upload(localFile: LocalFile,
                       bucket: Bucket,
                       remoteKey: RemoteKey) =
     s3Client.upload(localFile, bucket, remoteKey)
