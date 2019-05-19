@@ -29,7 +29,7 @@ class ThorpS3ClientSuite extends FunSpec {
         .contents(List(o1a, o1b, o2).asJava)
         .build()
     }
-    val subject = new ThorpS3Client(new MyS3CatsIOClient {
+    val s3client = new ThorpS3Client(new MyS3CatsIOClient {
       override def listObjectsV2(listObjectsV2Request: ListObjectsV2Request) =
         myFakeResponse
     })
@@ -41,7 +41,7 @@ class ThorpS3ClientSuite extends FunSpec {
         byKey = Map(
           k1a -> HashModified(h1, lm),
           k2 -> HashModified(h2, lm)))
-      val result: S3ObjectsData = subject.listObjects(Bucket("bucket"), RemoteKey("prefix")).unsafeRunSync()
+      val result: S3ObjectsData = s3client.listObjects(Bucket("bucket"), RemoteKey("prefix")).unsafeRunSync()
       assertResult(expected.byHash.keys)(result.byHash.keys)
       assertResult(expected.byKey.keys)(result.byKey.keys)
       assertResult(expected)(result)
