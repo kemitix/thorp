@@ -17,19 +17,23 @@ class S3ClientSuite
   private val prefix = RemoteKey("prefix")
   implicit private val config: Config = Config(Bucket("bucket"), prefix, source = source)
   private val fileToKey = generateKey(config.source, config.prefix) _
-  def aLocalFileWithHash(path: String, myHash: MD5Hash): LocalFile =
-    new LocalFile(source.toPath.resolve(path).toFile, source, fileToKey) {
-      override def hash: MD5Hash = myHash
-    }
 
   describe("getS3Status") {
     val hash = MD5Hash("hash")
-    val localFile = aLocalFileWithHash("the-file", hash)
+    val localFile = aLocalFile("the-file", hash, source, fileToKey)
     val key = localFile.remoteKey
+    val keyotherkey = aLocalFile("other-key-same-hash", hash, source, fileToKey)
+    val diffhash = MD5Hash("diff")
+    val keydiffhash = aLocalFile("other-key-diff-hash", diffhash, source, fileToKey)
     val lastModified = LastModified(Instant.now)
     val s3ObjectsData: S3ObjectsData = S3ObjectsData(
-      byHash = Map(hash -> Set(KeyModified(key, lastModified))),
-      byKey = Map(key -> HashModified(hash, lastModified)))
+      byHash = Map(
+        hash -> Set(KeyModified(key, lastModified), KeyModified(keyotherkey.remoteKey, lastModified)),
+        diffhash -> Set(KeyModified(keydiffhash.remoteKey, lastModified))),
+      byKey = Map(
+        key -> HashModified(hash, lastModified),
+        keyotherkey.remoteKey -> HashModified(hash, lastModified),
+        keydiffhash.remoteKey -> HashModified(diffhash, lastModified)))
 
     def invoke(self: S3Client, localFile: LocalFile) = {
       self.getS3Status(localFile)(s3ObjectsData)
@@ -37,19 +41,34 @@ class S3ClientSuite
 
     describe("when remote key exists") {
       val s3Client = S3Client.defaultClient
-      it("should return Some(expected values)") {
+      it("should return (Some, Set.nonEmpty)") {
         assertResult(
           (Some(HashModified(hash, lastModified)),
-          Set(KeyModified(key, lastModified)))
+            Set(
+              KeyModified(key, lastModified),
+              KeyModified(keyotherkey.remoteKey, lastModified)))
         )(invoke(s3Client, localFile))
       }
     }
 
-    describe("when remote key does not exist") {
+    describe("when remote key does not exist and no others matches hash") {
       val s3Client = S3Client.defaultClient
-      it("should return None") {
-        pending
-        assertResult(None)(invoke(s3Client, localFile))
+      it("should return (None, Set.empty)") {
+        val localFile = aLocalFile("missing-file", MD5Hash("unique"), source, fileToKey)
+        assertResult(
+          (None,
+            Set.empty)
+        )(invoke(s3Client, localFile))
+      }
+    }
+
+    describe("when remote key exists and no others match hash") {
+      val s3Client = S3Client.defaultClient
+      it("should return (None, Set.nonEmpty)") {
+        assertResult(
+          (Some(HashModified(diffhash, lastModified)),
+            Set(KeyModified(keydiffhash.remoteKey, lastModified)))
+        )(invoke(s3Client, keydiffhash))
       }
     }
 
