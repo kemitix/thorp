@@ -19,7 +19,7 @@ class ActionGeneratorSuite
       val otherKey = RemoteKey("prefix/other-file")
       def invokeSubject(input: S3MetaData) = createActions(input).toList
 
-      describe("#1 local exists, remote exists, remote matches - do nothing") {pending}
+      describe("#1 local exists, remote exists, remote matches - do nothing") {it("I should write this test"){pending}}
       describe("#2 local exists, remote is missing, other matches - copy") {
         val input = S3MetaData(localFile,
           matchByHash = Set(RemoteMetaData(otherKey, localHash, lastModified)),
@@ -42,8 +42,8 @@ class ActionGeneratorSuite
           assertResult(List(ToCopy(otherKey, localHash, localFile.remoteKey)))(invokeSubject(input))
         }
       }
-      describe("#5 local exists, remote exists, remote no match, other no matches - upload") {pending}
-      describe("#6 local missing, remote exists - delete") {pending}
+      describe("#5 local exists, remote exists, remote no match, other no matches - upload") {it("I should write this test"){pending}}
+      describe("#6 local missing, remote exists - delete") {it("I should write this test"){pending}}
     }
   }
 }
