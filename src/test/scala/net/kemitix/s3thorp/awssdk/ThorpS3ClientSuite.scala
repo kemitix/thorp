@@ -15,15 +15,20 @@ import software.amazon.awssdk.services.s3.model.{ListObjectsV2Request, ListObjec
 class ThorpS3ClientSuite extends FunSpec {
 
   describe("listObjectsInPrefix") {
-    val h1 = MD5Hash("hash1")
-    val k1a = RemoteKey("key1a")
-    val k1b = RemoteKey("key1b")
     val lm = LastModified(Instant.now)
+
+    val h1 = MD5Hash("hash1")
+
+    val k1a = RemoteKey("key1a")
     val o1a = S3Object.builder.eTag(h1.hash).key(k1a.key).lastModified(lm.when).build
+
+    val k1b = RemoteKey("key1b")
     val o1b = S3Object.builder.eTag(h1.hash).key(k1b.key).lastModified(lm.when).build
+
     val h2 = MD5Hash("hash2")
     val k2 = RemoteKey("key2")
     val o2 = S3Object.builder.eTag(h2.hash).key(k2.key).lastModified(lm.when).build
+
     val myFakeResponse: IO[ListObjectsV2Response] = IO {
       ListObjectsV2Response.builder()
         .contents(List(o1a, o1b, o2).asJava)
