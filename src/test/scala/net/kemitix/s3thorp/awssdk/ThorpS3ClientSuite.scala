@@ -45,6 +45,7 @@ class ThorpS3ClientSuite extends FunSpec {
           h2 -> Set(KeyModified(k2, lm))),
         byKey = Map(
           k1a -> HashModified(h1, lm),
+          k1b -> HashModified(h1, lm),
           k2 -> HashModified(h2, lm)))
       val result: S3ObjectsData = s3client.listObjects(Bucket("bucket"), RemoteKey("prefix")).unsafeRunSync()
       assertResult(expected.byHash.keys)(result.byHash.keys)
