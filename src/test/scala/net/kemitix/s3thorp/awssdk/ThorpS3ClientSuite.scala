@@ -37,10 +37,10 @@ class ThorpS3ClientSuite extends FunSpec {
     })
     it("should build list of hash lookups, with duplicate objects grouped by hash") {
       val expected = S3ObjectsData(
-        Map(
+        byHash = Map(
           h1 -> Set(KeyModified(k1a, lm1a), KeyModified(k1b, lm1b)),
           h2 -> Set(KeyModified(k2, lm2))),
-        Map(
+        byKey = Map(
           k1a -> HashModified(h1, lm1a),
           k2 -> HashModified(h2, lm2)))
       val result: S3ObjectsData = subject.listObjects(Bucket("bucket"), RemoteKey("prefix")).unsafeRunSync()
