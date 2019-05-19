@@ -30,7 +30,7 @@ private class ThorpS3Client(s3Client: S3CatsIOClient)
                     sourceKey: RemoteKey,
                     hash: MD5Hash,
                     targetKey: RemoteKey
-                   ): IO[Either[Throwable, RemoteKey]] = {
+                   ): IO[CopyS3Action] = {
     val request = CopyObjectRequest.builder()
       .bucket(bucket.name)
       .copySource(s"$bucket/$sourceKey")
@@ -38,7 +38,7 @@ private class ThorpS3Client(s3Client: S3CatsIOClient)
       .key(targetKey.key)
       .build()
     s3Client.copyObject(request)
-      .map(_ => Right(targetKey))
+      .map(_ => CopyS3Action(targetKey))
   }
 
   override def delete(bucket: Bucket,

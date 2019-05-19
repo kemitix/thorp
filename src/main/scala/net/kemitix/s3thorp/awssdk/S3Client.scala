@@ -25,7 +25,7 @@ trait S3Client {
            sourceKey: RemoteKey,
            hash: MD5Hash,
            targetKey: RemoteKey
-          ): IO[Either[Throwable, RemoteKey]]
+          ): IO[CopyS3Action]
 
   def delete(bucket: Bucket,
              remoteKey: RemoteKey

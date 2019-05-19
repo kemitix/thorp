@@ -58,7 +58,7 @@ class SyncSuite
                          ) = {
           if (bucket == testBucket)
             copiesRecord += (sourceKey -> targetKey)
-          IO(Right(targetKey))
+          IO(CopyS3Action(targetKey))
         }
         override def delete(bucket: Bucket,
                             remoteKey: RemoteKey
@@ -114,10 +114,10 @@ class SyncSuite
                           sourceKey: RemoteKey,
                           hash: MD5Hash,
                           targetKey: RemoteKey
-                         ): IO[Either[Throwable, RemoteKey]] = IO {
+                         ): IO[CopyS3Action] = IO {
           if (bucket == testBucket)
             copiesRecord += (sourceKey -> targetKey)
-          Right(targetKey)
+          CopyS3Action(targetKey)
         }
         override def delete(bucket: Bucket,
                             remoteKey: RemoteKey
@@ -174,7 +174,7 @@ class SyncSuite
                          ) = IO {
           if (bucket == testBucket)
             copiesRecord += (sourceKey -> targetKey)
-          Right(targetKey)
+          CopyS3Action(targetKey)
         }
         override def delete(bucket: Bucket,
                             remoteKey: RemoteKey

@@ -13,7 +13,7 @@ trait DummyS3Client extends S3Client {
                     sourceKey: RemoteKey,
                     hash: MD5Hash,
                     targetKey: RemoteKey
-                   ): IO[Either[Throwable, RemoteKey]] = ???
+                   ): IO[CopyS3Action] = ???
 
   override def delete(bucket: Bucket,
                       remoteKey: RemoteKey

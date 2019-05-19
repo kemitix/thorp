@@ -1,6 +1,5 @@
 package net.kemitix.s3thorp
 
-
 trait ActionGenerator
   extends MD5HashGenerator {
 
@@ -16,8 +15,20 @@ trait ActionGenerator
       case S3MetaData(localFile, hashMatches, Some(RemoteMetaData(_, remoteHash, _)))
         if hashMatches.isEmpty && localFile.hash != remoteHash => uploadFile(localFile)
 
+      // #2 local exists, remote is missing, other matches - copy
+      case S3MetaData(localFile, matchByHash, None)
+        if matchByHash.nonEmpty => copyFile(localFile, matchByHash)
+
       case _ => Stream.empty
     }
 
   private def uploadFile(localFile: LocalFile) = Stream(ToUpload(localFile))
+
+  private def copyFile(localFile: LocalFile, matchByHash: Set[RemoteMetaData]): Stream[Action] =
+    Stream(ToCopy(
+      sourceKey = matchByHash.head.remoteKey,
+      hash = localFile.hash,
+      targetKey = localFile.remoteKey
+    ))
+
 }
