@@ -24,18 +24,17 @@ hash of the file contents.
 
 When considering a local file, the following table governs what should happen:
 
-|---+------------+------------------+--------------------+---------------------|
-| # | remote key | hash of same key | hash of other keys | action              |
-|---+------------+------------------+--------------------+---------------------|
-| 1 | exists     | no match         | matches            | copy from other key |
-| 2 | exists     | no match         | no matches         | upload              |
-| 3 | exists     | matches          | matches            | do nothing          |
-| 4 | exists     | matches          | no matches         | do nothing          |
-| 5 | is missing | no match         | matches            | copy from other key |
-| 6 | is missing | no match         | no matches         | upload              |
-| 7 | is missing | matches          | matches            | invalid combination |
-| 8 | is missing | matches          | no matches         | invalid combination |
-|---+------------+------------------+--------------------+---------------------|
+|---+------------+------------+------------------+--------------------+---------------------|
+| # | local file | remote key | hash of same key | hash of other keys | action              |
+|---+------------+------------+------------------+--------------------+---------------------|
+| 1 | exists     | exists     | matches          | -                  | do nothing          |
+| 2 | exists     | is missing | -                | matches            | copy from other key |
+| 3 | exists     | is missing | -                | no matches         | upload              |
+| 4 | exists     | exists     | no match         | matches            | copy from other key |
+| 5 | exists     | exists     | no match         | no matches         | upload              |
+| 6 | is missing | exists     | -                | -                  | delete              |
+|---+------------+------------+------------------+--------------------+---------------------|
+
 * Creating Native Images
 
   - Download and install GraalVM
