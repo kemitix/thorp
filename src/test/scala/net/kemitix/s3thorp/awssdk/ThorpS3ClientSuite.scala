@@ -31,14 +31,7 @@ class ThorpS3ClientSuite extends FunSpec {
         .contents(List(o1a, o1b, o2).asJava)
         .build()
     }
-    val subject = new ThorpS3Client(new S3CatsIOClient {
-      override val underlying: S3AsyncClient = new S3AsyncClient {
-        override val underlying: s3.S3AsyncClient = new s3.S3AsyncClient {
-          override def serviceName(): String = "fake-s3-client"
-
-          override def close(): Unit = ()
-        }
-      }
+    val subject = new ThorpS3Client(new MyS3CatsIOClient {
       override def listObjectsV2(listObjectsV2Request: ListObjectsV2Request) =
         myFakeResponse
     })
@@ -54,6 +47,15 @@ class ThorpS3ClientSuite extends FunSpec {
       assertResult(expected.byHash.keys)(result.byHash.keys)
       assertResult(expected.byKey.keys)(result.byKey.keys)
       assertResult(expected)(result)
+    }
+  }
+  trait MyS3CatsIOClient extends S3CatsIOClient {
+    override val underlying: S3AsyncClient = new S3AsyncClient {
+      override val underlying: s3.S3AsyncClient = new s3.S3AsyncClient {
+        override def serviceName(): String = "fake-s3-client"
+
+        override def close(): Unit = ()
+      }
     }
   }
 }
