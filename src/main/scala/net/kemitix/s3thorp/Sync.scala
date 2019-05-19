@@ -43,9 +43,8 @@ class Sync(s3Client: S3Client)
                       moved: Int = 0)
 
   override def upload(localFile: LocalFile,
-                      bucket: Bucket,
-                      remoteKey: RemoteKey) =
-    s3Client.upload(localFile, bucket, remoteKey)
+                      bucket: Bucket) =
+    s3Client.upload(localFile, bucket)
 
   override def copy(bucket: Bucket,
                     sourceKey: RemoteKey,

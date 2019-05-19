@@ -20,14 +20,15 @@ class ThorpS3ClientSuite extends FunSpec {
     val k1b = RemoteKey("key1b")
     val lm1a = LastModified(Instant.now)
     val lm1b = LastModified(Instant.now.minus(10, ChronoUnit.MINUTES))
-    val o1 = S3Object.builder.eTag(h1.hash).key(k1a.key).lastModified(lm1a.when).build
+    val o1a = S3Object.builder.eTag(h1.hash).key(k1a.key).lastModified(lm1a.when).build
+    val o1b = S3Object.builder.eTag(h1.hash).key(k1b.key).lastModified(lm1b.when).build
     val h2 = MD5Hash("hash2")
     val k2 = RemoteKey("key2")
     val lm2 = LastModified(Instant.now.minusSeconds(200))
     val o2 = S3Object.builder.eTag(h2.hash).key(k2.key).lastModified(lm2.when).build
     val myFakeResponse: IO[ListObjectsV2Response] = IO{
       ListObjectsV2Response.builder()
-        .contents(List(o1, o2).asJava)
+        .contents(List(o1a, o1b, o2).asJava)
         .build()
     }
     val subject = new ThorpS3Client(new S3CatsIOClient {
@@ -41,8 +42,7 @@ class ThorpS3ClientSuite extends FunSpec {
       override def listObjectsV2(listObjectsV2Request: ListObjectsV2Request) =
         myFakeResponse
     })
-    it("should build list of hash lookups") {
-      val result: S3ObjectsData = subject.listObjects(Bucket("bucket"), RemoteKey("prefix")).unsafeRunSync()
+    it("should build list of hash lookups, with duplicate objects grouped by hash") {
       val expected = S3ObjectsData(
         Map(
           h1 -> Set(KeyModified(k1a, lm1a), KeyModified(k1b, lm1b)),
@@ -50,8 +50,10 @@ class ThorpS3ClientSuite extends FunSpec {
         Map(
           k1a -> HashModified(h1, lm1a),
           k2 -> HashModified(h2, lm2)))
+      val result: S3ObjectsData = subject.listObjects(Bucket("bucket"), RemoteKey("prefix")).unsafeRunSync()
+      assertResult(expected.byHash.keys)(result.byHash.keys)
+      assertResult(expected.byKey.keys)(result.byKey.keys)
       assertResult(expected)(result)
     }
   }
-
 }

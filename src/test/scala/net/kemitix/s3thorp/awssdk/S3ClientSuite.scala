@@ -3,14 +3,13 @@ package net.kemitix.s3thorp.awssdk
 import java.io.File
 import java.time.Instant
 
-import cats.effect.{IO, Sync}
+import cats.effect.IO
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
-import net.kemitix.s3thorp.{Bucket, Config, HashModified, KeyGenerator, KeyModified, LastModified, LocalFile, MD5Hash, RemoteKey, Resource, UploadS3Action}
-import org.scalatest.FunSpec
+import net.kemitix.s3thorp._
 import software.amazon.awssdk.services.s3.model.{PutObjectRequest, PutObjectResponse}
 
 class S3ClientSuite
-  extends FunSpec
+  extends UnitTest
     with KeyGenerator {
 
   val source = Resource(this, "../upload")
@@ -57,8 +56,8 @@ class S3ClientSuite
   }
 
   describe("upload") {
-    def invoke(s3Client: ThorpS3Client, localFile: LocalFile, bucket: Bucket, remoteKey: RemoteKey) =
-      s3Client.upload(localFile, bucket, remoteKey).unsafeRunSync
+    def invoke(s3Client: ThorpS3Client, localFile: LocalFile, bucket: Bucket) =
+      s3Client.upload(localFile, bucket).unsafeRunSync
     describe("when uploading a file") {
       val md5Hash = MD5Hash("the-md5hash")
       val s3Client = new ThorpS3Client(
@@ -67,11 +66,12 @@ class S3ClientSuite
             IO(PutObjectResponse.builder().eTag(md5Hash.hash).build())
         })
       val source = new File("/")
-      val localFile: LocalFile = LocalFile(new File("/some/file"), source, generateKey(source, RemoteKey("")))
+      val prefix = RemoteKey("prefix")
+      val localFile: LocalFile = aLocalFile("/some/file", md5Hash, source, generateKey(source, prefix))
       val bucket: Bucket = Bucket("a-bucket")
-      val remoteKey: RemoteKey = RemoteKey("prefix/file")
+      val remoteKey: RemoteKey = RemoteKey("prefix/some/file")
       it("should return hash of uploaded file") {
-        assertResult(UploadS3Action(remoteKey, md5Hash))(invoke(s3Client, localFile, bucket, remoteKey))
+        assertResult(UploadS3Action(remoteKey, md5Hash))(invoke(s3Client, localFile, bucket))
       }
     }
   }

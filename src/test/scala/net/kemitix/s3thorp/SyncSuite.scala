@@ -4,29 +4,28 @@ import java.io.File
 import java.time.Instant
 
 import cats.effect.IO
-import net.kemitix.s3thorp.awssdk.{S3ObjectsData, S3Client}
-import org.scalatest.FunSpec
+import net.kemitix.s3thorp.awssdk.{S3Client, S3ObjectsData}
 
 class SyncSuite
-  extends FunSpec
+  extends UnitTest
     with KeyGenerator {
 
   describe("s3client thunk") {
     val testBucket = Bucket("bucket")
-    val testRemoteKey = RemoteKey("prefix/file")
+    val prefix = RemoteKey("prefix")
+    val source = new File("/")
     describe("upload") {
       val md5Hash = MD5Hash("the-hash")
-      val source = new File("/")
-      val testLocalFile = LocalFile(new File("file"), source, generateKey(source, RemoteKey("")))
+      val testLocalFile = aLocalFile("file", md5Hash, source, generateKey(source, prefix))
       val sync = new Sync(new S3Client with DummyS3Client {
-        override def upload(localFile: LocalFile, bucket: Bucket, remoteKey: RemoteKey) = IO {
+        override def upload(localFile: LocalFile, bucket: Bucket) = IO {
           assert(bucket == testBucket)
-          UploadS3Action(remoteKey, md5Hash)
+          UploadS3Action(localFile.remoteKey, md5Hash)
         }
       })
       it("delegates unmodified to the S3Client") {
-        assertResult(UploadS3Action(testRemoteKey, md5Hash))(
-          sync.upload(testLocalFile, testBucket, testRemoteKey).
+        assertResult(UploadS3Action(RemoteKey(prefix.key + "/file"), md5Hash))(
+          sync.upload(testLocalFile, testBucket).
             unsafeRunSync())
       }
     }
@@ -46,12 +45,11 @@ class SyncSuite
             byHash = Map(),
             byKey = Map()))
         override def upload(localFile: LocalFile,
-                            bucket: Bucket,
-                            remoteKey: RemoteKey
+                            bucket: Bucket
                            ) = IO {
           if (bucket == testBucket)
-            uploadsRecord += (localFile.relative.toString -> remoteKey)
-          UploadS3Action(remoteKey, MD5Hash("some hash value"))
+            uploadsRecord += (localFile.relative.toString -> localFile.remoteKey)
+          UploadS3Action(localFile.remoteKey, MD5Hash("some hash value"))
         }
         override def copy(bucket: Bucket,
                           sourceKey: RemoteKey,
@@ -106,12 +104,11 @@ class SyncSuite
               RemoteKey("prefix/root-file") -> HashModified(rootHash, lastModified),
               RemoteKey("prefix/subdir/leaf-file") -> HashModified(leafHash, lastModified))))
         override def upload(localFile: LocalFile,
-                            bucket: Bucket,
-                            remoteKey: RemoteKey
+                            bucket: Bucket
                            ) = IO {
           if (bucket == testBucket)
-            uploadsRecord += (localFile.relative.toString -> remoteKey)
-          UploadS3Action(remoteKey, MD5Hash("some hash value"))
+            uploadsRecord += (localFile.relative.toString -> localFile.remoteKey)
+          UploadS3Action(localFile.remoteKey, MD5Hash("some hash value"))
         }
         override def copy(bucket: Bucket,
                           sourceKey: RemoteKey,
@@ -164,12 +161,11 @@ class SyncSuite
               RemoteKey("prefix/root-file-old") -> HashModified(rootHash, lastModified),
               RemoteKey("prefix/subdir/leaf-file") -> HashModified(leafHash, lastModified)))}
         override def upload(localFile: LocalFile,
-                            bucket: Bucket,
-                            remoteKey: RemoteKey
+                            bucket: Bucket
                            ) = IO {
           if (bucket == testBucket)
-            uploadsRecord += (localFile.relative.toString -> remoteKey)
-          UploadS3Action(remoteKey, MD5Hash("some hash value"))
+            uploadsRecord += (localFile.relative.toString -> localFile.remoteKey)
+          UploadS3Action(localFile.remoteKey, MD5Hash("some hash value"))
         }
         override def copy(bucket: Bucket,
                           sourceKey: RemoteKey,

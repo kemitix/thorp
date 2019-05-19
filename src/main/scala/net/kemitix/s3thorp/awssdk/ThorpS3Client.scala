@@ -2,27 +2,28 @@ package net.kemitix.s3thorp.awssdk
 
 import cats.effect.IO
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
-import net.kemitix.s3thorp.{Bucket, HashModified, KeyModified, LastModified, LocalFile, MD5Hash, RemoteKey, UploadS3Action}
+import net.kemitix.s3thorp._
 import software.amazon.awssdk.core.async.AsyncRequestBody
-import software.amazon.awssdk.services.s3.model.{CopyObjectRequest, DeleteObjectRequest, ListObjectsV2Request, PutObjectRequest, S3Object}
+import software.amazon.awssdk.services.s3.model.{Bucket => _, _}
 
 import scala.collection.JavaConverters._
 
-private class ThorpS3Client(s3Client: S3CatsIOClient) extends S3Client {
+private class ThorpS3Client(s3Client: S3CatsIOClient)
+  extends S3Client
+    with S3ObjectsByHash {
 
   override def upload(localFile: LocalFile,
-                      bucket: Bucket,
-                      remoteKey: RemoteKey
+                      bucket: Bucket
                      ): IO[UploadS3Action] = {
     val request = PutObjectRequest.builder()
       .bucket(bucket.name)
-      .key(remoteKey.key)
+      .key(localFile.remoteKey.key)
       .build()
     val body = AsyncRequestBody.fromFile(localFile.file)
     s3Client.putObject(request, body)
       .map(_.eTag)
       .map(MD5Hash)
-      .map(md5Hash => UploadS3Action(remoteKey, md5Hash))
+      .map(md5Hash => UploadS3Action(localFile.remoteKey, md5Hash))
   }
 
   override def copy(bucket: Bucket,
@@ -53,9 +54,6 @@ private class ThorpS3Client(s3Client: S3CatsIOClient) extends S3Client {
 
   private def asS3ObjectsData: Stream[S3Object] => S3ObjectsData =
     os => S3ObjectsData(byHash(os), byKey(os))
-
-  private def byHash(os: Stream[S3Object]) =
-    os.map{o => (MD5Hash(o.eTag), Set(KeyModified(RemoteKey(o.key), LastModified(o.lastModified))))}.toMap
 
   private def byKey(os: Stream[S3Object]) =
     os.map{o => (RemoteKey(o.key()), HashModified(MD5Hash(o.eTag()), LastModified(o.lastModified())))}.toMap

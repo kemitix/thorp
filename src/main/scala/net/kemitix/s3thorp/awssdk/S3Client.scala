@@ -18,8 +18,7 @@ trait S3Client {
                  ): IO[S3ObjectsData]
 
   def upload(localFile: LocalFile,
-             bucket: Bucket,
-             remoteKey: RemoteKey
+             bucket: Bucket
             ): IO[UploadS3Action]
 
   def copy(bucket: Bucket,
