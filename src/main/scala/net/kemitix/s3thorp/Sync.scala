@@ -27,6 +27,12 @@ class Sync(s3Client: S3Client)
               case UploadS3Action(_, _) =>
                 log1(s"- Uploaded: ${s3Action.remoteKey.key}")
                 counters.copy(uploaded = counters.uploaded + 1)
+              case CopyS3Action(remoteKey) =>
+                log1(s"-   Copied: ${s3Action.remoteKey.key}")
+                counters.copy(copied = counters.copied + 1)
+              case DeleteS3Action(remoteKey) =>
+                log1(s"-  Deleted: ${s3Action.remoteKey.key}")
+                counters.copy(deleted = counters.deleted + 1)
               case _ => counters
             }
           })
