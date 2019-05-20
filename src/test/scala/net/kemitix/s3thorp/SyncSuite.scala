@@ -203,4 +203,43 @@ class SyncSuite
     }
     describe("when a file is copied it is copied on S3 with no upload") {}
   }
+
+  class RecordingSync(testBucket: Bucket) extends DummyS3Client {
+
+    var uploadsRecord: Map[String, RemoteKey] = Map()
+    var copiesRecord: Map[RemoteKey, RemoteKey] = Map()
+    var deletionsRecord: Set[RemoteKey] = Set()
+
+    override def listObjects(bucket: Bucket, prefix: RemoteKey) = IO {
+      S3ObjectsData(
+        byHash = Map(),
+        byKey = Map())
+    }
+
+    override def upload(localFile: LocalFile,
+                        bucket: Bucket
+                       ) = IO {
+      if (bucket == testBucket)
+        uploadsRecord += (localFile.relative.toString -> localFile.remoteKey)
+      UploadS3Action(localFile.remoteKey, MD5Hash("some hash value"))
+    }
+
+    override def copy(bucket: Bucket,
+                      sourceKey: RemoteKey,
+                      hash: MD5Hash,
+                      targetKey: RemoteKey
+                     ) = IO {
+      if (bucket == testBucket)
+        copiesRecord += (sourceKey -> targetKey)
+      CopyS3Action(targetKey)
+    }
+
+    override def delete(bucket: Bucket,
+                        remoteKey: RemoteKey
+                       ) = IO {
+      if (bucket == testBucket)
+        deletionsRecord += remoteKey
+      DeleteS3Action(remoteKey)
+    }
+  }
 }
