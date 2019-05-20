@@ -24,14 +24,14 @@ class Sync(s3Client: S3Client)
           .foldLeft(Counters())((counters: Counters, ioS3Action: IO[S3Action]) => {
             val s3Action = ioS3Action.unsafeRunSync
             s3Action match {
-              case UploadS3Action(_, _) =>
-                log1(s"- Uploaded: ${s3Action.remoteKey.key}")
+              case UploadS3Action(remoteKey, _) =>
+                log1(s"- Uploaded: ${remoteKey.key}")
                 counters.copy(uploaded = counters.uploaded + 1)
               case CopyS3Action(remoteKey) =>
-                log1(s"-   Copied: ${s3Action.remoteKey.key}")
+                log1(s"-   Copied: ${remoteKey.key}")
                 counters.copy(copied = counters.copied + 1)
               case DeleteS3Action(remoteKey) =>
-                log1(s"-  Deleted: ${s3Action.remoteKey.key}")
+                log1(s"-  Deleted: ${remoteKey.key}")
                 counters.copy(deleted = counters.deleted + 1)
               case _ => counters
             }
