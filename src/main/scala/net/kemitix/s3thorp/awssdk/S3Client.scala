@@ -29,7 +29,7 @@ trait S3Client {
 
   def delete(bucket: Bucket,
              remoteKey: RemoteKey
-            ): IO[Either[Throwable, RemoteKey]]
+            ): IO[DeleteS3Action]
 
 }
 

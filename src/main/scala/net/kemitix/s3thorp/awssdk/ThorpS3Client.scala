@@ -43,13 +43,13 @@ private class ThorpS3Client(s3Client: S3CatsIOClient)
 
   override def delete(bucket: Bucket,
                       remoteKey: RemoteKey
-                     ): IO[Either[Throwable, RemoteKey]] = {
+                     ): IO[DeleteS3Action] = {
     val request = DeleteObjectRequest.builder()
       .bucket(bucket.name)
       .key(remoteKey.key)
       .build()
     s3Client.deleteObject(request)
-      .map(_ => Right(remoteKey))
+      .map(_ => DeleteS3Action(remoteKey))
   }
 
   private def asS3ObjectsData: Stream[S3Object] => S3ObjectsData =

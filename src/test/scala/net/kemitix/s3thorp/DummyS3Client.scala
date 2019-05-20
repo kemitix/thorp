@@ -17,7 +17,7 @@ trait DummyS3Client extends S3Client {
 
   override def delete(bucket: Bucket,
                       remoteKey: RemoteKey
-                     ): IO[Either[Throwable, RemoteKey]] = ???
+                     ): IO[DeleteS3Action] = ???
 
   override def listObjects(bucket: Bucket,
                            prefix: RemoteKey

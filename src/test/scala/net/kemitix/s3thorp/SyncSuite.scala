@@ -65,7 +65,7 @@ class SyncSuite
                            ) = {
           if (bucket == testBucket)
             deletionsRecord += remoteKey
-          IO(Right(remoteKey))
+          IO(DeleteS3Action(remoteKey))
         }
       })
       sync.run(config).unsafeRunSync
@@ -124,7 +124,7 @@ class SyncSuite
                            ) = IO {
           if (bucket == testBucket)
             deletionsRecord += remoteKey
-          Right(remoteKey)
+          DeleteS3Action(remoteKey)
         }
       })
       sync.run(config).unsafeRunSync
@@ -181,7 +181,7 @@ class SyncSuite
                            ) = IO {
           if (bucket == testBucket)
             deletionsRecord += remoteKey
-          Right(remoteKey)
+          DeleteS3Action(remoteKey)
         }
       })
       sync.run(config).unsafeRunSync
