@@ -75,7 +75,6 @@ class ActionGeneratorSuite
           matchByHash = Set(otherRemoteMetadata), // other matches
           matchByKey = Some(oldRemoteMetadata)) // remote exists
         it("copy from other key") {
-          pending
           val expected = List(ToCopy(otherRemoteKey, theHash, theRemoteKey)) // copy
           val result = invoke(input)
           assertResult(expected)(result)
@@ -91,7 +90,6 @@ class ActionGeneratorSuite
           matchByKey = Some(theRemoteMetadata) // remote exists
         )
         it("upload") {
-          pending
           val expected = List(ToUpload(theFile)) // upload
           val result = invoke(input)
           assertResult(expected)(result)
