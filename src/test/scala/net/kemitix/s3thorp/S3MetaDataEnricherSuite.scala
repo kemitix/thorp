@@ -64,8 +64,22 @@ class S3MetaDataEnricherSuite
           assertResult(expected)(result)
         }
       }
-      describe("#3a local exists, remote is missing, remote matches, other no matches - upload") {it("I should write this test"){pending}}
-      describe("#3b local exists, remote is missing, remote no match, other no matches - upload") {it("I should write this test"){pending}}
+      describe("#3 local exists, remote is missing, remote no match, other no matches - upload") {
+        val hash = MD5Hash("the-hash")
+        val theFile = aLocalFile("the-file", hash, source, fileToKey)
+        implicit val s3: S3ObjectsData = S3ObjectsData(
+          byHash = Map(),
+          byKey = Map()
+        )
+        it("I should write this test"){
+          val expected = S3MetaData(theFile,
+            matchByHash = Set.empty,
+            matchByKey = None)
+          val result = getMetadata(theFile)
+          assertResult(expected)(result)
+        }
+      }
+
       describe("#4 local exists, remote exists, remote no match, other matches - copy") {it("I should write this test"){pending}}
       describe("#5 local exists, remote exists, remote no match, other no matches - upload") {
         val newLocalHash: MD5Hash = MD5Hash("the-new-hash")
