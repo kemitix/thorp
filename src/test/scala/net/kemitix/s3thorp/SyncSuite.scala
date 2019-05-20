@@ -97,18 +97,16 @@ class SyncSuite
       val sync = new RecordingSync(testBucket, new DummyS3Client {}, s3ObjectsData)
       sync.run(config).unsafeRunSync
       it("uploads nothing") {
-        pending
         val expectedUploads = Map()
         assertResult(expectedUploads)(sync.uploadsRecord)
       }
       it("copies the file") {
-        pending
-        val expectedCopies = Map("prefix/root-file-old" -> "prefix/root-file")
+        val expectedCopies = Map(RemoteKey("prefix/root-file-old") -> RemoteKey("prefix/root-file"))
         assertResult(expectedCopies)(sync.copiesRecord)
       }
       it("deletes the original") {
         pending
-        val expectedDeletions = Set("prefix/root-file-old")
+        val expectedDeletions = Set(RemoteKey("prefix/root-file-old"))
         assertResult(expectedDeletions)(sync.deletionsRecord)
       }
     }
