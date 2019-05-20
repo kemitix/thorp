@@ -130,7 +130,6 @@ class S3MetaDataEnricherSuite
           assertResult(expected)(result)
         }
       }
-      describe("#6 local missing, remote exists - delete") {it("I should write this test"){pending}}
     }
   }
 }
