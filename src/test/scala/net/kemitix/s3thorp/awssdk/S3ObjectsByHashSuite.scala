@@ -21,7 +21,6 @@ class S3ObjectsByHashSuite extends UnitTest {
           hash -> Set(KeyModified(key1, lastModified), KeyModified(key2, lastModified))
         )
         val result = byHash(os)
-        println(s"result = $result")
         assertResult(expected)(result)
       }
     }
