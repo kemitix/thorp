@@ -19,15 +19,20 @@ trait ActionGenerator
           otherMatches.nonEmpty
       => copyFile(localFile, otherMatches)
 
-      // There is a local file, but nothing matching in S3 - Upload
-      case S3MetaData(localFile, hashMatches, None) if hashMatches.isEmpty => uploadFile(localFile)
+      // #3 local exists, remote is missing, other no matches - upload
+      case S3MetaData(localFile, otherMatches, None)
+        if localFile.file.exists &&
+          otherMatches.isEmpty
+      => uploadFile(localFile)
 
       // There is a local file and an s3 file with the same name, but different content,
       // and no other object with the same content - Upload
       case S3MetaData(localFile, hashMatches, Some(RemoteMetaData(_, remoteHash, _)))
         if hashMatches.isEmpty && localFile.hash != remoteHash => uploadFile(localFile)
 
+      // #4 local exists, remote exists, remote no match, other matches - copy
 
+      // #1 local exists, remote exists, remote matches - do nothing
       case _ => Stream.empty
     }
 
