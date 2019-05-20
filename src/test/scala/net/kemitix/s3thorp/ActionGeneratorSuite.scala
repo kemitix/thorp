@@ -20,7 +20,20 @@ class ActionGeneratorSuite
 
       def invoke(input: S3MetaData) = createActions(input).toList
 
-      describe("#1 local exists, remote exists, remote matches - do nothing") {it("I should write this test"){pending}}
+      describe("#1 local exists, remote exists, remote matches - do nothing") {
+        val theHash = MD5Hash("the-hash")
+        val theFile = aLocalFile("the-file", theHash, source, fileToKey)
+        val theRemoteMetadata = RemoteMetaData(theFile.remoteKey, theHash, lastModified)
+        val input = S3MetaData(theFile, // local exists
+          matchByHash = Set(theRemoteMetadata), // remote matches
+          matchByKey = Some(theRemoteMetadata) // remote exists
+          )
+        it("do nothing") {
+          val expected = List.empty // do nothing
+          val result = invoke(input)
+          assertResult(expected)(result)
+        }
+      }
       describe("#2 local exists, remote is missing, other matches - copy") {
         val theHash = MD5Hash("the-hash")
         val theFile = aLocalFile("the-file", theHash, source, fileToKey)
