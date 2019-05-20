@@ -81,7 +81,22 @@ class ActionGeneratorSuite
           assertResult(expected)(result)
         }
       }
-      describe("#5 local exists, remote exists, remote no match, other no matches - upload") {it("I should write this test"){pending}}
+      describe("#5 local exists, remote exists, remote no match, other no matches - upload") {
+        val theHash = MD5Hash("the-hash")
+        val theFile = aLocalFile("the-file", theHash, source, fileToKey)
+        val theRemoteKey = theFile.remoteKey
+        val theRemoteMetadata = RemoteMetaData(theRemoteKey, theHash, lastModified)
+        val input = S3MetaData(theFile, // local exists
+          matchByHash = Set.empty, // remote no match, other no match
+          matchByKey = Some(theRemoteMetadata) // remote exists
+        )
+        it("upload") {
+          pending
+          val expected = List(ToUpload(theFile)) // upload
+          val result = invoke(input)
+          assertResult(expected)(result)
+        }
+      }
       describe("#6 local missing, remote exists - delete") {it("I should write this test"){pending}}
     }
   }
