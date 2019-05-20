@@ -44,7 +44,7 @@ class ActionGeneratorSuite
           matchByHash = Set(otherRemoteMetadata), // other matches
           matchByKey = None) // remote is missing
         it("copy from other key") {
-          val expected = List(ToCopy(otherRemoteKey, theHash, theRemoteKey))
+          val expected = List(ToCopy(otherRemoteKey, theHash, theRemoteKey)) // copy
           val result = invoke(input)
           assertResult(expected)(result)
         }
@@ -56,7 +56,7 @@ class ActionGeneratorSuite
           matchByHash = Set.empty, // other no matches
           matchByKey = None) // remote is missing
         it("upload") {
-          val expected = List(ToUpload(theFile))
+          val expected = List(ToUpload(theFile)) // upload
           val result = invoke(input)
           assertResult(expected)(result)
         }
@@ -76,7 +76,7 @@ class ActionGeneratorSuite
           matchByKey = Some(oldRemoteMetadata)) // remote exists
         it("copy from other key") {
           pending
-          val expected = List(ToCopy(otherRemoteKey, theHash, theFile.remoteKey))
+          val expected = List(ToCopy(otherRemoteKey, theHash, theRemoteKey)) // copy
           val result = invoke(input)
           assertResult(expected)(result)
         }
