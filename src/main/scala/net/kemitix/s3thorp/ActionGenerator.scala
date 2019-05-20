@@ -7,6 +7,12 @@ trait ActionGenerator
                    (implicit c: Config): Stream[Action] =
     s3MetaData match {
 
+      // #1 local exists, remote exists, remote matches - do nothing
+      case S3MetaData(localFile, _, Some(RemoteMetaData(_, remoteHash, _)))
+        if localFile.file.exists &&
+          localFile.hash == remoteHash
+      => Stream.empty
+
       // There is a local file, but nothing matching in S3 - Upload
       case S3MetaData(localFile, hashMatches, None) if hashMatches.isEmpty => uploadFile(localFile)
 
