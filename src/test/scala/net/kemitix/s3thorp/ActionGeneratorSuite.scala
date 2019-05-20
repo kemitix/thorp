@@ -5,42 +5,67 @@ import java.time.Instant
 import org.scalatest.FunSpec
 
 class ActionGeneratorSuite
-  extends FunSpec
+  extends UnitTest
     with KeyGenerator {
 
+  private val source = Resource(this, "upload")
+  private val prefix = RemoteKey("prefix")
+  implicit private val config: Config = Config(Bucket("bucket"), prefix, source = source)
+  private val fileToKey = generateKey(config.source, config.prefix) _
+  val lastModified = LastModified(Instant.now())
+
   new ActionGenerator {
+
     describe("create actions") {
-      val resource = Resource(this, "test-file-for-hash.txt")
-      val localHash = MD5Hash("0cbfe978783bd7950d5da4ff85e4af37")
-      implicit val config: Config = Config(Bucket("bucket"), RemoteKey("prefix"), source = resource.getParentFile)
-      val fileToKey = generateKey(config.source, config.prefix) _
-      val localFile = LocalFile(resource, config.source, fileToKey)
-      val lastModified = LastModified(Instant.now)
-      val otherKey = RemoteKey("prefix/other-file")
-      def invokeSubject(input: S3MetaData) = createActions(input).toList
+
+      def invoke(input: S3MetaData) = createActions(input).toList
 
       describe("#1 local exists, remote exists, remote matches - do nothing") {it("I should write this test"){pending}}
       describe("#2 local exists, remote is missing, other matches - copy") {
-        val input = S3MetaData(localFile, // local exists
-          matchByHash = Set(RemoteMetaData(otherKey, localHash, lastModified)), // other matches
+        val theHash = MD5Hash("the-hash")
+        val theFile = aLocalFile("the-file", theHash, source, fileToKey)
+        val theRemoteKey = theFile.remoteKey
+        val otherRemoteKey = aRemoteKey(prefix, "other-key")
+        val otherRemoteMetadata = RemoteMetaData(otherRemoteKey, theHash, lastModified)
+        val input = S3MetaData(theFile, // local exists
+          matchByHash = Set(otherRemoteMetadata), // other matches
           matchByKey = None) // remote is missing
         it("copy from other key") {
-          assertResult(List(ToCopy(otherKey, localHash, localFile.remoteKey)))(invokeSubject(input))
+          val expected = List(ToCopy(otherRemoteKey, theHash, theRemoteKey))
+          val result = invoke(input)
+          assertResult(expected)(result)
         }
       }
       describe("#3 local exists, remote is missing, other no matches - upload") {
-        val input = S3MetaData(localFile, Set.empty, None)
+        val theHash = MD5Hash("the-hash")
+        val theFile = aLocalFile("the-file", theHash, source, fileToKey)
+        val input = S3MetaData(theFile, // local exists
+          matchByHash = Set.empty, // other no matches
+          matchByKey = None) // remote is missing
         it("upload") {
-          assertResult(List(ToUpload(localFile)))(invokeSubject(input))
+          val expected = List(ToUpload(theFile))
+          val result = invoke(input)
+          assertResult(expected)(result)
         }
       }
       describe("#4 local exists, remote exists, remote no match, other matches - copy") {
-        val input = S3MetaData(localFile,
-          matchByHash = Set(RemoteMetaData(otherKey, localHash, lastModified)),
-          matchByKey = Some(RemoteMetaData(localFile.remoteKey, MD5Hash("previous-hash"), lastModified)))
+        val theHash = MD5Hash("the-hash")
+        val theFile = aLocalFile("the-file", theHash, source, fileToKey)
+        val theRemoteKey = theFile.remoteKey
+        val oldHash = MD5Hash("old-hash")
+        val otherRemoteKey = aRemoteKey(prefix, "other-key")
+        val otherRemoteMetadata = RemoteMetaData(otherRemoteKey, theHash, lastModified)
+        val oldRemoteMetadata = RemoteMetaData(theRemoteKey,
+          hash = oldHash, // remote no match
+          lastModified = lastModified)
+        val input = S3MetaData(theFile, // local exists
+          matchByHash = Set(otherRemoteMetadata), // other matches
+          matchByKey = Some(oldRemoteMetadata)) // remote exists
         it("copy from other key") {
           pending
-          assertResult(List(ToCopy(otherKey, localHash, localFile.remoteKey)))(invokeSubject(input))
+          val expected = List(ToCopy(otherRemoteKey, theHash, theFile.remoteKey))
+          val result = invoke(input)
+          assertResult(expected)(result)
         }
       }
       describe("#5 local exists, remote exists, remote no match, other no matches - upload") {it("I should write this test"){pending}}
