@@ -1,7 +1,7 @@
 package net.kemitix.s3thorp
 
-import cats.implicits._
 import cats.effect.IO
+import cats.implicits._
 import net.kemitix.s3thorp.awssdk.S3Client
 
 class Sync(s3Client: S3Client)
@@ -15,20 +15,19 @@ class Sync(s3Client: S3Client)
     log1(s"Bucket: ${c.bucket.name}, Prefix: ${c.prefix.key}, Source: ${c.source}")
     listObjects(c.bucket, c.prefix)
       .map { implicit s3ObjectsData => {
-
         val actions = (for {
           file <- findFiles(c.source)
           meta = getMetadata(file)
           action <- createActions(meta)
           ioS3Action = submitAction(action)
         } yield ioS3Action).sequence
-
-        val sortedActions = actions.flatMap { actions => IO { actions.sorted } }
-
-        val completedActions: Stream[S3Action] = sortedActions.unsafeRunSync
-        log(completedActions)
+        val sorted = sort(actions)
+        log(sorted.unsafeRunSync)
       }}
   }
+
+  private def sort(ioActions: IO[Stream[S3Action]]) =
+    ioActions.flatMap { actions => IO { actions.sorted } }
 
   override def upload(localFile: LocalFile,
                       bucket: Bucket) =
