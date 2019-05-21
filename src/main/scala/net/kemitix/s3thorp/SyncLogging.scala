@@ -10,7 +10,6 @@ trait SyncLogging extends Logging {
     val counters = actions.foldLeft(Counters())(logActivity)
     log1(s"Uploaded ${counters.uploaded} files")
     log1(s"Copied   ${counters.copied} files")
-    log1(s"Moved    ${counters.moved} files")
     log1(s"Deleted  ${counters.deleted} files")
   }
 
@@ -32,7 +31,6 @@ trait SyncLogging extends Logging {
 
   case class Counters(uploaded: Int = 0,
                       deleted: Int = 0,
-                      copied: Int = 0,
-                      moved: Int = 0)
+                      copied: Int = 0)
 
 }
