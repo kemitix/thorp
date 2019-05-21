@@ -10,5 +10,4 @@ sealed trait S3Action {
 case class UploadS3Action(remoteKey: RemoteKey,
                           md5Hash: MD5Hash) extends S3Action
 case class CopyS3Action(remoteKey: RemoteKey) extends S3Action
-case class MoveS3Action(remoteKey: RemoteKey) extends S3Action
 case class DeleteS3Action(remoteKey: RemoteKey) extends S3Action
