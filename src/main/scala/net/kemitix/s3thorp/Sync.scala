@@ -9,7 +9,7 @@ class Sync(s3Client: S3Client)
     with S3MetaDataEnricher
     with ActionGenerator
     with ActionSubmitter
-    with Logging {
+    with SyncLogging {
 
   def run(implicit c: Config): IO[Unit] = {
     log1(s"Bucket: ${c.bucket.name}, Prefix: ${c.prefix.key}, Source: ${c.source}")
@@ -25,35 +25,10 @@ class Sync(s3Client: S3Client)
 
         val sortedActions = actions.flatMap { actions => IO { actions.sorted } }
 
-        val counters = sortedActions.unsafeRunSync
-          .foldLeft(Counters())(logActivity)
-        log1(s"Uploaded ${counters.uploaded} files")
-        log1(s"Copied   ${counters.copied} files")
-        log1(s"Moved    ${counters.moved} files")
-        log1(s"Deleted  ${counters.deleted} files")
+        val completedActions: Stream[S3Action] = sortedActions.unsafeRunSync
+        log(completedActions)
       }}
   }
-
-  private def logActivity(implicit c: Config): (Counters, S3Action) => Counters =
-    (counters: Counters, s3Action: S3Action) => {
-      s3Action match {
-        case UploadS3Action(remoteKey, _) =>
-          log1(s"- Uploaded: ${remoteKey.key}")
-          counters.copy(uploaded = counters.uploaded + 1)
-        case CopyS3Action(remoteKey) =>
-          log1(s"-   Copied: ${remoteKey.key}")
-          counters.copy(copied = counters.copied + 1)
-        case DeleteS3Action(remoteKey) =>
-          log1(s"-  Deleted: ${remoteKey.key}")
-          counters.copy(deleted = counters.deleted + 1)
-        case _ => counters
-      }
-    }
-
-  case class Counters(uploaded: Int = 0,
-                      deleted: Int = 0,
-                      copied: Int = 0,
-                      moved: Int = 0)
 
   override def upload(localFile: LocalFile,
                       bucket: Bucket) =
