@@ -1,5 +1,6 @@
 package net.kemitix.s3thorp
 
+import cats.implicits._
 import cats.effect.IO
 import net.kemitix.s3thorp.awssdk.S3Client
 
@@ -14,15 +15,46 @@ class Sync(s3Client: S3Client)
     log1(s"Bucket: ${c.bucket.name}, Prefix: ${c.prefix.key}, Source: ${c.source}")
     listObjects(c.bucket, c.prefix)
       .map { implicit s3ObjectsData => {
-        val counters = (
-          for {
-            file <- findFiles(c.source)
-            meta = getMetadata(file)
-            action <- createActions(meta)
-            ioS3Action = submitAction(action)
-          } yield ioS3Action)
-          .foldLeft(Counters())((counters: Counters, ioS3Action: IO[S3Action]) => {
-            val s3Action = ioS3Action.unsafeRunSync
+        val actions = (for {
+          file <- findFiles(c.source)
+          meta = getMetadata(file)
+          action <- createActions(meta)
+          ioS3Action = submitAction(action)
+        } yield ioS3Action).sequence
+        val copyActions = actions.flatMap { sa =>
+          IO {
+            sa.filter {
+              case CopyS3Action(_) => true
+              case _ => false
+            }
+          }
+        }
+        val uploadActions = actions.flatMap { sa =>
+          IO {
+            sa.filter {
+              case UploadS3Action(_, _) => true
+              case _ => false
+            }
+          }
+        }
+        val deleteActions = actions.flatMap { sa =>
+          IO {
+            sa.filter {
+              case DeleteS3Action(_) => true
+              case _ => false
+            }
+          }
+        }
+        val sequencedActions =
+          copyActions.flatMap{ sca => {
+            uploadActions.flatMap{ sua => {
+              deleteActions.flatMap{ sda => {
+                IO { sca.combine(sua).combine(sda) }
+              }}
+            }}
+          }}
+        val counters = sequencedActions.unsafeRunSync
+          .foldLeft(Counters())((counters: Counters, s3Action: S3Action) => {
             s3Action match {
               case UploadS3Action(remoteKey, _) =>
                 log1(s"- Uploaded: ${remoteKey.key}")
