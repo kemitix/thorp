@@ -12,7 +12,7 @@ class Sync(s3Client: S3Client)
     with SyncLogging {
 
   def run(implicit c: Config): IO[Unit] = {
-    log1(s"Bucket: ${c.bucket.name}, Prefix: ${c.prefix.key}, Source: ${c.source}")
+    logRunStart(c)
     listObjects(c.bucket, c.prefix)
       .map { implicit s3ObjectsData => {
         val actions = (for {
@@ -22,7 +22,7 @@ class Sync(s3Client: S3Client)
           ioS3Action = submitAction(action)
         } yield ioS3Action).sequence
         val sorted = sort(actions)
-        log(sorted.unsafeRunSync)
+        logRunFinished(sorted.unsafeRunSync)
       }}
   }
 
