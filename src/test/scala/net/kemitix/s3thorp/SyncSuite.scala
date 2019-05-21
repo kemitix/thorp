@@ -2,9 +2,15 @@ package net.kemitix.s3thorp
 
 import java.io.File
 import java.time.Instant
+import java.util.concurrent.CompletableFuture
 
 import cats.effect.IO
 import net.kemitix.s3thorp.awssdk.{S3Client, S3ObjectsData}
+import com.github.j5ik2o.reactive.aws.s3.S3AsyncClient
+import software.amazon.awssdk.core.async.AsyncRequestBody
+import software.amazon.awssdk.services.s3.{S3AsyncClient => JavaS3AsyncClient}
+import software.amazon.awssdk.services.s3
+import software.amazon.awssdk.services.s3.model.{ListObjectsV2Request, ListObjectsV2Response, PutObjectRequest, PutObjectResponse}
 
 class SyncSuite
   extends UnitTest
@@ -35,6 +41,8 @@ class SyncSuite
     val source = Resource(this, "upload")
     // source contains the files root-file and subdir/leaf-file
     val config = Config(Bucket("bucket"), RemoteKey("prefix"), source = source)
+    val rootRemoteKey = RemoteKey("prefix/root-file")
+    val leafRemoteKey = RemoteKey("prefix/subdir/leaf-file")
     describe("when all files should be uploaded") {
       val sync = new RecordingSync(testBucket, new DummyS3Client {}, S3ObjectsData(
         byHash = Map(),
@@ -42,8 +50,8 @@ class SyncSuite
       sync.run(config).unsafeRunSync
       it("uploads all files") {
         val expectedUploads = Map(
-          "subdir/leaf-file" -> RemoteKey("prefix/subdir/leaf-file"),
-          "root-file" -> RemoteKey("prefix/root-file")
+          "subdir/leaf-file" -> leafRemoteKey,
+          "root-file" -> rootRemoteKey
         )
         assertResult(expectedUploads)(sync.uploadsRecord)
       }
@@ -110,7 +118,21 @@ class SyncSuite
         assertResult(expectedDeletions)(sync.deletionsRecord)
       }
     }
-    describe("when a file is copied it is copied on S3 with no upload") {}
+    describe("when a file is copied it is copied on S3 with no upload") {it(""){pending}}
+    describe("io actions execute") {
+      val recordingS3Client = new RecordingS3Client
+      val client = S3Client.createClient(recordingS3Client)
+      val sync = new Sync(client)
+      sync.run(config).unsafeRunSync
+      it("invokes the underlying Java s3client") {
+        val expected = Set(
+          PutObjectRequest.builder().bucket(testBucket.name).key(rootRemoteKey.key).build(),
+          PutObjectRequest.builder().bucket(testBucket.name).key(leafRemoteKey.key).build()
+        )
+        val result = recordingS3Client.puts
+        assertResult(expected)(result)
+      }
+    }
   }
 
   class RecordingSync(testBucket: Bucket, s3Client: S3Client, s3ObjectsData: S3ObjectsData)
@@ -146,6 +168,28 @@ class SyncSuite
       if (bucket == testBucket)
         deletionsRecord += remoteKey
       DeleteS3Action(remoteKey)
+    }
+  }
+
+  class RecordingS3Client extends S3AsyncClient {
+    var lists: Set[ListObjectsV2Request] = Set()
+    var puts: Set[PutObjectRequest] = Set()
+    override val underlying: s3.S3AsyncClient = new JavaS3AsyncClient {
+      override def serviceName(): String = "s3Recorder"
+
+      override def close(): Unit = ()
+
+      override def listObjectsV2(listObjectsV2Request: ListObjectsV2Request): CompletableFuture[ListObjectsV2Response] = {
+        lists += listObjectsV2Request
+        CompletableFuture.completedFuture(ListObjectsV2Response.builder().build())
+      }
+
+      override def putObject(putObjectRequest: PutObjectRequest,
+                             requestBody: AsyncRequestBody): CompletableFuture[PutObjectResponse] = {
+        puts += putObjectRequest
+        CompletableFuture.completedFuture(PutObjectResponse.builder().build())
+      }
+
     }
   }
 }

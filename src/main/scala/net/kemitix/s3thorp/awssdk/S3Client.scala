@@ -1,6 +1,7 @@
 package net.kemitix.s3thorp.awssdk
 
 import cats.effect.IO
+import com.github.j5ik2o.reactive.aws.s3.S3AsyncClient
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
 import net.kemitix.s3thorp._
 
@@ -35,8 +36,11 @@ trait S3Client {
 
 object S3Client {
 
+  def createClient(s3AsyncClient: S3AsyncClient): S3Client = {
+    new ThorpS3Client(S3CatsIOClient(s3AsyncClient))
+  }
+
   val defaultClient: S3Client =
-    new ThorpS3Client(
-      S3CatsIOClient(new JavaClientWrapper {}.underlying))
+    createClient(new JavaClientWrapper {}.underlying)
 
 }

@@ -9,7 +9,7 @@ trait SyncLogging extends Logging {
     log1(s"Bucket: ${c.bucket.name}, Prefix: ${c.prefix.key}, Source: ${c.source}")(c)
   }
 
-  def logRunFinished(actions: Stream[S3Action])
+  def logRunFinished(actions: List[S3Action])
                     (implicit c: Config): IO[Unit] = IO {
     val counters = actions.foldLeft(Counters())(logActivity)
     log1(s"Uploaded ${counters.uploaded} files")

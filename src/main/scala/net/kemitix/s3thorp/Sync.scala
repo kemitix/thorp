@@ -21,8 +21,9 @@ class Sync(s3Client: S3Client)
           action <- createActions(meta)
           ioS3Action = submitAction(action)
         } yield ioS3Action).sequence
-        val sorted = sort(actions)
-        logRunFinished(sorted.unsafeRunSync)
+        val sorted: IO[Stream[S3Action]] = sort(actions)
+        val list: List[S3Action] = sorted.unsafeRunSync.toList
+        logRunFinished(list)
       }}
   }
 
