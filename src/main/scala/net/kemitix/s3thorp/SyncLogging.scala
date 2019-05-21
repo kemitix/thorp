@@ -5,10 +5,9 @@ import cats.effect.IO
 // Logging for the Sync class
 trait SyncLogging extends Logging {
 
-  def log(completedActions: Stream[S3Action])
-         (implicit c: Config): IO[Unit] = {
-    val counters = completedActions
-    .foldLeft(Counters())(logActivity)
+  def log(actions: Stream[S3Action])
+         (implicit c: Config): IO[Unit] = IO {
+    val counters = actions.foldLeft(Counters())(logActivity)
     log1(s"Uploaded ${counters.uploaded} files")
     log1(s"Copied   ${counters.copied} files")
     log1(s"Moved    ${counters.moved} files")
