@@ -15,59 +15,18 @@ class Sync(s3Client: S3Client)
     log1(s"Bucket: ${c.bucket.name}, Prefix: ${c.prefix.key}, Source: ${c.source}")
     listObjects(c.bucket, c.prefix)
       .map { implicit s3ObjectsData => {
+
         val actions = (for {
           file <- findFiles(c.source)
           meta = getMetadata(file)
           action <- createActions(meta)
           ioS3Action = submitAction(action)
         } yield ioS3Action).sequence
-        val copyActions = actions.flatMap { sa =>
-          IO {
-            sa.filter {
-              case CopyS3Action(_) => true
-              case _ => false
-            }
-          }
-        }
-        val uploadActions = actions.flatMap { sa =>
-          IO {
-            sa.filter {
-              case UploadS3Action(_, _) => true
-              case _ => false
-            }
-          }
-        }
-        val deleteActions = actions.flatMap { sa =>
-          IO {
-            sa.filter {
-              case DeleteS3Action(_) => true
-              case _ => false
-            }
-          }
-        }
-        val sequencedActions =
-          copyActions.flatMap{ sca => {
-            uploadActions.flatMap{ sua => {
-              deleteActions.flatMap{ sda => {
-                IO { sca.combine(sua).combine(sda) }
-              }}
-            }}
-          }}
-        val counters = sequencedActions.unsafeRunSync
           .foldLeft(Counters())((counters: Counters, s3Action: S3Action) => {
-            s3Action match {
-              case UploadS3Action(remoteKey, _) =>
-                log1(s"- Uploaded: ${remoteKey.key}")
-                counters.copy(uploaded = counters.uploaded + 1)
-              case CopyS3Action(remoteKey) =>
-                log1(s"-   Copied: ${remoteKey.key}")
-                counters.copy(copied = counters.copied + 1)
-              case DeleteS3Action(remoteKey) =>
-                log1(s"-  Deleted: ${remoteKey.key}")
-                counters.copy(deleted = counters.deleted + 1)
-              case _ => counters
-            }
-          })
+
+        val sortedActions = actions.flatMap { actions => IO { actions.sorted } }
+
+        val counters = sortedActions.unsafeRunSync
         log1(s"Uploaded ${counters.uploaded} files")
         log1(s"Copied   ${counters.copied} files")
         log1(s"Moved    ${counters.moved} files")
