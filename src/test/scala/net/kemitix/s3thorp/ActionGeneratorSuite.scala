@@ -96,7 +96,11 @@ class ActionGeneratorSuite
           assertResult(expected)(result)
         }
       }
-      describe("#6 local missing, remote exists - delete") {it("I should write this test"){pending}}
+      describe("#6 local missing, remote exists - delete") {
+        it("TODO") {
+          pending
+        }
+      }
     }
   }
 }

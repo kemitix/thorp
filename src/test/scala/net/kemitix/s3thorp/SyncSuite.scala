@@ -120,7 +120,11 @@ class SyncSuite
         assertResult(expectedDeletions)(sync.deletionsRecord)
       }
     }
-    describe("when a file is copied it is copied on S3 with no upload") {it(""){pending}}
+    describe("when a file is copied it is copied on S3 with no upload") {
+      it("TODO") {
+        pending
+      }
+    }
     describe("when a file is deleted locally it is deleted from S3") {
       val deletedHash = MD5Hash("deleted-hash")
       val deletedKey = RemoteKey("prefix/deleted-file")
@@ -204,7 +208,7 @@ class SyncSuite
       override def putObject(putObjectRequest: PutObjectRequest,
                              requestBody: AsyncRequestBody): CompletableFuture[PutObjectResponse] = {
         puts += putObjectRequest
-        CompletableFuture.completedFuture(PutObjectResponse.builder().build())
+        CompletableFuture.completedFuture(PutObjectResponse.builder().eTag("not-null").build())
       }
 
     }
