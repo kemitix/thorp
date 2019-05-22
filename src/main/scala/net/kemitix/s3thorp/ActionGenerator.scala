@@ -1,7 +1,7 @@
 package net.kemitix.s3thorp
 
 trait ActionGenerator
-  extends MD5HashGenerator {
+  extends Logging {
 
   def createActions(s3MetaData: S3MetaData)
                    (implicit c: Config): Stream[Action] =
