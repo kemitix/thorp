@@ -16,6 +16,8 @@ class SyncSuite
   extends UnitTest
     with KeyGenerator {
 
+  val lastModified = LastModified(Instant.now)
+
   describe("s3client thunk") {
     val testBucket = Bucket("bucket")
     val prefix = RemoteKey("prefix")
@@ -67,7 +69,6 @@ class SyncSuite
     describe("when no files should be uploaded") {
       val rootHash = MD5Hash("a3a6ac11a0eb577b81b3bb5c95cc8a6e")
       val leafHash = MD5Hash("208386a650bdec61cfcd7bd8dcb6b542")
-      val lastModified = LastModified(Instant.now)
       val s3ObjectsData = S3ObjectsData(
         byHash = Map(
           rootHash -> Set(KeyModified(RemoteKey("prefix/root-file"), lastModified)),
@@ -94,7 +95,6 @@ class SyncSuite
       // 'root-file-old' should be renamed as 'root-file'
       val rootHash = MD5Hash("a3a6ac11a0eb577b81b3bb5c95cc8a6e")
       val leafHash = MD5Hash("208386a650bdec61cfcd7bd8dcb6b542")
-      val lastModified = LastModified(Instant.now)
       val s3ObjectsData = S3ObjectsData(
         byHash = Map(
           rootHash -> Set(KeyModified(RemoteKey("prefix/root-file-old"), lastModified)),
@@ -113,12 +113,26 @@ class SyncSuite
         assertResult(expectedCopies)(sync.copiesRecord)
       }
       it("deletes the original") {
-        pending
         val expectedDeletions = Set(RemoteKey("prefix/root-file-old"))
         assertResult(expectedDeletions)(sync.deletionsRecord)
       }
     }
     describe("when a file is copied it is copied on S3 with no upload") {it(""){pending}}
+    describe("when a file is deleted locally it is deleted from S3") {
+      val deletedHash = MD5Hash("deleted-hash")
+      val deletedKey = RemoteKey("prefix/deleted-file")
+      val s3ObjectsData = S3ObjectsData(
+        byHash = Map(
+          deletedHash -> Set(KeyModified(RemoteKey("prefix/deleted-file"), lastModified))),
+        byKey = Map(
+          deletedKey -> HashModified(deletedHash, lastModified)))
+      val sync = new RecordingSync(testBucket, new DummyS3Client {}, s3ObjectsData)
+      sync.run(config).unsafeRunSync
+      it("deleted key") {
+        val expectedDeletions = Set(deletedKey)
+        assertResult(expectedDeletions)(sync.deletionsRecord)
+      }
+    }
     describe("io actions execute") {
       val recordingS3Client = new RecordingS3Client
       val client = S3Client.createClient(recordingS3Client)
