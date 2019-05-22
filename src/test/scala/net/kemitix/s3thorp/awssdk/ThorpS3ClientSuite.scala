@@ -7,12 +7,16 @@ import scala.collection.JavaConverters._
 import cats.effect.IO
 import com.github.j5ik2o.reactive.aws.s3.S3AsyncClient
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
-import net.kemitix.s3thorp.{Bucket, HashModified, KeyModified, LastModified, MD5Hash, RemoteKey}
+import net.kemitix.s3thorp.{Bucket, Config, HashModified, KeyModified, LastModified, MD5Hash, RemoteKey, Resource}
 import org.scalatest.FunSpec
 import software.amazon.awssdk.services.s3
 import software.amazon.awssdk.services.s3.model.{ListObjectsV2Request, ListObjectsV2Response, S3Object}
 
 class ThorpS3ClientSuite extends FunSpec {
+
+  private val source = Resource(this, "upload")
+  private val prefix = RemoteKey("prefix")
+  implicit private val config: Config = Config(Bucket("bucket"), prefix, source = source)
 
   describe("listObjectsInPrefix") {
     val lm = LastModified(Instant.now)

@@ -16,21 +16,21 @@ trait S3Client {
 
   def listObjects(bucket: Bucket,
                   prefix: RemoteKey
-                 ): IO[S3ObjectsData]
+                 )(implicit c: Config): IO[S3ObjectsData]
 
   def upload(localFile: LocalFile,
              bucket: Bucket
-            ): IO[UploadS3Action]
+            )(implicit c: Config): IO[UploadS3Action]
 
   def copy(bucket: Bucket,
            sourceKey: RemoteKey,
            hash: MD5Hash,
            targetKey: RemoteKey
-          ): IO[CopyS3Action]
+          )(implicit c: Config): IO[CopyS3Action]
 
   def delete(bucket: Bucket,
              remoteKey: RemoteKey
-            ): IO[DeleteS3Action]
+            )(implicit c: Config): IO[DeleteS3Action]
 
 }
 

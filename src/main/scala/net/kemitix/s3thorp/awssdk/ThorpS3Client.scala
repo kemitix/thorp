@@ -10,11 +10,13 @@ import scala.collection.JavaConverters._
 
 private class ThorpS3Client(s3Client: S3CatsIOClient)
   extends S3Client
-    with S3ObjectsByHash {
+    with S3ObjectsByHash
+    with Logging {
 
   override def upload(localFile: LocalFile,
                       bucket: Bucket
-                     ): IO[UploadS3Action] = {
+                     )(implicit c: Config): IO[UploadS3Action] = {
+    log5(s"upload:bucket = ${bucket.name}, localFile = ${localFile.remoteKey}")
     val request = PutObjectRequest.builder()
       .bucket(bucket.name)
       .key(localFile.remoteKey.key)
@@ -31,7 +33,8 @@ private class ThorpS3Client(s3Client: S3CatsIOClient)
                     sourceKey: RemoteKey,
                     hash: MD5Hash,
                     targetKey: RemoteKey
-                   ): IO[CopyS3Action] = {
+                   )(implicit c: Config): IO[CopyS3Action] = {
+    log5(s"copy:bucket = ${bucket.name}, sourceKey = ${sourceKey.key}, targetKey = ${targetKey.key}")
     val request = CopyObjectRequest.builder()
       .bucket(bucket.name)
       .copySource(s"${bucket.name}/${sourceKey.key}")
@@ -44,7 +47,8 @@ private class ThorpS3Client(s3Client: S3CatsIOClient)
 
   override def delete(bucket: Bucket,
                       remoteKey: RemoteKey
-                     ): IO[DeleteS3Action] = {
+                     )(implicit c: Config): IO[DeleteS3Action] = {
+    log5(s"delete:bucket = ${bucket.name}, remoteKey = ${remoteKey.key}")
     val request = DeleteObjectRequest.builder()
       .bucket(bucket.name)
       .key(remoteKey.key)
@@ -64,7 +68,10 @@ private class ThorpS3Client(s3Client: S3CatsIOClient)
       (remoteKey, HashModified(hash, lastModified))
     }}.toMap
 
-  def listObjects(bucket: Bucket, prefix: RemoteKey): IO[S3ObjectsData] = {
+
+  def listObjects(bucket: Bucket, prefix: RemoteKey)
+                 (implicit c: Config): IO[S3ObjectsData] = {
+    log5(s"listObjects:bucket = ${bucket.name}, prefix: ${prefix.key}")
     val request = ListObjectsV2Request.builder()
       .bucket(bucket.name)
       .prefix(prefix.key)

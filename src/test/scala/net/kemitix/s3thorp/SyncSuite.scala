@@ -16,7 +16,10 @@ class SyncSuite
   extends UnitTest
     with KeyGenerator {
 
-  val lastModified = LastModified(Instant.now)
+  private val source = Resource(this, "upload")
+  private val prefix = RemoteKey("prefix")
+  implicit private val config: Config = Config(Bucket("bucket"), prefix, source = source)
+  private val lastModified = LastModified(Instant.now)
 
   describe("s3client thunk") {
     val testBucket = Bucket("bucket")
@@ -26,7 +29,7 @@ class SyncSuite
       val md5Hash = MD5Hash("the-hash")
       val testLocalFile = aLocalFile("file", md5Hash, source, generateKey(source, prefix))
       val sync = new Sync(new S3Client with DummyS3Client {
-        override def upload(localFile: LocalFile, bucket: Bucket) = IO {
+        override def upload(localFile: LocalFile, bucket: Bucket)(implicit c: Config) = IO {
           assert(bucket == testBucket)
           UploadS3Action(localFile.remoteKey, md5Hash)
         }
@@ -156,11 +159,11 @@ class SyncSuite
     var copiesRecord: Map[RemoteKey, RemoteKey] = Map()
     var deletionsRecord: Set[RemoteKey] = Set()
 
-    override def listObjects(bucket: Bucket, prefix: RemoteKey) = IO {s3ObjectsData}
+    override def listObjects(bucket: Bucket, prefix: RemoteKey)(implicit c: Config) = IO {s3ObjectsData}
 
     override def upload(localFile: LocalFile,
                         bucket: Bucket
-                       ) = IO {
+                       )(implicit c: Config) = IO {
       if (bucket == testBucket)
         uploadsRecord += (localFile.relative.toString -> localFile.remoteKey)
       UploadS3Action(localFile.remoteKey, MD5Hash("some hash value"))
@@ -170,7 +173,7 @@ class SyncSuite
                       sourceKey: RemoteKey,
                       hash: MD5Hash,
                       targetKey: RemoteKey
-                     ) = IO {
+                     )(implicit c: Config) = IO {
       if (bucket == testBucket)
         copiesRecord += (sourceKey -> targetKey)
       CopyS3Action(targetKey)
@@ -178,7 +181,7 @@ class SyncSuite
 
     override def delete(bucket: Bucket,
                         remoteKey: RemoteKey
-                       ) = IO {
+                       )(implicit c: Config) = IO {
       if (bucket == testBucket)
         deletionsRecord += remoteKey
       DeleteS3Action(remoteKey)

@@ -7,20 +7,20 @@ trait DummyS3Client extends S3Client {
 
   override def upload(localFile: LocalFile,
                       bucket: Bucket
-                     ): IO[UploadS3Action] = ???
+                     )(implicit c: Config): IO[UploadS3Action] = ???
 
   override def copy(bucket: Bucket,
                     sourceKey: RemoteKey,
                     hash: MD5Hash,
                     targetKey: RemoteKey
-                   ): IO[CopyS3Action] = ???
+                   )(implicit c: Config): IO[CopyS3Action] = ???
 
   override def delete(bucket: Bucket,
                       remoteKey: RemoteKey
-                     ): IO[DeleteS3Action] = ???
+                     )(implicit c: Config): IO[DeleteS3Action] = ???
 
   override def listObjects(bucket: Bucket,
                            prefix: RemoteKey
-                          ): IO[S3ObjectsData] = ???
+                          )(implicit c: Config): IO[S3ObjectsData] = ???
 
 }
