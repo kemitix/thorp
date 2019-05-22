@@ -34,7 +34,7 @@ private class ThorpS3Client(s3Client: S3CatsIOClient)
                    ): IO[CopyS3Action] = {
     val request = CopyObjectRequest.builder()
       .bucket(bucket.name)
-      .copySource(s"$bucket/$sourceKey")
+      .copySource(s"${bucket.name}/${sourceKey.key}")
       .copySourceIfMatch(hash.hash)
       .key(targetKey.key)
       .build()
