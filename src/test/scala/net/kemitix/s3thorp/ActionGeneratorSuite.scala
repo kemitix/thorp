@@ -84,7 +84,8 @@ class ActionGeneratorSuite
         val theHash = MD5Hash("the-hash")
         val theFile = aLocalFile("the-file", theHash, source, fileToKey)
         val theRemoteKey = theFile.remoteKey
-        val theRemoteMetadata = RemoteMetaData(theRemoteKey, theHash, lastModified)
+        val oldHash = MD5Hash("old-hash")
+        val theRemoteMetadata = RemoteMetaData(theRemoteKey, oldHash, lastModified)
         val input = S3MetaData(theFile, // local exists
           matchByHash = Set.empty, // remote no match, other no match
           matchByKey = Some(theRemoteMetadata) // remote exists
