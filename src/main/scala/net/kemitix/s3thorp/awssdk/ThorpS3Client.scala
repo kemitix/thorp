@@ -57,7 +57,12 @@ private class ThorpS3Client(s3Client: S3CatsIOClient)
     os => S3ObjectsData(byHash(os), byKey(os))
 
   private def byKey(os: Stream[S3Object]) =
-    os.map{o => (RemoteKey(o.key()), HashModified(MD5Hash(o.eTag().filter{c => c != '"'}), LastModified(o.lastModified())))}.toMap
+    os.map { o => {
+      val remoteKey = RemoteKey(o.key)
+      val hash = MD5Hash(o.eTag().filter { c => c != '"' })
+      val lastModified = LastModified(o.lastModified())
+      (remoteKey, HashModified(hash, lastModified))
+    }}.toMap
 
   def listObjects(bucket: Bucket, prefix: RemoteKey): IO[S3ObjectsData] = {
     val request = ListObjectsV2Request.builder()
