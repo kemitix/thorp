@@ -14,7 +14,7 @@ class Sync(s3Client: S3Client)
     with SyncLogging {
 
   def run(implicit c: Config): IO[Unit] = {
-    logRunStart(c)
+    logRunStart(c).unsafeRunSync
     listObjects(c.bucket, c.prefix)
       .map { implicit s3ObjectsData => {
         val actions = (for {
