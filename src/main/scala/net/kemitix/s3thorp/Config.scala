@@ -1,16 +1,11 @@
 package net.kemitix.s3thorp
 
 import java.io.File
-import java.nio.file.Path
 
-import net.kemitix.s3thorp.Sync.{Bucket, LocalFile}
-
-case class Config(bucket: Bucket = "",
-                  prefix: String = "",
+case class Config(bucket: Bucket = Bucket(""),
+                  prefix: RemoteKey = RemoteKey(""),
                   verbose: Int = 1,
-                  source: LocalFile
+                  source: File
                ) {
-
-  def relativePath(file: File): Path = source.toPath.relativize(file.toPath)
-
+  require(source.isDirectory, s"Source must be a directory: $source")
 }

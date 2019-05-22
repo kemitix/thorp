@@ -19,11 +19,11 @@ object ParseArgs {
         .required()
         .text("Source directory to sync to S3"),
       opt[String]('b', "bucket")
-        .action((str, c) => c.copy(bucket = str))
+        .action((str, c) => c.copy(bucket = Bucket(str)))
         .required()
         .text("S3 bucket name"),
       opt[String]('p', "prefix")
-        .action((str, c) => c.copy(prefix = str))
+        .action((str, c) => c.copy(prefix = RemoteKey(str)))
         .text("Prefix within the S3 Bucket"),
       opt[Int]('v', "verbose")
         .validate(i =>

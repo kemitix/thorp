@@ -1,25 +1,21 @@
 package net.kemitix.s3thorp
 
-import java.io.File
-
-import net.kemitix.s3thorp.Sync.{LastModified, MD5Hash}
-import net.kemitix.s3thorp.awssdk.{HashLookup, S3Client}
+import net.kemitix.s3thorp.awssdk.{S3ObjectsData, S3Client}
 
 trait S3MetaDataEnricher
   extends S3Client
-    with KeyGenerator
     with Logging {
 
-  def enrichWithS3MetaData(c: Config)(implicit hashLookup: HashLookup): File => Either[File, S3MetaData] = {
-    val remoteKey = generateKey(c)_
-    file => {
-      log3(s"- Consider: ${c.relativePath(file)}")(c)
-      val key = remoteKey(file)
-      objectHead(key).map {
-        hlm: (MD5Hash, LastModified) => {
-          Right(S3MetaData(file, key, hlm._1.filter { c => c != '"' }, hlm._2))
-        }
-      }.getOrElse(Left(file))
-    }
+  def getMetadata(localFile: LocalFile)
+                 (implicit c: Config,
+                  s3ObjectsData: S3ObjectsData): S3MetaData = {
+    val (keyMatches: Option[HashModified], hashMatches: Set[KeyModified]) = getS3Status(localFile)
+
+    S3MetaData(localFile,
+      matchByKey = keyMatches.map{kmAsRemoteMetaData(localFile.remoteKey)},
+      matchByHash = hashMatches.map(km => RemoteMetaData(km.key, localFile.hash, km.modified)))
   }
+
+  private def kmAsRemoteMetaData(key: RemoteKey): HashModified => RemoteMetaData = hm => RemoteMetaData(key, hm.hash, hm.modified)
+
 }

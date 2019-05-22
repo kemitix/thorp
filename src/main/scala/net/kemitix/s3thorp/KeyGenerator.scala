@@ -4,11 +4,12 @@ import java.io.File
 
 trait KeyGenerator {
 
-  def generateKey(c: Config)(file: File): String = {
+  def generateKey(source: File, prefix: RemoteKey)
+                 (file: File): RemoteKey = {
     val otherPath = file.toPath.toAbsolutePath
-    val sourcePath = c.source.toPath
+    val sourcePath = source.toPath
     val relativePath = sourcePath.relativize(otherPath)
-    s"${c.prefix}/$relativePath"
+    RemoteKey(s"${prefix.key}/$relativePath")
   }
 
 }

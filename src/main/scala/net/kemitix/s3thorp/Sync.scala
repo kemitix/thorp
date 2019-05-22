@@ -1,48 +1,59 @@
 package net.kemitix.s3thorp
 
-import java.io.File
-import java.time.Instant
+import java.nio.file.Paths
 
-import cats.effect._
-import net.kemitix.s3thorp.Sync.{Bucket, LocalFile, MD5Hash, RemoteKey}
-import net.kemitix.s3thorp.awssdk.{HashLookup, S3Client}
+import cats.effect.IO
+import cats.implicits._
+import net.kemitix.s3thorp.awssdk.{S3Client, S3ObjectsData}
 
 class Sync(s3Client: S3Client)
   extends LocalFileStream
     with S3MetaDataEnricher
-    with UploadSelectionFilter
-    with S3Uploader
-    with Logging {
+    with ActionGenerator
+    with ActionSubmitter
+    with SyncLogging {
 
-  override def upload(localFile: LocalFile, bucket: Bucket, remoteKey: RemoteKey) =
-    s3Client.upload(localFile, bucket, remoteKey)
-
-  def run(c: Config): IO[Unit] = {
-    implicit val config: Config = c
-    log1(s"Bucket: ${c.bucket}, Prefix: ${c.prefix}, Source: ${c.source}")
-    s3Client.listObjects(c.bucket, c.prefix).map { hashLookup => {
-      val stream: Stream[(File, IO[Either[Throwable, MD5Hash]])] = streamDirectoryPaths(c.source).map(
-        enrichWithS3MetaData(c)(hashLookup)).flatMap(
-        uploadRequiredFilter(c)).map(
-        performUpload(c))
-      val count: Int = stream.foldLeft(0)((a: Int, io) => {
-        io._2.unsafeRunSync
-        log1(s"-     Done: ${io._1}")
-        a + 1
-      })
-      log1(s"Uploaded $count files")
-    }}
+  def run(implicit c: Config): IO[Unit] = {
+    logRunStart(c).unsafeRunSync
+    listObjects(c.bucket, c.prefix)
+      .map { implicit s3ObjectsData => {
+        val actions = (for {
+          file <- findFiles(c.source)
+          meta = getMetadata(file)
+          action <- createActions(meta)
+          ioS3Action = submitAction(action)
+        } yield ioS3Action).sequence
+        val sorted = sort(actions)
+        val list = sorted.unsafeRunSync.toList
+        val delActions = (for {
+          key <- s3ObjectsData.byKey.keys
+          if key.isMissingLocally
+          ioDelAction = submitAction(ToDelete(key))
+        } yield ioDelAction).toStream.sequence
+        val delList = delActions.unsafeRunSync.toList
+        logRunFinished(list ++ delList).unsafeRunSync
+      }}
   }
 
-  override def listObjects(bucket: Bucket, prefix: RemoteKey): IO[HashLookup] = ???
-}
+  private def sort(ioActions: IO[Stream[S3Action]]) =
+    ioActions.flatMap { actions => IO { actions.sorted } }
 
-object Sync {
+  override def upload(localFile: LocalFile,
+                      bucket: Bucket)(implicit c: Config): IO[UploadS3Action] =
+    s3Client.upload(localFile, bucket)
 
-  type Bucket = String // the S3 bucket name
-  type LocalFile = File // the file or directory
-  type RemoteKey = String // path within an S3 bucket
-  type MD5Hash = String // an MD5 hash
-  type LastModified = Instant // or scala equivalent
+  override def copy(bucket: Bucket,
+                    sourceKey: RemoteKey,
+                    hash: MD5Hash,
+                    targetKey: RemoteKey)(implicit c: Config): IO[CopyS3Action] =
+    s3Client.copy(bucket, sourceKey, hash, targetKey)
 
+  override def delete(bucket: Bucket,
+                      remoteKey: RemoteKey)(implicit c: Config): IO[DeleteS3Action] =
+    s3Client.delete(bucket, remoteKey)
+
+  override def listObjects(bucket: Bucket,
+                           prefix: RemoteKey
+                          )(implicit c: Config): IO[S3ObjectsData] =
+    s3Client.listObjects(bucket, prefix)
 }
