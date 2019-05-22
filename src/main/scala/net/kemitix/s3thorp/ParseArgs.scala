@@ -25,6 +25,8 @@ object ParseArgs {
       opt[String]('p', "prefix")
         .action((str, c) => c.copy(prefix = RemoteKey(str)))
         .text("Prefix within the S3 Bucket"),
+      opt[String]('f', "filter")
+        .action((str,c) => c.copy(filter = Filter(str))),
       opt[Int]('v', "verbose")
         .validate(i =>
           if (i >= 1 && i <= 5) Right(Unit)
