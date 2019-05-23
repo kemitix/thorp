@@ -2,8 +2,6 @@ package net.kemitix.s3thorp
 
 import java.time.Instant
 
-import org.scalatest.FunSpec
-
 class ActionGeneratorSuite
   extends UnitTest
     with KeyGenerator {
