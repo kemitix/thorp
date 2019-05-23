@@ -28,7 +28,7 @@ trait S3ClientLogging
                      bucket: Bucket)
                     (implicit c: Config): PutObjectResponse => IO[PutObjectResponse] = {
     in => IO {
-      log4(s"Uploading: ${bucket.name}:${localFile.remoteKey}")
+      log4(s"Uploading: ${bucket.name}:${localFile.remoteKey.key}")
       in
     }
   }
@@ -37,7 +37,7 @@ trait S3ClientLogging
                       bucket: Bucket)
                      (implicit c: Config): PutObjectResponse => IO[Unit] = {
     in =>IO {
-      log3(s"Uploaded: ${bucket.name}:${localFile.remoteKey}")
+      log3(s"Uploaded: ${bucket.name}:${localFile.remoteKey.key}")
     }
   }
 
