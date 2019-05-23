@@ -16,7 +16,7 @@ object Main extends IOApp with Logging {
   def program(args: List[String]): IO[ExitCode] =
     for {
       a <- ParseArgs(args, defaultConfig)
-      _ <- IO(log1("S3Thorp - hashed sync for s3")(a))
+      _ <- IO(log1("S3Thorp v0.3.0 - hashed sync for s3")(a))
       _ <- sync.run(a)
     } yield ExitCode.Success
 
