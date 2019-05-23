@@ -11,7 +11,7 @@ trait S3ClientLogging
                           prefix: RemoteKey)
                          (implicit c: Config): ListObjectsV2Response => IO[ListObjectsV2Response] = {
     in => IO {
-      log3(s"listObjects:start:${bucket.name}:${prefix.key}")
+      log3(s"Fetch S3 Summary: ${bucket.name}:${prefix.key}")
       in
     }
   }
@@ -20,7 +20,7 @@ trait S3ClientLogging
                            prefix: RemoteKey)
                           (implicit c: Config): ListObjectsV2Response => IO[Unit] = {
     in => IO {
-      log2(s"listObjects:finish:${bucket.name}:${prefix.key}")
+      log2(s"Fetched S3 Summary: ${bucket.name}:${prefix.key}")
     }
   }
 
@@ -28,7 +28,7 @@ trait S3ClientLogging
                      bucket: Bucket)
                     (implicit c: Config): PutObjectResponse => IO[PutObjectResponse] = {
     in => IO {
-      log4(s"upload:start:${localFile.file.length}:${bucket.name}:${localFile.remoteKey}")
+      log4(s"Uploading: ${bucket.name}:${localFile.remoteKey}")
       in
     }
   }
@@ -37,7 +37,7 @@ trait S3ClientLogging
                       bucket: Bucket)
                      (implicit c: Config): PutObjectResponse => IO[Unit] = {
     in =>IO {
-      log3(s"upload:finish:${localFile.file.length}:${bucket.name}:${localFile.remoteKey}")
+      log3(s"Uploaded: ${bucket.name}:${localFile.remoteKey}")
     }
   }
 
@@ -46,7 +46,7 @@ trait S3ClientLogging
                    targetKey: RemoteKey)
                   (implicit c: Config): CopyObjectResponse => IO[CopyObjectResponse] = {
     in => IO {
-      log4(s"copy:start:${bucket.name}:${sourceKey.key}:${targetKey.key}")
+      log4(s"Copy: ${bucket.name}:${sourceKey.key} => ${targetKey.key}")
       in
     }
   }
@@ -56,7 +56,7 @@ trait S3ClientLogging
                     targetKey: RemoteKey)
                    (implicit c: Config): CopyObjectResponse => IO[Unit] = {
     in => IO {
-      log3(s"copy:finish:${bucket.name}:${sourceKey.key}:${targetKey.key}")
+      log3(s"Copied: ${bucket.name}:${sourceKey.key} => ${targetKey.key}")
     }
   }
 
@@ -64,7 +64,7 @@ trait S3ClientLogging
                      remoteKey: RemoteKey)
                     (implicit c: Config): DeleteObjectResponse => IO[DeleteObjectResponse] = {
     in => IO {
-      log4(s"delete:start:${bucket.name}:${remoteKey.key}")
+      log4(s"Delete: ${bucket.name}:${remoteKey.key}")
       in
     }
   }
@@ -73,7 +73,7 @@ trait S3ClientLogging
                       remoteKey: RemoteKey)
                      (implicit c: Config): DeleteObjectResponse => IO[Unit] = {
     in => IO {
-      log3(s"delete:finish:${bucket.name}:${remoteKey.key}")
+      log3(s"Deleted: ${bucket.name}:${remoteKey.key}")
     }
   }
 
