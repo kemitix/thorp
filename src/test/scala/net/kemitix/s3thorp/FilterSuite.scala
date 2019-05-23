@@ -1,41 +1,43 @@
 package net.kemitix.s3thorp
 
-import java.nio.file.Paths
+import java.nio.file.{Path, Paths}
 
 class FilterSuite extends UnitTest {
 
   describe("default filter") {
     val filter = Filter()
-    val path = Paths.get("/a-file")
+    val paths: List[Path] = List("/a-file", "a-file", "path/to/a/file", "/path/to/a/file",
+      "/home/pcampbell/repos/kemitix/s3thorp/target/scala-2.12/test-classes/net/kemitix/s3thorp/upload/subdir"
+    ) map { p => Paths.get(p)}
     it("should not exclude files") {
-      assert(!filter.isExcluded(path))
+      paths.foreach(path => { assertResult(false)(filter.isExcluded(path)) })
     }
     it("should include files") {
-      assert(filter.isIncluded(path))
+      paths.foreach(path => assertResult(true)(filter.isIncluded(path)))
     }
   }
   describe("directory exact match filter '/upload/subdir/'") {
     val filter = Filter("/upload/subdir/")
     it("exclude matching directory") {
       val matching = Paths.get("/upload/subdir/leaf-file")
-      assert(filter.isExcluded(matching))
+      assertResult(true)(filter.isExcluded(matching))
     }
     it("include non-matching files") {
       val nonMatching = Paths.get("/upload/other-file")
-      assert(filter.isIncluded(nonMatching))
+      assertResult(true)(filter.isIncluded(nonMatching))
     }
   }
   describe("file partial match 'root'") {
     val filter = Filter("root")
     it("exclude matching file '/upload/root-file") {
       val matching = Paths.get("/upload/root-file")
-      assert(filter.isExcluded(matching))
+      assertResult(true)(filter.isExcluded(matching))
     }
     it("include non-matching files 'test-file-for-hash.txt' & '/upload/subdir/leaf-file'") {
       val nonMatching1 = Paths.get("/test-file-for-hash.txt")
       val nonMatching2 = Paths.get("/upload/subdir/leaf-file")
-      assert(filter.isIncluded(nonMatching1))
-      assert(filter.isIncluded(nonMatching2))
+      assertResult(true)(filter.isIncluded(nonMatching1))
+      assertResult(true)(filter.isIncluded(nonMatching2))
     }
   }
 

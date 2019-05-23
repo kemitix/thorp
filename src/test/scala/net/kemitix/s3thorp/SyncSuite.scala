@@ -48,6 +48,8 @@ class SyncSuite
     val config = Config(Bucket("bucket"), RemoteKey("prefix"), source = source)
     val rootRemoteKey = RemoteKey("prefix/root-file")
     val leafRemoteKey = RemoteKey("prefix/subdir/leaf-file")
+    val rootHash = MD5Hash("a3a6ac11a0eb577b81b3bb5c95cc8a6e")
+    val leafHash = MD5Hash("208386a650bdec61cfcd7bd8dcb6b542")
     describe("when all files should be uploaded") {
       val sync = new RecordingSync(testBucket, new DummyS3Client {}, S3ObjectsData(
         byHash = Map(),
@@ -70,8 +72,6 @@ class SyncSuite
       }
     }
     describe("when no files should be uploaded") {
-      val rootHash = MD5Hash("a3a6ac11a0eb577b81b3bb5c95cc8a6e")
-      val leafHash = MD5Hash("208386a650bdec61cfcd7bd8dcb6b542")
       val s3ObjectsData = S3ObjectsData(
         byHash = Map(
           rootHash -> Set(KeyModified(RemoteKey("prefix/root-file"), lastModified)),
@@ -152,6 +152,17 @@ class SyncSuite
         )
         val result = recordingS3Client.puts
         assertResult(expected)(result)
+      }
+    }
+    describe("when a file is file is excluded") {
+      val filteredConfig = config.copy(filter = Filter("leaf"), verbose = 5)
+      val sync = new RecordingSync(testBucket, new DummyS3Client {}, S3ObjectsData(Map(), Map()))
+      sync.run(filteredConfig).unsafeRunSync
+      it("is not uploaded") {
+        val expectedUploads = Map(
+          "root-file" -> rootRemoteKey
+        )
+        assertResult(expectedUploads)(sync.uploadsRecord)
       }
     }
   }
