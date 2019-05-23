@@ -6,7 +6,8 @@ import org.scalatest.FunSpec
 
 abstract class UnitTest extends FunSpec {
 
-  def aLocalFile(path: String, myHash: MD5Hash, source: File, fileToKey: File => RemoteKey): LocalFile =
+  def aLocalFile(path: String, myHash: MD5Hash, source: File, fileToKey: File => RemoteKey)
+                (implicit c: Config): LocalFile =
     new LocalFile(source.toPath.resolve(path).toFile, source, fileToKey) {
       override def hash: MD5Hash = myHash
     }
