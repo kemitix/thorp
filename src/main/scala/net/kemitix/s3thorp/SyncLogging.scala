@@ -21,13 +21,10 @@ trait SyncLogging extends Logging {
     (counters: Counters, s3Action: S3Action) => {
       s3Action match {
         case UploadS3Action(remoteKey, _) =>
-          log1(s"- Uploaded: ${remoteKey.key}")
           counters.copy(uploaded = counters.uploaded + 1)
         case CopyS3Action(remoteKey) =>
-          log1(s"-   Copied: ${remoteKey.key}")
           counters.copy(copied = counters.copied + 1)
         case DeleteS3Action(remoteKey) =>
-          log1(s"-  Deleted: ${remoteKey.key}")
           counters.copy(deleted = counters.deleted + 1)
         case _ => counters
       }

@@ -6,6 +6,7 @@ import java.nio.file.Path
 case class LocalFile(file: File,
                      source: File,
                      keyGenerator: File => RemoteKey)
+                    (implicit c: Config)
   extends MD5HashGenerator {
 
   require(!file.isDirectory, s"LocalFile must not be a directory: $file")
