@@ -155,7 +155,7 @@ class SyncSuite
       }
     }
     describe("when a file is file is excluded") {
-      val filteredConfig = config.copy(filter = Filter("leaf"), verbose = 5)
+      val filteredConfig = config.copy(filters = List(Filter("leaf")))
       val sync = new RecordingSync(testBucket, new DummyS3Client {}, S3ObjectsData(Map(), Map()))
       sync.run(filteredConfig).unsafeRunSync
       it("is not uploaded") {

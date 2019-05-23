@@ -1,16 +1,16 @@
 package net.kemitix.s3thorp.awssdk
 
 import java.time.Instant
-import java.time.temporal.ChronoUnit
 
-import scala.collection.JavaConverters._
 import cats.effect.IO
 import com.github.j5ik2o.reactive.aws.s3.S3AsyncClient
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
-import net.kemitix.s3thorp.{Bucket, Config, HashModified, KeyModified, LastModified, MD5Hash, Main, RemoteKey, Resource}
+import net.kemitix.s3thorp._
 import org.scalatest.FunSpec
 import software.amazon.awssdk.services.s3
 import software.amazon.awssdk.services.s3.model.{ListObjectsV2Request, ListObjectsV2Response, S3Object}
+
+import scala.collection.JavaConverters._
 
 class ThorpS3ClientSuite extends FunSpec {
 

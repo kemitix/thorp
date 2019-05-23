@@ -6,7 +6,8 @@ import cats.effect.IO
 trait SyncLogging extends Logging {
 
   def logRunStart(c: Config): IO[Unit] = IO {
-    log1(s"Bucket: ${c.bucket.name}, Prefix: ${c.prefix.key}, Source: ${c.source}")(c)
+    log1(s"Bucket: ${c.bucket.name}, Prefix: ${c.prefix.key}, Source: ${c.source}, " +
+      s"Filter: ${c.filters.map{f => f.filter}.mkString(""", """)}")(c)
   }
 
   def logRunFinished(actions: List[S3Action])
