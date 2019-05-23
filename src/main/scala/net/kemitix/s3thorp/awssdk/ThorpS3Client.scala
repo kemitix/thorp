@@ -16,13 +16,18 @@ private class ThorpS3Client(s3Client: S3CatsIOClient)
   override def upload(localFile: LocalFile,
                       bucket: Bucket
                      )(implicit c: Config): IO[UploadS3Action] = {
-    log5(s"upload:bucket = ${bucket.name}, localFile = ${localFile.remoteKey}")
     val request = PutObjectRequest.builder()
       .bucket(bucket.name)
       .key(localFile.remoteKey.key)
-      .build()
+      .build
     val body = AsyncRequestBody.fromFile(localFile.file)
     s3Client.putObject(request, body)
+      .bracket(in => IO{
+        log5(s"upload:start:${localFile.file.length}:${bucket.name}:${localFile.remoteKey}")
+        in
+      })(in => IO{
+        log5(s"upload:finish:${localFile.file.length}:${bucket.name}:${localFile.remoteKey}")
+      })
       .map(_.eTag)
       .map(_.filter{c => c != '"'})
       .map(MD5Hash)
@@ -34,26 +39,36 @@ private class ThorpS3Client(s3Client: S3CatsIOClient)
                     hash: MD5Hash,
                     targetKey: RemoteKey
                    )(implicit c: Config): IO[CopyS3Action] = {
-    log5(s"copy:bucket = ${bucket.name}, sourceKey = ${sourceKey.key}, targetKey = ${targetKey.key}")
     val request = CopyObjectRequest.builder()
       .bucket(bucket.name)
       .copySource(s"${bucket.name}/${sourceKey.key}")
       .copySourceIfMatch(hash.hash)
       .key(targetKey.key)
-      .build()
+      .build
     s3Client.copyObject(request)
+      .bracket(in => IO{
+        log5(s"copy:start:${bucket.name}:${sourceKey.key}:${targetKey.key}")
+        in
+      })(in => IO{
+        log5(s"copy:finish:${bucket.name}:${sourceKey.key}:${targetKey.key}")
+      })
       .map(_ => CopyS3Action(targetKey))
   }
 
   override def delete(bucket: Bucket,
                       remoteKey: RemoteKey
                      )(implicit c: Config): IO[DeleteS3Action] = {
-    log5(s"delete:bucket = ${bucket.name}, remoteKey = ${remoteKey.key}")
     val request = DeleteObjectRequest.builder()
       .bucket(bucket.name)
       .key(remoteKey.key)
-      .build()
+      .build
     s3Client.deleteObject(request)
+      .bracket(in => IO{
+        log5(s"delete:start:${bucket.name}:${remoteKey.key}")
+        in
+      })(in => IO{
+        log5(s"delete:finish:${bucket.name}:${remoteKey.key}")
+      })
       .map(_ => DeleteS3Action(remoteKey))
   }
 
@@ -68,15 +83,19 @@ private class ThorpS3Client(s3Client: S3CatsIOClient)
       (remoteKey, HashModified(hash, lastModified))
     }}.toMap
 
-
   def listObjects(bucket: Bucket, prefix: RemoteKey)
                  (implicit c: Config): IO[S3ObjectsData] = {
-    log5(s"listObjects:bucket = ${bucket.name}, prefix: ${prefix.key}")
     val request = ListObjectsV2Request.builder()
       .bucket(bucket.name)
       .prefix(prefix.key)
-      .build()
+      .build
     s3Client.listObjectsV2(request)
+      .bracket(in => IO{
+        log5(s"listObjects:start:${bucket.name}:${prefix.key}")
+        in
+      })(in => IO{
+        log5(s"listObjects:finish:${bucket.name}:${prefix.key}")
+      })
       .map(r => r.contents.asScala.toStream)
       .map(asS3ObjectsData)
   }
