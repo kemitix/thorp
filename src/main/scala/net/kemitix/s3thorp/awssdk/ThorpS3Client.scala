@@ -6,36 +6,10 @@ import net.kemitix.s3thorp._
 import software.amazon.awssdk.core.async.AsyncRequestBody
 import software.amazon.awssdk.services.s3.model.{Bucket => _, _}
 
-import scala.collection.JavaConverters._
-
 private class ThorpS3Client(s3Client: S3CatsIOClient)
   extends S3Client
-    with S3ObjectsByHash
-    with S3ClientLogging {
-
-  override def listObjects(bucket: Bucket,
-                           prefix: RemoteKey)
-                          (implicit c: Config): IO[S3ObjectsData] = {
-    val request = ListObjectsV2Request.builder
-      .bucket(bucket.name)
-      .prefix(prefix.key).build
-    s3Client.listObjectsV2(request)
-      .bracket(
-        logListObjectsStart(bucket, prefix))(
-        logListObjectsFinish(bucket,prefix))
-      .map(_.contents)
-      .map(_.asScala)
-      .map(_.toStream)
-      .map(os => S3ObjectsData(byHash(os), byKey(os)))
-  }
-
-  private def byKey(os: Stream[S3Object]) =
-    os.map { o => {
-      val remoteKey = RemoteKey(o.key)
-      val hash = MD5Hash(o.eTag() filter stripQuotes)
-      val lastModified = LastModified(o.lastModified())
-      (remoteKey, HashModified(hash, lastModified))
-    }}.toMap
+    with S3ClientLogging
+    with QuoteStripper {
 
   override def upload(localFile: LocalFile,
                       bucket: Bucket)
@@ -53,8 +27,6 @@ private class ThorpS3Client(s3Client: S3CatsIOClient)
       .map(MD5Hash)
       .map(UploadS3Action(localFile.remoteKey, _))
   }
-
-  private def stripQuotes: Char => Boolean = _ != '"'
 
   override def copy(bucket: Bucket,
                     sourceKey: RemoteKey,
@@ -85,5 +57,12 @@ private class ThorpS3Client(s3Client: S3CatsIOClient)
         logDeleteFinish(bucket, remoteKey))
       .map(_ => DeleteS3Action(remoteKey))
   }
+
+  lazy val objectLister = new S3ClientObjectLister(s3Client)
+
+  override def listObjects(bucket: Bucket,
+                           prefix: RemoteKey)
+                          (implicit c: Config): IO[S3ObjectsData] =
+    objectLister.listObjects(bucket, prefix)
 
 }
