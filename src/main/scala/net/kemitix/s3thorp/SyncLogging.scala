@@ -9,6 +9,9 @@ trait SyncLogging extends Logging {
     log1(s"Bucket: ${c.bucket.name}, Prefix: ${c.prefix.key}, Source: ${c.source}, " +
       s"Filter: ${c.filters.map{f => f.filter}.mkString(""", """)}")(c)
 
+  def logFileScan(implicit c: Config): Unit =
+    log1(s"Scanning local files: ${c.source}...")
+
 
   def logRunFinished(actions: List[S3Action])
                     (implicit c: Config): Unit = {

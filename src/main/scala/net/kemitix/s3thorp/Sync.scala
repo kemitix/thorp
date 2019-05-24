@@ -15,6 +15,7 @@ class Sync(s3Client: S3Client)
     logRunStart
     listObjects(c.bucket, c.prefix)
       .map { implicit s3ObjectsData => {
+        logFileScan
         val actions = for {
           file <- findFiles(c.source)
           data <- getMetadata(file)
