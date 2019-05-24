@@ -13,6 +13,7 @@ private class ThorpS3Client(s3Client: S3CatsIOClient)
   lazy val objectLister = new S3ClientObjectLister(s3Client)
   lazy val copier = new S3ClientCopier(s3Client)
   lazy val uploader = new S3ClientUploader(s3Client)
+  lazy val multiPartUploader = new S3ClientMultiPartUploader(s3Client)
   lazy val deleter = new S3ClientDeleter(s3Client)
 
   override def listObjects(bucket: Bucket,
@@ -32,8 +33,8 @@ private class ThorpS3Client(s3Client: S3CatsIOClient)
   override def upload(localFile: LocalFile,
                       bucket: Bucket)
                      (implicit c: Config): IO[UploadS3Action] =
-    uploader.upload(localFile, bucket)
-
+    if (multiPartUploader.accepts(localFile)) multiPartUploader.upload(localFile, bucket)
+    else uploader.upload(localFile, bucket)
 
   override def delete(bucket: Bucket,
                       remoteKey: RemoteKey)
