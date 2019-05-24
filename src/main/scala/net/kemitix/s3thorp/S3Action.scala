@@ -9,6 +9,10 @@ sealed trait S3Action {
 
 }
 
+case class DoNothingS3Action(remoteKey: RemoteKey) extends S3Action {
+  override val order: Int = 0
+}
+
 case class CopyS3Action(remoteKey: RemoteKey) extends S3Action {
   override val order: Int = 1
 }

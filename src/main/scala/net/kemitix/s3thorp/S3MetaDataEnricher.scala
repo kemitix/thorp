@@ -8,14 +8,12 @@ trait S3MetaDataEnricher
 
   def getMetadata(localFile: LocalFile)
                  (implicit c: Config,
-                  s3ObjectsData: S3ObjectsData): S3MetaData = {
-    val (keyMatches: Option[HashModified], hashMatches: Set[KeyModified]) = getS3Status(localFile)
-
-    S3MetaData(localFile,
-      matchByKey = keyMatches.map{kmAsRemoteMetaData(localFile.remoteKey)},
-      matchByHash = hashMatches.map(km => RemoteMetaData(km.key, localFile.hash, km.modified)))
+                  s3ObjectsData: S3ObjectsData): Stream[S3MetaData] = {
+    val (keyMatches, hashMatches) = getS3Status(localFile)
+    Stream(
+      S3MetaData(localFile,
+        matchByKey = keyMatches map { hm => RemoteMetaData(localFile.remoteKey, hm.hash, hm.modified) },
+        matchByHash = hashMatches map { km => RemoteMetaData(km.key, localFile.hash, km.modified) }))
   }
-
-  private def kmAsRemoteMetaData(key: RemoteKey): HashModified => RemoteMetaData = hm => RemoteMetaData(key, hm.hash, hm.modified)
 
 }

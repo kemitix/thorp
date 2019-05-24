@@ -1,7 +1,5 @@
 package net.kemitix.s3thorp
 
-import java.nio.file.Paths
-
 import cats.effect.IO
 import cats.implicits._
 import net.kemitix.s3thorp.awssdk.{S3Client, S3ObjectsData}
@@ -17,18 +15,18 @@ class Sync(s3Client: S3Client)
     logRunStart(c).unsafeRunSync
     listObjects(c.bucket, c.prefix)
       .map { implicit s3ObjectsData => {
-        val actions = (for {
+        val actions = for {
           file <- findFiles(c.source)
-          meta = getMetadata(file)
-          action <- createActions(meta)
-          ioS3Action = submitAction(action)
-        } yield ioS3Action).sequence
-        val sorted = sort(actions)
+          data <- getMetadata(file)
+          action <- createActions(data)
+          s3Action <- submitAction(action)
+        } yield s3Action
+        val sorted = sort(actions.sequence)
         val list = sorted.unsafeRunSync.toList
         val delActions = (for {
           key <- s3ObjectsData.byKey.keys
           if key.isMissingLocally
-          ioDelAction = submitAction(ToDelete(key))
+          ioDelAction <- submitAction(ToDelete(key))
         } yield ioDelAction).toStream.sequence
         val delList = delActions.unsafeRunSync.toList
         logRunFinished(list ++ delList).unsafeRunSync
