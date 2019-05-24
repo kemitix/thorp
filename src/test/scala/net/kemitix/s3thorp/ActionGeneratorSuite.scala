@@ -27,7 +27,7 @@ class ActionGeneratorSuite
           matchByKey = Some(theRemoteMetadata) // remote exists
           )
         it("do nothing") {
-          val expected = List.empty // do nothing
+          val expected = List(DoNothing(theFile.remoteKey))
           val result = invoke(input)
           assertResult(expected)(result)
         }

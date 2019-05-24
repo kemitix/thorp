@@ -27,9 +27,9 @@ class S3MetaDataEnricherSuite
         )
         val theRemoteMetadata = RemoteMetaData(theRemoteKey, theHash, lastModified)
         it("generates valid metadata") {
-          val expected = S3MetaData(theFile,
+          val expected = Stream(S3MetaData(theFile,
             matchByHash = Set(theRemoteMetadata),
-            matchByKey = Some(theRemoteMetadata))
+            matchByKey = Some(theRemoteMetadata)))
           val result = getMetadata(theFile)
           assertResult(expected)(result)
         }
@@ -44,9 +44,9 @@ class S3MetaDataEnricherSuite
         )
         val theRemoteMetadata = RemoteMetaData(theRemoteKey, theHash, lastModified)
         it("generates valid metadata") {
-          val expected = S3MetaData(theFile,
+          val expected = Stream(S3MetaData(theFile,
             matchByHash = Set(theRemoteMetadata),
-            matchByKey = Some(theRemoteMetadata))
+            matchByKey = Some(theRemoteMetadata)))
           val result = getMetadata(theFile)
           assertResult(expected)(result)
         }
@@ -61,9 +61,9 @@ class S3MetaDataEnricherSuite
         )
         val otherRemoteMetadata = RemoteMetaData(otherRemoteKey, theHash, lastModified)
         it("generates valid metadata") {
-          val expected = S3MetaData(theFile,
+          val expected = Stream(S3MetaData(theFile,
             matchByHash = Set(otherRemoteMetadata),
-            matchByKey = None)
+            matchByKey = None))
           val result = getMetadata(theFile)
           assertResult(expected)(result)
         }
@@ -76,9 +76,9 @@ class S3MetaDataEnricherSuite
           byKey = Map()
         )
         it("generates valid metadata") {
-          val expected = S3MetaData(theFile,
+          val expected = Stream(S3MetaData(theFile,
             matchByHash = Set.empty,
-            matchByKey = None)
+            matchByKey = None))
           val result = getMetadata(theFile)
           assertResult(expected)(result)
         }
@@ -101,9 +101,9 @@ class S3MetaDataEnricherSuite
         val theRemoteMetadata = RemoteMetaData(theRemoteKey, oldHash, lastModified)
         val otherRemoteMetadata = RemoteMetaData(otherRemoteKey, theHash, lastModified)
         it("generates valid metadata") {
-          val expected = S3MetaData(theFile,
+          val expected = Stream(S3MetaData(theFile,
             matchByHash = Set(otherRemoteMetadata),
-            matchByKey = Some(theRemoteMetadata))
+            matchByKey = Some(theRemoteMetadata)))
           val result = getMetadata(theFile)
           assertResult(expected)(result)
         }
@@ -123,9 +123,9 @@ class S3MetaDataEnricherSuite
         )
         val theRemoteMetadata = RemoteMetaData(theRemoteKey, oldHash, lastModified)
         it("generates valid metadata") {
-          val expected = S3MetaData(theFile,
+          val expected = Stream(S3MetaData(theFile,
             matchByHash = Set.empty,
-            matchByKey = Some(theRemoteMetadata))
+            matchByKey = Some(theRemoteMetadata)))
           val result = getMetadata(theFile)
           assertResult(expected)(result)
         }
