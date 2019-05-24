@@ -10,27 +10,16 @@ private class ThorpS3Client(s3Client: S3CatsIOClient)
     with S3ClientLogging
     with QuoteStripper {
 
-  override def delete(bucket: Bucket,
-                      remoteKey: RemoteKey)
-                     (implicit c: Config): IO[DeleteS3Action] = {
-    val request = DeleteObjectRequest.builder
-      .bucket(bucket.name)
-      .key(remoteKey.key).build
-    s3Client.deleteObject(request)
-      .bracket(
-        logDeleteStart(bucket, remoteKey))(
-        logDeleteFinish(bucket, remoteKey))
-      .map(_ => DeleteS3Action(remoteKey))
-  }
-
   lazy val objectLister = new S3ClientObjectLister(s3Client)
+  lazy val copier = new S3ClientCopier(s3Client)
+  lazy val uploader = new S3ClientUploader(s3Client)
+  lazy val deleter = new S3ClientDeleter(s3Client)
 
   override def listObjects(bucket: Bucket,
                            prefix: RemoteKey)
                           (implicit c: Config): IO[S3ObjectsData] =
     objectLister.listObjects(bucket, prefix)
 
-  lazy val copier = new S3ClientCopier(s3Client)
 
   override def copy(bucket: Bucket,
                     sourceKey: RemoteKey,
@@ -39,10 +28,16 @@ private class ThorpS3Client(s3Client: S3CatsIOClient)
                    (implicit c: Config): IO[CopyS3Action] =
     copier.copy(bucket, sourceKey,hash, targetKey)
 
-  lazy val uploader = new S3ClientUploader(s3Client)
 
   override def upload(localFile: LocalFile,
                       bucket: Bucket)
-                     (implicit c: Config): IO[UploadS3Action] = uploader.upload(localFile, bucket)
+                     (implicit c: Config): IO[UploadS3Action] =
+    uploader.upload(localFile, bucket)
+
+
+  override def delete(bucket: Bucket,
+                      remoteKey: RemoteKey)
+                     (implicit c: Config): IO[DeleteS3Action] =
+    deleter.delete(bucket, remoteKey)
 
 }
