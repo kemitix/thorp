@@ -5,13 +5,13 @@ import cats.effect.IO
 // Logging for the Sync class
 trait SyncLogging extends Logging {
 
-  def logRunStart(c: Config): IO[Unit] = IO {
+  def logRunStart(implicit c: Config): Unit =
     log1(s"Bucket: ${c.bucket.name}, Prefix: ${c.prefix.key}, Source: ${c.source}, " +
       s"Filter: ${c.filters.map{f => f.filter}.mkString(""", """)}")(c)
-  }
+
 
   def logRunFinished(actions: List[S3Action])
-                    (implicit c: Config): IO[Unit] = IO {
+                    (implicit c: Config): Unit = {
     val counters = actions.foldLeft(Counters())(logActivity)
     log1(s"Uploaded ${counters.uploaded} files")
     log1(s"Copied   ${counters.copied} files")
