@@ -11,23 +11,6 @@ private class ThorpS3Client(s3Client: S3CatsIOClient)
     with S3ClientLogging
     with QuoteStripper {
 
-  override def upload(localFile: LocalFile,
-                      bucket: Bucket)
-                     (implicit c: Config): IO[UploadS3Action] = {
-    val request = PutObjectRequest.builder
-      .bucket(bucket.name)
-      .key(localFile.remoteKey.key).build
-    val body = AsyncRequestBody.fromFile(localFile.file)
-    s3Client.putObject(request, body)
-      .bracket(
-        logUploadStart(localFile, bucket))(
-        logUploadFinish(localFile, bucket))
-      .map(_.eTag)
-      .map(_ filter stripQuotes)
-      .map(MD5Hash)
-      .map(UploadS3Action(localFile.remoteKey, _))
-  }
-
   override def copy(bucket: Bucket,
                     sourceKey: RemoteKey,
                     hash: MD5Hash,
@@ -64,5 +47,11 @@ private class ThorpS3Client(s3Client: S3CatsIOClient)
                            prefix: RemoteKey)
                           (implicit c: Config): IO[S3ObjectsData] =
     objectLister.listObjects(bucket, prefix)
+
+  lazy val uploader = new S3ClientUploader(s3Client)
+
+  override def upload(localFile: LocalFile,
+                      bucket: Bucket)
+                     (implicit c: Config): IO[UploadS3Action] = uploader.upload(localFile, bucket)
 
 }
