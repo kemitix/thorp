@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger, AtomicReferenc
 
 import cats.effect.IO
 import net.kemitix.s3thorp._
-import software.amazon.awssdk.services.s3.model.{CompleteMultipartUploadRequest, CompleteMultipartUploadResponse, CreateMultipartUploadRequest, CreateMultipartUploadResponse, UploadPartRequest, UploadPartResponse}
+import software.amazon.awssdk.services.s3.model.{Bucket => _, _}
 
 class S3ClientMultiPartUploaderSuite
   extends UnitTest
@@ -36,7 +36,6 @@ class S3ClientMultiPartUploaderSuite
       val bigFile = aLocalFile("big-file", MD5Hash(""), source, fileToKey)
       assert(bigFile.file.exists, "sample big file is missing")
       assert(bigFile.file.length == 5 * 1024 * 1025, "sample big file is wrong size")
-      println(s"bigFile.file.length: ${bigFile.file.length}")
       val result = uploader.accepts(bigFile)
       assertResult(true)(result)
     }
@@ -53,6 +52,7 @@ class S3ClientMultiPartUploaderSuite
     val uploadPartResponse1 = UploadPartResponse.builder.eTag("part-1").build
     val uploadPartResponse2 = UploadPartResponse.builder.eTag("part-2").build
     val completeUploadResponse = CompleteMultipartUploadResponse.builder.eTag("hash").build
+    val abortMultipartUploadResponse = AbortMultipartUploadResponse.builder.build
     describe("multi-part uploader upload components") {
       val uploader = new RecordingMultiPartUploader()
       describe("initiate upload") {
@@ -117,7 +117,7 @@ class S3ClientMultiPartUploaderSuite
       describe("upload") {
         describe("when all okay") {
           val uploader = new RecordingMultiPartUploader()
-          uploader.upload(theFile, config.bucket).unsafeRunSync
+          uploader.upload(theFile, config.bucket, 1).unsafeRunSync
           it("should initiate the upload") {
             assert(uploader.initiated.get)
           }
@@ -130,7 +130,7 @@ class S3ClientMultiPartUploaderSuite
         }
         describe("when initiate upload fails") {
           val uploader = new RecordingMultiPartUploader(initOkay = false)
-          uploader.upload(theFile, config.bucket).unsafeRunSync
+          uploader.upload(theFile, config.bucket, 1).unsafeRunSync
           it("should not upload any parts") {
             assertResult(Set())(uploader.partsUploaded.get)
           }
@@ -139,25 +139,29 @@ class S3ClientMultiPartUploaderSuite
           }
         }
         describe("when uploading a part fails once") {
-          it("should retry the upload") {
-            pending
+          val uploader = new RecordingMultiPartUploader(partTriesRequired = 2)
+          uploader.upload(theFile, config.bucket, 1).unsafeRunSync
+          it("should initiate the upload") {
+            assert(uploader.initiated.get)
           }
           it("should upload all parts") {
-            pending
+            assertResult(Set(0, 1))(uploader.partsUploaded.get)
           }
           it("should complete the upload") {
-            pending
+            assert(uploader.completed.get)
           }
         }
         describe("when uploading a part fails too many times") {
-          it("should retry the upload") {
-            pending
+          val uploader = new RecordingMultiPartUploader(partTriesRequired = 4)
+          uploader.upload(theFile, config.bucket, 1).unsafeRunSync
+          it("should initiate the upload") {
+            assert(uploader.initiated.get)
           }
           it("should not complete the upload") {
-            pending
+            assertResult(Set())(uploader.partsUploaded.get)
           }
           it("should cancel the upload") {
-            pending
+            assert(uploader.canceled.get)
           }
         }
       }
@@ -169,55 +173,51 @@ class S3ClientMultiPartUploaderSuite
                                      val part0Tries: AtomicInteger = new AtomicInteger(0),
                                      val part1Tries: AtomicInteger = new AtomicInteger(0),
                                      val part2Tries: AtomicInteger = new AtomicInteger(0),
-                                     var completed: AtomicBoolean = new AtomicBoolean(false))
+                                     val completed: AtomicBoolean = new AtomicBoolean(false),
+                                     val canceled: AtomicBoolean = new AtomicBoolean(false))
       extends S3ClientMultiPartUploader(
         new MyS3CatsIOClient {
 
           override def createMultipartUpload(createMultipartUploadRequest: CreateMultipartUploadRequest): IO[CreateMultipartUploadResponse] =
             if (initOkay) {
-              initiated.set(true)
-              IO {
-                createUploadResponse
-              }
+              initiated set true
+              IO(createUploadResponse)
             }
-            else IO.raiseError(new Exception)
+            else IO raiseError S3Exception.builder.build
 
           override def uploadPartFromFile(uploadPartRequest: UploadPartRequest, sourceFile: File): IO[UploadPartResponse] =
             uploadPartRequest match {
               case _ if uploadPartRequest.partNumber == 0 => {
                 if (part0Tries.incrementAndGet >= partTriesRequired) IO {
-                  partsUploaded.getAndUpdate(t => t + 0)
+                  partsUploaded getAndUpdate (t => t + 0)
                   uploadPartResponse0
                 }
-                else {
-                  IO.raiseError(new Exception)
-                }
+                else IO raiseError S3Exception.builder.build
               }
               case _ if uploadPartRequest.partNumber == 1 => {
                 if (part1Tries.incrementAndGet >= partTriesRequired) IO {
-                  partsUploaded.getAndUpdate(t => t + 1)
+                  partsUploaded getAndUpdate (t => t + 1)
                   uploadPartResponse1
                 }
-                else {
-                  IO.raiseError(new Exception)
-                }
+                else IO raiseError S3Exception.builder.build
               }
               case _ if uploadPartRequest.partNumber == 2 => {
                 if (part2Tries.incrementAndGet >= partTriesRequired) IO {
-                  partsUploaded.getAndUpdate(t => t + 2)
+                  partsUploaded getAndUpdate (t => t + 2)
                   uploadPartResponse2
                 }
-                else {
-                  IO.raiseError(new Exception)
-                }
+                else IO raiseError S3Exception.builder.build
               }
             }
 
           override def completeMultipartUpload(completeMultipartUploadRequest: CompleteMultipartUploadRequest): IO[CompleteMultipartUploadResponse] = {
-            completed.set(true)
-            IO {
-              completeUploadResponse
-            }
+            completed set true
+            IO(completeUploadResponse)
+          }
+
+          override def abortMultipartUpload(abortMultipartUploadRequest: AbortMultipartUploadRequest): IO[AbortMultipartUploadResponse] = {
+            canceled set true
+            IO(abortMultipartUploadResponse)
           }
         }) {}
   }
