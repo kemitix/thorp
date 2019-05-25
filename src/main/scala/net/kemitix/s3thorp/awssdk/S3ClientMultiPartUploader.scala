@@ -58,6 +58,14 @@ private class S3ClientMultiPartUploader(s3Client: S3CatsIOClient)
                   parts: Stream[UploadPartRequest]): IO[Stream[UploadPartResponse]] =
     (parts map uploadPart(localFile)).sequence
 
+  def completeUpload(createUploadResponse: CreateMultipartUploadResponse,
+                     uploadPartResponses: Stream[UploadPartResponse]): IO[CompleteMultipartUploadResponse] = {
+    s3Client completeMultipartUpload
+      CompleteMultipartUploadRequest.builder
+        .uploadId(createUploadResponse.uploadId)
+        .build
+  }
+
   def upload(localFile: LocalFile,
              bucket: Bucket)
             (implicit c: Config): IO[UploadS3Action] = {
