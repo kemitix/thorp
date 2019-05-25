@@ -24,7 +24,7 @@ case class DeleteS3Action(remoteKey: RemoteKey) extends S3Action {
   override val order: Int = 3
 }
 
-case class ErroredS3Action(remoteKey: RemoteKey) extends S3Action {
+case class ErroredS3Action(remoteKey: RemoteKey, e: Throwable) extends S3Action {
   override val order: Int = 10
 }
 
