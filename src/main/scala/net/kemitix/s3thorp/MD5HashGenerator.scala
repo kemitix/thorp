@@ -21,14 +21,15 @@ trait MD5HashGenerator
     val md5 = MessageDigest.getInstance("MD5")
     val dis = new DigestInputStream(fis, md5)
     try {
-      read(dis, size, new Array[Byte](bufferSize))
+      read(dis, 0, size, new Array[Byte](bufferSize))
     } finally {
       dis.close()
     }
     md5.digest.map("%02x".format(_)).mkString
   }
 
-  def read(dis: DigestInputStream, size: Long, buffer: Array[Byte]): Unit =
-    (0 to (size / bufferSize).toInt).foreach(_ => dis.read(buffer))
+  def read(dis: DigestInputStream, count: Long, size: Long, buffer: Array[Byte]): Unit =
+    if (count + bufferSize > size) dis.read(buffer, 0, (size - count).toInt)
+    else {dis.read(buffer);read(dis, count + bufferSize, size, buffer)}
 
 }
