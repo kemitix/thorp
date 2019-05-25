@@ -1,6 +1,8 @@
 package net.kemitix.s3thorp.awssdk
 
+import cats.effect.IO
 import net.kemitix.s3thorp.{Bucket, Config, KeyGenerator, MD5Hash, RemoteKey, Resource, UnitTest}
+import software.amazon.awssdk.services.s3.model.{CreateMultipartUploadRequest, CreateMultipartUploadResponse}
 
 class S3ClientMultiPartUploaderSuite
   extends UnitTest
@@ -30,6 +32,22 @@ class S3ClientMultiPartUploaderSuite
       println(s"bigFile.file.length: ${bigFile.file.length}")
       val result = uploader.accepts(bigFile)
       assertResult(true)(result)
+    }
+  }
+
+  describe("multi-part uploader upload") {
+    val myCreateMultipartUploadResponse = CreateMultipartUploadResponse.builder.build
+    val uploader = new S3ClientMultiPartUploader(new MyS3CatsIOClient {
+      override def createMultipartUpload(createMultipartUploadRequest: CreateMultipartUploadRequest): IO[CreateMultipartUploadResponse] =
+        IO(myCreateMultipartUploadResponse)
+    })
+    val theFile = aLocalFile("big-file", MD5Hash(""), source, fileToKey)
+    describe("initiate upload") {
+      it("should createMultipartUpload") {
+        val expected = myCreateMultipartUploadResponse
+        val result = uploader.createUpload(config.bucket, theFile).unsafeRunSync
+        assertResult(expected)(result)
+      }
     }
   }
 }
