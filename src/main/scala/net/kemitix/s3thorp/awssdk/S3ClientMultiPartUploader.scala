@@ -22,6 +22,35 @@ private class S3ClientMultiPartUploader(s3Client: S3CatsIOClient)
         .key(localFile.remoteKey.key)
         .build
 
+  def parts(localFile: LocalFile,
+            response: CreateMultipartUploadResponse)
+           (implicit c: Config): IO[Stream[UploadPartRequest]] =
+    {
+      val fileSize = localFile.file.length
+      val maxParts = 1024 // arbitrary, supports upto 10,000 (I, think)
+      val threshold = c.multiPartThreshold
+      val nParts = Math.min((fileSize / threshold) + 1, maxParts).toInt
+      val partSize = fileSize / nParts
+      val maxUpload = nParts * partSize
+
+      IO {
+        require(fileSize <= maxUpload,
+          s"File (${localFile.file.getPath}) size ($fileSize) exceeds upload limit: $maxUpload")
+        for {
+          partNumber <- (0 until nParts).toStream
+          offSet = partNumber * partSize
+          chunkSize = Math.min(fileSize - offSet, partSize)
+          partHash = md5FilePart(localFile.file, offSet, chunkSize)
+          uploadPartRequest = UploadPartRequest.builder
+            .uploadId(response.uploadId)
+            .partNumber(partNumber)
+            .contentLength(chunkSize)
+            .contentMD5(partHash)
+            .build
+        } yield uploadPartRequest
+      }
+    }
+
   def upload(localFile: LocalFile,
              bucket: Bucket)
             (implicit c: Config): IO[UploadS3Action] = {
