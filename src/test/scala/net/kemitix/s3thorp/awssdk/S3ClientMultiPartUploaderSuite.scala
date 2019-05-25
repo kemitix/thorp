@@ -1,12 +1,11 @@
 package net.kemitix.s3thorp.awssdk
 
 import java.io.File
-import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger, AtomicReference, AtomicStampedReference}
-import java.util.function.UnaryOperator
+import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger, AtomicReference}
 
 import cats.effect.IO
-import net.kemitix.s3thorp.{Bucket, Config, KeyGenerator, MD5Hash, RemoteKey, Resource, UnitTest, UploadS3Action}
-import software.amazon.awssdk.services.s3.model.{CompleteMultipartUploadRequest, CompleteMultipartUploadResponse, CreateMultipartUploadRequest, CreateMultipartUploadResponse, S3Exception, UploadPartRequest, UploadPartResponse}
+import net.kemitix.s3thorp._
+import software.amazon.awssdk.services.s3.model.{CompleteMultipartUploadRequest, CompleteMultipartUploadResponse, CreateMultipartUploadRequest, CreateMultipartUploadResponse, UploadPartRequest, UploadPartResponse}
 
 class S3ClientMultiPartUploaderSuite
   extends UnitTest
@@ -55,22 +54,7 @@ class S3ClientMultiPartUploaderSuite
     val uploadPartResponse2 = UploadPartResponse.builder.eTag("part-2").build
     val completeUploadResponse = CompleteMultipartUploadResponse.builder.eTag("hash").build
     describe("multi-part uploader upload components") {
-      val uploader = new S3ClientMultiPartUploader(new MyS3CatsIOClient {
-        override def createMultipartUpload(createMultipartUploadRequest: CreateMultipartUploadRequest): IO[CreateMultipartUploadResponse] =
-          IO(createUploadResponse)
-
-        override def uploadPartFromFile(uploadPartRequest: UploadPartRequest, sourceFile: File): IO[UploadPartResponse] =
-          IO {
-            uploadPartRequest match {
-              case _ if uploadPartRequest.partNumber() == 0 => uploadPartResponse0
-              case _ if uploadPartRequest.partNumber() == 1 => uploadPartResponse1
-              case _ if uploadPartRequest.partNumber() == 2 => uploadPartResponse2
-            }
-          }
-
-        override def completeMultipartUpload(completeMultipartUploadRequest: CompleteMultipartUploadRequest): IO[CompleteMultipartUploadResponse] =
-          IO(completeUploadResponse)
-      })
+      val uploader = new RecordingMultiPartUploader()
       describe("initiate upload") {
         it("should createMultipartUpload") {
           val expected = createUploadResponse
@@ -175,64 +159,64 @@ class S3ClientMultiPartUploaderSuite
           }
         }
       }
-      class RecordingMultiPartUploader(initOkay: Boolean = true,
-                                       partTriesRequired: Int = 1,
-                                       val initiated: AtomicBoolean = new AtomicBoolean(false),
-                                       val partsUploaded: AtomicReference[Set[Int]] = new AtomicReference[Set[Int]](Set()),
-                                       val part0Tries: AtomicInteger = new AtomicInteger(0),
-                                       val part1Tries: AtomicInteger = new AtomicInteger(0),
-                                       val part2Tries: AtomicInteger = new AtomicInteger(0),
-                                       var completed: AtomicBoolean = new AtomicBoolean(false))
-        extends S3ClientMultiPartUploader(
-          new MyS3CatsIOClient {
+    }
+    class RecordingMultiPartUploader(initOkay: Boolean = true,
+                                     partTriesRequired: Int = 1,
+                                     val initiated: AtomicBoolean = new AtomicBoolean(false),
+                                     val partsUploaded: AtomicReference[Set[Int]] = new AtomicReference[Set[Int]](Set()),
+                                     val part0Tries: AtomicInteger = new AtomicInteger(0),
+                                     val part1Tries: AtomicInteger = new AtomicInteger(0),
+                                     val part2Tries: AtomicInteger = new AtomicInteger(0),
+                                     var completed: AtomicBoolean = new AtomicBoolean(false))
+      extends S3ClientMultiPartUploader(
+        new MyS3CatsIOClient {
 
-            override def createMultipartUpload(createMultipartUploadRequest: CreateMultipartUploadRequest): IO[CreateMultipartUploadResponse] =
-              if (initOkay) {
-                initiated.set(true)
-                IO {
-                  createUploadResponse
-                }
-              }
-              else IO.raiseError(new Exception)
-
-            override def uploadPartFromFile(uploadPartRequest: UploadPartRequest, sourceFile: File): IO[UploadPartResponse] =
-              uploadPartRequest match {
-                case _ if uploadPartRequest.partNumber == 0 => {
-                  if (part0Tries.incrementAndGet >= partTriesRequired) IO {
-                    partsUploaded.getAndUpdate(t => t + 0)
-                    uploadPartResponse0
-                  }
-                  else {
-                    IO.raiseError(new Exception)
-                  }
-                }
-                case _ if uploadPartRequest.partNumber == 1 => {
-                  if (part1Tries.incrementAndGet >= partTriesRequired) IO {
-                    partsUploaded.getAndUpdate(t => t + 1)
-                    uploadPartResponse1
-                  }
-                  else {
-                    IO.raiseError(new Exception)
-                  }
-                }
-                case _ if uploadPartRequest.partNumber == 2 => {
-                  if (part2Tries.incrementAndGet >= partTriesRequired) IO {
-                    partsUploaded.getAndUpdate(t => t + 2)
-                    uploadPartResponse2
-                  }
-                  else {
-                    IO.raiseError(new Exception)
-                  }
-                }
-              }
-
-            override def completeMultipartUpload(completeMultipartUploadRequest: CompleteMultipartUploadRequest): IO[CompleteMultipartUploadResponse] = {
-              completed.set(true)
+          override def createMultipartUpload(createMultipartUploadRequest: CreateMultipartUploadRequest): IO[CreateMultipartUploadResponse] =
+            if (initOkay) {
+              initiated.set(true)
               IO {
-                completeUploadResponse
+                createUploadResponse
               }
             }
-          }) {}
-    }
+            else IO.raiseError(new Exception)
+
+          override def uploadPartFromFile(uploadPartRequest: UploadPartRequest, sourceFile: File): IO[UploadPartResponse] =
+            uploadPartRequest match {
+              case _ if uploadPartRequest.partNumber == 0 => {
+                if (part0Tries.incrementAndGet >= partTriesRequired) IO {
+                  partsUploaded.getAndUpdate(t => t + 0)
+                  uploadPartResponse0
+                }
+                else {
+                  IO.raiseError(new Exception)
+                }
+              }
+              case _ if uploadPartRequest.partNumber == 1 => {
+                if (part1Tries.incrementAndGet >= partTriesRequired) IO {
+                  partsUploaded.getAndUpdate(t => t + 1)
+                  uploadPartResponse1
+                }
+                else {
+                  IO.raiseError(new Exception)
+                }
+              }
+              case _ if uploadPartRequest.partNumber == 2 => {
+                if (part2Tries.incrementAndGet >= partTriesRequired) IO {
+                  partsUploaded.getAndUpdate(t => t + 2)
+                  uploadPartResponse2
+                }
+                else {
+                  IO.raiseError(new Exception)
+                }
+              }
+            }
+
+          override def completeMultipartUpload(completeMultipartUploadRequest: CompleteMultipartUploadRequest): IO[CompleteMultipartUploadResponse] = {
+            completed.set(true)
+            IO {
+              completeUploadResponse
+            }
+          }
+        }) {}
   }
 }
