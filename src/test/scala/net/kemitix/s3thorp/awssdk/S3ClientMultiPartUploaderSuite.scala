@@ -44,13 +44,24 @@ class S3ClientMultiPartUploaderSuite
   describe("multi-part uploader upload") {
     val uploadId = "upload-id"
     val myCreateMultipartUploadResponse = CreateMultipartUploadResponse.builder.uploadId(uploadId).build
-    val myUploadPartResponse = UploadPartResponse.builder.build
+    val uploadPartRequest0 = UploadPartRequest.builder.partNumber(0).build
+    val uploadPartRequest1 = UploadPartRequest.builder.partNumber(1).build
+    val uploadPartRequest2 = UploadPartRequest.builder.partNumber(2).build
+    val uploadPartResponse0 = UploadPartResponse.builder.eTag("part-0").build
+    val uploadPartResponse1 = UploadPartResponse.builder.eTag("part-1").build
+    val uploadPartResponse2 = UploadPartResponse.builder.eTag("part-2").build
     val uploader = new S3ClientMultiPartUploader(new MyS3CatsIOClient {
       override def createMultipartUpload(createMultipartUploadRequest: CreateMultipartUploadRequest): IO[CreateMultipartUploadResponse] =
         IO(myCreateMultipartUploadResponse)
 
       override def uploadPartFromFile(uploadPartRequest: UploadPartRequest, sourceFile: File): IO[UploadPartResponse] =
-        IO(myUploadPartResponse)
+        IO {
+          uploadPartRequest match {
+            case _ if uploadPartRequest.partNumber() == 0 => uploadPartResponse0
+            case _ if uploadPartRequest.partNumber() == 1 => uploadPartResponse1
+            case _ if uploadPartRequest.partNumber() == 2 => uploadPartResponse2
+          }
+        }
     })
     val theFile = aLocalFile("big-file", MD5Hash(""), source, fileToKey)
     describe("initiate upload") {
@@ -81,17 +92,24 @@ class S3ClientMultiPartUploaderSuite
         .contentMD5(part2md5)
         .build
       it("should create the parts expected") {
-        val result: List[UploadPartRequest] = uploader.parts(theFile, myCreateMultipartUploadResponse).unsafeRunSync.toList
+        val result = uploader.parts(theFile, myCreateMultipartUploadResponse).unsafeRunSync.toList
         assertResult(2)(result.size)
         assertResult(part1)(result(1))
         assertResult(part0)(result(0))
       }
     }
     describe("upload part") {
-      val request: UploadPartRequest = UploadPartRequest.builder.build
       it("should uploadPart") {
-        val expected = myUploadPartResponse
-        val result = uploader.uploadPart(theFile)(request).unsafeRunSync
+        val expected = uploadPartResponse2
+        val result = uploader.uploadPart(theFile)(uploadPartRequest2).unsafeRunSync
+        assertResult(expected)(result)
+      }
+    }
+    describe("upload parts") {
+      val uploadPartRequests = Stream(uploadPartRequest0, uploadPartRequest1)
+      it("should uploadPart for each") {
+        val expected = List(uploadPartResponse0, uploadPartResponse1)
+        val result = uploader.uploadParts(theFile, uploadPartRequests).unsafeRunSync.toList
         assertResult(expected)(result)
       }
     }
