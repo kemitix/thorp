@@ -24,6 +24,10 @@ case class DeleteS3Action(remoteKey: RemoteKey) extends S3Action {
   override val order: Int = 3
 }
 
+case class ErroredS3Action(remoteKey: RemoteKey) extends S3Action {
+  override val order: Int = 10
+}
+
 object S3Action {
   implicit def ord[A <: S3Action]: Ordering[A] = Ordering.by(_.order)
 }

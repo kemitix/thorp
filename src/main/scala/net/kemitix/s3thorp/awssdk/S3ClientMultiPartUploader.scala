@@ -6,6 +6,8 @@ import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
 import net.kemitix.s3thorp._
 import software.amazon.awssdk.services.s3.model.{Bucket => _, _}
 
+import scala.util.control.NonFatal
+
 private class S3ClientMultiPartUploader(s3Client: S3CatsIOClient)
   extends S3ClientLogging
     with MD5HashGenerator
@@ -68,8 +70,7 @@ private class S3ClientMultiPartUploader(s3Client: S3CatsIOClient)
 
   def upload(localFile: LocalFile,
              bucket: Bucket)
-            (implicit c: Config): IO[UploadS3Action] = {
-    //TODO handle an error and cancel the upload
+            (implicit c: Config): IO[S3Action] = {
     //TODO provide logging of upload progress
     (for {
       createUploadResponse <- createUpload(bucket, localFile)
@@ -81,5 +82,8 @@ private class S3ClientMultiPartUploader(s3Client: S3CatsIOClient)
       .map(_ filter stripQuotes)
       .map(MD5Hash)
       .map(UploadS3Action(localFile.remoteKey, _))
+      .handleErrorWith {
+        case NonFatal(e) => IO(println(s"error ${e.getMessage}")) *> IO.pure(ErroredS3Action(localFile.remoteKey))
+      }
   }
 }

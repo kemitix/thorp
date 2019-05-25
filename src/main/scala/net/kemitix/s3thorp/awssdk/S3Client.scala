@@ -20,7 +20,7 @@ trait S3Client {
 
   def upload(localFile: LocalFile,
              bucket: Bucket
-            )(implicit c: Config): IO[UploadS3Action]
+            )(implicit c: Config): IO[S3Action]
 
   def copy(bucket: Bucket,
            sourceKey: RemoteKey,
