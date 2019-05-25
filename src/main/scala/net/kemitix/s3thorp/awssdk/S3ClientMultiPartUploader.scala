@@ -69,14 +69,14 @@ private class S3ClientMultiPartUploader(s3Client: S3CatsIOClient)
   def upload(localFile: LocalFile,
              bucket: Bucket)
             (implicit c: Config): IO[UploadS3Action] = {
-    val request = PutObjectRequest.builder
-      .bucket(bucket.name)
-      .key(localFile.remoteKey.key).build
-    val body = AsyncRequestBody.fromFile(localFile.file)
-    s3Client.putObject(request, body)
-      .bracket(
-        logUploadStart(localFile, bucket))(
-        logUploadFinish(localFile, bucket))
+    //TODO handle an error and cancel the upload
+    //TODO provide logging of upload progress
+    (for {
+      createUploadResponse <- createUpload(bucket, localFile)
+      parts <- parts(localFile, createUploadResponse)
+      uploadPartResponses <- uploadParts(localFile, parts)
+      completedUploadResponse <- completeUpload(createUploadResponse, uploadPartResponses)
+    } yield completedUploadResponse)
       .map(_.eTag)
       .map(_ filter stripQuotes)
       .map(MD5Hash)
