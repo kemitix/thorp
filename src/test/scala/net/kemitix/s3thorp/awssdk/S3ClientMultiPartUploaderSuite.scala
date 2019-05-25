@@ -117,7 +117,7 @@ class S3ClientMultiPartUploaderSuite
       describe("upload") {
         describe("when all okay") {
           val uploader = new RecordingMultiPartUploader()
-          val result: UploadS3Action = uploader.upload(theFile, config.bucket).unsafeRunSync
+          uploader.upload(theFile, config.bucket).unsafeRunSync
           it("should initiate the upload") {
             assert(uploader.initiated.get)
           }
