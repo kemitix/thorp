@@ -129,11 +129,13 @@ class S3ClientMultiPartUploaderSuite
           }
         }
         describe("when initiate upload fails") {
+          val uploader = new RecordingMultiPartUploader(initOkay = false)
+          uploader.upload(theFile, config.bucket).unsafeRunSync
           it("should not upload any parts") {
-            pending
+            assertResult(Set())(uploader.partsUploaded.get)
           }
           it("should not complete the upload") {
-            pending
+            assertResult(false)(uploader.completed.get)
           }
         }
         describe("when uploading a part fails once") {
