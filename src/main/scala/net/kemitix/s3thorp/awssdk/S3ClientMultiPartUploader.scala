@@ -51,6 +51,9 @@ private class S3ClientMultiPartUploader(s3Client: S3CatsIOClient)
       }
     }
 
+  def uploadPart(localFile: LocalFile): UploadPartRequest => IO[UploadPartResponse] =
+    s3Client.uploadPartFromFile(_, localFile.file)
+
   def upload(localFile: LocalFile,
              bucket: Bucket)
             (implicit c: Config): IO[UploadS3Action] = {
