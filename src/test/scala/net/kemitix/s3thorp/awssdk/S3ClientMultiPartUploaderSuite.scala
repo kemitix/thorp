@@ -92,7 +92,7 @@ class S3ClientMultiPartUploaderSuite
       describe("upload part") {
         it("should uploadPart") {
           val expected = uploadPartResponse2
-          val result = uploader.uploadPart(theFile)(uploadPartRequest2).unsafeRunSync
+          val result = uploader.uploadPart(theFile)(config)(uploadPartRequest2).unsafeRunSync
           assertResult(expected)(result)
         }
       }
@@ -108,7 +108,7 @@ class S3ClientMultiPartUploaderSuite
         val uploadPartResponses = Stream(uploadPartResponse0, uploadPartResponse1, uploadPartResponse2)
         it("should completeUpload") {
           val expected = completeUploadResponse
-          val result = uploader.completeUpload(createUploadResponse, uploadPartResponses).unsafeRunSync
+          val result = uploader.completeUpload(createUploadResponse, uploadPartResponses, theFile).unsafeRunSync
           assertResult(expected)(result)
         }
       }
