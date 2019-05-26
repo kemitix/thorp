@@ -129,6 +129,13 @@ class S3ClientMultiPartUploaderSuite
           assertResult(expected)(result)
         }
       }
+      describe("create abort request") {
+        val abortRequest = uploader.createAbortRequest(uploadId)
+        it("should have the upload id") {
+          assertResult(uploadId)(abortRequest.uploadId)
+        }
+      }
+      describe("abort upload") {}
     }
     describe("multi-part uploader upload complete") {
       describe("upload") {
