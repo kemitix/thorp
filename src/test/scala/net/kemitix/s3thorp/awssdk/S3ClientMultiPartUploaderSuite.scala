@@ -136,6 +136,9 @@ class S3ClientMultiPartUploaderSuite
         it("should have the upload id") {
           assertResult(uploadId)(abortRequest.uploadId)
         }
+        it("should have the bucket") {
+          assertResult(config.bucket.name)(abortRequest.bucket)
+        }
       }
       describe("abort upload") {}
     }

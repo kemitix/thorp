@@ -97,8 +97,10 @@ private class S3ClientMultiPartUploader(s3Client: S3CatsIOClient)
     s3Client abortMultipartUpload createAbortRequest(uploadId)
   }
 
-  def createAbortRequest(uploadId: String): AbortMultipartUploadRequest = {
+  def createAbortRequest(uploadId: String)
+                        (implicit c: Config): AbortMultipartUploadRequest = {
     AbortMultipartUploadRequest.builder
+      .bucket(c.bucket.name)
       .uploadId(uploadId)
       .build
   }
