@@ -55,6 +55,15 @@ class S3ClientMultiPartUploaderSuite
     val abortMultipartUploadResponse = AbortMultipartUploadResponse.builder.build
     describe("multi-part uploader upload components") {
       val uploader = new RecordingMultiPartUploader()
+      describe("create upload request") {
+        val request = uploader.createUploadRequest(config.bucket, theFile)
+        it("should have bucket") {
+          assertResult(config.bucket.name)(request.bucket)
+        }
+        it("should have key") {
+          assertResult(theFile.remoteKey.key)(request.key)
+        }
+      }
       describe("initiate upload") {
         it("should createMultipartUpload") {
           val expected = createUploadResponse

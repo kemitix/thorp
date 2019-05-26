@@ -20,11 +20,14 @@ private class S3ClientMultiPartUploader(s3Client: S3CatsIOClient)
   def createUpload(bucket: Bucket, localFile: LocalFile)
                   (implicit c: Config): IO[CreateMultipartUploadResponse] = {
     logMultiPartUploadInitiate(localFile)
-    s3Client createMultipartUpload
-      CreateMultipartUploadRequest.builder
-        .bucket(bucket.name)
-        .key(localFile.remoteKey.key)
-        .build
+    s3Client createMultipartUpload createUploadRequest(bucket, localFile)
+  }
+
+  def createUploadRequest(bucket: Bucket, localFile: LocalFile) = {
+    CreateMultipartUploadRequest.builder
+      .bucket(bucket.name)
+      .key(localFile.remoteKey.key)
+      .build
   }
 
   def parts(localFile: LocalFile,
