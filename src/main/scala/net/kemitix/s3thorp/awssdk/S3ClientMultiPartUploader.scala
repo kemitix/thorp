@@ -43,7 +43,7 @@ private class S3ClientMultiPartUploader(s3Client: S3CatsIOClient)
     IO {
       require(fileSize <= maxUpload,
         s"File (${localFile.file.getPath}) size ($fileSize) exceeds upload limit: $maxUpload")
-      logMultiPartUploadPartDetails(localFile, nParts, partSize)
+      logMultiPartUploadPartsDetails(localFile, nParts, partSize)
       for {
         partNumber <- (1 to nParts).toStream
         offSet = (partNumber - 1) * partSize

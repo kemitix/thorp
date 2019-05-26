@@ -17,10 +17,10 @@ trait S3ClientMultiPartUploaderLogging
                                 (implicit c: Config): Unit =
     log5(s"$prefix:initiating: ${localFile.remoteKey.key}")
 
-  def logMultiPartUploadPartDetails(localFile: LocalFile,
-                                    nParts: Int,
-                                    partSize: Long)
-                                   (implicit c: Config): Unit =
+  def logMultiPartUploadPartsDetails(localFile: LocalFile,
+                                     nParts: Int,
+                                     partSize: Long)
+                                    (implicit c: Config): Unit =
     log5(s"$prefix:parts $nParts:each $partSize: ${localFile.remoteKey.key}")
 
   def logMultiPartUploadPart(localFile: LocalFile,
