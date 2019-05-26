@@ -1,5 +1,7 @@
 package net.kemitix.s3thorp
 
+import java.nio.file.Files
+
 class MD5HashGeneratorTest extends UnitTest {
 
   private val source = Resource(this, "upload")
@@ -12,6 +14,15 @@ class MD5HashGeneratorTest extends UnitTest {
       it("should generate the correct hash") {
         val expected = MD5Hash("a3a6ac11a0eb577b81b3bb5c95cc8a6e")
         val result = md5File(file)
+        assertResult(expected)(result)
+      }
+    }
+    describe("read a buffer") {
+      val file = Resource(this, "upload/root-file")
+      val buffer: Array[Byte] = Files.readAllBytes(file.toPath)
+      it("should generate the correct hash") {
+        val expected = "a3a6ac11a0eb577b81b3bb5c95cc8a6e"
+        val result = md5PartBody(buffer)
         assertResult(expected)(result)
       }
     }
