@@ -115,6 +115,12 @@ class S3ClientMultiPartUploaderSuite
           assertResult(expected)(result)
         }
       }
+      describe("create complete request") {
+        val request = uploader.createCompleteRequest(createUploadResponse)
+        it("should have the upload id") {
+          assertResult(uploadId)(request.uploadId)
+        }
+      }
       describe("complete upload") {
         val uploadPartResponses = Stream(uploadPartResponse0, uploadPartResponse1, uploadPartResponse2)
         it("should completeUpload") {

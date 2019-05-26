@@ -81,10 +81,13 @@ private class S3ClientMultiPartUploader(s3Client: S3CatsIOClient)
                      localFile: LocalFile)
                     (implicit c: Config): IO[CompleteMultipartUploadResponse] = {
     logMultiPartUploadCompleted(createUploadResponse, uploadPartResponses, localFile)
-    s3Client completeMultipartUpload
-      CompleteMultipartUploadRequest.builder
-        .uploadId(createUploadResponse.uploadId)
-        .build
+    s3Client completeMultipartUpload createCompleteRequest(createUploadResponse)
+  }
+
+  def createCompleteRequest(createUploadResponse: CreateMultipartUploadResponse) = {
+    CompleteMultipartUploadRequest.builder
+      .uploadId(createUploadResponse.uploadId)
+      .build
   }
 
   def cancel(uploadId: String, localFile: LocalFile)
