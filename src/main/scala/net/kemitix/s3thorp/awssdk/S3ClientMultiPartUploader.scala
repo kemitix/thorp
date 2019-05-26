@@ -93,17 +93,16 @@ private class S3ClientMultiPartUploader(s3Client: AmazonS3)
                      localFile: LocalFile)
                     (implicit c: Config): IO[CompleteMultipartUploadResult] = {
     logMultiPartUploadCompleted(createUploadResponse, uploadPartResponses, localFile)
-    val partETags = uploadPartResponses.map(r => MD5Hash(r.getETag)).toList
-    IO(s3Client completeMultipartUpload createCompleteRequest(createUploadResponse, partETags))
+    IO(s3Client completeMultipartUpload createCompleteRequest(createUploadResponse, uploadPartResponses.toList))
   }
 
   def createCompleteRequest(createUploadResponse: InitiateMultipartUploadResult,
-                            partETags: List[MD5Hash]) = {
+                            uploadPartResult: List[UploadPartResult]) = {
     new CompleteMultipartUploadRequest()
       .withBucketName(createUploadResponse.getBucketName)
       .withKey(createUploadResponse.getKey)
       .withUploadId(createUploadResponse.getUploadId)
-      .withPartETags(partETags.zipWithIndex.map { case (m, i) => new PartETag(i, m.hash) }.asJava)
+      .withPartETags(uploadPartResult.asJava)
   }
 
   def cancel(uploadId: String, localFile: LocalFile)

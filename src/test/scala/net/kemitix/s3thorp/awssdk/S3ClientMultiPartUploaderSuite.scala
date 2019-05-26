@@ -63,15 +63,15 @@ class S3ClientMultiPartUploaderSuite
     val uploadPartRequest1 = uploadPartRequest(1)
     val uploadPartRequest2 = uploadPartRequest(2)
     val uploadPartRequest3 = uploadPartRequest(3)
-    val uploadPartResponse1 = uploadPartResult("part-1")
-    val uploadPartResponse2 = uploadPartResult("part-2")
+    val part1md5 = "aadf0d266cefe0fcdb241a51798d74b3"
+    val part2md5 = "16e08d53ca36e729d808fd5e4f7e35dc"
+    val uploadPartResponse1 = uploadPartResult(part1md5)
+    val uploadPartResponse2 = uploadPartResult(part2md5)
     val uploadPartResponse3 = uploadPartResult("part-3")
     val completeUploadResponse = new CompleteMultipartUploadResult()
     completeUploadResponse.setETag("hash")
     describe("multi-part uploader upload components") {
       val uploader = new RecordingMultiPartUploader()
-      val part1md5 = "aadf0d266cefe0fcdb241a51798d74b3"
-      val part2md5 = "16e08d53ca36e729d808fd5e4f7e35dc"
       describe("create upload request") {
         val request = uploader.createUploadRequest(config.bucket, theFile)
         it("should have bucket") {
@@ -123,7 +123,7 @@ class S3ClientMultiPartUploaderSuite
         }
       }
       describe("create complete request") {
-        val request = uploader.createCompleteRequest(createUploadResponse, List(MD5Hash(part1md5), MD5Hash(part2md5)))
+        val request = uploader.createCompleteRequest(createUploadResponse, List(uploadPartResponse1, uploadPartResponse2))
         it("should have the bucket name") {
           assertResult(config.bucket.name)(request.getBucketName)
         }
