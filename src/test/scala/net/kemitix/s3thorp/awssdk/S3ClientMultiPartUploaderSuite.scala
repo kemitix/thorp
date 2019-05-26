@@ -45,12 +45,12 @@ class S3ClientMultiPartUploaderSuite
     val theFile = aLocalFile("big-file", MD5Hash(""), source, fileToKey)
     val uploadId = "upload-id"
     val createUploadResponse = CreateMultipartUploadResponse.builder.uploadId(uploadId).build
-    val uploadPartRequest0 = UploadPartRequest.builder.partNumber(0).build
     val uploadPartRequest1 = UploadPartRequest.builder.partNumber(1).build
     val uploadPartRequest2 = UploadPartRequest.builder.partNumber(2).build
-    val uploadPartResponse0 = UploadPartResponse.builder.eTag("part-0").build
+    val uploadPartRequest3 = UploadPartRequest.builder.partNumber(3).build
     val uploadPartResponse1 = UploadPartResponse.builder.eTag("part-1").build
     val uploadPartResponse2 = UploadPartResponse.builder.eTag("part-2").build
+    val uploadPartResponse3 = UploadPartResponse.builder.eTag("part-3").build
     val completeUploadResponse = CompleteMultipartUploadResponse.builder.eTag("hash").build
     val abortMultipartUploadResponse = AbortMultipartUploadResponse.builder.build
     describe("multi-part uploader upload components") {
@@ -79,40 +79,40 @@ class S3ClientMultiPartUploaderSuite
         // md5sum x0[01]
         val part1md5 = "aadf0d266cefe0fcdb241a51798d74b3"
         val part2md5 = "16e08d53ca36e729d808fd5e4f7e35dc"
-        val part0 = UploadPartRequest.builder
-          .bucket(config.bucket.name)
-          .key(theFile.remoteKey.key)
-          .uploadId(uploadId)
-          .partNumber(0)
-          .contentLength(chunkSize)
-          .contentMD5(part1md5)
-          .build
         val part1 = UploadPartRequest.builder
           .bucket(config.bucket.name)
           .key(theFile.remoteKey.key)
           .uploadId(uploadId)
           .partNumber(1)
           .contentLength(chunkSize)
+          .contentMD5(part1md5)
+          .build
+        val part2 = UploadPartRequest.builder
+          .bucket(config.bucket.name)
+          .key(theFile.remoteKey.key)
+          .uploadId(uploadId)
+          .partNumber(2)
+          .contentLength(chunkSize)
           .contentMD5(part2md5)
           .build
         it("should create the parts expected") {
           val result = uploader.parts(theFile, createUploadResponse).unsafeRunSync.toList
           assertResult(2)(result.size)
-          assertResult(part1)(result(1))
-          assertResult(part0)(result(0))
+          assertResult(part2)(result(1))
+          assertResult(part1)(result(0))
         }
       }
       describe("upload part") {
         it("should uploadPart") {
-          val expected = uploadPartResponse2
-          val result = uploader.uploadPart(theFile)(config)(uploadPartRequest2).unsafeRunSync
+          val expected = uploadPartResponse3
+          val result = uploader.uploadPart(theFile)(config)(uploadPartRequest3).unsafeRunSync
           assertResult(expected)(result)
         }
       }
       describe("upload parts") {
-        val uploadPartRequests = Stream(uploadPartRequest0, uploadPartRequest1)
+        val uploadPartRequests = Stream(uploadPartRequest1, uploadPartRequest2)
         it("should uploadPart for each") {
-          val expected = List(uploadPartResponse0, uploadPartResponse1)
+          val expected = List(uploadPartResponse1, uploadPartResponse2)
           val result = uploader.uploadParts(theFile, uploadPartRequests).unsafeRunSync.toList
           assertResult(expected)(result)
         }
@@ -124,7 +124,7 @@ class S3ClientMultiPartUploaderSuite
         }
       }
       describe("complete upload") {
-        val uploadPartResponses = Stream(uploadPartResponse0, uploadPartResponse1, uploadPartResponse2)
+        val uploadPartResponses = Stream(uploadPartResponse1, uploadPartResponse2, uploadPartResponse3)
         it("should completeUpload") {
           val expected = completeUploadResponse
           val result = uploader.completeUpload(createUploadResponse, uploadPartResponses, theFile).unsafeRunSync
@@ -151,7 +151,7 @@ class S3ClientMultiPartUploaderSuite
             assert(uploader.initiated.get)
           }
           it("should upload both parts") {
-            assertResult(Set(0, 1))(uploader.partsUploaded.get)
+            assertResult(Set(1, 2))(uploader.partsUploaded.get)
           }
           it("should complete the upload") {
             assert(uploader.completed.get)
@@ -174,7 +174,7 @@ class S3ClientMultiPartUploaderSuite
             assert(uploader.initiated.get)
           }
           it("should upload all parts") {
-            assertResult(Set(0, 1))(uploader.partsUploaded.get)
+            assertResult(Set(1, 2))(uploader.partsUploaded.get)
           }
           it("should complete the upload") {
             assert(uploader.completed.get)
@@ -216,24 +216,24 @@ class S3ClientMultiPartUploaderSuite
 
           override def uploadPartFromFile(uploadPartRequest: UploadPartRequest, sourceFile: File): IO[UploadPartResponse] =
             uploadPartRequest match {
-              case _ if uploadPartRequest.partNumber == 0 => {
-                if (part0Tries.incrementAndGet >= partTriesRequired) IO {
-                  partsUploaded getAndUpdate (t => t + 0)
-                  uploadPartResponse0
-                }
-                else IO raiseError S3Exception.builder.build
-              }
               case _ if uploadPartRequest.partNumber == 1 => {
-                if (part1Tries.incrementAndGet >= partTriesRequired) IO {
+                if (part0Tries.incrementAndGet >= partTriesRequired) IO {
                   partsUploaded getAndUpdate (t => t + 1)
                   uploadPartResponse1
                 }
                 else IO raiseError S3Exception.builder.build
               }
               case _ if uploadPartRequest.partNumber == 2 => {
-                if (part2Tries.incrementAndGet >= partTriesRequired) IO {
+                if (part1Tries.incrementAndGet >= partTriesRequired) IO {
                   partsUploaded getAndUpdate (t => t + 2)
                   uploadPartResponse2
+                }
+                else IO raiseError S3Exception.builder.build
+              }
+              case _ if uploadPartRequest.partNumber == 3 => {
+                if (part2Tries.incrementAndGet >= partTriesRequired) IO {
+                  partsUploaded getAndUpdate (t => t + 3)
+                  uploadPartResponse3
                 }
                 else IO raiseError S3Exception.builder.build
               }

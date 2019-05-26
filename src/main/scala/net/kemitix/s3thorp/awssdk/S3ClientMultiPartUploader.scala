@@ -45,8 +45,8 @@ private class S3ClientMultiPartUploader(s3Client: S3CatsIOClient)
         s"File (${localFile.file.getPath}) size ($fileSize) exceeds upload limit: $maxUpload")
       logMultiPartUploadPartDetails(localFile, nParts, partSize)
       for {
-        partNumber <- (0 until nParts).toStream
-        offSet = partNumber * partSize
+        partNumber <- (1 to nParts).toStream
+        offSet = (partNumber - 1) * partSize
         chunkSize = Math.min(fileSize - offSet, partSize)
         partHash = md5FilePart(localFile.file, offSet, chunkSize)
         uploadPartRequest = UploadPartRequest.builder
