@@ -73,7 +73,7 @@ class S3ClientMultiPartUploaderSuite
       }
       describe("create UploadPartRequests for file") {
         val chunkSize = 5l * 1024 * 1025 / 2
-        // to create expected md5 values for each chunK:
+        // to create expected md5 values for each chunk:
         // split -d -b $((5 * 1024 * 1025 / 2)) big-file
         // creates x00 and x01
         // md5sum x0[01]
