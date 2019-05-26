@@ -80,12 +80,14 @@ class S3ClientMultiPartUploaderSuite
         val part1md5 = "aadf0d266cefe0fcdb241a51798d74b3"
         val part2md5 = "16e08d53ca36e729d808fd5e4f7e35dc"
         val part0 = UploadPartRequest.builder
+          .bucket(config.bucket.name)
           .uploadId(uploadId)
           .partNumber(0)
           .contentLength(chunkSize)
           .contentMD5(part1md5)
           .build
         val part1 = UploadPartRequest.builder
+          .bucket(config.bucket.name)
           .uploadId(uploadId)
           .partNumber(1)
           .contentLength(chunkSize)
