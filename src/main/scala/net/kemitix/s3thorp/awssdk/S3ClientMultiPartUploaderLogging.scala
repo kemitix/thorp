@@ -11,49 +11,49 @@ trait S3ClientMultiPartUploaderLogging
   def logMultiPartUploadStart(localFile: LocalFile,
                               tryCount: Int)
                              (implicit c: Config): Unit =
-    log4(s"$prefix:upload:try $tryCount: ${localFile.remoteKey}")
+    log4(s"$prefix:upload:try $tryCount: ${localFile.remoteKey.key}")
 
   def logMultiPartUploadInitiate(localFile: LocalFile)
                                 (implicit c: Config): Unit =
-    log5(s"$prefix:initiating: ${localFile.remoteKey}")
+    log5(s"$prefix:initiating: ${localFile.remoteKey.key}")
 
   def logMultiPartUploadPartDetails(localFile: LocalFile,
                                     nParts: Int,
                                     partSize: Long)
                                    (implicit c: Config): Unit =
-    log5(s"$prefix:parts $nParts:each $partSize: ${localFile.remoteKey}")
+    log5(s"$prefix:parts $nParts:each $partSize: ${localFile.remoteKey.key}")
 
   def logMultiPartUploadPart(localFile: LocalFile,
                              partRequest: UploadPartRequest)
                             (implicit c: Config): Unit =
-    log5(s"$prefix:sending:part ${partRequest.partNumber}: ${localFile.remoteKey}")
+    log5(s"$prefix:sending:part ${partRequest.partNumber}: ${localFile.remoteKey.key}")
 
   def logMultiPartUploadPartError(localFile: LocalFile,
                                   partRequest: UploadPartRequest,
                                   error: Throwable)
                                  (implicit c: Config): Unit =
-    warn(s"$prefix:error:part ${partRequest.partNumber}: ${localFile.remoteKey}")
+    warn(s"$prefix:error:part ${partRequest.partNumber}: ${localFile.remoteKey.key}")
 
   def logMultiPartUploadCompleted(createUploadResponse: CreateMultipartUploadResponse,
                                   uploadPartResponses: Stream[UploadPartResponse],
                                   localFile: LocalFile)
                                  (implicit c: Config): Unit =
-    log4(s"$prefix:completed:parts ${uploadPartResponses.size}: ${localFile.remoteKey}")
+    log4(s"$prefix:completed:parts ${uploadPartResponses.size}: ${localFile.remoteKey.key}")
 
   def logMultiPartUploadCancelling(localFile: LocalFile)
                                   (implicit c: Config): Unit =
-    warn(s"$prefix:cancelling: ${localFile.remoteKey}")
+    warn(s"$prefix:cancelling: ${localFile.remoteKey.key}")
 
   def logErrorRetrying(e: Throwable, localFile: LocalFile, tryCount: Int)
                       (implicit c: Config): Unit =
-    warn(s"$prefix:retry:error ${e.getMessage}: ${localFile.remoteKey}")
+    warn(s"$prefix:retry:error ${e.getMessage}: ${localFile.remoteKey.key}")
 
   def logErrorCancelling(e: Throwable, localFile: LocalFile)
                         (implicit c: Config) : Unit =
-    error(s"$prefix:cancelling:error ${e.getMessage}: ${localFile.remoteKey}")
+    error(s"$prefix:cancelling:error ${e.getMessage}: ${localFile.remoteKey.key}")
 
   def logErrorUnknown(e: Throwable, localFile: LocalFile)
                      (implicit c: Config): Unit =
-    error(s"$prefix:unknown:error $e: ${localFile.remoteKey}")
+    error(s"$prefix:unknown:error $e: ${localFile.remoteKey.key}")
 
 }
