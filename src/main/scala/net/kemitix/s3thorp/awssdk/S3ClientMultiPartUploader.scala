@@ -66,6 +66,8 @@ private class S3ClientMultiPartUploader(s3Client: AmazonS3)
     request.setPartNumber(partNumber)
     request.setPartSize(chunkSize)
     request.setMd5Digest(partHash)
+    request.setFile(localFile.file)
+    request.setFileOffset((partNumber - 1) * chunkSize)
     request
   }
 
