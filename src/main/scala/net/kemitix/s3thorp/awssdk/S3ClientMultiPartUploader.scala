@@ -61,16 +61,15 @@ private class S3ClientMultiPartUploader(s3Client: AmazonS3)
                                       chunkSize: Long,
                                       partHash: String)
                                      (implicit c: Config) = {
-    val request = new UploadPartRequest
-    request.setBucketName(c.bucket.name)
-    request.setKey(localFile.remoteKey.key)
-    request.setUploadId(response.getUploadId)
-    request.setPartNumber(partNumber)
-    request.setPartSize(chunkSize)
-    request.setMd5Digest(partHash)
-    request.setFile(localFile.file)
-    request.setFileOffset((partNumber - 1) * chunkSize)
-    request
+    new UploadPartRequest()
+      .withBucketName(c.bucket.name)
+      .withKey(localFile.remoteKey.key)
+      .withUploadId(response.getUploadId)
+      .withPartNumber(partNumber)
+      .withPartSize(chunkSize)
+      .withMD5Digest(partHash)
+      .withFile(localFile.file)
+      .withFileOffset((partNumber - 1) * chunkSize)
   }
 
   def uploadPart(localFile: LocalFile)
@@ -100,12 +99,11 @@ private class S3ClientMultiPartUploader(s3Client: AmazonS3)
 
   def createCompleteRequest(createUploadResponse: InitiateMultipartUploadResult,
                             partETags: List[MD5Hash]) = {
-    val request = new CompleteMultipartUploadRequest
-    request.setBucketName(createUploadResponse.getBucketName)
-    request.setKey(createUploadResponse.getKey)
-    request.setUploadId(createUploadResponse.getUploadId)
-    request.setPartETags(partETags.zipWithIndex.map { case (m, i) => new PartETag(i, m.hash) }.asJava)
-    request
+    new CompleteMultipartUploadRequest()
+      .withBucketName(createUploadResponse.getBucketName)
+      .withKey(createUploadResponse.getKey)
+      .withUploadId(createUploadResponse.getUploadId)
+      .withPartETags(partETags.zipWithIndex.map { case (m, i) => new PartETag(i, m.hash) }.asJava)
   }
 
   def cancel(uploadId: String, localFile: LocalFile)
