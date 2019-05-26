@@ -51,6 +51,7 @@ private class S3ClientMultiPartUploader(s3Client: S3CatsIOClient)
         partHash = md5FilePart(localFile.file, offSet, chunkSize)
         uploadPartRequest = UploadPartRequest.builder
           .bucket(c.bucket.name)
+          .key(localFile.remoteKey.key)
           .uploadId(response.uploadId)
           .partNumber(partNumber)
           .contentLength(chunkSize)
