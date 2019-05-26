@@ -1,9 +1,11 @@
 package net.kemitix.s3thorp.awssdk
 
+import scala.collection.JavaConverters._
+
 import cats.effect.IO
 import cats.implicits._
 import com.amazonaws.services.s3.AmazonS3
-import com.amazonaws.services.s3.model.{AbortMultipartUploadRequest, CompleteMultipartUploadRequest, CompleteMultipartUploadResult, InitiateMultipartUploadRequest, InitiateMultipartUploadResult, UploadPartRequest, UploadPartResult}
+import com.amazonaws.services.s3.model.{AbortMultipartUploadRequest, CompleteMultipartUploadRequest, CompleteMultipartUploadResult, InitiateMultipartUploadRequest, InitiateMultipartUploadResult, PartETag, UploadPartRequest, UploadPartResult}
 import net.kemitix.s3thorp._
 
 import scala.util.control.NonFatal
@@ -92,15 +94,17 @@ private class S3ClientMultiPartUploader(s3Client: AmazonS3)
                      localFile: LocalFile)
                     (implicit c: Config): IO[CompleteMultipartUploadResult] = {
     logMultiPartUploadCompleted(createUploadResponse, uploadPartResponses, localFile)
-    IO(s3Client completeMultipartUpload createCompleteRequest(createUploadResponse))
+    val partETags = uploadPartResponses.map(r => MD5Hash(r.getETag)).toList
+    IO(s3Client completeMultipartUpload createCompleteRequest(createUploadResponse, partETags))
   }
 
-  def createCompleteRequest(createUploadResponse: InitiateMultipartUploadResult) = {
+  def createCompleteRequest(createUploadResponse: InitiateMultipartUploadResult,
+                            partETags: List[MD5Hash]) = {
     val request = new CompleteMultipartUploadRequest
     request.setBucketName(createUploadResponse.getBucketName)
     request.setKey(createUploadResponse.getKey)
     request.setUploadId(createUploadResponse.getUploadId)
-    //TODO: eTags list
+    request.setPartETags(partETags.zipWithIndex.map { case (m, i) => new PartETag(i, m.hash) }.asJava)
     request
   }
 

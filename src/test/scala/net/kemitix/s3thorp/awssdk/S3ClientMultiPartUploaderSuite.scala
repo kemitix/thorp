@@ -1,10 +1,9 @@
 package net.kemitix.s3thorp.awssdk
 
-import java.io.File
+import scala.collection.JavaConverters._
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger, AtomicReference}
 
-import cats.effect.IO
-import com.amazonaws.services.s3.model.{AbortMultipartUploadRequest, CompleteMultipartUploadRequest, CompleteMultipartUploadResult, InitiateMultipartUploadRequest, InitiateMultipartUploadResult, UploadPartRequest, UploadPartResult}
+import com.amazonaws.services.s3.model.{AbortMultipartUploadRequest, CompleteMultipartUploadRequest, CompleteMultipartUploadResult, InitiateMultipartUploadRequest, InitiateMultipartUploadResult, PartETag, UploadPartRequest, UploadPartResult}
 import net.kemitix.s3thorp._
 import software.amazon.awssdk.services.s3.model.S3Exception
 
@@ -58,6 +57,8 @@ class S3ClientMultiPartUploaderSuite
     val theFile = aLocalFile("big-file", MD5Hash(""), source, fileToKey)
     val uploadId = "upload-id"
     val createUploadResponse = new InitiateMultipartUploadResult()
+    createUploadResponse.setBucketName(config.bucket.name)
+    createUploadResponse.setKey(theFile.remoteKey.key)
     createUploadResponse.setUploadId(uploadId)
     val uploadPartRequest1 = uploadPartRequest(1)
     val uploadPartRequest2 = uploadPartRequest(2)
@@ -66,9 +67,11 @@ class S3ClientMultiPartUploaderSuite
     val uploadPartResponse2 = uploadPartResult("part-2")
     val uploadPartResponse3 = uploadPartResult("part-3")
     val completeUploadResponse = new CompleteMultipartUploadResult()
-      completeUploadResponse.setETag("hash")
+    completeUploadResponse.setETag("hash")
     describe("multi-part uploader upload components") {
       val uploader = new RecordingMultiPartUploader()
+      val part1md5 = "aadf0d266cefe0fcdb241a51798d74b3"
+      val part2md5 = "16e08d53ca36e729d808fd5e4f7e35dc"
       describe("create upload request") {
         val request = uploader.createUploadRequest(config.bucket, theFile)
         it("should have bucket") {
@@ -91,8 +94,6 @@ class S3ClientMultiPartUploaderSuite
         // split -d -b $((5 * 1024 * 1025 / 2)) big-file
         // creates x00 and x01
         // md5sum x0[01]
-        val part1md5 = "aadf0d266cefe0fcdb241a51798d74b3"
-        val part2md5 = "16e08d53ca36e729d808fd5e4f7e35dc"
         val result = uploader.parts(theFile, createUploadResponse).unsafeRunSync.toList
         it("should create two parts") {
           assertResult(2)(result.size)
@@ -122,9 +123,19 @@ class S3ClientMultiPartUploaderSuite
         }
       }
       describe("create complete request") {
-        val request = uploader.createCompleteRequest(createUploadResponse)
+        val request = uploader.createCompleteRequest(createUploadResponse, List(MD5Hash(part1md5), MD5Hash(part2md5)))
+        it("should have the bucket name") {
+          assertResult(config.bucket.name)(request.getBucketName)
+        }
+        it("should have the key") {
+          assertResult(theFile.remoteKey.key)(request.getKey)
+        }
         it("should have the upload id") {
           assertResult(uploadId)(request.getUploadId)
+        }
+        it("should have the etags") {
+          val expected = List(new PartETag(1, part1md5), new PartETag(2, part2md5))
+          assertResult(expected.map(_.getETag))(request.getPartETags.asScala.map(_.getETag))
         }
       }
       describe("complete upload") {
