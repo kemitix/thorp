@@ -41,4 +41,16 @@ trait S3ClientMultiPartUploaderLogging
   def logMultiPartUploadCancelling(localFile: LocalFile)
                                   (implicit c: Config): Unit =
     warn(s"multi-part upload:cancelling: ${localFile.file.getPath}")
+
+  def logErrorRetrying(e: Throwable, localFile: LocalFile, tryCount: Int)
+                      (implicit c: Config): Unit =
+    warn(s"multi-part upload:try $tryCount:${e.getMessage}: ${localFile.file.getPath}")
+
+  def logErrorCancelling(e: Throwable, localFile: LocalFile)
+                        (implicit c: Config) : Unit =
+    error(s"multi-part upload:cancelling:${e.getMessage}: ${localFile.file.getPath}")
+
+  def logErrorUnknown(e: Throwable, localFile: LocalFile)
+                     (implicit c: Config): Unit =
+    error(s"multi-part upload:unknown error:$e: ${localFile.file.getPath}")
 }

@@ -119,11 +119,11 @@ private class S3ClientMultiPartUploader(s3Client: S3CatsIOClient)
       .map(UploadS3Action(localFile.remoteKey, _))
       .handleErrorWith {
         case CancellableMultiPartUpload(e, uploadId) =>
-          if (tryCount >= 3) cancel(uploadId, localFile) *> IO.pure(ErroredS3Action(localFile.remoteKey, e))
-          else IO(warn(e.getMessage)) *> upload(localFile, bucket, tryCount + 1)
+          if (tryCount >= 3) IO(logErrorCancelling(e, localFile)) *> cancel(uploadId, localFile) *> IO.pure(ErroredS3Action(localFile.remoteKey, e))
+          else IO(logErrorRetrying(e, localFile, tryCount)) *> upload(localFile, bucket, tryCount + 1)
         case NonFatal(e) =>
-          if (tryCount >= 3) IO.pure(ErroredS3Action(localFile.remoteKey, e))
-          else IO(warn(e.getMessage)) *> upload(localFile, bucket, tryCount + 1)
+          if (tryCount >= 3) IO(logErrorUnknown(e, localFile)) *> IO.pure(ErroredS3Action(localFile.remoteKey, e))
+          else IO(logErrorRetrying(e, localFile, tryCount)) *> upload(localFile, bucket, tryCount + 1)
       }
   }
 }
