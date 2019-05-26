@@ -7,6 +7,7 @@ case class Config(bucket: Bucket = Bucket(""),
                   verbose: Int = 1,
                   filters: Seq[Filter] = List(),
                   multiPartThreshold: Long = 1024 * 1024 * 5,
+                  maxRetries: Int = 3,
                   source: File
                ) {
   require(source.isDirectory, s"Source must be a directory: $source")
