@@ -2,13 +2,13 @@ package net.kemitix.s3thorp.awssdk
 
 import cats.effect.IO
 import cats.implicits._
-import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
+import com.amazonaws.services.s3.AmazonS3
+import com.amazonaws.services.s3.model.{AbortMultipartUploadRequest, CompleteMultipartUploadRequest, CompleteMultipartUploadResult, InitiateMultipartUploadRequest, InitiateMultipartUploadResult, UploadPartRequest, UploadPartResult}
 import net.kemitix.s3thorp._
-import software.amazon.awssdk.services.s3.model.{Bucket => _, _}
 
 import scala.util.control.NonFatal
 
-private class S3ClientMultiPartUploader(s3Client: S3CatsIOClient)
+private class S3ClientMultiPartUploader(s3Client: AmazonS3)
   extends S3ClientMultiPartUploaderLogging
     with MD5HashGenerator
     with QuoteStripper {
@@ -18,20 +18,18 @@ private class S3ClientMultiPartUploader(s3Client: S3CatsIOClient)
     localFile.file.length >= c.multiPartThreshold
 
   def createUpload(bucket: Bucket, localFile: LocalFile)
-                  (implicit c: Config): IO[CreateMultipartUploadResponse] = {
+                  (implicit c: Config): IO[InitiateMultipartUploadResult] = {
     logMultiPartUploadInitiate(localFile)
-    s3Client createMultipartUpload createUploadRequest(bucket, localFile)
+    IO(s3Client initiateMultipartUpload createUploadRequest(bucket, localFile))
   }
 
-  def createUploadRequest(bucket: Bucket, localFile: LocalFile) = {
-    CreateMultipartUploadRequest.builder
-      .bucket(bucket.name)
-      .key(localFile.remoteKey.key)
-      .build
-  }
+  def createUploadRequest(bucket: Bucket, localFile: LocalFile) =
+    new InitiateMultipartUploadRequest(
+      bucket.name,
+      localFile.remoteKey.key)
 
   def parts(localFile: LocalFile,
-            response: CreateMultipartUploadResponse)
+            response: InitiateMultipartUploadResult)
            (implicit c: Config): IO[Stream[UploadPartRequest]] = {
     val fileSize = localFile.file.length
     val maxParts = 1024 // arbitrary, supports upto 10,000 (I, think)
@@ -50,76 +48,84 @@ private class S3ClientMultiPartUploader(s3Client: S3CatsIOClient)
         chunkSize = Math.min(fileSize - offSet, partSize)
         partHash = md5FilePart(localFile.file, offSet, chunkSize)
         _ = logMultiPartUploadPartDetails(localFile, partNumber, partHash)
-        uploadPartRequest = UploadPartRequest.builder
-          .bucket(c.bucket.name)
-          .key(localFile.remoteKey.key)
-          .uploadId(response.uploadId)
-          .partNumber(partNumber)
-          .contentLength(chunkSize)
-          .contentMD5(partHash)
-          .build
+        uploadPartRequest = createUploadPartRequest(localFile, response, partNumber, chunkSize, partHash)
       } yield uploadPartRequest
     }
   }
 
+  private def createUploadPartRequest(localFile: LocalFile,
+                                      response: InitiateMultipartUploadResult,
+                                      partNumber: Int,
+                                      chunkSize: Long,
+                                      partHash: String)
+                                     (implicit c: Config) = {
+    val request = new UploadPartRequest
+    request.setBucketName(c.bucket.name)
+    request.setKey(localFile.remoteKey.key)
+    request.setUploadId(response.getUploadId)
+    request.setPartNumber(partNumber)
+    request.setPartSize(chunkSize)
+    request.setMd5Digest(partHash)
+    request
+  }
+
   def uploadPart(localFile: LocalFile)
-                (implicit c: Config): UploadPartRequest => IO[UploadPartResponse] =
+                (implicit c: Config): UploadPartRequest => IO[UploadPartResult] =
     partRequest => {
       logMultiPartUploadPart(localFile, partRequest)
-      s3Client.uploadPartFromFile(partRequest, localFile.file)
+      IO(s3Client.uploadPart(partRequest))
         .handleErrorWith(error => {
           logMultiPartUploadPartError(localFile, partRequest, error)
-          IO.raiseError(CancellableMultiPartUpload(error, partRequest.uploadId))
+          IO.raiseError(CancellableMultiPartUpload(error, partRequest.getUploadId))
         })
     }
 
   def uploadParts(localFile: LocalFile,
                   parts: Stream[UploadPartRequest])
-                 (implicit c: Config): IO[Stream[UploadPartResponse]] =
+                 (implicit c: Config): IO[Stream[UploadPartResult]] =
     (parts map uploadPart(localFile)).sequence
 
-  def completeUpload(createUploadResponse: CreateMultipartUploadResponse,
-                     uploadPartResponses: Stream[UploadPartResponse],
+  def completeUpload(createUploadResponse: InitiateMultipartUploadResult,
+                     uploadPartResponses: Stream[UploadPartResult],
                      localFile: LocalFile)
-                    (implicit c: Config): IO[CompleteMultipartUploadResponse] = {
+                    (implicit c: Config): IO[CompleteMultipartUploadResult] = {
     logMultiPartUploadCompleted(createUploadResponse, uploadPartResponses, localFile)
-    s3Client completeMultipartUpload createCompleteRequest(createUploadResponse)
+    IO(s3Client completeMultipartUpload createCompleteRequest(createUploadResponse))
   }
 
-  def createCompleteRequest(createUploadResponse: CreateMultipartUploadResponse) = {
-    CompleteMultipartUploadRequest.builder
-      .uploadId(createUploadResponse.uploadId)
-      .build
+  def createCompleteRequest(createUploadResponse: InitiateMultipartUploadResult) = {
+    val request = new CompleteMultipartUploadRequest
+    request.setBucketName(createUploadResponse.getBucketName)
+    request.setKey(createUploadResponse.getKey)
+    request.setUploadId(createUploadResponse.getUploadId)
+    //TODO: eTags list
+    request
   }
 
   def cancel(uploadId: String, localFile: LocalFile)
-            (implicit c: Config): IO[AbortMultipartUploadResponse] = {
+            (implicit c: Config): IO[Unit] = {
     logMultiPartUploadCancelling(localFile)
-    s3Client abortMultipartUpload createAbortRequest(uploadId, localFile)
+    IO(s3Client abortMultipartUpload createAbortRequest(uploadId, localFile))
   }
 
   def createAbortRequest(uploadId: String,
                          localFile: LocalFile)
-                        (implicit c: Config): AbortMultipartUploadRequest = {
-    AbortMultipartUploadRequest.builder
-      .bucket(c.bucket.name)
-      .key(localFile.remoteKey.key)
-      .uploadId(uploadId)
-      .build
-  }
+                        (implicit c: Config): AbortMultipartUploadRequest =
+    new AbortMultipartUploadRequest(c.bucket.name, localFile.remoteKey.key, uploadId)
 
   def upload(localFile: LocalFile,
              bucket: Bucket,
              tryCount: Int)
             (implicit c: Config): IO[S3Action] = {
     logMultiPartUploadStart(localFile, tryCount)
+
     (for {
       createUploadResponse <- createUpload(bucket, localFile)
       parts <- parts(localFile, createUploadResponse)
       uploadPartResponses <- uploadParts(localFile, parts)
       completedUploadResponse <- completeUpload(createUploadResponse, uploadPartResponses, localFile)
     } yield completedUploadResponse)
-      .map(_.eTag)
+      .map(_.getETag)
       .map(_ filter stripQuotes)
       .map(MD5Hash)
       .map(UploadS3Action(localFile.remoteKey, _))

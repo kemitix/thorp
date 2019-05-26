@@ -1,7 +1,7 @@
 package net.kemitix.s3thorp.awssdk
 
+import com.amazonaws.services.s3.model.{InitiateMultipartUploadResult, UploadPartRequest, UploadPartResult}
 import net.kemitix.s3thorp.{Config, LocalFile}
-import software.amazon.awssdk.services.s3.model.{CreateMultipartUploadResponse, S3Exception, UploadPartRequest, UploadPartResponse}
 
 trait S3ClientMultiPartUploaderLogging
   extends S3ClientLogging {
@@ -32,16 +32,16 @@ trait S3ClientMultiPartUploaderLogging
   def logMultiPartUploadPart(localFile: LocalFile,
                              partRequest: UploadPartRequest)
                             (implicit c: Config): Unit =
-    log5(s"$prefix:sending:part ${partRequest.partNumber}: ${localFile.remoteKey.key}")
+    log5(s"$prefix:sending:part ${partRequest.getPartNumber}: ${localFile.remoteKey.key}")
 
   def logMultiPartUploadPartError(localFile: LocalFile,
                                   partRequest: UploadPartRequest,
                                   error: Throwable)
                                  (implicit c: Config): Unit =
-    warn(s"$prefix:error:part ${partRequest.partNumber}: ${localFile.remoteKey.key}")
+    warn(s"$prefix:error:part ${partRequest.getPartNumber}: ${localFile.remoteKey.key}")
 
-  def logMultiPartUploadCompleted(createUploadResponse: CreateMultipartUploadResponse,
-                                  uploadPartResponses: Stream[UploadPartResponse],
+  def logMultiPartUploadCompleted(createUploadResponse: InitiateMultipartUploadResult,
+                                  uploadPartResponses: Stream[UploadPartResult],
                                   localFile: LocalFile)
                                  (implicit c: Config): Unit =
     log4(s"$prefix:completed:parts ${uploadPartResponses.size}: ${localFile.remoteKey.key}")
