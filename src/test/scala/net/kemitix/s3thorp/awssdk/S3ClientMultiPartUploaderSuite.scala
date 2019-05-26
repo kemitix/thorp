@@ -132,15 +132,22 @@ class S3ClientMultiPartUploaderSuite
         }
       }
       describe("create abort request") {
-        val abortRequest = uploader.createAbortRequest(uploadId)
+        val abortRequest = uploader.createAbortRequest(uploadId, theFile)
         it("should have the upload id") {
           assertResult(uploadId)(abortRequest.uploadId)
         }
         it("should have the bucket") {
           assertResult(config.bucket.name)(abortRequest.bucket)
         }
+        it("should have the key") {
+          assertResult(theFile.remoteKey.key)(abortRequest.key)
+        }
       }
-      describe("abort upload") {}
+      describe("abort upload") {
+        it("should abortUpload") {
+          pending
+        }
+      }
     }
     describe("multi-part uploader upload complete") {
       describe("upload") {

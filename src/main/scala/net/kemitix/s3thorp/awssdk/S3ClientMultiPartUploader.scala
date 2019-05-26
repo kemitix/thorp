@@ -94,13 +94,15 @@ private class S3ClientMultiPartUploader(s3Client: S3CatsIOClient)
   def cancel(uploadId: String, localFile: LocalFile)
             (implicit c: Config): IO[AbortMultipartUploadResponse] = {
     logMultiPartUploadCancelling(localFile)
-    s3Client abortMultipartUpload createAbortRequest(uploadId)
+    s3Client abortMultipartUpload createAbortRequest(uploadId, localFile)
   }
 
-  def createAbortRequest(uploadId: String)
+  def createAbortRequest(uploadId: String,
+                         localFile: LocalFile)
                         (implicit c: Config): AbortMultipartUploadRequest = {
     AbortMultipartUploadRequest.builder
       .bucket(c.bucket.name)
+      .key(localFile.remoteKey.key)
       .uploadId(uploadId)
       .build
   }
