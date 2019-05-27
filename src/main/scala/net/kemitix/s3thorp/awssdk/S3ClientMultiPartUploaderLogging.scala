@@ -32,7 +32,7 @@ trait S3ClientMultiPartUploaderLogging
   def logMultiPartUploadPart(localFile: LocalFile,
                              partRequest: UploadPartRequest)
                             (implicit c: Config): Unit =
-    log5(s"$prefix:sending:part ${partRequest.getPartNumber}: ${localFile.remoteKey.key}")
+    log5(s"$prefix:sending:part ${partRequest.getPartNumber}: ${partRequest.getMd5Digest}: ${localFile.remoteKey.key}")
 
   def logMultiPartUploadPartError(localFile: LocalFile,
                                   partRequest: UploadPartRequest,
