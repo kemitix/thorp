@@ -1,7 +1,7 @@
 package net.kemitix.s3thorp.awssdk
 
 import com.amazonaws.services.s3.model.{InitiateMultipartUploadResult, UploadPartRequest, UploadPartResult}
-import net.kemitix.s3thorp.{Config, LocalFile}
+import net.kemitix.s3thorp.{Config, LocalFile, MD5Hash}
 
 trait S3ClientMultiPartUploaderLogging
   extends S3ClientLogging {
@@ -25,9 +25,9 @@ trait S3ClientMultiPartUploaderLogging
 
   def logMultiPartUploadPartDetails(localFile: LocalFile,
                                     partNumber: Int,
-                                    partHash: String)
+                                    partHash: MD5Hash)
                                    (implicit c: Config): Unit =
-    log5(s"$prefix:part $partNumber:hash $partHash: ${localFile.remoteKey.key}")
+    log5(s"$prefix:part $partNumber:hash ${partHash.hash}: ${localFile.remoteKey.key}")
 
   def logMultiPartUploadPart(localFile: LocalFile,
                              partRequest: UploadPartRequest)

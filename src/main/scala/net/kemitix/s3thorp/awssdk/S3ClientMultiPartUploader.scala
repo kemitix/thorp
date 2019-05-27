@@ -59,7 +59,7 @@ private class S3ClientMultiPartUploader(s3Client: AmazonS3)
                                       response: InitiateMultipartUploadResult,
                                       partNumber: Int,
                                       chunkSize: Long,
-                                      partHash: String)
+                                      partHash: MD5Hash)
                                      (implicit c: Config) = {
     new UploadPartRequest()
       .withBucketName(c.bucket.name)
@@ -67,7 +67,7 @@ private class S3ClientMultiPartUploader(s3Client: AmazonS3)
       .withUploadId(response.getUploadId)
       .withPartNumber(partNumber)
       .withPartSize(chunkSize)
-      .withMD5Digest(partHash)
+      .withMD5Digest(partHash.hash)
       .withFile(localFile.file)
       .withFileOffset((partNumber - 1) * chunkSize)
   }
