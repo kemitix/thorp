@@ -10,7 +10,7 @@ trait LocalFileStream
                (implicit c: Config): Stream[LocalFile] = {
     log5(s"- Entering: $file")
     val files = for {
-      f <- dirPaths(file) filter { f => c.filters.forall { filter => filter isIncluded f.toPath } }
+      f <- dirPaths(file) filter { f => c.excludes.forall { filter => filter isIncluded f.toPath } }
       fs <- recurseIntoSubDirectories(f)
       } yield fs
     log5(s"-  Leaving: $file")
