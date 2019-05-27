@@ -10,7 +10,8 @@ import net.kemitix.s3thorp._
 import scala.util.control.NonFatal
 
 private class S3ClientMultiPartUploader(s3Client: AmazonS3)
-  extends S3ClientMultiPartUploaderLogging
+  extends S3ClientUploader
+    with S3ClientMultiPartUploaderLogging
     with MD5HashGenerator
     with QuoteStripper {
 
@@ -116,10 +117,10 @@ private class S3ClientMultiPartUploader(s3Client: AmazonS3)
                         (implicit c: Config): AbortMultipartUploadRequest =
     new AbortMultipartUploadRequest(c.bucket.name, localFile.remoteKey.key, uploadId)
 
-  def upload(localFile: LocalFile,
-             bucket: Bucket,
-             tryCount: Int)
-            (implicit c: Config): IO[S3Action] = {
+  override def upload(localFile: LocalFile,
+                      bucket: Bucket,
+                      tryCount: Int)
+                     (implicit c: Config): IO[S3Action] = {
     logMultiPartUploadStart(localFile, tryCount)
 
     (for {
