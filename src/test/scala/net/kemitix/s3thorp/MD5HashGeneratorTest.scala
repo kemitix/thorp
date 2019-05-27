@@ -21,7 +21,7 @@ class MD5HashGeneratorTest extends UnitTest {
       val file = Resource(this, "upload/root-file")
       val buffer: Array[Byte] = Files.readAllBytes(file.toPath)
       it("should generate the correct hash") {
-        val expected = "a3a6ac11a0eb577b81b3bb5c95cc8a6e"
+        val expected = MD5Hash("a3a6ac11a0eb577b81b3bb5c95cc8a6e")
         val result = md5PartBody(buffer)
         assertResult(expected)(result)
       }
@@ -40,14 +40,14 @@ class MD5HashGeneratorTest extends UnitTest {
       assertResult(file.length)(halfFileLength * 2)
       describe("when starting at the beginning of the file") {
         it("should generate the correct hash") {
-          val expected = "aadf0d266cefe0fcdb241a51798d74b3"
+          val expected = MD5Hash("aadf0d266cefe0fcdb241a51798d74b3")
           val result = md5FilePart(file, 0, halfFileLength)
           assertResult(expected)(result)
         }
       }
       describe("when starting in the middle of the file") {
         it("should generate the correct hash") {
-          val expected = "16e08d53ca36e729d808fd5e4f7e35dc"
+          val expected = MD5Hash("16e08d53ca36e729d808fd5e4f7e35dc")
           val result = md5FilePart(file, halfFileLength, halfFileLength)
           assertResult(expected)(result)
         }

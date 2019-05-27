@@ -1,11 +1,10 @@
 package net.kemitix.s3thorp.awssdk
 
-import java.io.File
+import scala.collection.JavaConverters._
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger, AtomicReference}
 
-import cats.effect.IO
+import com.amazonaws.services.s3.model._
 import net.kemitix.s3thorp._
-import software.amazon.awssdk.services.s3.model.{Bucket => _, _}
 
 class S3ClientMultiPartUploaderSuite
   extends UnitTest
@@ -17,7 +16,7 @@ class S3ClientMultiPartUploaderSuite
   private val fileToKey = generateKey(config.source, config.prefix) _
 
   describe("multi-part uploader accepts") {
-    val uploader = new S3ClientMultiPartUploader(new MyS3CatsIOClient {})
+    val uploader = new S3ClientMultiPartUploader(new MyAmazonS3Client {})
 
     it("should reject small file") {
       // small-file: dd if=/dev/urandom of=src/test/resources/net/kemitix/s3thorp/small-file bs=1047552 count=5
@@ -41,27 +40,44 @@ class S3ClientMultiPartUploaderSuite
     }
   }
 
+  def uploadPartRequest(partNumber: Int) = {
+    val request = new UploadPartRequest
+    request.setPartNumber(partNumber)
+    request
+  }
+
+  def uploadPartResult(eTag: String) = {
+    val result = new UploadPartResult
+    result.setETag(eTag)
+    result
+  }
+
   describe("mulit-part uploader upload") {
     val theFile = aLocalFile("big-file", MD5Hash(""), source, fileToKey)
     val uploadId = "upload-id"
-    val createUploadResponse = CreateMultipartUploadResponse.builder.uploadId(uploadId).build
-    val uploadPartRequest1 = UploadPartRequest.builder.partNumber(1).build
-    val uploadPartRequest2 = UploadPartRequest.builder.partNumber(2).build
-    val uploadPartRequest3 = UploadPartRequest.builder.partNumber(3).build
-    val uploadPartResponse1 = UploadPartResponse.builder.eTag("part-1").build
-    val uploadPartResponse2 = UploadPartResponse.builder.eTag("part-2").build
-    val uploadPartResponse3 = UploadPartResponse.builder.eTag("part-3").build
-    val completeUploadResponse = CompleteMultipartUploadResponse.builder.eTag("hash").build
-    val abortMultipartUploadResponse = AbortMultipartUploadResponse.builder.build
+    val createUploadResponse = new InitiateMultipartUploadResult()
+    createUploadResponse.setBucketName(config.bucket.name)
+    createUploadResponse.setKey(theFile.remoteKey.key)
+    createUploadResponse.setUploadId(uploadId)
+    val uploadPartRequest1 = uploadPartRequest(1)
+    val uploadPartRequest2 = uploadPartRequest(2)
+    val uploadPartRequest3 = uploadPartRequest(3)
+    val part1md5 = "aadf0d266cefe0fcdb241a51798d74b3"
+    val part2md5 = "16e08d53ca36e729d808fd5e4f7e35dc"
+    val uploadPartResponse1 = uploadPartResult(part1md5)
+    val uploadPartResponse2 = uploadPartResult(part2md5)
+    val uploadPartResponse3 = uploadPartResult("part-3")
+    val completeUploadResponse = new CompleteMultipartUploadResult()
+    completeUploadResponse.setETag("hash")
     describe("multi-part uploader upload components") {
       val uploader = new RecordingMultiPartUploader()
       describe("create upload request") {
         val request = uploader.createUploadRequest(config.bucket, theFile)
         it("should have bucket") {
-          assertResult(config.bucket.name)(request.bucket)
+          assertResult(config.bucket.name)(request.getBucketName)
         }
         it("should have key") {
-          assertResult(theFile.remoteKey.key)(request.key)
+          assertResult(theFile.remoteKey.key)(request.getKey)
         }
       }
       describe("initiate upload") {
@@ -77,29 +93,17 @@ class S3ClientMultiPartUploaderSuite
         // split -d -b $((5 * 1024 * 1025 / 2)) big-file
         // creates x00 and x01
         // md5sum x0[01]
-        val part1md5 = "aadf0d266cefe0fcdb241a51798d74b3"
-        val part2md5 = "16e08d53ca36e729d808fd5e4f7e35dc"
-        val part1 = UploadPartRequest.builder
-          .bucket(config.bucket.name)
-          .key(theFile.remoteKey.key)
-          .uploadId(uploadId)
-          .partNumber(1)
-          .contentLength(chunkSize)
-          .contentMD5(part1md5)
-          .build
-        val part2 = UploadPartRequest.builder
-          .bucket(config.bucket.name)
-          .key(theFile.remoteKey.key)
-          .uploadId(uploadId)
-          .partNumber(2)
-          .contentLength(chunkSize)
-          .contentMD5(part2md5)
-          .build
-        it("should create the parts expected") {
-          val result = uploader.parts(theFile, createUploadResponse).unsafeRunSync.toList
+        val result = uploader.parts(theFile, createUploadResponse).unsafeRunSync.toList
+        it("should create two parts") {
           assertResult(2)(result.size)
-          assertResult(part2)(result(1))
-          assertResult(part1)(result(0))
+        }
+        it("create part 1") {
+          val part1 = result(0)
+          assertResult((1, chunkSize, part1md5))((part1.getPartNumber, part1.getPartSize, part1.getMd5Digest))
+        }
+        it("create part 2") {
+          val part2 = result(1)
+          assertResult((2, chunkSize, part2md5))((part2.getPartNumber, part2.getPartSize, part2.getMd5Digest))
         }
       }
       describe("upload part") {
@@ -118,9 +122,19 @@ class S3ClientMultiPartUploaderSuite
         }
       }
       describe("create complete request") {
-        val request = uploader.createCompleteRequest(createUploadResponse)
+        val request = uploader.createCompleteRequest(createUploadResponse, List(uploadPartResponse1, uploadPartResponse2))
+        it("should have the bucket name") {
+          assertResult(config.bucket.name)(request.getBucketName)
+        }
+        it("should have the key") {
+          assertResult(theFile.remoteKey.key)(request.getKey)
+        }
         it("should have the upload id") {
-          assertResult(uploadId)(request.uploadId)
+          assertResult(uploadId)(request.getUploadId)
+        }
+        it("should have the etags") {
+          val expected = List(new PartETag(1, part1md5), new PartETag(2, part2md5))
+          assertResult(expected.map(_.getETag))(request.getPartETags.asScala.map(_.getETag))
         }
       }
       describe("complete upload") {
@@ -134,13 +148,13 @@ class S3ClientMultiPartUploaderSuite
       describe("create abort request") {
         val abortRequest = uploader.createAbortRequest(uploadId, theFile)
         it("should have the upload id") {
-          assertResult(uploadId)(abortRequest.uploadId)
+          assertResult(uploadId)(abortRequest.getUploadId)
         }
         it("should have the bucket") {
-          assertResult(config.bucket.name)(abortRequest.bucket)
+          assertResult(config.bucket.name)(abortRequest.getBucketName)
         }
         it("should have the key") {
-          assertResult(theFile.remoteKey.key)(abortRequest.key)
+          assertResult(theFile.remoteKey.key)(abortRequest.getKey)
         }
       }
       describe("abort upload") {
@@ -212,48 +226,53 @@ class S3ClientMultiPartUploaderSuite
                                      val completed: AtomicBoolean = new AtomicBoolean(false),
                                      val canceled: AtomicBoolean = new AtomicBoolean(false))
       extends S3ClientMultiPartUploader(
-        new MyS3CatsIOClient {
+        new MyAmazonS3Client {
 
-          override def createMultipartUpload(createMultipartUploadRequest: CreateMultipartUploadRequest): IO[CreateMultipartUploadResponse] =
+          def error[A]: A = {
+            val exception = new AmazonS3Exception("error")
+            exception.setAdditionalDetails(Map("Content-MD5" -> "(hash)").asJava)
+            throw exception
+          }
+
+          override def initiateMultipartUpload(createMultipartUploadRequest: InitiateMultipartUploadRequest): InitiateMultipartUploadResult =
             if (initOkay) {
               initiated set true
-              IO(createUploadResponse)
+              createUploadResponse
             }
-            else IO raiseError S3Exception.builder.build
+            else error
 
-          override def uploadPartFromFile(uploadPartRequest: UploadPartRequest, sourceFile: File): IO[UploadPartResponse] =
+          override def uploadPart(uploadPartRequest: UploadPartRequest): UploadPartResult =
             uploadPartRequest match {
-              case _ if uploadPartRequest.partNumber == 1 => {
-                if (part0Tries.incrementAndGet >= partTriesRequired) IO {
+              case _ if uploadPartRequest.getPartNumber == 1 => {
+                if (part0Tries.incrementAndGet >= partTriesRequired) {
                   partsUploaded getAndUpdate (t => t + 1)
                   uploadPartResponse1
                 }
-                else IO raiseError S3Exception.builder.build
+                else error
               }
-              case _ if uploadPartRequest.partNumber == 2 => {
-                if (part1Tries.incrementAndGet >= partTriesRequired) IO {
+              case _ if uploadPartRequest.getPartNumber == 2 => {
+                if (part1Tries.incrementAndGet >= partTriesRequired) {
                   partsUploaded getAndUpdate (t => t + 2)
                   uploadPartResponse2
                 }
-                else IO raiseError S3Exception.builder.build
+                else error
               }
-              case _ if uploadPartRequest.partNumber == 3 => {
-                if (part2Tries.incrementAndGet >= partTriesRequired) IO {
+              case _ if uploadPartRequest.getPartNumber == 3 => {
+                if (part2Tries.incrementAndGet >= partTriesRequired) {
                   partsUploaded getAndUpdate (t => t + 3)
                   uploadPartResponse3
                 }
-                else IO raiseError S3Exception.builder.build
+                else error
               }
             }
 
-          override def completeMultipartUpload(completeMultipartUploadRequest: CompleteMultipartUploadRequest): IO[CompleteMultipartUploadResponse] = {
+          override def completeMultipartUpload(completeMultipartUploadRequest: CompleteMultipartUploadRequest): CompleteMultipartUploadResult = {
             completed set true
-            IO(completeUploadResponse)
+            completeUploadResponse
           }
 
-          override def abortMultipartUpload(abortMultipartUploadRequest: AbortMultipartUploadRequest): IO[AbortMultipartUploadResponse] = {
+          override def abortMultipartUpload(abortMultipartUploadRequest: AbortMultipartUploadRequest): Unit = {
             canceled set true
-            IO(abortMultipartUploadResponse)
           }
         }) {}
   }
