@@ -1,11 +1,10 @@
 package net.kemitix.s3thorp.awssdk
 
 import scala.collection.JavaConverters._
-
 import cats.effect.IO
 import cats.implicits._
 import com.amazonaws.services.s3.AmazonS3
-import com.amazonaws.services.s3.model.{AbortMultipartUploadRequest, CompleteMultipartUploadRequest, CompleteMultipartUploadResult, InitiateMultipartUploadRequest, InitiateMultipartUploadResult, PartETag, UploadPartRequest, UploadPartResult}
+import com.amazonaws.services.s3.model.{AbortMultipartUploadRequest, AmazonS3Exception, CompleteMultipartUploadRequest, CompleteMultipartUploadResult, InitiateMultipartUploadRequest, InitiateMultipartUploadResult, PartETag, UploadPartRequest, UploadPartResult}
 import net.kemitix.s3thorp._
 
 import scala.util.control.NonFatal
@@ -77,10 +76,11 @@ private class S3ClientMultiPartUploader(s3Client: AmazonS3)
     partRequest => {
       logMultiPartUploadPart(localFile, partRequest)
       IO(s3Client.uploadPart(partRequest))
-        .handleErrorWith(error => {
+        .handleErrorWith{
+          case error: AmazonS3Exception => {
           logMultiPartUploadPartError(localFile, partRequest, error)
           IO.raiseError(CancellableMultiPartUpload(error, partRequest.getUploadId))
-        })
+        }}
     }
 
   def uploadParts(localFile: LocalFile,

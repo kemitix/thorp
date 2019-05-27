@@ -3,9 +3,8 @@ package net.kemitix.s3thorp.awssdk
 import scala.collection.JavaConverters._
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger, AtomicReference}
 
-import com.amazonaws.services.s3.model.{AbortMultipartUploadRequest, CompleteMultipartUploadRequest, CompleteMultipartUploadResult, InitiateMultipartUploadRequest, InitiateMultipartUploadResult, PartETag, UploadPartRequest, UploadPartResult}
+import com.amazonaws.services.s3.model._
 import net.kemitix.s3thorp._
-import software.amazon.awssdk.services.s3.model.S3Exception
 
 class S3ClientMultiPartUploaderSuite
   extends UnitTest
@@ -229,12 +228,18 @@ class S3ClientMultiPartUploaderSuite
       extends S3ClientMultiPartUploader(
         new MyAmazonS3Client {
 
+          def error[A]: A = {
+            val exception = new AmazonS3Exception("error")
+            exception.setAdditionalDetails(Map("Content-MD5" -> "(hash)").asJava)
+            throw exception
+          }
+
           override def initiateMultipartUpload(createMultipartUploadRequest: InitiateMultipartUploadRequest): InitiateMultipartUploadResult =
             if (initOkay) {
               initiated set true
               createUploadResponse
             }
-            else throw S3Exception.builder.build
+            else error
 
           override def uploadPart(uploadPartRequest: UploadPartRequest): UploadPartResult =
             uploadPartRequest match {
@@ -243,21 +248,21 @@ class S3ClientMultiPartUploaderSuite
                   partsUploaded getAndUpdate (t => t + 1)
                   uploadPartResponse1
                 }
-                else throw S3Exception.builder.build
+                else error
               }
               case _ if uploadPartRequest.getPartNumber == 2 => {
                 if (part1Tries.incrementAndGet >= partTriesRequired) {
                   partsUploaded getAndUpdate (t => t + 2)
                   uploadPartResponse2
                 }
-                else throw S3Exception.builder.build
+                else error
               }
               case _ if uploadPartRequest.getPartNumber == 3 => {
                 if (part2Tries.incrementAndGet >= partTriesRequired) {
                   partsUploaded getAndUpdate (t => t + 3)
                   uploadPartResponse3
                 }
-                else throw S3Exception.builder.build
+                else error
               }
             }
 
