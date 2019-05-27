@@ -1,6 +1,6 @@
 package net.kemitix.s3thorp.awssdk
 
-import com.amazonaws.services.s3.model.{InitiateMultipartUploadResult, UploadPartRequest, UploadPartResult}
+import com.amazonaws.services.s3.model.{AmazonS3Exception, InitiateMultipartUploadResult, UploadPartRequest, UploadPartResult}
 import net.kemitix.s3thorp.{Config, LocalFile, MD5Hash}
 
 trait S3ClientMultiPartUploaderLogging
@@ -34,11 +34,19 @@ trait S3ClientMultiPartUploaderLogging
                             (implicit c: Config): Unit =
     log5(s"$prefix:sending:part ${partRequest.getPartNumber}: ${partRequest.getMd5Digest}: ${localFile.remoteKey.key}")
 
+  def logMultiPartUploadPartDone(localFile: LocalFile,
+                                 partRequest: UploadPartRequest,
+                                 result: UploadPartResult)
+                                (implicit c: Config): Unit =
+    log5(s"$prefix:sent:part ${partRequest.getPartNumber}: ${result.getPartETag}: ${localFile.remoteKey.key}")
+
   def logMultiPartUploadPartError(localFile: LocalFile,
                                   partRequest: UploadPartRequest,
-                                  error: Throwable)
-                                 (implicit c: Config): Unit =
-    warn(s"$prefix:error:part ${partRequest.getPartNumber}: ${localFile.remoteKey.key}")
+                                  error: AmazonS3Exception)
+                                 (implicit c: Config): Unit = {
+    val returnedMD5Hash = error.getAdditionalDetails.get("Content-MD5")
+    warn(s"$prefix:error:part ${partRequest.getPartNumber}:ret-hash $returnedMD5Hash: ${localFile.remoteKey.key}")
+  }
 
   def logMultiPartUploadCompleted(createUploadResponse: InitiateMultipartUploadResult,
                                   uploadPartResponses: Stream[UploadPartResult],
