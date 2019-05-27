@@ -6,15 +6,30 @@ import java.security.{DigestInputStream, MessageDigest}
 trait MD5HashGenerator
   extends Logging {
 
-  def md5File(file: File)(implicit c: Config): MD5Hash =  {
-    log5(s"md5file:reading:${file.length}:$file")
-    val buffer = new Array[Byte](8192)
-    val md5 = MessageDigest.getInstance("MD5")
-    val dis = new DigestInputStream(new FileInputStream(file), md5)
-    try { while (dis.read(buffer) != -1) { } } finally { dis.close() }
-    val hash = md5.digest.map("%02x".format(_)).mkString
-    log5(s"md5file:generated:$hash:$file")
-    MD5Hash(hash)
+  def md5File(file: File)
+             (implicit c: Config): MD5Hash =  {
+    val hash = md5FilePart(file, 0, file.length)
+    hash
+  }
+
+  def md5FilePart(file: File,
+                  offset: Long,
+                  size: Long)
+                 (implicit c: Config): MD5Hash = {
+    log5(s"md5:reading:offset $offset:size $size:$file")
+    val fis = new FileInputStream(file)
+    fis skip offset
+    val buffer = new Array[Byte](size.toInt)
+    fis read buffer
+    val hash = md5PartBody(buffer)
+    log5(s"md5:generated:${hash.hash}")
+    hash
+  }
+
+  def md5PartBody(partBody: Array[Byte]): MD5Hash = {
+    val md5 = MessageDigest getInstance "MD5"
+    md5 update partBody
+    MD5Hash((md5.digest map ("%02x" format _)).mkString)
   }
 
 }

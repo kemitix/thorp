@@ -13,7 +13,7 @@ trait ActionSubmitter
       action match {
         case ToUpload(file) =>
           log4(s"    Upload: ${file.relative}")
-          upload(file, c.bucket)
+          upload(file, c.bucket, 1)
         case ToCopy(sourceKey, hash, targetKey) =>
           log4(s"      Copy: $sourceKey => $targetKey")
           copy(c.bucket, sourceKey, hash, targetKey)

@@ -29,14 +29,17 @@ class SyncSuite
       val md5Hash = MD5Hash("the-hash")
       val testLocalFile = aLocalFile("file", md5Hash, source, generateKey(source, prefix))
       val sync = new Sync(new S3Client with DummyS3Client {
-        override def upload(localFile: LocalFile, bucket: Bucket)(implicit c: Config) = IO {
+        override def upload(localFile: LocalFile,
+                            bucket: Bucket,
+                            tryCount: Int)
+                           (implicit c: Config) = IO {
           assert(bucket == testBucket)
           UploadS3Action(localFile.remoteKey, md5Hash)
         }
       })
       it("delegates unmodified to the S3Client") {
         assertResult(UploadS3Action(RemoteKey(prefix.key + "/file"), md5Hash))(
-          sync.upload(testLocalFile, testBucket).
+          sync.upload(testLocalFile, testBucket, 1).
             unsafeRunSync())
       }
     }
@@ -177,7 +180,8 @@ class SyncSuite
     override def listObjects(bucket: Bucket, prefix: RemoteKey)(implicit c: Config) = IO {s3ObjectsData}
 
     override def upload(localFile: LocalFile,
-                        bucket: Bucket
+                        bucket: Bucket,
+                        tryCount: Int
                        )(implicit c: Config) = IO {
       if (bucket == testBucket)
         uploadsRecord += (localFile.relative.toString -> localFile.remoteKey)

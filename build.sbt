@@ -8,8 +8,12 @@ scalaVersion := "2.12.8"
 libraryDependencies += "com.github.scopt" %% "scopt" % "4.0.0-RC2"
 
 // AWS SDK
+/// wraps the in-preview Java SDK V2 which is incomplete and doesn't support multi-part uploads
 libraryDependencies += "com.github.j5ik2o" %% "reactive-aws-s3-core" % "1.1.3"
 libraryDependencies += "com.github.j5ik2o" %% "reactive-aws-s3-cats" % "1.1.3"
+
+// AWS SDK - multi-part upload
+libraryDependencies += "com.amazonaws" % "aws-java-sdk-s3" % "1.11.560"
 
 // Logging
 libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2"

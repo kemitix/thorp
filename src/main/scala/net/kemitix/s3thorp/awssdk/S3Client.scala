@@ -19,8 +19,9 @@ trait S3Client {
                  )(implicit c: Config): IO[S3ObjectsData]
 
   def upload(localFile: LocalFile,
-             bucket: Bucket
-            )(implicit c: Config): IO[UploadS3Action]
+             bucket: Bucket,
+             tryCount: Int
+            )(implicit c: Config): IO[S3Action]
 
   def copy(bucket: Bucket,
            sourceKey: RemoteKey,

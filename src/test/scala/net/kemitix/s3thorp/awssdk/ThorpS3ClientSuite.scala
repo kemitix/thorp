@@ -57,13 +57,5 @@ class ThorpS3ClientSuite extends FunSpec {
       assertResult(expected)(result)
     }
   }
-  trait MyS3CatsIOClient extends S3CatsIOClient {
-    override val underlying: S3AsyncClient = new S3AsyncClient {
-      override val underlying: s3.S3AsyncClient = new s3.S3AsyncClient {
-        override def serviceName(): String = "fake-s3-client"
 
-        override def close(): Unit = ()
-      }
-    }
-  }
 }

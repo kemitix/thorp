@@ -6,7 +6,8 @@ import net.kemitix.s3thorp.awssdk.{S3ObjectsData, S3Client}
 trait DummyS3Client extends S3Client {
 
   override def upload(localFile: LocalFile,
-                      bucket: Bucket
+                      bucket: Bucket,
+                      tryCount: Int
                      )(implicit c: Config): IO[UploadS3Action] = ???
 
   override def copy(bucket: Bucket,
