@@ -11,6 +11,8 @@ private class S3ClientPutObjectUploader(s3Client: S3CatsIOClient)
     with S3ClientLogging
     with QuoteStripper {
 
+  override def accepts(localFile: LocalFile)(implicit c: Config): Boolean = true
+
   override
   def upload(localFile: LocalFile,
              bucket: Bucket,
@@ -29,5 +31,4 @@ private class S3ClientPutObjectUploader(s3Client: S3CatsIOClient)
       .map(MD5Hash)
       .map(UploadS3Action(localFile.remoteKey, _))
   }
-
 }
