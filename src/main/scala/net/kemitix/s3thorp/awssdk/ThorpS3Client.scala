@@ -33,10 +33,11 @@ private class ThorpS3Client(s3Client: S3CatsIOClient)
 
 
   override def upload(localFile: LocalFile,
-                      bucket: Bucket)
+                      bucket: Bucket,
+                      tryCount: Int)
                      (implicit c: Config): IO[S3Action] =
     if (multiPartUploader.accepts(localFile)) multiPartUploader.upload(localFile, bucket, 1)
-    else uploader.upload(localFile, bucket)
+    else uploader.upload(localFile, bucket, tryCount)
 
   override def delete(bucket: Bucket,
                       remoteKey: RemoteKey)

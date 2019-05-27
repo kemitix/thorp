@@ -76,7 +76,7 @@ class S3ClientSuite
 
   describe("upload") {
     def invoke(s3Client: ThorpS3Client, localFile: LocalFile, bucket: Bucket) =
-      s3Client.upload(localFile, bucket).unsafeRunSync
+      s3Client.upload(localFile, bucket, 1).unsafeRunSync
     describe("when uploading a file") {
       val md5Hash = MD5Hash("the-md5hash")
       val s3Client = new ThorpS3Client(

@@ -38,8 +38,10 @@ class Sync(s3Client: S3Client)
     ioActions.flatMap { actions => IO { actions.sorted } }
 
   override def upload(localFile: LocalFile,
-                      bucket: Bucket)(implicit c: Config): IO[S3Action] =
-    s3Client.upload(localFile, bucket)
+                      bucket: Bucket,
+                      tryCount: Int)
+                     (implicit c: Config): IO[S3Action] =
+    s3Client.upload(localFile, bucket, tryCount)
 
   override def copy(bucket: Bucket,
                     sourceKey: RemoteKey,
