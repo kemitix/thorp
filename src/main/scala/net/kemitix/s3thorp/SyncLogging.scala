@@ -7,7 +7,7 @@ trait SyncLogging extends Logging {
 
   def logRunStart(implicit c: Config): Unit =
     log1(s"Bucket: ${c.bucket.name}, Prefix: ${c.prefix.key}, Source: ${c.source}, " +
-      s"Filter: ${c.excludes.map{ f => f.exclude}.mkString(""", """)}")(c)
+      s"Exclude: ${c.excludes.map{ f => f.exclude}.mkString(""", """)}")(c)
 
   def logFileScan(implicit c: Config): Unit =
     log1(s"Scanning local files: ${c.source}...")
