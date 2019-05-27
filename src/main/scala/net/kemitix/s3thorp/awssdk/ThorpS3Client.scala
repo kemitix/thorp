@@ -1,6 +1,7 @@
 package net.kemitix.s3thorp.awssdk
 
 import cats.effect.IO
+import com.amazonaws.services.s3.transfer.TransferManagerBuilder
 import com.amazonaws.services.s3.{AmazonS3Client, AmazonS3ClientBuilder}
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
 import net.kemitix.s3thorp._
@@ -11,11 +12,12 @@ private class ThorpS3Client(s3Client: S3CatsIOClient)
     with S3ClientLogging
     with QuoteStripper {
 
-  lazy val amazonS3Client = AmazonS3ClientBuilder.defaultClient()
+  lazy val amazonS3Client = AmazonS3ClientBuilder.defaultClient
+  lazy val amazonS3TransferManager = TransferManagerBuilder.defaultTransferManager
   lazy val objectLister = new S3ClientObjectLister(s3Client)
   lazy val copier = new S3ClientCopier(s3Client)
   lazy val uploader = new S3ClientPutObjectUploader(s3Client)
-  lazy val multiPartUploader = new S3ClientMultiPartUploader(amazonS3Client)
+  lazy val multiPartUploader = new S3ClientMultiPartTransferManager(amazonS3TransferManager)
   lazy val deleter = new S3ClientDeleter(s3Client)
 
   override def listObjects(bucket: Bucket,

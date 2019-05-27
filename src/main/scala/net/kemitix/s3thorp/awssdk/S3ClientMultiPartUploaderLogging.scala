@@ -13,6 +13,10 @@ trait S3ClientMultiPartUploaderLogging
                              (implicit c: Config): Unit =
     log4(s"$prefix:upload:try $tryCount: ${localFile.remoteKey.key}")
 
+  def logMultiPartUploadFinished(localFile: LocalFile)
+                                (implicit c: Config): Unit =
+    log4(s"$prefix:upload:finished: ${localFile.remoteKey.key}")
+
   def logMultiPartUploadInitiate(localFile: LocalFile)
                                 (implicit c: Config): Unit =
     log5(s"$prefix:initiating: ${localFile.remoteKey.key}")
