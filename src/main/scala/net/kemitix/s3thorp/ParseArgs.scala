@@ -26,7 +26,7 @@ object ParseArgs {
         .action((str, c) => c.copy(prefix = RemoteKey(str)))
         .text("Prefix within the S3 Bucket"),
       opt[Seq[String]]('f', "filters")
-        .action((str,c) => c.copy(filters = str.map(Exclude)))
+        .action((str,c) => c.copy(excludes = str.map(Exclude)))
         .text("Exclude matching paths"),
       opt[Int]('v', "verbose")
         .validate(i =>
