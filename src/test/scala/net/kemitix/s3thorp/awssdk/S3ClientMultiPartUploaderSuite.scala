@@ -3,7 +3,7 @@ package net.kemitix.s3thorp.awssdk
 import scala.collection.JavaConverters._
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger, AtomicReference}
 
-import com.amazonaws.services.s3.model._
+import com.amazonaws.services.s3.model.{Bucket => _, _}
 import net.kemitix.s3thorp._
 
 class S3ClientMultiPartUploaderSuite
