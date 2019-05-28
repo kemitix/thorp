@@ -15,10 +15,10 @@ trait ActionSubmitter
           log4(s"    Upload: ${file.relative}")
           upload(file, c.bucket, 1)
         case ToCopy(sourceKey, hash, targetKey) =>
-          log4(s"      Copy: $sourceKey => $targetKey")
+          log4(s"      Copy: ${sourceKey.key} => ${targetKey.key}")
           copy(c.bucket, sourceKey, hash, targetKey)
         case ToDelete(remoteKey) =>
-          log4(s"    Delete: $remoteKey")
+          log4(s"    Delete: ${remoteKey.key}")
           delete(c.bucket, remoteKey)
         case DoNothing(remoteKey) => IO {
           DoNothingS3Action(remoteKey)}
