@@ -11,9 +11,9 @@ trait ActionSubmitter
                   (implicit c: Config): Stream[IO[S3Action]] = {
     Stream(
       action match {
-        case ToUpload(file) =>
-          log4(s"    Upload: ${file.relative}")
-          upload(file, c.bucket, 1)
+        case ToUpload(localFile) =>
+          log4(s"    Upload: ${localFile.relative}")
+          upload(localFile, c.bucket, 1)
         case ToCopy(sourceKey, hash, targetKey) =>
           log4(s"      Copy: ${sourceKey.key} => ${targetKey.key}")
           copy(c.bucket, sourceKey, hash, targetKey)
