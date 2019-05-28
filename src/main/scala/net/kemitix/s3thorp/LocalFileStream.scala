@@ -11,7 +11,7 @@ trait LocalFileStream
     log5(s"- Entering: $file")
     val files = for {
       f <- dirPaths(file)
-        .filter { f => c.filters.forall { filter => filter isIncluded f.toPath } }
+        .filter { f => f.isDirectory || c.filters.forall { filter => filter isIncluded f.toPath } }
         .filter { f => c.excludes.forall { exclude => exclude isIncluded f.toPath } }
       fs <- recurseIntoSubDirectories(f)
       } yield fs
