@@ -1,12 +1,11 @@
 package net.kemitix.s3thorp.awssdk
 
 import cats.effect.IO
-import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
-import net.kemitix.s3thorp.{Bucket, Config, LocalFile, MD5Hash, UploadS3Action}
-import software.amazon.awssdk.core.async.AsyncRequestBody
-import software.amazon.awssdk.services.s3.model.PutObjectRequest
+import com.amazonaws.services.s3.AmazonS3
+import com.amazonaws.services.s3.model.PutObjectRequest
+import net.kemitix.s3thorp._
 
-private class S3ClientPutObjectUploader(s3Client: S3CatsIOClient)
+private class S3ClientPutObjectUploader(s3Client: AmazonS3)
   extends S3ClientUploader
     with S3ClientLogging
     with QuoteStripper {
@@ -19,15 +18,14 @@ private class S3ClientPutObjectUploader(s3Client: S3CatsIOClient)
              progressListener: UploadProgressListener,
              tryCount: Int)
             (implicit c: Config): IO[UploadS3Action] = {
-    val request = PutObjectRequest.builder
-      .bucket(bucket.name)
-      .key(localFile.remoteKey.key).build
-    val body = AsyncRequestBody.fromFile(localFile.file)
-    s3Client.putObject(request, body)
+    val request: PutObjectRequest =
+      new PutObjectRequest(bucket.name, localFile.remoteKey.key, localFile.file)
+        .withGeneralProgressListener(progressListener.listener)
+    IO(s3Client.putObject(request))
       .bracket(
         logUploadStart(localFile, bucket))(
         logUploadFinish(localFile, bucket))
-      .map(_.eTag)
+      .map(_.getETag)
       .map(_ filter stripQuotes)
       .map(MD5Hash)
       .map(UploadS3Action(localFile.remoteKey, _))

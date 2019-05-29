@@ -16,7 +16,7 @@ private class ThorpS3Client(s3Client: S3CatsIOClient)
   lazy val amazonS3TransferManager = TransferManagerBuilder.defaultTransferManager
   lazy val objectLister = new S3ClientObjectLister(s3Client)
   lazy val copier = new S3ClientCopier(s3Client)
-  lazy val uploader = new S3ClientPutObjectUploader(s3Client)
+  lazy val uploader = new S3ClientPutObjectUploader(amazonS3Client)
   lazy val multiPartUploader = new S3ClientMultiPartTransferManager(amazonS3TransferManager)
   lazy val deleter = new S3ClientDeleter(s3Client)
 
