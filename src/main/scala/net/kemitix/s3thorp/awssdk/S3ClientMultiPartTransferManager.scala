@@ -1,4 +1,5 @@
 package net.kemitix.s3thorp.awssdk
+
 import cats.effect.IO
 import com.amazonaws.services.s3.model.PutObjectRequest
 import com.amazonaws.services.s3.transfer.TransferManager
@@ -15,9 +16,12 @@ class S3ClientMultiPartTransferManager(transferManager: TransferManager)
   override
   def upload(localFile: LocalFile,
              bucket: Bucket,
+             progressListener: UploadProgressListener,
              tryCount: Int)
             (implicit c: Config): IO[S3Action] = {
-    val putObjectRequest = new PutObjectRequest(bucket.name, localFile.remoteKey.key, localFile.file)
+    val putObjectRequest: PutObjectRequest =
+      new PutObjectRequest(bucket.name, localFile.remoteKey.key, localFile.file)
+        .withGeneralProgressListener(progressListener.create)
     IO {
       logMultiPartUploadStart(localFile, tryCount)
       val result = transferManager.upload(putObjectRequest)

@@ -20,6 +20,7 @@ trait S3Client {
 
   def upload(localFile: LocalFile,
              bucket: Bucket,
+             progressListener: UploadProgressListener,
              tryCount: Int
             )(implicit c: Config): IO[S3Action]
 

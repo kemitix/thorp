@@ -16,6 +16,7 @@ private class S3ClientPutObjectUploader(s3Client: S3CatsIOClient)
   override
   def upload(localFile: LocalFile,
              bucket: Bucket,
+             progressListener: UploadProgressListener,
              tryCount: Int)
             (implicit c: Config): IO[UploadS3Action] = {
     val request = PutObjectRequest.builder

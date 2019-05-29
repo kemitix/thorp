@@ -2,7 +2,7 @@ package net.kemitix.s3thorp
 
 import cats.effect.IO
 import cats.implicits._
-import net.kemitix.s3thorp.awssdk.{S3Client, S3ObjectsData}
+import net.kemitix.s3thorp.awssdk.{S3Client, S3ObjectsData, UploadProgressListener}
 
 class Sync(s3Client: S3Client)
   extends LocalFileStream
@@ -39,9 +39,10 @@ class Sync(s3Client: S3Client)
 
   override def upload(localFile: LocalFile,
                       bucket: Bucket,
+                      progressListener: UploadProgressListener,
                       tryCount: Int)
                      (implicit c: Config): IO[S3Action] =
-    s3Client.upload(localFile, bucket, tryCount)
+    s3Client.upload(localFile, bucket, progressListener, tryCount)
 
   override def copy(bucket: Bucket,
                     sourceKey: RemoteKey,

@@ -1,7 +1,7 @@
 package net.kemitix.s3thorp
 
 import cats.effect.IO
-import net.kemitix.s3thorp.awssdk.S3Client
+import net.kemitix.s3thorp.awssdk.{S3Client, UploadProgressListener}
 
 trait ActionSubmitter
   extends S3Client
@@ -13,7 +13,8 @@ trait ActionSubmitter
       action match {
         case ToUpload(localFile) =>
           log4(s"    Upload: ${localFile.relative}")
-          upload(localFile, c.bucket, 1)
+          val progressListener = new UploadProgressListener(localFile)
+          upload(localFile, c.bucket, progressListener, 1)
         case ToCopy(sourceKey, hash, targetKey) =>
           log4(s"      Copy: ${sourceKey.key} => ${targetKey.key}")
           copy(c.bucket, sourceKey, hash, targetKey)
