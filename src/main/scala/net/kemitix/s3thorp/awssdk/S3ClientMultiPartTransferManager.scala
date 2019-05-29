@@ -21,7 +21,7 @@ class S3ClientMultiPartTransferManager(transferManager: TransferManager)
             (implicit c: Config): IO[S3Action] = {
     val putObjectRequest: PutObjectRequest =
       new PutObjectRequest(bucket.name, localFile.remoteKey.key, localFile.file)
-        .withGeneralProgressListener(progressListener.create)
+        .withGeneralProgressListener(progressListener.listener)
     IO {
       logMultiPartUploadStart(localFile, tryCount)
       val result = transferManager.upload(putObjectRequest)
