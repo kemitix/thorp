@@ -9,7 +9,7 @@ trait UploadProgressLogging
     def logTransfer(localFile: LocalFile,
       eventType: ProgressEventType)
       (implicit c: Config): Unit =
-      log1(s"Transfer:${eventType.name}: ${localFile.remoteKey.key}")
+      log2(s"Transfer:${eventType.name}: ${localFile.remoteKey.key}")
 
     def logRequestCycle(localFile: LocalFile,
       eventType: ProgressEventType,
@@ -17,6 +17,6 @@ trait UploadProgressLogging
       transferred: Long)
       (implicit c: Config): Unit =
       if (eventType equals ProgressEventType.REQUEST_BYTE_TRANSFER_EVENT) print('.')
-      else log1(s"Uploading:${eventType.name}:$transferred/$bytes:${localFile.remoteKey.key}")
+      else log3(s"Uploading:${eventType.name}:$transferred/$bytes:${localFile.remoteKey.key}")
 
   }
