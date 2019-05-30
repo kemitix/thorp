@@ -38,6 +38,9 @@ When considering a local file, the following table governs what should happen:
 
 * Creating Native Images
 
+Note: the created image currently can't be run outside of the base of
+the project. See [[https://github.com/kemitix/s3thorp/issues/15][Issue #15]]
+
   - Download and install GraalVM
     - https://github.com/oracle/graal/releases
   - Install ~native-image~ using the graal updater
