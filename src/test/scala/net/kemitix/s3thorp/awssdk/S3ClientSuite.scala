@@ -4,6 +4,9 @@ import java.io.File
 import java.time.Instant
 
 import cats.effect.IO
+import com.amazonaws.services.s3.model
+import com.amazonaws.services.s3.model.PutObjectResult
+import com.amazonaws.services.s3.transfer.{TransferManager, TransferManagerBuilder}
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
 import net.kemitix.s3thorp._
 import software.amazon.awssdk.services.s3.model.{PutObjectRequest, PutObjectResponse}
@@ -75,22 +78,31 @@ class S3ClientSuite
   }
 
   describe("upload") {
-    def invoke(s3Client: ThorpS3Client, localFile: LocalFile, bucket: Bucket) =
-      s3Client.upload(localFile, bucket, 1).unsafeRunSync
+    def invoke(s3Client: ThorpS3Client, localFile: LocalFile, bucket: Bucket, progressListener: UploadProgressListener) =
+      s3Client.upload(localFile, bucket, progressListener, 1).unsafeRunSync
     describe("when uploading a file") {
-      val md5Hash = MD5Hash("the-md5hash")
+      val source = Resource(this, "../upload")
+      val md5Hash = new MD5HashGenerator {}.md5File(source.toPath.resolve("root-file").toFile)
+      val amazonS3 = new MyAmazonS3 {
+        override def putObject(putObjectRequest: model.PutObjectRequest): PutObjectResult = {
+          val result = new PutObjectResult
+          result.setETag(md5Hash.hash)
+          result
+        }
+      }
+      val amazonS3TransferManager = TransferManagerBuilder.standard().withS3Client(amazonS3).build
       val s3Client = new ThorpS3Client(
         new S3CatsIOClient with JavaClientWrapper {
-          override def putObject(putObjectRequest: PutObjectRequest, requestBody: RB) =
-            IO(PutObjectResponse.builder().eTag(md5Hash.hash).build())
-        })
-      val source = new File("/")
+//          override def putObject(putObjectRequest: PutObjectRequest, requestBody: RB) =
+//            IO(PutObjectResponse.builder().eTag(md5Hash.hash).build())
+        }, amazonS3, amazonS3TransferManager)
       val prefix = RemoteKey("prefix")
-      val localFile: LocalFile = aLocalFile("/some/file", md5Hash, source, generateKey(source, prefix))
+      val localFile: LocalFile = aLocalFile("root-file", md5Hash, source, generateKey(source, prefix))
       val bucket: Bucket = Bucket("a-bucket")
-      val remoteKey: RemoteKey = RemoteKey("prefix/some/file")
+      val remoteKey: RemoteKey = RemoteKey("prefix/root-file")
+      val progressListener = new UploadProgressListener(localFile)
       it("should return hash of uploaded file") {
-        assertResult(UploadS3Action(remoteKey, md5Hash))(invoke(s3Client, localFile, bucket))
+        assertResult(UploadS3Action(remoteKey, md5Hash))(invoke(s3Client, localFile, bucket, progressListener))
       }
     }
   }

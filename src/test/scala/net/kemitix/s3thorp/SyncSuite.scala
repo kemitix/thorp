@@ -1,16 +1,27 @@
 package net.kemitix.s3thorp
 
-import java.io.File
+import java.io.{File, InputStream}
+import java.net.URL
 import java.time.Instant
+import java.util
+import java.util.Date
 import java.util.concurrent.CompletableFuture
 
 import cats.effect.IO
-import net.kemitix.s3thorp.awssdk.{S3Client, S3ObjectsData}
+import com.amazonaws.regions.Region
+import com.amazonaws.services.s3.model._
+import com.amazonaws.services.s3.model.analytics.AnalyticsConfiguration
+import com.amazonaws.services.s3.model.inventory.InventoryConfiguration
+import com.amazonaws.services.s3.model.metrics.MetricsConfiguration
+import com.amazonaws.services.s3.transfer.TransferManagerBuilder
+import com.amazonaws.services.s3.waiters.AmazonS3Waiters
+import com.amazonaws.services.s3.{AmazonS3, S3ClientOptions, S3ResponseMetadata, model}
+import com.amazonaws.{AmazonWebServiceRequest, HttpMethod}
 import com.github.j5ik2o.reactive.aws.s3.S3AsyncClient
-import software.amazon.awssdk.core.async.AsyncRequestBody
-import software.amazon.awssdk.services.s3.{S3AsyncClient => JavaS3AsyncClient}
+import net.kemitix.s3thorp.awssdk.{MyAmazonS3, S3Client, S3ObjectsData, UploadProgressListener}
 import software.amazon.awssdk.services.s3
-import software.amazon.awssdk.services.s3.model.{ListObjectsV2Request, ListObjectsV2Response, PutObjectRequest, PutObjectResponse}
+import software.amazon.awssdk.services.s3.model.{ListObjectsV2Request, ListObjectsV2Response}
+import software.amazon.awssdk.services.s3.{S3AsyncClient => JavaS3AsyncClient}
 
 class SyncSuite
   extends UnitTest
@@ -20,6 +31,11 @@ class SyncSuite
   private val prefix = RemoteKey("prefix")
   implicit private val config: Config = Config(Bucket("bucket"), prefix, source = source)
   private val lastModified = LastModified(Instant.now)
+  val fileToKey: File => RemoteKey = generateKey(source, prefix)
+  val rootHash = MD5Hash("a3a6ac11a0eb577b81b3bb5c95cc8a6e")
+  val leafHash = MD5Hash("208386a650bdec61cfcd7bd8dcb6b542")
+  val rootFile = aLocalFile("root-file", rootHash, source, fileToKey)
+  val leafFile = aLocalFile("subdir/leaf-file", leafHash, source, fileToKey)
 
   describe("s3client thunk") {
     val testBucket = Bucket("bucket")
@@ -28,9 +44,11 @@ class SyncSuite
     describe("upload") {
       val md5Hash = MD5Hash("the-hash")
       val testLocalFile = aLocalFile("file", md5Hash, source, generateKey(source, prefix))
+      val progressListener = new UploadProgressListener(testLocalFile)
       val sync = new Sync(new S3Client with DummyS3Client {
         override def upload(localFile: LocalFile,
                             bucket: Bucket,
+                            progressListener: UploadProgressListener,
                             tryCount: Int)
                            (implicit c: Config) = IO {
           assert(bucket == testBucket)
@@ -39,11 +57,16 @@ class SyncSuite
       })
       it("delegates unmodified to the S3Client") {
         assertResult(UploadS3Action(RemoteKey(prefix.key + "/file"), md5Hash))(
-          sync.upload(testLocalFile, testBucket, 1).
+          sync.upload(testLocalFile, testBucket, progressListener, 1).
             unsafeRunSync())
       }
     }
   }
+
+  def putObjectRequest(bucket: Bucket, remoteKey: RemoteKey, localFile: LocalFile) = {
+    (bucket.name, remoteKey.key, localFile.file)
+  }
+
   describe("run") {
     val testBucket = Bucket("bucket")
     val source = Resource(this, "upload")
@@ -51,8 +74,6 @@ class SyncSuite
     val config = Config(Bucket("bucket"), RemoteKey("prefix"), source = source)
     val rootRemoteKey = RemoteKey("prefix/root-file")
     val leafRemoteKey = RemoteKey("prefix/subdir/leaf-file")
-    val rootHash = MD5Hash("a3a6ac11a0eb577b81b3bb5c95cc8a6e")
-    val leafHash = MD5Hash("208386a650bdec61cfcd7bd8dcb6b542")
     describe("when all files should be uploaded") {
       val sync = new RecordingSync(testBucket, new DummyS3Client {}, S3ObjectsData(
         byHash = Map(),
@@ -144,16 +165,19 @@ class SyncSuite
       }
     }
     describe("io actions execute") {
+      val recordingS3ClientLegacy = new RecordingS3ClientLegacy
       val recordingS3Client = new RecordingS3Client
-      val client = S3Client.createClient(recordingS3Client)
+      val transferManager = TransferManagerBuilder.standard
+        .withS3Client(recordingS3Client).build
+      val client = S3Client.createClient(recordingS3ClientLegacy, recordingS3Client, transferManager)
       val sync = new Sync(client)
       sync.run(config).unsafeRunSync
       it("invokes the underlying Java s3client") {
         val expected = Set(
-          PutObjectRequest.builder().bucket(testBucket.name).key(rootRemoteKey.key).build(),
-          PutObjectRequest.builder().bucket(testBucket.name).key(leafRemoteKey.key).build()
+          putObjectRequest(testBucket, rootRemoteKey, rootFile),
+          putObjectRequest(testBucket, leafRemoteKey, leafFile)
         )
-        val result = recordingS3Client.puts
+        val result = recordingS3Client.puts map {r => (r.getBucketName, r.getKey, r.getFile)}
         assertResult(expected)(result)
       }
     }
@@ -181,6 +205,7 @@ class SyncSuite
 
     override def upload(localFile: LocalFile,
                         bucket: Bucket,
+                        progressListener: UploadProgressListener,
                         tryCount: Int
                        )(implicit c: Config) = IO {
       if (bucket == testBucket)
@@ -207,7 +232,7 @@ class SyncSuite
     }
   }
 
-  class RecordingS3Client extends S3AsyncClient {
+  class RecordingS3ClientLegacy extends S3AsyncClient {
     var lists: Set[ListObjectsV2Request] = Set()
     var puts: Set[PutObjectRequest] = Set()
     override val underlying: s3.S3AsyncClient = new JavaS3AsyncClient {
@@ -220,12 +245,19 @@ class SyncSuite
         CompletableFuture.completedFuture(ListObjectsV2Response.builder().build())
       }
 
-      override def putObject(putObjectRequest: PutObjectRequest,
-                             requestBody: AsyncRequestBody): CompletableFuture[PutObjectResponse] = {
-        puts += putObjectRequest
-        CompletableFuture.completedFuture(PutObjectResponse.builder().eTag("not-null").build())
-      }
-
     }
   }
+  class RecordingS3Client extends MyAmazonS3 {
+    var lists: Set[ListObjectsV2Request] = Set()
+    var puts: Set[PutObjectRequest] = Set()
+
+    override def putObject(putObjectRequest: PutObjectRequest): PutObjectResult = {
+      puts += putObjectRequest
+      val result = new PutObjectResult
+      result.setETag("not-null")
+      result
+    }
+
+  }
+
 }

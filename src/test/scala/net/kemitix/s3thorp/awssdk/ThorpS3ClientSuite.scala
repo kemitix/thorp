@@ -3,6 +3,8 @@ package net.kemitix.s3thorp.awssdk
 import java.time.Instant
 
 import cats.effect.IO
+import com.amazonaws.services.s3.model.{PutObjectRequest, PutObjectResult}
+import com.amazonaws.services.s3.transfer.{TransferManager, TransferManagerBuilder}
 import com.github.j5ik2o.reactive.aws.s3.S3AsyncClient
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
 import net.kemitix.s3thorp._
@@ -38,10 +40,12 @@ class ThorpS3ClientSuite extends FunSpec {
         .contents(List(o1a, o1b, o2).asJava)
         .build()
     }
+    val amazonS3 = new MyAmazonS3 {}
+    val amazonS3TransferManager = TransferManagerBuilder.standard().withS3Client(amazonS3).build
     val s3client = new ThorpS3Client(new MyS3CatsIOClient {
       override def listObjectsV2(listObjectsV2Request: ListObjectsV2Request): IO[ListObjectsV2Response] =
         myFakeResponse
-    })
+    }, amazonS3, amazonS3TransferManager)
     it("should build list of hash lookups, with duplicate objects grouped by hash") {
       val expected = S3ObjectsData(
         byHash = Map(

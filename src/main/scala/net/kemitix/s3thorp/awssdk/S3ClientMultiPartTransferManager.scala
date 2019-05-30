@@ -5,7 +5,7 @@ import com.amazonaws.services.s3.model.PutObjectRequest
 import com.amazonaws.services.s3.transfer.TransferManager
 import net.kemitix.s3thorp._
 
-class S3ClientMultiPartTransferManager(transferManager: TransferManager)
+class S3ClientMultiPartTransferManager(transferManager: => TransferManager)
   extends S3ClientUploader
     with S3ClientMultiPartUploaderLogging {
 
