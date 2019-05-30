@@ -54,6 +54,7 @@ class S3ClientMultiPartUploaderSuite
 
   describe("mulit-part uploader upload") {
     val theFile = aLocalFile("big-file", MD5Hash(""), source, fileToKey)
+    val progressListener = new UploadProgressListener(theFile)
     val uploadId = "upload-id"
     val createUploadResponse = new InitiateMultipartUploadResult()
     createUploadResponse.setBucketName(config.bucket.name)
@@ -167,7 +168,7 @@ class S3ClientMultiPartUploaderSuite
       describe("upload") {
         describe("when all okay") {
           val uploader = new RecordingMultiPartUploader()
-          uploader.upload(theFile, config.bucket, 1).unsafeRunSync
+          uploader.upload(theFile, config.bucket, progressListener, 1).unsafeRunSync
           it("should initiate the upload") {
             assert(uploader.initiated.get)
           }
@@ -180,7 +181,7 @@ class S3ClientMultiPartUploaderSuite
         }
         describe("when initiate upload fails") {
           val uploader = new RecordingMultiPartUploader(initOkay = false)
-          uploader.upload(theFile, config.bucket, 1).unsafeRunSync
+          uploader.upload(theFile, config.bucket, progressListener, 1).unsafeRunSync
           it("should not upload any parts") {
             assertResult(Set())(uploader.partsUploaded.get)
           }
@@ -190,7 +191,7 @@ class S3ClientMultiPartUploaderSuite
         }
         describe("when uploading a part fails once") {
           val uploader = new RecordingMultiPartUploader(partTriesRequired = 2)
-          uploader.upload(theFile, config.bucket, 1).unsafeRunSync
+          uploader.upload(theFile, config.bucket, progressListener, 1).unsafeRunSync
           it("should initiate the upload") {
             assert(uploader.initiated.get)
           }
@@ -203,7 +204,7 @@ class S3ClientMultiPartUploaderSuite
         }
         describe("when uploading a part fails too many times") {
           val uploader = new RecordingMultiPartUploader(partTriesRequired = 4)
-          uploader.upload(theFile, config.bucket, 1).unsafeRunSync
+          uploader.upload(theFile, config.bucket, progressListener, 1).unsafeRunSync
           it("should initiate the upload") {
             assert(uploader.initiated.get)
           }

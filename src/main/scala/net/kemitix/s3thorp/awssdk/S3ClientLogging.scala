@@ -1,8 +1,9 @@
 package net.kemitix.s3thorp.awssdk
 
 import cats.effect.IO
+import com.amazonaws.services.s3.model.PutObjectResult
 import net.kemitix.s3thorp.{Bucket, Config, LocalFile, Logging, RemoteKey}
-import software.amazon.awssdk.services.s3.model.{CopyObjectResponse, DeleteObjectResponse, ListObjectsV2Response, PutObjectResponse}
+import software.amazon.awssdk.services.s3.model.{CopyObjectResponse, DeleteObjectResponse, ListObjectsV2Response}
 
 trait S3ClientLogging
   extends Logging {
@@ -26,7 +27,7 @@ trait S3ClientLogging
 
   def logUploadStart(localFile: LocalFile,
                      bucket: Bucket)
-                    (implicit c: Config): PutObjectResponse => IO[PutObjectResponse] = {
+                    (implicit c: Config): PutObjectResult => IO[PutObjectResult] = {
     in => IO {
       log4(s"Uploading: ${bucket.name}:${localFile.remoteKey.key}")
       in
@@ -35,9 +36,9 @@ trait S3ClientLogging
 
   def logUploadFinish(localFile: LocalFile,
                       bucket: Bucket)
-                     (implicit c: Config): PutObjectResponse => IO[Unit] = {
+                     (implicit c: Config): PutObjectResult => IO[Unit] = {
     in =>IO {
-      log3(s"Uploaded: ${bucket.name}:${localFile.remoteKey.key}")
+      log1(s"Uploaded: ${bucket.name}:${localFile.remoteKey.key}")
     }
   }
 

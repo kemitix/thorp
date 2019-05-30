@@ -119,6 +119,7 @@ private class S3ClientMultiPartUploader(s3Client: AmazonS3)
 
   override def upload(localFile: LocalFile,
                       bucket: Bucket,
+                      progressListener: UploadProgressListener,
                       tryCount: Int)
                      (implicit c: Config): IO[S3Action] = {
     logMultiPartUploadStart(localFile, tryCount)
@@ -136,10 +137,10 @@ private class S3ClientMultiPartUploader(s3Client: AmazonS3)
       .handleErrorWith {
         case CancellableMultiPartUpload(e, uploadId) =>
           if (tryCount >= c.maxRetries) IO(logErrorCancelling(e, localFile)) *> cancel(uploadId, localFile) *> IO.pure(ErroredS3Action(localFile.remoteKey, e))
-          else IO(logErrorRetrying(e, localFile, tryCount)) *> upload(localFile, bucket, tryCount + 1)
+          else IO(logErrorRetrying(e, localFile, tryCount)) *> upload(localFile, bucket, progressListener, tryCount + 1)
         case NonFatal(e) =>
           if (tryCount >= c.maxRetries) IO(logErrorUnknown(e, localFile)) *> IO.pure(ErroredS3Action(localFile.remoteKey, e))
-          else IO(logErrorRetrying(e, localFile, tryCount)) *> upload(localFile, bucket, tryCount + 1)
+          else IO(logErrorRetrying(e, localFile, tryCount)) *> upload(localFile, bucket, progressListener, tryCount + 1)
       }
   }
 }

@@ -8,7 +8,7 @@ trait LocalFileStream
 
   def findFiles(file: File)
                (implicit c: Config): Stream[LocalFile] = {
-    log5(s"- Entering: $file")
+    log2(s"- Entering: $file")
     val files = for {
       f <- dirPaths(file)
         .filter { f => f.isDirectory || c.filters.forall { filter => filter isIncluded f.toPath } }

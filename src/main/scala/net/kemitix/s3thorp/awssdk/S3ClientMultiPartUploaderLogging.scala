@@ -11,7 +11,7 @@ trait S3ClientMultiPartUploaderLogging
   def logMultiPartUploadStart(localFile: LocalFile,
                               tryCount: Int)
                              (implicit c: Config): Unit =
-    log4(s"$prefix:upload:try $tryCount: ${localFile.remoteKey.key}")
+    log1(s"$prefix:upload:try $tryCount: ${localFile.remoteKey.key}")
 
   def logMultiPartUploadFinished(localFile: LocalFile)
                                 (implicit c: Config): Unit =
@@ -56,7 +56,7 @@ trait S3ClientMultiPartUploaderLogging
                                   uploadPartResponses: Stream[UploadPartResult],
                                   localFile: LocalFile)
                                  (implicit c: Config): Unit =
-    log4(s"$prefix:completed:parts ${uploadPartResponses.size}: ${localFile.remoteKey.key}")
+    log1(s"$prefix:completed:parts ${uploadPartResponses.size}: ${localFile.remoteKey.key}")
 
   def logMultiPartUploadCancelling(localFile: LocalFile)
                                   (implicit c: Config): Unit =

@@ -1,12 +1,13 @@
 package net.kemitix.s3thorp
 
 import cats.effect.IO
-import net.kemitix.s3thorp.awssdk.{S3ObjectsData, S3Client}
+import net.kemitix.s3thorp.awssdk.{S3Client, S3ObjectsData, UploadProgressListener}
 
 trait DummyS3Client extends S3Client {
 
   override def upload(localFile: LocalFile,
                       bucket: Bucket,
+                      progressListener: UploadProgressListener,
                       tryCount: Int
                      )(implicit c: Config): IO[UploadS3Action] = ???
 
