@@ -4,7 +4,7 @@ import java.nio.file.Path
 import java.util.function.Predicate
 import java.util.regex.Pattern
 
-case class Filter(filter: String = ".*") {
+final case class Filter(filter: String = ".*") {
 
   lazy val predicate: Predicate[String] = Pattern.compile(filter).asPredicate.negate
 

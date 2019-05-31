@@ -9,22 +9,25 @@ sealed trait S3Action {
 
 }
 
-case class DoNothingS3Action(remoteKey: RemoteKey) extends S3Action {
+final case class DoNothingS3Action(remoteKey: RemoteKey) extends S3Action {
   override val order: Int = 0
 }
 
-case class CopyS3Action(remoteKey: RemoteKey) extends S3Action {
+final case class CopyS3Action(remoteKey: RemoteKey) extends S3Action {
   override val order: Int = 1
 }
-case class UploadS3Action(remoteKey: RemoteKey,
-                          md5Hash: MD5Hash) extends S3Action {
+
+final case class UploadS3Action(
+  remoteKey: RemoteKey,
+  md5Hash: MD5Hash) extends S3Action {
   override val order: Int = 2
 }
-case class DeleteS3Action(remoteKey: RemoteKey) extends S3Action {
+
+final case class DeleteS3Action(remoteKey: RemoteKey) extends S3Action {
   override val order: Int = 3
 }
 
-case class ErroredS3Action(remoteKey: RemoteKey, e: Throwable) extends S3Action {
+final case class ErroredS3Action(remoteKey: RemoteKey, e: Throwable) extends S3Action {
   override val order: Int = 10
 }
 

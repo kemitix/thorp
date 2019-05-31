@@ -35,8 +35,9 @@ trait SyncLogging extends Logging {
       }
     }
 
-  case class Counters(uploaded: Int = 0,
-                      deleted: Int = 0,
-                      copied: Int = 0)
+  final case class Counters(
+    uploaded: Int = 0,
+    deleted: Int = 0,
+    copied: Int = 0)
 
 }
