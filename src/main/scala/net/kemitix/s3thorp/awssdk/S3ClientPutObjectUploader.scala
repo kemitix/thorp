@@ -18,9 +18,7 @@ private class S3ClientPutObjectUploader(s3Client: => AmazonS3)
              progressListener: UploadProgressListener,
              tryCount: Int)
             (implicit c: Config): IO[UploadS3Action] = {
-    val request: PutObjectRequest =
-      new PutObjectRequest(bucket.name, localFile.remoteKey.key, localFile.file)
-        .withGeneralProgressListener(progressListener.listener)
+    val request = putObjectRequest(localFile, bucket, progressListener)
     IO(s3Client.putObject(request))
       .bracket(
         logUploadStart(localFile, bucket))(
@@ -29,5 +27,13 @@ private class S3ClientPutObjectUploader(s3Client: => AmazonS3)
       .map(_ filter stripQuotes)
       .map(MD5Hash)
       .map(UploadS3Action(localFile.remoteKey, _))
+  }
+
+  private def putObjectRequest(localFile: LocalFile,
+                               bucket: Bucket,
+                               progressListener: UploadProgressListener
+                              ): PutObjectRequest = {
+    new PutObjectRequest(bucket.name, localFile.remoteKey.key, localFile.file)
+      .withGeneralProgressListener(progressListener.listener)
   }
 }
