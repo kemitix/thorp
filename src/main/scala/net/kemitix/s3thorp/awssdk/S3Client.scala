@@ -46,9 +46,11 @@ object S3Client {
     new ThorpS3Client(S3CatsIOClient(s3AsyncClient), amazonS3Client, amazonS3TransferManager)
   }
 
-  val defaultClient: S3Client =
-    createClient(new JavaClientWrapper {}.underlying,
-      AmazonS3ClientBuilder.defaultClient,
-      TransferManagerBuilder.defaultTransferManager)
+  val defaultClient: S3Client = {
+    val s3AsyncClient: S3AsyncClient = new JavaClientWrapper {}.underlying
+    val amazonS3Client = AmazonS3ClientBuilder.defaultClient
+    val transferManager = TransferManagerBuilder.defaultTransferManager
+    createClient(s3AsyncClient, amazonS3Client, transferManager)
+  }
 
 }
