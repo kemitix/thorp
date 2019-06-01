@@ -4,7 +4,7 @@ import java.nio.file.Path
 import java.util.function.Predicate
 import java.util.regex.Pattern
 
-case class Exclude(exclude: String = "!.*") {
+final case class Exclude(exclude: String = "!.*") {
 
   lazy val predicate: Predicate[String] = Pattern.compile(exclude).asPredicate()
 
