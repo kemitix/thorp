@@ -3,13 +3,9 @@ package net.kemitix.s3thorp.awssdk
 import java.time.Instant
 
 import cats.effect.IO
-import com.amazonaws.services.s3.model.{PutObjectRequest, PutObjectResult}
-import com.amazonaws.services.s3.transfer.{TransferManager, TransferManagerBuilder}
-import com.github.j5ik2o.reactive.aws.s3.S3AsyncClient
-import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
+import com.amazonaws.services.s3.transfer.TransferManagerBuilder
 import net.kemitix.s3thorp._
 import org.scalatest.FunSpec
-import software.amazon.awssdk.services.s3
 import software.amazon.awssdk.services.s3.model.{ListObjectsV2Request, ListObjectsV2Response, S3Object}
 
 import scala.collection.JavaConverters._
@@ -17,7 +13,7 @@ import scala.collection.JavaConverters._
 class ThorpS3ClientSuite extends FunSpec {
 
   describe("listObjectsInPrefix") {
-    val source = Resource(Main, "upload")
+    val source = Resource(this, "../upload")
     val prefix = RemoteKey("prefix")
     implicit val config: Config = Config(Bucket("bucket"), prefix, source = source)
 
