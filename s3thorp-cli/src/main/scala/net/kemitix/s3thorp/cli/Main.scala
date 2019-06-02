@@ -5,7 +5,7 @@ import java.nio.file.Paths
 import cats.effect.ExitCase.{Canceled, Completed, Error}
 import cats.effect.{ExitCode, IO, IOApp}
 import net.kemitix.s3thorp.awssdk.S3Client
-import net.kemitix.s3thorp.{Config, Logging, ParseArgs, Sync}
+import net.kemitix.s3thorp.{Config, Logging, Sync}
 
 object Main extends IOApp with Logging {
 

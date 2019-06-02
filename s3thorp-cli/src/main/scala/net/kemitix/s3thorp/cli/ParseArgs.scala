@@ -1,8 +1,9 @@
-package net.kemitix.s3thorp
+package net.kemitix.s3thorp.cli
 
 import java.nio.file.Paths
 
 import cats.effect.IO
+import net.kemitix.s3thorp._
 import scopt.OParser
 import scopt.OParser.{builder, parse, sequence}
 
