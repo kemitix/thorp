@@ -29,7 +29,7 @@ lazy val legacyRoot = (project in file("."))
       "-Ypartial-unification")
   )
 
-lazy val cli = (project in file("s3thorp-cli"))
+lazy val cli = (project in file("cli"))
   .dependsOn(legacyRoot)
   .aggregate(legacyRoot)
   .settings(
