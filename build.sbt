@@ -38,3 +38,7 @@ lazy val cli = (project in file("cli"))
       "com.github.scopt" %% "scopt" % "4.0.0-RC2"
     )
   )
+
+lazy val `aws-api` = (project in file("aws-api"))
+  .dependsOn(legacyRoot)
+  .aggregate(legacyRoot)
