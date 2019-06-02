@@ -4,9 +4,6 @@ lazy val legacyRoot = (project in file("."))
     version := "0.1",
     scalaVersion := "2.12.8",
 
-    // command line arguments parser
-    libraryDependencies += "com.github.scopt" %% "scopt" % "4.0.0-RC2",
-
     // AWS SDK
     /// wraps the in-preview Java SDK V2 which is incomplete and doesn't support multi-part uploads
     libraryDependencies += "com.github.j5ik2o" %% "reactive-aws-s3-core" % "1.1.3",
@@ -35,3 +32,9 @@ lazy val legacyRoot = (project in file("."))
 lazy val cli = (project in file("s3thorp-cli"))
   .dependsOn(legacyRoot)
   .aggregate(legacyRoot)
+  .settings(
+    libraryDependencies ++= Seq(
+      // command line arguments parser
+      "com.github.scopt" %% "scopt" % "4.0.0-RC2"
+    )
+  )
