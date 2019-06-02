@@ -27,7 +27,11 @@ lazy val legacyRoot = (project in file("."))
       "-feature",
       "-deprecation",
       "-unchecked",
-    "-language:postfixOps",
+      "-language:postfixOps",
       "-language:higherKinds",
       "-Ypartial-unification")
   )
+
+lazy val cli = (project in file("s3thorp-cli"))
+  .dependsOn(legacyRoot)
+  .aggregate(legacyRoot)
