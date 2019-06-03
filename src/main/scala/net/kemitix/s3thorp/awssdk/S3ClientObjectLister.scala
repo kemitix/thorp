@@ -1,10 +1,10 @@
 package net.kemitix.s3thorp.awssdk
 
 import cats.effect.IO
-import net.kemitix.s3thorp.{Config, HashModified, LastModified}
+import net.kemitix.s3thorp.{Config, HashModified}
 import software.amazon.awssdk.services.s3.model.{ListObjectsV2Request, S3Object}
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
-import net.kemitix.s3thorp.domain.{Bucket, MD5Hash, RemoteKey}
+import net.kemitix.s3thorp.domain.{Bucket, LastModified, MD5Hash, RemoteKey}
 
 import scala.collection.JavaConverters._
 

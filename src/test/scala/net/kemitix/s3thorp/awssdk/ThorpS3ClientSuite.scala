@@ -5,7 +5,7 @@ import java.time.Instant
 import cats.effect.IO
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder
 import net.kemitix.s3thorp._
-import net.kemitix.s3thorp.domain.{Bucket, MD5Hash, RemoteKey}
+import net.kemitix.s3thorp.domain.{Bucket, LastModified, MD5Hash, RemoteKey}
 import org.scalatest.FunSpec
 import software.amazon.awssdk.services.s3.model.{ListObjectsV2Request, ListObjectsV2Response, S3Object}
 

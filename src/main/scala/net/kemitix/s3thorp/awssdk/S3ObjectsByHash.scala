@@ -1,7 +1,7 @@
 package net.kemitix.s3thorp.awssdk
 
-import net.kemitix.s3thorp.domain.{MD5Hash, RemoteKey}
-import net.kemitix.s3thorp.{KeyModified, LastModified}
+import net.kemitix.s3thorp.domain.{LastModified, MD5Hash, RemoteKey}
+import net.kemitix.s3thorp.KeyModified
 import software.amazon.awssdk.services.s3.model.S3Object
 
 trait S3ObjectsByHash {
