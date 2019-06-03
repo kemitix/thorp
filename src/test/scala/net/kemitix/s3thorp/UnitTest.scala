@@ -2,6 +2,7 @@ package net.kemitix.s3thorp
 
 import java.io.File
 
+import net.kemitix.s3thorp.domain.RemoteKey
 import org.scalatest.FunSpec
 
 abstract class UnitTest extends FunSpec {

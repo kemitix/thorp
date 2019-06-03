@@ -2,7 +2,7 @@ package net.kemitix.s3thorp
 
 import java.time.Instant
 
-import net.kemitix.s3thorp.domain.Bucket
+import net.kemitix.s3thorp.domain.{Bucket, RemoteKey}
 
 class ActionGeneratorSuite
   extends UnitTest

@@ -2,6 +2,8 @@ package net.kemitix.s3thorp
 
 import java.io.File
 
+import net.kemitix.s3thorp.domain.RemoteKey
+
 trait KeyGenerator {
 
   def generateKey(source: File, prefix: RemoteKey)

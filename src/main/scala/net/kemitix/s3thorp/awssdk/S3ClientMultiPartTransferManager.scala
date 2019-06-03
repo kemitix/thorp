@@ -4,7 +4,7 @@ import cats.effect.IO
 import com.amazonaws.services.s3.model.PutObjectRequest
 import com.amazonaws.services.s3.transfer.TransferManager
 import net.kemitix.s3thorp._
-import net.kemitix.s3thorp.domain.Bucket
+import net.kemitix.s3thorp.domain.{Bucket, RemoteKey}
 
 class S3ClientMultiPartTransferManager(transferManager: => TransferManager)
   extends S3ClientUploader

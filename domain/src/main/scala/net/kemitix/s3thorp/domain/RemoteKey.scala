@@ -1,4 +1,4 @@
-package net.kemitix.s3thorp
+package net.kemitix.s3thorp.domain
 
 import java.io.File
 import java.nio.file.Paths

@@ -1,5 +1,7 @@
 package net.kemitix.s3thorp
 
+import net.kemitix.s3thorp.domain.RemoteKey
+
 sealed trait S3Action {
 
   // the remote key that was uploaded, deleted or otherwise updated by the action

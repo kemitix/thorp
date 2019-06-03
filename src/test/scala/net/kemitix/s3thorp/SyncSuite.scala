@@ -19,7 +19,7 @@ import com.amazonaws.services.s3.{AmazonS3, S3ClientOptions, S3ResponseMetadata,
 import com.amazonaws.{AmazonWebServiceRequest, HttpMethod}
 import com.github.j5ik2o.reactive.aws.s3.S3AsyncClient
 import net.kemitix.s3thorp.awssdk.{MyAmazonS3, S3Client, S3ObjectsData, UploadProgressListener}
-import net.kemitix.s3thorp.domain.Bucket
+import net.kemitix.s3thorp.domain.{Bucket, RemoteKey}
 import software.amazon.awssdk.services.s3
 import software.amazon.awssdk.services.s3.model.{ListObjectsV2Request, ListObjectsV2Response}
 import software.amazon.awssdk.services.s3.{S3AsyncClient => JavaS3AsyncClient}

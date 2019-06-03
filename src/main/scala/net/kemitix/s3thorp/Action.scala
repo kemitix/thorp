@@ -1,5 +1,7 @@
 package net.kemitix.s3thorp
 
+import net.kemitix.s3thorp.domain.RemoteKey
+
 sealed trait Action
 final case class DoNothing(remoteKey: RemoteKey) extends Action
 final case class ToUpload(localFile: LocalFile) extends Action
