@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger, AtomicReferenc
 
 import com.amazonaws.services.s3.model.{Bucket => _, _}
 import net.kemitix.s3thorp._
-import net.kemitix.s3thorp.domain.{Bucket, MD5Hash, RemoteKey}
+import net.kemitix.s3thorp.domain.{Bucket, LocalFile, MD5Hash, RemoteKey}
 
 class S3ClientMultiPartUploaderSuite
   extends UnitTest
@@ -26,7 +26,7 @@ class S3ClientMultiPartUploaderSuite
       // small-file: dd if=/dev/urandom of=src/test/resources/net/kemitix/s3thorp/small-file bs=1047552 count=5
       // 1047552 = 1024 * 1023
       // file size 5kb under 5Mb threshold
-      val smallFile = aLocalFile("small-file", MD5Hash(""), source, fileToKey, fileToHash)
+      val smallFile = LocalFile.resolve("small-file", MD5Hash(""), source, fileToKey, fileToHash)
       assert(smallFile.file.exists, "sample small file is missing")
       assert(smallFile.file.length == 5 * 1024 * 1023, "sample small file is wrong size")
       val result = uploader.accepts(smallFile)
@@ -36,7 +36,7 @@ class S3ClientMultiPartUploaderSuite
       // big-file: dd if=/dev/urandom of=src/test/resources/net/kemitix/s3thorp/big-file bs=1049600 count=5
       // 1049600 = 1024 * 1025
       // file size 5kb over 5Mb threshold
-      val bigFile = aLocalFile("big-file", MD5Hash(""), source, fileToKey, fileToHash)
+      val bigFile = LocalFile.resolve("big-file", MD5Hash(""), source, fileToKey, fileToHash)
       assert(bigFile.file.exists, "sample big file is missing")
       assert(bigFile.file.length == 5 * 1024 * 1025, "sample big file is wrong size")
       val result = uploader.accepts(bigFile)
@@ -57,7 +57,7 @@ class S3ClientMultiPartUploaderSuite
   }
 
   describe("mulit-part uploader upload") {
-    val theFile = aLocalFile("big-file", MD5Hash(""), source, fileToKey, fileToHash)
+    val theFile = LocalFile.resolve("big-file", MD5Hash(""), source, fileToKey, fileToHash)
     val progressListener = new UploadProgressListener(theFile)
     val uploadId = "upload-id"
     val createUploadResponse = new InitiateMultipartUploadResult()

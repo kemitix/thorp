@@ -22,7 +22,7 @@ class S3MetaDataEnricherSuite
 
       describe("#1a local exists, remote exists, remote matches, other matches - do nothing") {
         val theHash: MD5Hash = MD5Hash("the-file-hash")
-        val theFile: LocalFile = aLocalFile("the-file", theHash, source, fileToKey, fileToHash)
+        val theFile: LocalFile = LocalFile.resolve("the-file", theHash, source, fileToKey, fileToHash)
         val theRemoteKey: RemoteKey = theFile.remoteKey
         implicit val s3: S3ObjectsData = S3ObjectsData(
           byHash = Map(theHash -> Set(KeyModified(theRemoteKey, lastModified))),
@@ -39,7 +39,7 @@ class S3MetaDataEnricherSuite
       }
       describe("#1b local exists, remote exists, remote matches, other no matches - do nothing") {
         val theHash: MD5Hash = MD5Hash("the-file-hash")
-        val theFile: LocalFile = aLocalFile("the-file", theHash, source, fileToKey, fileToHash)
+        val theFile: LocalFile = LocalFile.resolve("the-file", theHash, source, fileToKey, fileToHash)
         val theRemoteKey: RemoteKey = prefix.resolve("the-file")
         implicit val s3: S3ObjectsData = S3ObjectsData(
           byHash = Map(theHash -> Set(KeyModified(theRemoteKey, lastModified))),
@@ -56,7 +56,7 @@ class S3MetaDataEnricherSuite
       }
       describe("#2 local exists, remote is missing, remote no match, other matches - copy") {
         val theHash = MD5Hash("the-hash")
-        val theFile = aLocalFile("the-file", theHash, source, fileToKey, fileToHash)
+        val theFile = LocalFile.resolve("the-file", theHash, source, fileToKey, fileToHash)
         val otherRemoteKey = RemoteKey("other-key")
         implicit val s3: S3ObjectsData = S3ObjectsData(
           byHash = Map(theHash -> Set(KeyModified(otherRemoteKey, lastModified))),
@@ -73,7 +73,7 @@ class S3MetaDataEnricherSuite
       }
       describe("#3 local exists, remote is missing, remote no match, other no matches - upload") {
         val theHash = MD5Hash("the-hash")
-        val theFile = aLocalFile("the-file", theHash, source, fileToKey, fileToHash)
+        val theFile = LocalFile.resolve("the-file", theHash, source, fileToKey, fileToHash)
         implicit val s3: S3ObjectsData = S3ObjectsData(
           byHash = Map(),
           byKey = Map()
@@ -88,7 +88,7 @@ class S3MetaDataEnricherSuite
       }
       describe("#4 local exists, remote exists, remote no match, other matches - copy") {
         val theHash = MD5Hash("the-hash")
-        val theFile = aLocalFile("the-file", theHash, source, fileToKey, fileToHash)
+        val theFile = LocalFile.resolve("the-file", theHash, source, fileToKey, fileToHash)
         val theRemoteKey = theFile.remoteKey
         val oldHash = MD5Hash("old-hash")
         val otherRemoteKey = prefix.resolve("other-key")
@@ -113,7 +113,7 @@ class S3MetaDataEnricherSuite
       }
       describe("#5 local exists, remote exists, remote no match, other no matches - upload") {
         val theHash = MD5Hash("the-hash")
-        val theFile = aLocalFile("the-file", theHash, source, fileToKey, fileToHash)
+        val theFile = LocalFile.resolve("the-file", theHash, source, fileToKey, fileToHash)
         val theRemoteKey = theFile.remoteKey
         val oldHash = MD5Hash("old-hash")
         implicit val s3: S3ObjectsData = S3ObjectsData(

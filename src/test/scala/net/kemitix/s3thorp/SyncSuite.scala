@@ -36,8 +36,8 @@ class SyncSuite
   val fileToHash = (file: File) => new MD5HashGenerator {}.md5File(file)
   val rootHash = MD5Hash("a3a6ac11a0eb577b81b3bb5c95cc8a6e")
   val leafHash = MD5Hash("208386a650bdec61cfcd7bd8dcb6b542")
-  val rootFile = aLocalFile("root-file", rootHash, source, fileToKey, fileToHash)
-  val leafFile = aLocalFile("subdir/leaf-file", leafHash, source, fileToKey, fileToHash)
+  val rootFile = LocalFile.resolve("root-file", rootHash, source, fileToKey, fileToHash)
+  val leafFile = LocalFile.resolve("subdir/leaf-file", leafHash, source, fileToKey, fileToHash)
 
   val md5HashGenerator: File => MD5Hash = file => new MD5HashGenerator {}.md5File(file)(config)
 
@@ -47,7 +47,7 @@ class SyncSuite
     val source = new File("/")
     describe("upload") {
       val md5Hash = MD5Hash("the-hash")
-      val testLocalFile = aLocalFile("file", md5Hash, source, generateKey(source, prefix), fileToHash)
+      val testLocalFile = LocalFile.resolve("file", md5Hash, source, generateKey(source, prefix), fileToHash)
       val progressListener = new UploadProgressListener(testLocalFile)
       val sync = new Sync(new S3Client with DummyS3Client {
         override def upload(localFile: LocalFile,

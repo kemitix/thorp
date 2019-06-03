@@ -7,7 +7,7 @@ import com.amazonaws.AmazonClientException
 import com.amazonaws.services.s3.model
 import com.amazonaws.services.s3.transfer.model.UploadResult
 import com.amazonaws.services.s3.transfer.{PauseResult, PersistableUpload, Transfer, TransferManager, TransferManagerBuilder, TransferProgress, Upload}
-import net.kemitix.s3thorp.domain.{Bucket, LastModified, MD5Hash, RemoteKey}
+import net.kemitix.s3thorp.domain.{Bucket, LastModified, LocalFile, MD5Hash, RemoteKey}
 import net.kemitix.s3thorp.{Config, KeyGenerator, MD5HashGenerator, Resource, UnitTest, UploadS3Action}
 
 class S3ClientMultiPartTransferManagerSuite
@@ -26,7 +26,7 @@ class S3ClientMultiPartTransferManagerSuite
       val transferManager = new MyTransferManager(("", "", new File("")), RemoteKey(""), MD5Hash(""))
       val uploader = new S3ClientMultiPartTransferManager(transferManager)
       describe("small-file") {
-        val smallFile = aLocalFile("small-file", MD5Hash("the-hash"), source, fileToKey, fileToHash)
+        val smallFile = LocalFile.resolve("small-file", MD5Hash("the-hash"), source, fileToKey, fileToHash)
         it("should be a small-file") {
           assert(smallFile.file.length < 5 * 1024 * 1024)
         }
@@ -35,7 +35,7 @@ class S3ClientMultiPartTransferManagerSuite
         }
       }
       describe("big-file") {
-        val bigFile = aLocalFile("big-file", MD5Hash("the-hash"), source, fileToKey, fileToHash)
+        val bigFile = LocalFile.resolve("big-file", MD5Hash("the-hash"), source, fileToKey, fileToHash)
         it("should be a big-file") {
           assert(bigFile.file.length > 5 * 1024 * 1024)
         }
@@ -52,7 +52,7 @@ class S3ClientMultiPartTransferManagerSuite
       // dies when putObject is called
       val returnedKey = RemoteKey("returned-key")
       val returnedHash = MD5Hash("returned-hash")
-      val bigFile = aLocalFile("small-file", MD5Hash("the-hash"), source, fileToKey, fileToHash)
+      val bigFile = LocalFile.resolve("small-file", MD5Hash("the-hash"), source, fileToKey, fileToHash)
       val progressListener = new UploadProgressListener(bigFile)
       val amazonS3 = new MyAmazonS3 {}
       val amazonS3TransferManager = TransferManagerBuilder.standard().withS3Client(amazonS3).build
