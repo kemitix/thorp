@@ -1,22 +1,12 @@
 package net.kemitix.s3thorp
 
-import java.io.{File, InputStream}
-import java.net.URL
+import java.io.File
 import java.time.Instant
-import java.util
-import java.util.Date
 import java.util.concurrent.CompletableFuture
 
 import cats.effect.IO
-import com.amazonaws.regions.Region
 import com.amazonaws.services.s3.model._
-import com.amazonaws.services.s3.model.analytics.AnalyticsConfiguration
-import com.amazonaws.services.s3.model.inventory.InventoryConfiguration
-import com.amazonaws.services.s3.model.metrics.MetricsConfiguration
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder
-import com.amazonaws.services.s3.waiters.AmazonS3Waiters
-import com.amazonaws.services.s3.{AmazonS3, S3ClientOptions, S3ResponseMetadata, model}
-import com.amazonaws.{AmazonWebServiceRequest, HttpMethod}
 import com.github.j5ik2o.reactive.aws.s3.S3AsyncClient
 import net.kemitix.s3thorp.awssdk.{MyAmazonS3, S3Client, S3ObjectsData, UploadProgressListener}
 import net.kemitix.s3thorp.domain.{Bucket, Exclude, HashModified, KeyModified, LastModified, LocalFile, MD5Hash, RemoteKey}

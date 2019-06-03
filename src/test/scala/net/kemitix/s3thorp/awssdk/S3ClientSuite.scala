@@ -3,15 +3,13 @@ package net.kemitix.s3thorp.awssdk
 import java.io.File
 import java.time.Instant
 
-import cats.effect.IO
 import com.amazonaws.services.s3.model
 import com.amazonaws.services.s3.model.PutObjectResult
-import com.amazonaws.services.s3.transfer.{TransferManager, TransferManagerBuilder}
+import com.amazonaws.services.s3.transfer.TransferManagerBuilder
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
 import net.kemitix.s3thorp._
 import net.kemitix.s3thorp.domain.{Bucket, HashModified, KeyModified, LastModified, LocalFile, MD5Hash, RemoteKey}
 import org.scalatest.FunSpec
-import software.amazon.awssdk.services.s3.model.{PutObjectRequest, PutObjectResponse}
 
 class S3ClientSuite
   extends FunSpec

@@ -1,7 +1,7 @@
 package net.kemitix.s3thorp
 
 import java.io.{File, FileInputStream}
-import java.security.{DigestInputStream, MessageDigest}
+import java.security.MessageDigest
 
 import net.kemitix.s3thorp.domain.MD5Hash
 

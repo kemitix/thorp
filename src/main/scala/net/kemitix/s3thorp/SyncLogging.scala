@@ -1,7 +1,5 @@
 package net.kemitix.s3thorp
 
-import cats.effect.IO
-
 // Logging for the Sync class
 trait SyncLogging extends Logging {
 
