@@ -41,3 +41,6 @@ lazy val cli = (project in file("cli"))
 
 lazy val `aws-api` = (project in file("aws-api"))
   .dependsOn(legacyRoot)
+
+lazy val `aws-lib` = (project in file("aws-lib"))
+  .dependsOn(legacyRoot, `aws-api`)
