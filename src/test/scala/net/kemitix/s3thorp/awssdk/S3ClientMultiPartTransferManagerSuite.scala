@@ -8,10 +8,11 @@ import com.amazonaws.services.s3.model
 import com.amazonaws.services.s3.transfer.model.UploadResult
 import com.amazonaws.services.s3.transfer.{PauseResult, PersistableUpload, Transfer, TransferManager, TransferManagerBuilder, TransferProgress, Upload}
 import net.kemitix.s3thorp.domain.{Bucket, LastModified, LocalFile, MD5Hash, RemoteKey}
-import net.kemitix.s3thorp.{Config, KeyGenerator, MD5HashGenerator, Resource, UnitTest, UploadS3Action}
+import net.kemitix.s3thorp.{Config, KeyGenerator, MD5HashGenerator, Resource, UploadS3Action}
+import org.scalatest.FunSpec
 
 class S3ClientMultiPartTransferManagerSuite
-  extends UnitTest
+  extends FunSpec
     with KeyGenerator {
 
   private val source = Resource(this, "..")

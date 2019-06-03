@@ -4,9 +4,10 @@ import java.io.File
 import java.time.Instant
 
 import net.kemitix.s3thorp.domain.{Bucket, LastModified, LocalFile, MD5Hash, RemoteKey, RemoteMetaData, S3MetaData}
+import org.scalatest.FunSpec
 
 class ActionGeneratorSuite
-  extends UnitTest
+  extends FunSpec
     with KeyGenerator {
 
   private val source = Resource(this, "upload")

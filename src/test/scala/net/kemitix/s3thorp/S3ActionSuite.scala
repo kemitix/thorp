@@ -1,8 +1,9 @@
 package net.kemitix.s3thorp
 
 import net.kemitix.s3thorp.domain.{MD5Hash, RemoteKey}
+import org.scalatest.FunSpec
 
-class S3ActionSuite extends UnitTest {
+class S3ActionSuite extends FunSpec {
 
   describe("Ordering of types") {
     val remoteKey = RemoteKey("remote-key")

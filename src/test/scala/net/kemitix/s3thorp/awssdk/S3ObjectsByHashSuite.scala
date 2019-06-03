@@ -3,10 +3,10 @@ package net.kemitix.s3thorp.awssdk
 import java.time.Instant
 
 import net.kemitix.s3thorp.domain.{KeyModified, LastModified, MD5Hash, RemoteKey}
-import net.kemitix.s3thorp.UnitTest
+import org.scalatest.FunSpec
 import software.amazon.awssdk.services.s3.model.S3Object
 
-class S3ObjectsByHashSuite extends UnitTest {
+class S3ObjectsByHashSuite extends FunSpec {
 
   new S3ObjectsByHash {
     describe("grouping s3 object together by their hash values") {

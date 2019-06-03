@@ -8,9 +8,10 @@ import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger, AtomicReferenc
 import com.amazonaws.services.s3.model.{Bucket => _, _}
 import net.kemitix.s3thorp._
 import net.kemitix.s3thorp.domain.{Bucket, LocalFile, MD5Hash, RemoteKey}
+import org.scalatest.FunSpec
 
 class S3ClientMultiPartUploaderSuite
-  extends UnitTest
+  extends FunSpec
     with KeyGenerator {
 
   private val source = Resource(this, "..")

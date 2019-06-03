@@ -10,10 +10,11 @@ import com.amazonaws.services.s3.transfer.{TransferManager, TransferManagerBuild
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
 import net.kemitix.s3thorp._
 import net.kemitix.s3thorp.domain.{Bucket, HashModified, KeyModified, LastModified, LocalFile, MD5Hash, RemoteKey}
+import org.scalatest.FunSpec
 import software.amazon.awssdk.services.s3.model.{PutObjectRequest, PutObjectResponse}
 
 class S3ClientSuite
-  extends UnitTest
+  extends FunSpec
     with KeyGenerator {
 
   val source = Resource(this, "../upload")
