@@ -16,12 +16,12 @@ class S3ClientPutObjectUploader(s3Client: => AmazonS3)
   override
   def upload(localFile: LocalFile,
              bucket: Bucket,
-             progressListener: UploadProgressListener,
+             uploadProgressListener: UploadProgressListener,
              tryCount: Int)
             (implicit c: Config): IO[UploadS3Action] = {
     val request: PutObjectRequest =
       new PutObjectRequest(bucket.name, localFile.remoteKey.key, localFile.file)
-        .withGeneralProgressListener(progressListener.listener)
+        .withGeneralProgressListener(progressListener(uploadProgressListener))
     IO(s3Client.putObject(request))
       .bracket(
         logUploadStart(localFile, bucket))(
