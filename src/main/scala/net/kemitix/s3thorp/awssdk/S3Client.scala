@@ -6,7 +6,7 @@ import com.amazonaws.services.s3.transfer.{TransferManager, TransferManagerBuild
 import com.github.j5ik2o.reactive.aws.s3.S3AsyncClient
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
 import net.kemitix.s3thorp._
-import net.kemitix.s3thorp.domain.{Bucket, MD5Hash, RemoteKey}
+import net.kemitix.s3thorp.domain.{Bucket, LocalFile, MD5Hash, RemoteKey}
 
 trait S3Client {
 

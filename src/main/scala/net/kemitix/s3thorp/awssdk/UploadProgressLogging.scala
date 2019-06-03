@@ -1,7 +1,8 @@
 package net.kemitix.s3thorp.awssdk
 
 import com.amazonaws.event.ProgressEventType
-import net.kemitix.s3thorp.{Logging, LocalFile, Config}
+import net.kemitix.s3thorp.domain.LocalFile
+import net.kemitix.s3thorp.{Config, Logging}
 
 trait UploadProgressLogging
       extends Logging {

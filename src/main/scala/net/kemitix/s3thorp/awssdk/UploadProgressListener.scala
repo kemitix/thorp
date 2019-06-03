@@ -1,7 +1,8 @@
 package net.kemitix.s3thorp.awssdk
 
 import com.amazonaws.event.{ProgressEvent, ProgressListener}
-import net.kemitix.s3thorp.{Config, LocalFile}
+import net.kemitix.s3thorp.Config
+import net.kemitix.s3thorp.domain.LocalFile
 
 class UploadProgressListener(localFile: LocalFile)
   (implicit c: Config)

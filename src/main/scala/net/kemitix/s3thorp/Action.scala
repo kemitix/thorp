@@ -1,6 +1,6 @@
 package net.kemitix.s3thorp
 
-import net.kemitix.s3thorp.domain.{MD5Hash, RemoteKey}
+import net.kemitix.s3thorp.domain.{LocalFile, MD5Hash, RemoteKey}
 
 sealed trait Action
 final case class DoNothing(remoteKey: RemoteKey) extends Action

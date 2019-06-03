@@ -2,7 +2,7 @@ package net.kemitix.s3thorp
 
 import java.io.File
 
-import net.kemitix.s3thorp.domain.{MD5Hash, RemoteKey}
+import net.kemitix.s3thorp.domain.{LocalFile, MD5Hash, RemoteKey}
 import org.scalatest.FunSpec
 
 abstract class UnitTest extends FunSpec {
