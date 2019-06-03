@@ -3,6 +3,7 @@ package net.kemitix.s3thorp
 import java.time.Instant
 
 import net.kemitix.s3thorp.awssdk.S3ObjectsData
+import net.kemitix.s3thorp.domain.Bucket
 
 class S3MetaDataEnricherSuite
   extends UnitTest

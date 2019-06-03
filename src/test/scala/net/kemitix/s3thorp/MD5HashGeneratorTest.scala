@@ -2,6 +2,8 @@ package net.kemitix.s3thorp
 
 import java.nio.file.Files
 
+import net.kemitix.s3thorp.domain.Bucket
+
 class MD5HashGeneratorTest extends UnitTest {
 
   private val source = Resource(this, "upload")

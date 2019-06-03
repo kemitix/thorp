@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger, AtomicReferenc
 
 import com.amazonaws.services.s3.model.{Bucket => _, _}
 import net.kemitix.s3thorp._
+import net.kemitix.s3thorp.domain.Bucket
 
 class S3ClientMultiPartUploaderSuite
   extends UnitTest

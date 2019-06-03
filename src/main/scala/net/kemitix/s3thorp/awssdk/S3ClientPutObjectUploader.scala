@@ -4,6 +4,7 @@ import cats.effect.IO
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.PutObjectRequest
 import net.kemitix.s3thorp._
+import net.kemitix.s3thorp.domain.Bucket
 
 class S3ClientPutObjectUploader(s3Client: => AmazonS3)
   extends S3ClientUploader

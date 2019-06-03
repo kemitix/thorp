@@ -1,7 +1,8 @@
 package net.kemitix.s3thorp.awssdk
 
 import cats.effect.IO
-import net.kemitix.s3thorp.{Bucket, Config, LocalFile, S3Action}
+import net.kemitix.s3thorp.domain.Bucket
+import net.kemitix.s3thorp.{Config, LocalFile, S3Action}
 
 trait S3ClientUploader {
 

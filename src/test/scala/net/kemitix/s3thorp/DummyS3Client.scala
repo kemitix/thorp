@@ -2,6 +2,7 @@ package net.kemitix.s3thorp
 
 import cats.effect.IO
 import net.kemitix.s3thorp.awssdk.{S3Client, S3ObjectsData, UploadProgressListener}
+import net.kemitix.s3thorp.domain.Bucket
 
 trait DummyS3Client extends S3Client {
 

@@ -7,7 +7,8 @@ import com.amazonaws.AmazonClientException
 import com.amazonaws.services.s3.model
 import com.amazonaws.services.s3.transfer.model.UploadResult
 import com.amazonaws.services.s3.transfer.{PauseResult, PersistableUpload, Transfer, TransferManager, TransferManagerBuilder, TransferProgress, Upload}
-import net.kemitix.s3thorp.{Bucket, Config, KeyGenerator, LastModified, MD5Hash, MD5HashGenerator, RemoteKey, Resource, UnitTest, UploadS3Action}
+import net.kemitix.s3thorp.domain.Bucket
+import net.kemitix.s3thorp.{Config, KeyGenerator, LastModified, MD5Hash, MD5HashGenerator, RemoteKey, Resource, UnitTest, UploadS3Action}
 
 class S3ClientMultiPartTransferManagerSuite
   extends UnitTest
