@@ -1,7 +1,6 @@
 package net.kemitix.s3thorp.awssdk
 
-import net.kemitix.s3thorp.Config
-import net.kemitix.s3thorp.domain.LocalFile
+import net.kemitix.s3thorp.domain.{Config, LocalFile}
 
 class UploadProgressListener(localFile: LocalFile)
   (implicit c: Config)

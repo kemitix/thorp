@@ -1,8 +1,7 @@
 package net.kemitix.s3thorp.awssdk
 
 import com.amazonaws.services.s3.model.{AmazonS3Exception, InitiateMultipartUploadResult, UploadPartRequest, UploadPartResult}
-import net.kemitix.s3thorp.domain.{LocalFile, MD5Hash}
-import net.kemitix.s3thorp.Config
+import net.kemitix.s3thorp.domain.{Config, LocalFile, MD5Hash}
 
 trait S3ClientMultiPartUploaderLogging
   extends S3ClientLogging {

@@ -2,8 +2,8 @@ package net.kemitix.s3thorp.awssdk
 
 import cats.effect.IO
 import com.amazonaws.services.s3.model.PutObjectResult
-import net.kemitix.s3thorp.domain.{Bucket, LocalFile, RemoteKey}
-import net.kemitix.s3thorp.{Config, Logging}
+import net.kemitix.s3thorp.domain.{Bucket, Config, LocalFile, RemoteKey}
+import net.kemitix.s3thorp.Logging
 import software.amazon.awssdk.services.s3.model.{CopyObjectResponse, DeleteObjectResponse, ListObjectsV2Response}
 
 trait S3ClientLogging

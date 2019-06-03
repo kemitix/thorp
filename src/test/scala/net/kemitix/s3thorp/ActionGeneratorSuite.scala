@@ -3,7 +3,7 @@ package net.kemitix.s3thorp
 import java.io.File
 import java.time.Instant
 
-import net.kemitix.s3thorp.domain.{Bucket, LastModified, LocalFile, MD5Hash, RemoteKey, RemoteMetaData, S3MetaData}
+import net.kemitix.s3thorp.domain.{Bucket, Config, LastModified, LocalFile, MD5Hash, RemoteKey, RemoteMetaData, S3MetaData}
 import org.scalatest.FunSpec
 
 class ActionGeneratorSuite

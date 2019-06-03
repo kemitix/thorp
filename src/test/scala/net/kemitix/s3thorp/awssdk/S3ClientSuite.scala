@@ -8,7 +8,7 @@ import com.amazonaws.services.s3.model.PutObjectResult
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
 import net.kemitix.s3thorp._
-import net.kemitix.s3thorp.domain.{Bucket, HashModified, KeyModified, LastModified, LocalFile, MD5Hash, RemoteKey, S3ObjectsData}
+import net.kemitix.s3thorp.domain.{Bucket, Config, HashModified, KeyModified, LastModified, LocalFile, MD5Hash, RemoteKey, S3ObjectsData}
 import org.scalatest.FunSpec
 
 class S3ClientSuite

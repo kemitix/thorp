@@ -2,8 +2,8 @@ package net.kemitix.s3thorp.awssdk
 
 import cats.effect.IO
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
-import net.kemitix.s3thorp.domain.{Bucket, RemoteKey}
-import net.kemitix.s3thorp.{Config, DeleteS3Action}
+import net.kemitix.s3thorp.domain.{Bucket, Config, RemoteKey}
+import net.kemitix.s3thorp.DeleteS3Action
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest
 
 class S3ClientDeleter(s3Client: S3CatsIOClient)

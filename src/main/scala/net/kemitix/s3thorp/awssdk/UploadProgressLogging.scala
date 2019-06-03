@@ -1,7 +1,7 @@
 package net.kemitix.s3thorp.awssdk
 
-import net.kemitix.s3thorp.domain.LocalFile
-import net.kemitix.s3thorp.{Config, Logging}
+import net.kemitix.s3thorp.domain.{Config, LocalFile}
+import net.kemitix.s3thorp.Logging
 
 trait UploadProgressLogging
       extends Logging {

@@ -6,8 +6,8 @@ import java.nio.file.Paths
 import cats.effect.ExitCase.{Canceled, Completed, Error}
 import cats.effect.{ExitCode, IO, IOApp}
 import net.kemitix.s3thorp.aws.lib.S3ClientBuilder
-import net.kemitix.s3thorp.domain.MD5Hash
-import net.kemitix.s3thorp.{Config, Logging, MD5HashGenerator, Sync}
+import net.kemitix.s3thorp.domain.{Config, MD5Hash}
+import net.kemitix.s3thorp.{Logging, MD5HashGenerator, Sync}
 
 object Main extends IOApp with Logging {
 

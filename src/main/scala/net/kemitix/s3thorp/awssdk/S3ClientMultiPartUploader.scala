@@ -6,7 +6,7 @@ import cats.implicits._
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.{AbortMultipartUploadRequest, AmazonS3Exception, CompleteMultipartUploadRequest, CompleteMultipartUploadResult, InitiateMultipartUploadRequest, InitiateMultipartUploadResult, PartETag, UploadPartRequest, UploadPartResult}
 import net.kemitix.s3thorp._
-import net.kemitix.s3thorp.domain.{Bucket, LocalFile, MD5Hash}
+import net.kemitix.s3thorp.domain.{Bucket, Config, LocalFile, MD5Hash}
 
 import scala.util.control.NonFatal
 

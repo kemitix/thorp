@@ -1,5 +1,7 @@
 package net.kemitix.s3thorp
 
+import net.kemitix.s3thorp.domain.Config
+
 // Logging for the Sync class
 trait SyncLogging extends Logging {
 

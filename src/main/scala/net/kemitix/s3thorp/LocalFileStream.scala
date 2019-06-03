@@ -2,7 +2,7 @@ package net.kemitix.s3thorp
 
 import java.io.File
 
-import net.kemitix.s3thorp.domain.{LocalFile, MD5Hash}
+import net.kemitix.s3thorp.domain.{Config, LocalFile, MD5Hash}
 
 class LocalFileStream(md5HashGenerator: File => MD5Hash)
   extends KeyGenerator
