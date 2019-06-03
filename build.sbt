@@ -29,11 +29,11 @@ lazy val legacyRoot = (project in file("."))
       "-Ypartial-unification")
   )
 
-// cli -> aws-lib -> core -> aws-api
+// cli -> aws-lib -> core -> aws-api (-> legacyRoot)
 
 lazy val cli = (project in file("cli"))
-  .dependsOn(legacyRoot)
-  .aggregate(legacyRoot, `aws-api`)
+  .dependsOn(`aws-lib`)
+  .aggregate(legacyRoot, `aws-api`, core, `aws-lib`)
   .settings(
     libraryDependencies ++= Seq(
       // command line arguments parser
@@ -41,10 +41,11 @@ lazy val cli = (project in file("cli"))
     )
   )
 
+lazy val `aws-lib` = (project in file("aws-lib"))
+  .dependsOn(core)
+
 lazy val core = (project in file("core"))
+  .dependsOn(`aws-api`)
 
 lazy val `aws-api` = (project in file("aws-api"))
   .dependsOn(legacyRoot)
-
-lazy val `aws-lib` = (project in file("aws-lib"))
-  .dependsOn(legacyRoot, `aws-api`)
