@@ -4,8 +4,8 @@ import java.io.File
 import java.nio.file.Paths
 
 final case class RemoteKey(key: String) {
-  def asFile(implicit c: Config): File =
-    c.source.toPath.resolve(Paths.get(c.prefix.key).relativize(Paths.get(key))).toFile
-  def isMissingLocally(implicit c: Config): Boolean =
-    ! asFile.exists
+  def asFile(source: File, prefix: RemoteKey): File =
+    source.toPath.resolve(Paths.get(prefix.key).relativize(Paths.get(key))).toFile
+  def isMissingLocally(source: File, prefix: RemoteKey): Boolean =
+    ! asFile(source, prefix).exists
 }

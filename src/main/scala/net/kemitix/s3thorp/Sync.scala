@@ -27,7 +27,7 @@ class Sync(s3Client: S3Client)
         val list = sorted.unsafeRunSync.toList
         val delActions = (for {
           key <- s3ObjectsData.byKey.keys
-          if key.isMissingLocally
+          if key.isMissingLocally(c.source, c.prefix)
           ioDelAction <- submitAction(ToDelete(key))
         } yield ioDelAction).toStream.sequence
         val delList = delActions.unsafeRunSync.toList
