@@ -4,7 +4,7 @@ import java.io.File
 import java.time.Instant
 
 import net.kemitix.s3thorp.awssdk.S3ObjectsData
-import net.kemitix.s3thorp.domain.{Bucket, LastModified, LocalFile, MD5Hash, RemoteKey}
+import net.kemitix.s3thorp.domain.{Bucket, LastModified, LocalFile, MD5Hash, RemoteKey, RemoteMetaData}
 
 class S3MetaDataEnricherSuite
   extends UnitTest
