@@ -2,8 +2,8 @@ package net.kemitix.s3thorp.awssdk
 
 import java.time.Instant
 
-import net.kemitix.s3thorp.domain.RemoteKey
-import net.kemitix.s3thorp.{KeyModified, LastModified, MD5Hash, UnitTest}
+import net.kemitix.s3thorp.domain.{MD5Hash, RemoteKey}
+import net.kemitix.s3thorp.{KeyModified, LastModified, UnitTest}
 import software.amazon.awssdk.services.s3.model.S3Object
 
 class S3ObjectsByHashSuite extends UnitTest {

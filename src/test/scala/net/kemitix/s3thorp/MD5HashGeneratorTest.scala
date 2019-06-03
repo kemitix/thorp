@@ -2,7 +2,7 @@ package net.kemitix.s3thorp
 
 import java.nio.file.Files
 
-import net.kemitix.s3thorp.domain.{Bucket, RemoteKey}
+import net.kemitix.s3thorp.domain.{Bucket, MD5Hash, RemoteKey}
 
 class MD5HashGeneratorTest extends UnitTest {
 

@@ -3,7 +3,7 @@ package net.kemitix.s3thorp
 import java.io.File
 import java.nio.file.Path
 
-import net.kemitix.s3thorp.domain.RemoteKey
+import net.kemitix.s3thorp.domain.{MD5Hash, RemoteKey}
 
 final case class LocalFile(
   file: File,

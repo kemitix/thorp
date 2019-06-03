@@ -3,7 +3,7 @@ package net.kemitix.s3thorp
 import cats.effect.IO
 import cats.implicits._
 import net.kemitix.s3thorp.awssdk.{S3Client, S3ObjectsData, UploadProgressListener}
-import net.kemitix.s3thorp.domain.{Bucket, RemoteKey}
+import net.kemitix.s3thorp.domain.{Bucket, MD5Hash, RemoteKey}
 
 class Sync(s3Client: S3Client)
   extends LocalFileStream

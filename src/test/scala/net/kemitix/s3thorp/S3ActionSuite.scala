@@ -1,6 +1,6 @@
 package net.kemitix.s3thorp
 
-import net.kemitix.s3thorp.domain.RemoteKey
+import net.kemitix.s3thorp.domain.{MD5Hash, RemoteKey}
 
 class S3ActionSuite extends UnitTest {
 

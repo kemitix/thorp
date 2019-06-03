@@ -1,7 +1,7 @@
 package net.kemitix.s3thorp.awssdk
 
-import net.kemitix.s3thorp.domain.RemoteKey
-import net.kemitix.s3thorp.{HashModified, KeyModified, MD5Hash}
+import net.kemitix.s3thorp.domain.{MD5Hash, RemoteKey}
+import net.kemitix.s3thorp.{HashModified, KeyModified}
 
 /**
   * A list of objects and their MD5 hash values.

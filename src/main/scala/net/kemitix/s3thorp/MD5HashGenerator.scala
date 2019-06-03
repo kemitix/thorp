@@ -3,6 +3,8 @@ package net.kemitix.s3thorp
 import java.io.{File, FileInputStream}
 import java.security.{DigestInputStream, MessageDigest}
 
+import net.kemitix.s3thorp.domain.MD5Hash
+
 trait MD5HashGenerator
   extends Logging {
 

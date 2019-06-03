@@ -1,4 +1,4 @@
-package net.kemitix.s3thorp
+package net.kemitix.s3thorp.domain
 
 final case class MD5Hash(hash: String) {
 
