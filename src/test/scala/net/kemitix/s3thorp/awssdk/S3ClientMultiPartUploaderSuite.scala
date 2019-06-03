@@ -1,5 +1,7 @@
 package net.kemitix.s3thorp.awssdk
 
+import java.io.File
+
 import scala.collection.JavaConverters._
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger, AtomicReference}
 
@@ -15,6 +17,7 @@ class S3ClientMultiPartUploaderSuite
   private val prefix = RemoteKey("prefix")
   implicit private val config: Config = Config(Bucket("bucket"), prefix, source = source)
   private val fileToKey = generateKey(config.source, config.prefix) _
+  private val fileToHash = (file: File) => new MD5HashGenerator {}.md5File(file)
 
   describe("multi-part uploader accepts") {
     val uploader = new S3ClientMultiPartUploader(new MyAmazonS3Client {})
@@ -23,7 +26,7 @@ class S3ClientMultiPartUploaderSuite
       // small-file: dd if=/dev/urandom of=src/test/resources/net/kemitix/s3thorp/small-file bs=1047552 count=5
       // 1047552 = 1024 * 1023
       // file size 5kb under 5Mb threshold
-      val smallFile = aLocalFile("small-file", MD5Hash(""), source, fileToKey)
+      val smallFile = aLocalFile("small-file", MD5Hash(""), source, fileToKey, fileToHash)
       assert(smallFile.file.exists, "sample small file is missing")
       assert(smallFile.file.length == 5 * 1024 * 1023, "sample small file is wrong size")
       val result = uploader.accepts(smallFile)
@@ -33,7 +36,7 @@ class S3ClientMultiPartUploaderSuite
       // big-file: dd if=/dev/urandom of=src/test/resources/net/kemitix/s3thorp/big-file bs=1049600 count=5
       // 1049600 = 1024 * 1025
       // file size 5kb over 5Mb threshold
-      val bigFile = aLocalFile("big-file", MD5Hash(""), source, fileToKey)
+      val bigFile = aLocalFile("big-file", MD5Hash(""), source, fileToKey, fileToHash)
       assert(bigFile.file.exists, "sample big file is missing")
       assert(bigFile.file.length == 5 * 1024 * 1025, "sample big file is wrong size")
       val result = uploader.accepts(bigFile)
@@ -54,7 +57,7 @@ class S3ClientMultiPartUploaderSuite
   }
 
   describe("mulit-part uploader upload") {
-    val theFile = aLocalFile("big-file", MD5Hash(""), source, fileToKey)
+    val theFile = aLocalFile("big-file", MD5Hash(""), source, fileToKey, fileToHash)
     val progressListener = new UploadProgressListener(theFile)
     val uploadId = "upload-id"
     val createUploadResponse = new InitiateMultipartUploadResult()

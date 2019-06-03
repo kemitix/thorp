@@ -33,10 +33,13 @@ class SyncSuite
   implicit private val config: Config = Config(Bucket("bucket"), prefix, source = source)
   private val lastModified = LastModified(Instant.now)
   val fileToKey: File => RemoteKey = generateKey(source, prefix)
+  val fileToHash = (file: File) => new MD5HashGenerator {}.md5File(file)
   val rootHash = MD5Hash("a3a6ac11a0eb577b81b3bb5c95cc8a6e")
   val leafHash = MD5Hash("208386a650bdec61cfcd7bd8dcb6b542")
-  val rootFile = aLocalFile("root-file", rootHash, source, fileToKey)
-  val leafFile = aLocalFile("subdir/leaf-file", leafHash, source, fileToKey)
+  val rootFile = aLocalFile("root-file", rootHash, source, fileToKey, fileToHash)
+  val leafFile = aLocalFile("subdir/leaf-file", leafHash, source, fileToKey, fileToHash)
+
+  val md5HashGenerator: File => MD5Hash = file => new MD5HashGenerator {}.md5File(file)(config)
 
   describe("s3client thunk") {
     val testBucket = Bucket("bucket")
@@ -44,7 +47,7 @@ class SyncSuite
     val source = new File("/")
     describe("upload") {
       val md5Hash = MD5Hash("the-hash")
-      val testLocalFile = aLocalFile("file", md5Hash, source, generateKey(source, prefix))
+      val testLocalFile = aLocalFile("file", md5Hash, source, generateKey(source, prefix), fileToHash)
       val progressListener = new UploadProgressListener(testLocalFile)
       val sync = new Sync(new S3Client with DummyS3Client {
         override def upload(localFile: LocalFile,
@@ -55,7 +58,7 @@ class SyncSuite
           assert(bucket == testBucket)
           UploadS3Action(localFile.remoteKey, md5Hash)
         }
-      })
+      }, md5HashGenerator)
       it("delegates unmodified to the S3Client") {
         assertResult(UploadS3Action(RemoteKey(prefix.key + "/file"), md5Hash))(
           sync.upload(testLocalFile, testBucket, progressListener, 1).
@@ -171,7 +174,7 @@ class SyncSuite
       val transferManager = TransferManagerBuilder.standard
         .withS3Client(recordingS3Client).build
       val client = S3Client.createClient(recordingS3ClientLegacy, recordingS3Client, transferManager)
-      val sync = new Sync(client)
+      val sync = new Sync(client, md5HashGenerator)
       sync.run(config).unsafeRunSync
       it("invokes the underlying Java s3client") {
         val expected = Set(
@@ -196,7 +199,7 @@ class SyncSuite
   }
 
   class RecordingSync(testBucket: Bucket, s3Client: S3Client, s3ObjectsData: S3ObjectsData)
-    extends Sync(s3Client) {
+    extends Sync(s3Client, md5HashGenerator) {
 
     var uploadsRecord: Map[String, RemoteKey] = Map()
     var copiesRecord: Map[RemoteKey, RemoteKey] = Map()

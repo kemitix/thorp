@@ -18,6 +18,7 @@ class S3ClientMultiPartTransferManagerSuite
   private val prefix = RemoteKey("prefix")
   implicit private val config: Config = Config(Bucket("bucket"), prefix, source = source)
   private val fileToKey = generateKey(config.source, config.prefix) _
+  private val fileToHash = (file: File) => new MD5HashGenerator {}.md5File(file)
   val lastModified = LastModified(Instant.now())
 
   describe("S3ClientMultiPartTransferManagerSuite") {
@@ -25,7 +26,7 @@ class S3ClientMultiPartTransferManagerSuite
       val transferManager = new MyTransferManager(("", "", new File("")), RemoteKey(""), MD5Hash(""))
       val uploader = new S3ClientMultiPartTransferManager(transferManager)
       describe("small-file") {
-        val smallFile = aLocalFile("small-file", MD5Hash("the-hash"), source, fileToKey)
+        val smallFile = aLocalFile("small-file", MD5Hash("the-hash"), source, fileToKey, fileToHash)
         it("should be a small-file") {
           assert(smallFile.file.length < 5 * 1024 * 1024)
         }
@@ -34,7 +35,7 @@ class S3ClientMultiPartTransferManagerSuite
         }
       }
       describe("big-file") {
-        val bigFile = aLocalFile("big-file", MD5Hash("the-hash"), source, fileToKey)
+        val bigFile = aLocalFile("big-file", MD5Hash("the-hash"), source, fileToKey, fileToHash)
         it("should be a big-file") {
           assert(bigFile.file.length > 5 * 1024 * 1024)
         }
@@ -51,7 +52,7 @@ class S3ClientMultiPartTransferManagerSuite
       // dies when putObject is called
       val returnedKey = RemoteKey("returned-key")
       val returnedHash = MD5Hash("returned-hash")
-      val bigFile = aLocalFile("small-file", MD5Hash("the-hash"), source, fileToKey)
+      val bigFile = aLocalFile("small-file", MD5Hash("the-hash"), source, fileToKey, fileToHash)
       val progressListener = new UploadProgressListener(bigFile)
       val amazonS3 = new MyAmazonS3 {}
       val amazonS3TransferManager = TransferManagerBuilder.standard().withS3Client(amazonS3).build

@@ -9,13 +9,12 @@ final case class LocalFile(
   file: File,
   source: File,
   keyGenerator: File => RemoteKey,
-  suppliedHash: Option[MD5Hash] = None)
-  (implicit c: Config)
-  extends MD5HashGenerator {
+  md5HashGenerator: File => MD5Hash,
+  suppliedHash: Option[MD5Hash] = None) {
 
   require(!file.isDirectory, s"LocalFile must not be a directory: $file")
 
-  private lazy val myhash = suppliedHash.getOrElse(md5File(file))
+  private lazy val myhash = suppliedHash.getOrElse(md5HashGenerator(file))
 
   def hash: MD5Hash = myhash
 

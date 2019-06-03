@@ -1,12 +1,14 @@
 package net.kemitix.s3thorp
 
+import java.io.File
+
 import cats.effect.IO
 import cats.implicits._
 import net.kemitix.s3thorp.awssdk.{S3Client, S3ObjectsData, UploadProgressListener}
 import net.kemitix.s3thorp.domain.{Bucket, MD5Hash, RemoteKey}
 
-class Sync(s3Client: S3Client)
-  extends LocalFileStream
+class Sync(s3Client: S3Client, md5HashGenerator: File => MD5Hash)
+  extends LocalFileStream(md5HashGenerator)
     with S3MetaDataEnricher
     with ActionGenerator
     with ActionSubmitter

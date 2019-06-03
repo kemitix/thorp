@@ -1,18 +1,22 @@
 package net.kemitix.s3thorp.cli
 
+import java.io.File
 import java.nio.file.Paths
 
 import cats.effect.ExitCase.{Canceled, Completed, Error}
 import cats.effect.{ExitCode, IO, IOApp}
 import net.kemitix.s3thorp.aws.lib.S3ClientBuilder
-import net.kemitix.s3thorp.{Config, Logging, Sync}
+import net.kemitix.s3thorp.domain.MD5Hash
+import net.kemitix.s3thorp.{Config, Logging, MD5HashGenerator, Sync}
 
 object Main extends IOApp with Logging {
 
   val defaultConfig: Config =
     Config(source = Paths.get(".").toFile)
 
-  val sync = new Sync(S3ClientBuilder.defaultClient)
+  val md5HashGenerator: File => MD5Hash = file => new MD5HashGenerator {}.md5File(file)(defaultConfig)
+
+  val sync = new Sync(S3ClientBuilder.defaultClient, md5HashGenerator)
 
   def program(args: List[String]): IO[ExitCode] =
     for {

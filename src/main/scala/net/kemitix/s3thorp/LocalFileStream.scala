@@ -2,7 +2,9 @@ package net.kemitix.s3thorp
 
 import java.io.File
 
-trait LocalFileStream
+import net.kemitix.s3thorp.domain.MD5Hash
+
+class LocalFileStream(md5HashGenerator: File => MD5Hash)
   extends KeyGenerator
     with Logging {
 
@@ -26,6 +28,6 @@ trait LocalFileStream
 
   private def recurseIntoSubDirectories(file: File)(implicit c: Config): Stream[LocalFile] =
     if (file.isDirectory) findFiles(file)(c)
-    else Stream(LocalFile(file, c.source, generateKey(c.source, c.prefix)))
+    else Stream(LocalFile(file, c.source, generateKey(c.source, c.prefix), md5HashGenerator))
 
 }

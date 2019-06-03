@@ -21,14 +21,15 @@ class S3ClientSuite
   private val prefix = RemoteKey("prefix")
   implicit private val config: Config = Config(Bucket("bucket"), prefix, source = source)
   private val fileToKey = generateKey(config.source, config.prefix) _
+  private val fileToHash = (file: File) => new MD5HashGenerator {}.md5File(file)
 
   describe("getS3Status") {
     val hash = MD5Hash("hash")
-    val localFile = aLocalFile("the-file", hash, source, fileToKey)
+    val localFile = aLocalFile("the-file", hash, source, fileToKey, fileToHash)
     val key = localFile.remoteKey
-    val keyotherkey = aLocalFile("other-key-same-hash", hash, source, fileToKey)
+    val keyotherkey = aLocalFile("other-key-same-hash", hash, source, fileToKey, fileToHash)
     val diffhash = MD5Hash("diff")
-    val keydiffhash = aLocalFile("other-key-diff-hash", diffhash, source, fileToKey)
+    val keydiffhash = aLocalFile("other-key-diff-hash", diffhash, source, fileToKey, fileToHash)
     val lastModified = LastModified(Instant.now)
     val s3ObjectsData: S3ObjectsData = S3ObjectsData(
       byHash = Map(
@@ -58,7 +59,7 @@ class S3ClientSuite
     describe("when remote key does not exist and no others matches hash") {
       val s3Client = S3Client.defaultClient
       it("should return (None, Set.empty)") {
-        val localFile = aLocalFile("missing-file", MD5Hash("unique"), source, fileToKey)
+        val localFile = aLocalFile("missing-file", MD5Hash("unique"), source, fileToKey, fileToHash)
         assertResult(
           (None,
             Set.empty)
@@ -98,7 +99,7 @@ class S3ClientSuite
 //            IO(PutObjectResponse.builder().eTag(md5Hash.hash).build())
         }, amazonS3, amazonS3TransferManager)
       val prefix = RemoteKey("prefix")
-      val localFile: LocalFile = aLocalFile("root-file", md5Hash, source, generateKey(source, prefix))
+      val localFile: LocalFile = aLocalFile("root-file", md5Hash, source, generateKey(source, prefix), fileToHash)
       val bucket: Bucket = Bucket("a-bucket")
       val remoteKey: RemoteKey = RemoteKey("prefix/root-file")
       val progressListener = new UploadProgressListener(localFile)
