@@ -1,6 +1,6 @@
 package net.kemitix.s3thorp
 
-import net.kemitix.s3thorp.domain.{LocalFile, RemoteKey, RemoteMetaData}
+import net.kemitix.s3thorp.domain.{LocalFile, RemoteKey, RemoteMetaData, S3MetaData}
 
 trait ActionGenerator
   extends Logging {

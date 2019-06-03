@@ -1,7 +1,7 @@
 package net.kemitix.s3thorp
 
 import net.kemitix.s3thorp.awssdk.{S3Client, S3ObjectsData}
-import net.kemitix.s3thorp.domain.{LocalFile, RemoteMetaData}
+import net.kemitix.s3thorp.domain.{LocalFile, RemoteMetaData, S3MetaData}
 
 trait S3MetaDataEnricher
   extends S3Client

@@ -3,7 +3,7 @@ package net.kemitix.s3thorp
 import java.io.File
 import java.time.Instant
 
-import net.kemitix.s3thorp.domain.{Bucket, LastModified, MD5Hash, RemoteKey, RemoteMetaData}
+import net.kemitix.s3thorp.domain.{Bucket, LastModified, MD5Hash, RemoteKey, RemoteMetaData, S3MetaData}
 
 class ActionGeneratorSuite
   extends UnitTest
