@@ -1,8 +1,10 @@
-package net.kemitix.s3thorp
+package net.kemitix.s3thorp.domain
 
 import java.nio.file.{Path, Paths}
 
-class ExcludeSuite extends UnitTest {
+import org.scalatest.FunSpec
+
+class ExcludeSuite extends FunSpec {
 
   describe("default exclude") {
     val exclude = Exclude()

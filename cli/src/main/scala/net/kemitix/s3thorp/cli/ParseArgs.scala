@@ -4,7 +4,7 @@ import java.nio.file.Paths
 
 import cats.effect.IO
 import net.kemitix.s3thorp._
-import net.kemitix.s3thorp.domain.{Bucket, RemoteKey}
+import net.kemitix.s3thorp.domain.{Bucket, Exclude, RemoteKey}
 import scopt.OParser
 import scopt.OParser.{builder, parse, sequence}
 

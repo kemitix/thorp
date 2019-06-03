@@ -2,7 +2,7 @@ package net.kemitix.s3thorp
 
 import java.io.File
 
-import net.kemitix.s3thorp.domain.{Bucket, RemoteKey}
+import net.kemitix.s3thorp.domain.{Bucket, Exclude, RemoteKey}
 
 final case class Config(
   bucket: Bucket = Bucket(""),
