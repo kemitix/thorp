@@ -40,7 +40,7 @@ class ActionGeneratorSuite
         val theHash = MD5Hash("the-hash")
         val theFile = aLocalFile("the-file", theHash, source, fileToKey, fileToHash)
         val theRemoteKey = theFile.remoteKey
-        val otherRemoteKey = aRemoteKey(prefix, "other-key")
+        val otherRemoteKey = prefix.resolve("other-key")
         val otherRemoteMetadata = RemoteMetaData(otherRemoteKey, theHash, lastModified)
         val input = S3MetaData(theFile, // local exists
           matchByHash = Set(otherRemoteMetadata), // other matches
@@ -68,7 +68,7 @@ class ActionGeneratorSuite
         val theFile = aLocalFile("the-file", theHash, source, fileToKey, fileToHash)
         val theRemoteKey = theFile.remoteKey
         val oldHash = MD5Hash("old-hash")
-        val otherRemoteKey = aRemoteKey(prefix, "other-key")
+        val otherRemoteKey = prefix.resolve("other-key")
         val otherRemoteMetadata = RemoteMetaData(otherRemoteKey, theHash, lastModified)
         val oldRemoteMetadata = RemoteMetaData(theRemoteKey,
           hash = oldHash, // remote no match

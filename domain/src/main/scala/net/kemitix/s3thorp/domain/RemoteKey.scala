@@ -8,4 +8,6 @@ final case class RemoteKey(key: String) {
     source.toPath.resolve(Paths.get(prefix.key).relativize(Paths.get(key))).toFile
   def isMissingLocally(source: File, prefix: RemoteKey): Boolean =
     ! asFile(source, prefix).exists
+  def resolve(path: String): RemoteKey =
+    RemoteKey(key + "/" + path)
 }

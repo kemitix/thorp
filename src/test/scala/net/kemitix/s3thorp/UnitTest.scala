@@ -19,7 +19,4 @@ abstract class UnitTest extends FunSpec {
       md5HashGenerator = fileToHash,
       suppliedHash = Some(myHash))
 
-  def aRemoteKey(prefix: RemoteKey, path: String): RemoteKey =
-    RemoteKey(prefix.key + "/" + path)
-
 }
