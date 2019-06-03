@@ -8,8 +8,8 @@ import cats.effect.IO
 import com.amazonaws.services.s3.model._
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder
 import com.github.j5ik2o.reactive.aws.s3.S3AsyncClient
-import net.kemitix.s3thorp.awssdk.{MyAmazonS3, S3Client, S3ObjectsData, UploadProgressListener}
-import net.kemitix.s3thorp.domain.{Bucket, Exclude, HashModified, KeyModified, LastModified, LocalFile, MD5Hash, RemoteKey}
+import net.kemitix.s3thorp.awssdk.{MyAmazonS3, S3Client, UploadProgressListener}
+import net.kemitix.s3thorp.domain.{Bucket, Exclude, HashModified, KeyModified, LastModified, LocalFile, MD5Hash, RemoteKey, S3ObjectsData}
 import org.scalatest.FunSpec
 import software.amazon.awssdk.services.s3
 import software.amazon.awssdk.services.s3.model.{ListObjectsV2Request, ListObjectsV2Response}

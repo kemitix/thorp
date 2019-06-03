@@ -1,8 +1,8 @@
 package net.kemitix.s3thorp
 
 import cats.effect.IO
-import net.kemitix.s3thorp.awssdk.{S3Client, S3ObjectsData, UploadProgressListener}
-import net.kemitix.s3thorp.domain.{Bucket, LocalFile, MD5Hash, RemoteKey}
+import net.kemitix.s3thorp.awssdk.{S3Client, UploadProgressListener}
+import net.kemitix.s3thorp.domain.{Bucket, LocalFile, MD5Hash, RemoteKey, S3ObjectsData}
 
 trait DummyS3Client extends S3Client {
 

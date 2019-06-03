@@ -4,8 +4,8 @@ import java.io.File
 
 import cats.effect.IO
 import cats.implicits._
-import net.kemitix.s3thorp.awssdk.{S3Client, S3ObjectsData, UploadProgressListener}
-import net.kemitix.s3thorp.domain.{Bucket, LocalFile, MD5Hash, RemoteKey}
+import net.kemitix.s3thorp.awssdk.{S3Client, UploadProgressListener}
+import net.kemitix.s3thorp.domain.{Bucket, LocalFile, MD5Hash, RemoteKey, S3ObjectsData}
 
 class Sync(s3Client: S3Client, md5HashGenerator: File => MD5Hash)
   extends LocalFileStream(md5HashGenerator)

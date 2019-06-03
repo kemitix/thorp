@@ -3,8 +3,7 @@ package net.kemitix.s3thorp
 import java.io.File
 import java.time.Instant
 
-import net.kemitix.s3thorp.awssdk.S3ObjectsData
-import net.kemitix.s3thorp.domain.{Bucket, HashModified, KeyModified, LastModified, LocalFile, MD5Hash, RemoteKey, RemoteMetaData, S3MetaData}
+import net.kemitix.s3thorp.domain.{Bucket, HashModified, KeyModified, LastModified, LocalFile, MD5Hash, RemoteKey, RemoteMetaData, S3MetaData, S3ObjectsData}
 import org.scalatest.FunSpec
 
 class S3MetaDataEnricherSuite
