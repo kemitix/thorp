@@ -27,9 +27,9 @@ lazy val legacyRoot = (project in file("."))
       "-language:postfixOps",
       "-language:higherKinds",
       "-Ypartial-unification")
-  ).dependsOn(domain)
+  ).dependsOn(`aws-api`, domain)
 
-// cli -> aws-lib -> core -> aws-api (-> legacyRoot) -> domain
+// cli -> aws-lib -> core (-> legacyRoot) -> aws-api -> domain
 
 lazy val cli = (project in file("cli"))
   .dependsOn(`aws-lib`)
@@ -45,10 +45,10 @@ lazy val `aws-lib` = (project in file("aws-lib"))
   .dependsOn(core)
 
 lazy val core = (project in file("core"))
-  .dependsOn(`aws-api`)
+  .dependsOn(legacyRoot, `aws-api`)
 
 lazy val `aws-api` = (project in file("aws-api"))
-  .dependsOn(legacyRoot)
+  .dependsOn(domain)
 
 lazy val domain = (project in file("domain"))
   .settings(
