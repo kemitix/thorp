@@ -29,6 +29,8 @@ lazy val legacyRoot = (project in file("."))
       "-Ypartial-unification")
   )
 
+// cli -> aws-lib -> core -> aws-api
+
 lazy val cli = (project in file("cli"))
   .dependsOn(legacyRoot)
   .aggregate(legacyRoot, `aws-api`)
