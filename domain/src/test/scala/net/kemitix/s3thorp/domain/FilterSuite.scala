@@ -1,8 +1,10 @@
-package net.kemitix.s3thorp
+package net.kemitix.s3thorp.domain
 
 import java.nio.file.{Path, Paths}
 
-class FilterSuite extends UnitTest {
+import org.scalatest.FunSpec
+
+class FilterSuite extends FunSpec {
 
   describe("default filter") {
     val filter = Filter()

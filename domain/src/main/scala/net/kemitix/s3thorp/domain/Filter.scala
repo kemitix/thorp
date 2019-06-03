@@ -1,4 +1,4 @@
-package net.kemitix.s3thorp
+package net.kemitix.s3thorp.domain
 
 import java.nio.file.Path
 import java.util.function.Predicate
