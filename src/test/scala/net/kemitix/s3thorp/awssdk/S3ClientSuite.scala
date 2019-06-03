@@ -9,7 +9,7 @@ import com.amazonaws.services.s3.model.PutObjectResult
 import com.amazonaws.services.s3.transfer.{TransferManager, TransferManagerBuilder}
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
 import net.kemitix.s3thorp._
-import net.kemitix.s3thorp.domain.{Bucket, KeyModified, LastModified, LocalFile, MD5Hash, RemoteKey}
+import net.kemitix.s3thorp.domain.{Bucket, HashModified, KeyModified, LastModified, LocalFile, MD5Hash, RemoteKey}
 import software.amazon.awssdk.services.s3.model.{PutObjectRequest, PutObjectResponse}
 
 class S3ClientSuite
