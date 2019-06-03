@@ -4,7 +4,7 @@ import java.nio.file.Paths
 
 import cats.effect.ExitCase.{Canceled, Completed, Error}
 import cats.effect.{ExitCode, IO, IOApp}
-import net.kemitix.s3thorp.awssdk.S3Client
+import net.kemitix.s3thorp.aws.lib.S3ClientBuilder
 import net.kemitix.s3thorp.{Config, Logging, Sync}
 
 object Main extends IOApp with Logging {
@@ -12,7 +12,7 @@ object Main extends IOApp with Logging {
   val defaultConfig: Config =
     Config(source = Paths.get(".").toFile)
 
-  val sync = new Sync(S3Client.defaultClient)
+  val sync = new Sync(S3ClientBuilder.defaultClient)
 
   def program(args: List[String]): IO[ExitCode] =
     for {
