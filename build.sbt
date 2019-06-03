@@ -31,7 +31,7 @@ lazy val legacyRoot = (project in file("."))
 
 lazy val cli = (project in file("cli"))
   .dependsOn(legacyRoot)
-  .aggregate(legacyRoot)
+  .aggregate(legacyRoot, `aws-api`)
   .settings(
     libraryDependencies ++= Seq(
       // command line arguments parser
@@ -41,4 +41,3 @@ lazy val cli = (project in file("cli"))
 
 lazy val `aws-api` = (project in file("aws-api"))
   .dependsOn(legacyRoot)
-  .aggregate(legacyRoot)
