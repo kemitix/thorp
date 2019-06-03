@@ -50,4 +50,10 @@ lazy val core = (project in file("core"))
 lazy val `aws-api` = (project in file("aws-api"))
   .dependsOn(legacyRoot)
 
-lazy val domain = project in file("domain")
+lazy val domain = (project in file("domain"))
+  .settings(
+    libraryDependencies ++= Seq(
+      // testing
+      "org.scalatest" %% "scalatest" % "3.0.7" % "test"
+    )
+  )
