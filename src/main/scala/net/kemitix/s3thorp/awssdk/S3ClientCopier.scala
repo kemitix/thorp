@@ -5,7 +5,7 @@ import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
 import net.kemitix.s3thorp.{Bucket, Config, CopyS3Action, MD5Hash, RemoteKey}
 import software.amazon.awssdk.services.s3.model.CopyObjectRequest
 
-private class S3ClientCopier(s3Client: S3CatsIOClient)
+class S3ClientCopier(s3Client: S3CatsIOClient)
   extends S3ClientLogging {
 
   def copy(bucket: Bucket,

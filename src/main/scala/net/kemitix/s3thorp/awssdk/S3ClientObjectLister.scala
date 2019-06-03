@@ -6,7 +6,7 @@ import software.amazon.awssdk.services.s3.model.{ListObjectsV2Request, S3Object}
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
 import scala.collection.JavaConverters._
 
-private class S3ClientObjectLister(s3Client: S3CatsIOClient)
+class S3ClientObjectLister(s3Client: S3CatsIOClient)
   extends S3ClientLogging
     with S3ObjectsByHash
     with QuoteStripper {

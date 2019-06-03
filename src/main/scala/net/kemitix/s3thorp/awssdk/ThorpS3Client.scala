@@ -7,7 +7,7 @@ import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
 import net.kemitix.s3thorp._
 import software.amazon.awssdk.services.s3.model.{Bucket => _}
 
-private class ThorpS3Client(ioS3Client: S3CatsIOClient,
+class ThorpS3Client(ioS3Client: S3CatsIOClient,
                             amazonS3Client: => AmazonS3,
                             amazonS3TransferManager: => TransferManager)
   extends S3Client

@@ -5,7 +5,7 @@ import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.PutObjectRequest
 import net.kemitix.s3thorp._
 
-private class S3ClientPutObjectUploader(s3Client: => AmazonS3)
+class S3ClientPutObjectUploader(s3Client: => AmazonS3)
   extends S3ClientUploader
     with S3ClientLogging
     with QuoteStripper {
