@@ -44,7 +44,7 @@ class S3ClientSuite
     }
 
     describe("when remote key exists") {
-      val s3Client = S3Client.defaultClient
+      val s3Client = S3ClientBuilder.defaultClient
       it("should return (Some, Set.nonEmpty)") {
         assertResult(
           (Some(HashModified(hash, lastModified)),
@@ -56,7 +56,7 @@ class S3ClientSuite
     }
 
     describe("when remote key does not exist and no others matches hash") {
-      val s3Client = S3Client.defaultClient
+      val s3Client = S3ClientBuilder.defaultClient
       it("should return (None, Set.empty)") {
         val localFile = LocalFile.resolve("missing-file", MD5Hash("unique"), source, fileToKey, fileToHash)
         assertResult(
@@ -67,7 +67,7 @@ class S3ClientSuite
     }
 
     describe("when remote key exists and no others match hash") {
-      val s3Client = S3Client.defaultClient
+      val s3Client = S3ClientBuilder.defaultClient
       it("should return (None, Set.nonEmpty)") {
         assertResult(
           (Some(HashModified(diffhash, lastModified)),

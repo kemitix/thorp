@@ -39,7 +39,7 @@ trait S3Client {
 
 }
 
-object S3Client {
+object S3ClientBuilder {
 
   def createClient(s3AsyncClient: S3AsyncClient,
                    amazonS3Client: AmazonS3,

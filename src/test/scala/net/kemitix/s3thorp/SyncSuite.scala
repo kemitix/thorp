@@ -8,7 +8,7 @@ import cats.effect.IO
 import com.amazonaws.services.s3.model._
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder
 import com.github.j5ik2o.reactive.aws.s3.S3AsyncClient
-import net.kemitix.s3thorp.awssdk.{MyAmazonS3, S3Client, UploadProgressListener}
+import net.kemitix.s3thorp.awssdk.{MyAmazonS3, S3Client, S3ClientBuilder, UploadProgressListener}
 import net.kemitix.s3thorp.domain.{Bucket, Config, Exclude, HashModified, KeyModified, LastModified, LocalFile, MD5Hash, RemoteKey, S3ObjectsData}
 import org.scalatest.FunSpec
 import software.amazon.awssdk.services.s3
@@ -164,7 +164,7 @@ class SyncSuite
       val recordingS3Client = new RecordingS3Client
       val transferManager = TransferManagerBuilder.standard
         .withS3Client(recordingS3Client).build
-      val client = S3Client.createClient(recordingS3ClientLegacy, recordingS3Client, transferManager)
+      val client = S3ClientBuilder.createClient(recordingS3ClientLegacy, recordingS3Client, transferManager)
       val sync = new Sync(client, md5HashGenerator)
       sync.run(config).unsafeRunSync
       it("invokes the underlying Java s3client") {
