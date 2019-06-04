@@ -17,11 +17,9 @@ class ActionGeneratorSuite
   private val fileToHash = (file: File) => new MD5HashGenerator {}.md5File(file)
   val lastModified = LastModified(Instant.now())
 
-  new ActionGenerator {
-
     describe("create actions") {
 
-      def invoke(input: S3MetaData) = createActions(input).toList
+      def invoke(input: S3MetaData) = ActionGenerator.createActions(input).toList
 
       describe("#1 local exists, remote exists, remote matches - do nothing") {
         val theHash = MD5Hash("the-hash")
@@ -105,5 +103,4 @@ class ActionGeneratorSuite
         }
       }
     }
-  }
 }
