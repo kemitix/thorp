@@ -8,8 +8,7 @@ import net.kemitix.s3thorp.awssdk.{S3Client, UploadProgressListener}
 import net.kemitix.s3thorp.domain.{Bucket, Config, LocalFile, MD5Hash, RemoteKey, S3ObjectsData}
 
 class Sync(s3Client: S3Client, md5HashGenerator: File => MD5Hash)
-  extends LocalFileStream(md5HashGenerator)
-    with S3MetaDataEnricher
+  extends S3MetaDataEnricher
     with ActionGenerator
     with ActionSubmitter {
 
@@ -18,11 +17,12 @@ class Sync(s3Client: S3Client, md5HashGenerator: File => MD5Hash)
           error: String => Unit)
          (implicit c: Config): IO[Unit] = {
     SyncLogging.logRunStart(info)
+    val lfs = new LocalFileStream(md5HashGenerator, info)
     listObjects(c.bucket, c.prefix)
       .map { implicit s3ObjectsData => {
         SyncLogging.logFileScan(info)
         val actions = for {
-          file <- findFiles(c.source)
+          file <- lfs.findFiles(c.source)
           data <- getMetadata(file)
           action <- createActions(data)
           s3Action <- submitAction(action)
