@@ -11,17 +11,16 @@ class Sync(s3Client: S3Client, md5HashGenerator: File => MD5Hash)
   extends LocalFileStream(md5HashGenerator)
     with S3MetaDataEnricher
     with ActionGenerator
-    with ActionSubmitter
-    with SyncLogging {
+    with ActionSubmitter {
 
   def run(info: String => Unit,
           warn: String => Unit,
           error: String => Unit)
          (implicit c: Config): IO[Unit] = {
-    logRunStart
+    SyncLogging.logRunStart(info)
     listObjects(c.bucket, c.prefix)
       .map { implicit s3ObjectsData => {
-        logFileScan
+        SyncLogging.logFileScan(info)
         val actions = for {
           file <- findFiles(c.source)
           data <- getMetadata(file)
@@ -36,7 +35,7 @@ class Sync(s3Client: S3Client, md5HashGenerator: File => MD5Hash)
           ioDelAction <- submitAction(ToDelete(key))
         } yield ioDelAction).toStream.sequence
         val delList = delActions.unsafeRunSync.toList
-        logRunFinished(list ++ delList)
+        SyncLogging.logRunFinished(list ++ delList, info)
       }}
   }
 
