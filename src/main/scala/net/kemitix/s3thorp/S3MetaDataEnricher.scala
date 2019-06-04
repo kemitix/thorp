@@ -4,8 +4,7 @@ import net.kemitix.s3thorp.awssdk.S3Client
 import net.kemitix.s3thorp.domain.{Config, LocalFile, RemoteMetaData, S3MetaData, S3ObjectsData}
 
 trait S3MetaDataEnricher
-  extends S3Client
-    with Logging {
+  extends S3Client {
 
   def getMetadata(localFile: LocalFile)
                  (implicit c: Config,
