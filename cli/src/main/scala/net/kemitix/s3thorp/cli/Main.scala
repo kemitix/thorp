@@ -9,7 +9,7 @@ import net.kemitix.s3thorp.aws.lib.S3ClientBuilder
 import net.kemitix.s3thorp.domain.{Config, MD5Hash}
 import net.kemitix.s3thorp.{Logging, MD5HashGenerator, Sync}
 
-object Main extends IOApp with Logging {
+object Main extends IOApp {
 
   val defaultConfig: Config =
     Config(source = Paths.get(".").toFile)
@@ -18,10 +18,12 @@ object Main extends IOApp with Logging {
 
   val sync = new Sync(S3ClientBuilder.defaultClient, md5HashGenerator)
 
+  val logger = new Logger
+
   def program(args: List[String]): IO[ExitCode] =
     for {
       a <- ParseArgs(args, defaultConfig)
-      _ <- IO(log1("S3Thorp - hashed sync for s3")(a))
+      _ <- IO(logger.log1("S3Thorp - hashed sync for s3")(a))
       _ <- sync.run(a)
     } yield ExitCode.Success
 
@@ -30,7 +32,7 @@ object Main extends IOApp with Logging {
       .guaranteeCase {
         case Canceled => IO(logger.warn("Interrupted"))
         case Error(e) => IO(logger.error(e.getMessage))
-        case Completed => IO(logger.info("Done"))
+        case Completed => IO(logger.log1("Done")(defaultConfig))
       }
 
 }
