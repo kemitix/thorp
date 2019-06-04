@@ -40,7 +40,7 @@ class S3ClientSuite
         keydiffhash.remoteKey -> HashModified(diffhash, lastModified)))
 
     def invoke(self: S3Client, localFile: LocalFile) = {
-      self.getS3Status(localFile)(s3ObjectsData)
+      S3MetaDataEnricher.getS3Status(localFile)(s3ObjectsData)
     }
 
     describe("when remote key exists") {

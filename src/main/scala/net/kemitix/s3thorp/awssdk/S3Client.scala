@@ -10,13 +10,6 @@ import net.kemitix.s3thorp.domain.{Bucket, Config, HashModified, KeyModified, Lo
 
 trait S3Client {
 
-  final def getS3Status(localFile: LocalFile)
-                       (implicit s3ObjectsData: S3ObjectsData): (Option[HashModified], Set[KeyModified]) = {
-    val matchingByKey = s3ObjectsData.byKey.get(localFile.remoteKey)
-    val matchingByHash = s3ObjectsData.byHash.getOrElse(localFile.hash, Set())
-    (matchingByKey, matchingByHash)
-  }
-
   def listObjects(bucket: Bucket,
                   prefix: RemoteKey
                  )(implicit c: Config): IO[S3ObjectsData]
