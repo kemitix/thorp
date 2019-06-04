@@ -14,7 +14,10 @@ class Sync(s3Client: S3Client, md5HashGenerator: File => MD5Hash)
     with ActionSubmitter
     with SyncLogging {
 
-  def run(implicit c: Config): IO[Unit] = {
+  def run(info: String => Unit,
+          warn: String => Unit,
+          error: String => Unit)
+         (implicit c: Config): IO[Unit] = {
     logRunStart
     listObjects(c.bucket, c.prefix)
       .map { implicit s3ObjectsData => {

@@ -7,7 +7,7 @@ import cats.effect.ExitCase.{Canceled, Completed, Error}
 import cats.effect.{ExitCode, IO, IOApp}
 import net.kemitix.s3thorp.aws.lib.S3ClientBuilder
 import net.kemitix.s3thorp.domain.{Config, MD5Hash}
-import net.kemitix.s3thorp.{Logging, MD5HashGenerator, Sync}
+import net.kemitix.s3thorp.{MD5HashGenerator, Sync}
 
 object Main extends IOApp {
 
@@ -22,9 +22,12 @@ object Main extends IOApp {
 
   def program(args: List[String]): IO[ExitCode] =
     for {
-      a <- ParseArgs(args, defaultConfig)
-      _ <- IO(logger.log1("S3Thorp - hashed sync for s3")(a))
-      _ <- sync.run(a)
+      config <- ParseArgs(args, defaultConfig)
+      _ <- IO(logger.info(1, "S3Thorp - hashed sync for s3")(config))
+      _ <- sync.run(
+        i => logger.info(1, i)(config),
+        w => logger.warn(w),
+        e => logger.error(e))(config)
     } yield ExitCode.Success
 
   override def run(args: List[String]): IO[ExitCode] =
@@ -32,7 +35,7 @@ object Main extends IOApp {
       .guaranteeCase {
         case Canceled => IO(logger.warn("Interrupted"))
         case Error(e) => IO(logger.error(e.getMessage))
-        case Completed => IO(logger.log1("Done")(defaultConfig))
+        case Completed => IO(logger.info(1, "Done")(defaultConfig))
       }
 
 }
