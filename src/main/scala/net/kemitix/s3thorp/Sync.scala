@@ -5,6 +5,7 @@ import java.io.File
 import cats.effect.IO
 import cats.implicits._
 import net.kemitix.s3thorp.ActionGenerator.createActions
+import net.kemitix.s3thorp.SyncLogging.{logFileScan, logRunFinished, logRunStart}
 import net.kemitix.s3thorp.awssdk.{S3Client, UploadProgressListener}
 import net.kemitix.s3thorp.domain.{Bucket, Config, LocalFile, MD5Hash, RemoteKey, S3ObjectsData}
 
@@ -16,11 +17,11 @@ class Sync(s3Client: S3Client, md5HashGenerator: File => MD5Hash)
           warn: String => Unit,
           error: String => Unit)
          (implicit c: Config): IO[Unit] = {
-    SyncLogging.logRunStart(info)
+    logRunStart(info)
     val lfs = new LocalFileStream(md5HashGenerator, info)
     listObjects(c.bucket, c.prefix)
       .map { implicit s3ObjectsData => {
-        SyncLogging.logFileScan(info)
+        logFileScan(info)
         val actions = for {
           file <- lfs.findFiles(c.source)
           data <- getMetadata(file)
@@ -35,7 +36,7 @@ class Sync(s3Client: S3Client, md5HashGenerator: File => MD5Hash)
           ioDelAction <- submitAction(ToDelete(key))
         } yield ioDelAction).toStream.sequence
         val delList = delActions.unsafeRunSync.toList
-        SyncLogging.logRunFinished(list ++ delList, info)
+        logRunFinished(list ++ delList, info)
       }}
   }
 
