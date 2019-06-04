@@ -62,7 +62,7 @@ class SyncSuite
     (bucket.name, remoteKey.key, localFile.file)
   }
 
-  def logInfo: String => Unit = i => ()
+  def logInfo: Int => String => Unit = l => i => ()
   def logWarn: String => Unit = w => ()
   def logError: String => Unit = e => ()
 

@@ -23,9 +23,9 @@ object Main extends IOApp {
   def program(args: List[String]): IO[ExitCode] =
     for {
       config <- ParseArgs(args, defaultConfig)
-      _ <- IO(logger.info(1, "S3Thorp - hashed sync for s3")(config))
+      _ <- IO(logger.info(1)("S3Thorp - hashed sync for s3")(config))
       _ <- sync.run(
-        i => logger.info(1, i)(config),
+        l => i => logger.info(l)(i)(config),
         w => logger.warn(w),
         e => logger.error(e))(config)
     } yield ExitCode.Success
@@ -35,7 +35,7 @@ object Main extends IOApp {
       .guaranteeCase {
         case Canceled => IO(logger.warn("Interrupted"))
         case Error(e) => IO(logger.error(e.getMessage))
-        case Completed => IO(logger.info(1, "Done")(defaultConfig))
+        case Completed => IO(logger.info(1)("Done")(defaultConfig))
       }
 
 }

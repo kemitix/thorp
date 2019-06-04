@@ -13,7 +13,7 @@ class Sync(s3Client: S3Client, md5HashGenerator: File => MD5Hash)
     with ActionGenerator
     with ActionSubmitter {
 
-  def run(info: String => Unit,
+  def run(info: Int => String => Unit,
           warn: String => Unit,
           error: String => Unit)
          (implicit c: Config): IO[Unit] = {
