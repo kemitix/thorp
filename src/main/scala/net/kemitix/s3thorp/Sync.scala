@@ -6,6 +6,7 @@ import cats.effect.IO
 import cats.implicits._
 import net.kemitix.s3thorp.ActionGenerator.createActions
 import net.kemitix.s3thorp.ActionSubmitter.submitAction
+import net.kemitix.s3thorp.LocalFileStream.findFiles
 import net.kemitix.s3thorp.S3MetaDataEnricher.getMetadata
 import net.kemitix.s3thorp.SyncLogging.{logFileScan, logRunFinished, logRunStart}
 import net.kemitix.s3thorp.awssdk.S3Client
@@ -18,12 +19,11 @@ class Sync(s3Client: S3Client, md5HashGenerator: File => MD5Hash) {
           error: String => Unit)
          (implicit c: Config): IO[Unit] = {
     logRunStart(info)
-    val lfs = new LocalFileStream(md5HashGenerator, info)
     s3Client.listObjects(c.bucket, c.prefix)
       .map { implicit s3ObjectsData => {
         logFileScan(info)
         val actions = for {
-          file <- lfs.findFiles(c.source)
+          file <- findFiles(c.source, md5HashGenerator, info)
           data <- getMetadata(file)
           action <- createActions(data)
           s3Action <- submitAction(s3Client, action)
