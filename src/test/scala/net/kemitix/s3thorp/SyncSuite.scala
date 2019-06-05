@@ -32,32 +32,6 @@ class SyncSuite
 
   val md5HashGenerator: File => MD5Hash = file => new MD5HashGenerator {}.md5File(file)(config)
 
-  describe("s3client thunk") {
-    val testBucket = Bucket("bucket")
-    val prefix = RemoteKey("prefix")
-    val source = new File("/")
-    describe("upload") {
-      val md5Hash = MD5Hash("the-hash")
-      val testLocalFile = LocalFile.resolve("file", md5Hash, source, generateKey(source, prefix), fileToHash)
-      val progressListener = new UploadProgressListener(testLocalFile)
-      val sync = new Sync(new S3Client with DummyS3Client {
-        override def upload(localFile: LocalFile,
-                            bucket: Bucket,
-                            progressListener: UploadProgressListener,
-                            tryCount: Int)
-                           (implicit c: Config) = IO {
-          assert(bucket == testBucket)
-          UploadS3Action(localFile.remoteKey, md5Hash)
-        }
-      }, md5HashGenerator)
-      it("delegates unmodified to the S3Client") {
-        assertResult(UploadS3Action(RemoteKey(prefix.key + "/file"), md5Hash))(
-          sync.upload(testLocalFile, testBucket, progressListener, 1).
-            unsafeRunSync())
-      }
-    }
-  }
-
   def putObjectRequest(bucket: Bucket, remoteKey: RemoteKey, localFile: LocalFile) = {
     (bucket.name, remoteKey.key, localFile.file)
   }
@@ -74,24 +48,25 @@ class SyncSuite
     val rootRemoteKey = RemoteKey("prefix/root-file")
     val leafRemoteKey = RemoteKey("prefix/subdir/leaf-file")
     describe("when all files should be uploaded") {
-      val sync = new RecordingSync(testBucket, new DummyS3Client {}, S3ObjectsData(
+      val s3Client = new RecordingClient(testBucket, S3ObjectsData(
         byHash = Map(),
         byKey = Map()))
+      val sync = new Sync(s3Client, md5HashGenerator)
       sync.run(logInfo, logWarn, logError)(config).unsafeRunSync
       it("uploads all files") {
         val expectedUploads = Map(
           "subdir/leaf-file" -> leafRemoteKey,
           "root-file" -> rootRemoteKey
         )
-        assertResult(expectedUploads)(sync.uploadsRecord)
+        assertResult(expectedUploads)(s3Client.uploadsRecord)
       }
       it("copies nothing") {
         val expectedCopies = Map()
-        assertResult(expectedCopies)(sync.copiesRecord)
+        assertResult(expectedCopies)(s3Client.copiesRecord)
       }
       it("deletes nothing") {
         val expectedDeletions = Set()
-        assertResult(expectedDeletions)(sync.deletionsRecord)
+        assertResult(expectedDeletions)(s3Client.deletionsRecord)
       }
     }
     describe("when no files should be uploaded") {
@@ -102,19 +77,20 @@ class SyncSuite
         byKey = Map(
           RemoteKey("prefix/root-file") -> HashModified(rootHash, lastModified),
           RemoteKey("prefix/subdir/leaf-file") -> HashModified(leafHash, lastModified)))
-      val sync = new RecordingSync(testBucket, new DummyS3Client {}, s3ObjectsData)
+      val s3Client = new RecordingClient(testBucket, s3ObjectsData)
+      val sync = new Sync(s3Client, md5HashGenerator)
       sync.run(logInfo, logWarn, logError)(config).unsafeRunSync
       it("uploads nothing") {
         val expectedUploads = Map()
-        assertResult(expectedUploads)(sync.uploadsRecord)
+        assertResult(expectedUploads)(s3Client.uploadsRecord)
       }
       it("copies nothing") {
         val expectedCopies = Map()
-        assertResult(expectedCopies)(sync.copiesRecord)
+        assertResult(expectedCopies)(s3Client.copiesRecord)
       }
       it("deletes nothing") {
         val expectedDeletions = Set()
-        assertResult(expectedDeletions)(sync.deletionsRecord)
+        assertResult(expectedDeletions)(s3Client.deletionsRecord)
       }
     }
     describe("when a file is renamed it is moved on S3 with no upload") {
@@ -128,19 +104,20 @@ class SyncSuite
         byKey = Map(
           RemoteKey("prefix/root-file-old") -> HashModified(rootHash, lastModified),
           RemoteKey("prefix/subdir/leaf-file") -> HashModified(leafHash, lastModified)))
-      val sync = new RecordingSync(testBucket, new DummyS3Client {}, s3ObjectsData)
+      val s3Client = new RecordingClient(testBucket, s3ObjectsData)
+      val sync = new Sync(s3Client, md5HashGenerator)
       sync.run(logInfo, logWarn, logError)(config).unsafeRunSync
       it("uploads nothing") {
         val expectedUploads = Map()
-        assertResult(expectedUploads)(sync.uploadsRecord)
+        assertResult(expectedUploads)(s3Client.uploadsRecord)
       }
       it("copies the file") {
         val expectedCopies = Map(RemoteKey("prefix/root-file-old") -> RemoteKey("prefix/root-file"))
-        assertResult(expectedCopies)(sync.copiesRecord)
+        assertResult(expectedCopies)(s3Client.copiesRecord)
       }
       it("deletes the original") {
         val expectedDeletions = Set(RemoteKey("prefix/root-file-old"))
-        assertResult(expectedDeletions)(sync.deletionsRecord)
+        assertResult(expectedDeletions)(s3Client.deletionsRecord)
       }
     }
     describe("when a file is copied it is copied on S3 with no upload") {
@@ -156,11 +133,12 @@ class SyncSuite
           deletedHash -> Set(KeyModified(RemoteKey("prefix/deleted-file"), lastModified))),
         byKey = Map(
           deletedKey -> HashModified(deletedHash, lastModified)))
-      val sync = new RecordingSync(testBucket, new DummyS3Client {}, s3ObjectsData)
+      val s3Client = new RecordingClient(testBucket, s3ObjectsData)
+      val sync = new Sync(s3Client, md5HashGenerator)
       sync.run(logInfo, logWarn, logError)(config).unsafeRunSync
       it("deleted key") {
         val expectedDeletions = Set(deletedKey)
-        assertResult(expectedDeletions)(sync.deletionsRecord)
+        assertResult(expectedDeletions)(s3Client.deletionsRecord)
       }
     }
     describe("io actions execute") {
@@ -182,19 +160,21 @@ class SyncSuite
     }
     describe("when a file is file is excluded") {
       val configWithExclusion = config.copy(excludes = List(Exclude("leaf")))
-      val sync = new RecordingSync(testBucket, new DummyS3Client {}, S3ObjectsData(Map(), Map()))
+      val s3ObjectsData = S3ObjectsData(Map(), Map())
+      val s3Client = new RecordingClient(testBucket, s3ObjectsData)
+      val sync = new Sync(s3Client, md5HashGenerator)
       sync.run(logInfo, logWarn, logError)(configWithExclusion).unsafeRunSync
       it("is not uploaded") {
         val expectedUploads = Map(
           "root-file" -> rootRemoteKey
         )
-        assertResult(expectedUploads)(sync.uploadsRecord)
+        assertResult(expectedUploads)(s3Client.uploadsRecord)
       }
     }
   }
 
-  class RecordingSync(testBucket: Bucket, s3Client: S3Client, s3ObjectsData: S3ObjectsData)
-    extends Sync(s3Client, md5HashGenerator) {
+  class RecordingClient(testBucket: Bucket, s3ObjectsData: S3ObjectsData)
+    extends S3Client {
 
     var uploadsRecord: Map[String, RemoteKey] = Map()
     var copiesRecord: Map[RemoteKey, RemoteKey] = Map()
