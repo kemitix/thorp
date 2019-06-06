@@ -4,30 +4,33 @@ import java.io.File
 
 import net.kemitix.s3thorp.domain.{Config, LocalFile, MD5Hash}
 
-class LocalFileStream(md5HashGenerator: File => MD5Hash)
-  extends KeyGenerator
-    with Logging {
+object LocalFileStream
+  extends KeyGenerator {
 
-  def findFiles(file: File)
+  def findFiles(file: File,
+                md5HashGenerator: File => MD5Hash,
+                info: Int => String => Unit)
                (implicit c: Config): Stream[LocalFile] = {
-    log2(s"- Entering: $file")
-    val files = for {
-      f <- dirPaths(file)
-        .filter { f => f.isDirectory || c.filters.forall { filter => filter isIncluded f.toPath } }
-        .filter { f => c.excludes.forall { exclude => exclude isIncluded f.toPath } }
-      fs <- recurseIntoSubDirectories(f)
+    def loop(file: File): Stream[LocalFile] = {
+      info(2)(s"- Entering: $file")
+      val files = for {
+        f <- dirPaths(file)
+          .filter { f => f.isDirectory || c.filters.forall { filter => filter isIncluded f.toPath } }
+          .filter { f => c.excludes.forall { exclude => exclude isIncluded f.toPath } }
+        fs <- recurseIntoSubDirectories(f)
       } yield fs
-    log5(s"-  Leaving: $file")
-    files
+      info(5)(s"-  Leaving: $file")
+      files
+    }
+
+    def dirPaths(file: File): Stream[File] =
+      Option(file.listFiles)
+        .getOrElse(throw new IllegalArgumentException(s"Directory not found $file")).toStream
+
+    def recurseIntoSubDirectories(file: File)(implicit c: Config): Stream[LocalFile] =
+      if (file.isDirectory) loop(file)
+      else Stream(LocalFile(file, c.source, generateKey(c.source, c.prefix), md5HashGenerator))
+
+    loop(file)
   }
-
-  private def dirPaths(file: File): Stream[File] = {
-    Option(file.listFiles)
-      .getOrElse(throw new IllegalArgumentException(s"Directory not found $file")).toStream
-  }
-
-  private def recurseIntoSubDirectories(file: File)(implicit c: Config): Stream[LocalFile] =
-    if (file.isDirectory) findFiles(file)(c)
-    else Stream(LocalFile(file, c.source, generateKey(c.source, c.prefix), md5HashGenerator))
-
 }

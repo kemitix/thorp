@@ -1,9 +1,9 @@
 package net.kemitix.s3thorp
 
-import net.kemitix.s3thorp.domain.{Config, LocalFile, RemoteKey, RemoteMetaData, S3MetaData}
+import net.kemitix.s3thorp.Action.{DoNothing, ToCopy, ToUpload}
+import net.kemitix.s3thorp.domain.{Bucket, Config, LocalFile, RemoteKey, RemoteMetaData, S3MetaData}
 
-trait ActionGenerator
-  extends Logging {
+object ActionGenerator {
 
   def createActions(s3MetaData: S3MetaData)
                    (implicit c: Config): Stream[Action] =
@@ -12,43 +12,47 @@ trait ActionGenerator
       // #1 local exists, remote exists, remote matches - do nothing
       case S3MetaData(localFile, _, Some(RemoteMetaData(remoteKey, remoteHash, _)))
         if localFile.hash == remoteHash
-      => doNothing(remoteKey)
+      => doNothing(c.bucket, remoteKey)
 
       // #2 local exists, remote is missing, other matches - copy
       case S3MetaData(localFile, otherMatches, None)
         if otherMatches.nonEmpty
-      => copyFile(localFile, otherMatches)
+      => copyFile(c.bucket, localFile, otherMatches)
 
       // #3 local exists, remote is missing, other no matches - upload
       case S3MetaData(localFile, otherMatches, None)
         if otherMatches.isEmpty
-      => uploadFile(localFile)
+      => uploadFile(c.bucket, localFile)
 
       // #4 local exists, remote exists, remote no match, other matches - copy
       case S3MetaData(localFile, otherMatches, Some(RemoteMetaData(_, remoteHash, _)))
         if localFile.hash != remoteHash &&
           otherMatches.nonEmpty
-      => copyFile(localFile, otherMatches)
+      => copyFile(c.bucket, localFile, otherMatches)
 
       // #5 local exists, remote exists, remote no match, other no matches - upload
       case S3MetaData(localFile, hashMatches, Some(_))
         if hashMatches.isEmpty
-      => uploadFile(localFile)
+      => uploadFile(c.bucket, localFile)
 
     }
 
-  private def doNothing(remoteKey: RemoteKey) =
+  private def doNothing(bucket: Bucket,
+                        remoteKey: RemoteKey) =
     Stream(
-      DoNothing(remoteKey))
+      DoNothing(bucket, remoteKey))
 
-  private def uploadFile(localFile: LocalFile) =
+  private def uploadFile(bucket: Bucket,
+                         localFile: LocalFile) =
     Stream(
-      ToUpload(localFile))
+      ToUpload(bucket, localFile))
 
-  private def copyFile(localFile: LocalFile,
+  private def copyFile(bucket: Bucket,
+                       localFile: LocalFile,
                        matchByHash: Set[RemoteMetaData]): Stream[Action] =
     Stream(
       ToCopy(
+        bucket,
         sourceKey = matchByHash.head.remoteKey,
         hash = localFile.hash,
         targetKey = localFile.remoteKey))

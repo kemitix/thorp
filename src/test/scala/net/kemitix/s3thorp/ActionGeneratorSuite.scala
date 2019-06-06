@@ -3,6 +3,7 @@ package net.kemitix.s3thorp
 import java.io.File
 import java.time.Instant
 
+import net.kemitix.s3thorp.Action.{DoNothing, ToCopy, ToUpload}
 import net.kemitix.s3thorp.domain.{Bucket, Config, LastModified, LocalFile, MD5Hash, RemoteKey, RemoteMetaData, S3MetaData}
 import org.scalatest.FunSpec
 
@@ -12,16 +13,16 @@ class ActionGeneratorSuite
 
   private val source = Resource(this, "upload")
   private val prefix = RemoteKey("prefix")
-  implicit private val config: Config = Config(Bucket("bucket"), prefix, source = source)
+  private val bucket = Bucket("bucket")
+  implicit private val config: Config = Config(bucket, prefix, source = source)
+  implicit private val logInfo: Int => String => Unit = l => i => ()
   private val fileToKey = generateKey(config.source, config.prefix) _
-  private val fileToHash = (file: File) => new MD5HashGenerator {}.md5File(file)
+  private val fileToHash = (file: File) => MD5HashGenerator.md5File(file)
   val lastModified = LastModified(Instant.now())
-
-  new ActionGenerator {
 
     describe("create actions") {
 
-      def invoke(input: S3MetaData) = createActions(input).toList
+      def invoke(input: S3MetaData) = ActionGenerator.createActions(input).toList
 
       describe("#1 local exists, remote exists, remote matches - do nothing") {
         val theHash = MD5Hash("the-hash")
@@ -32,7 +33,7 @@ class ActionGeneratorSuite
           matchByKey = Some(theRemoteMetadata) // remote exists
           )
         it("do nothing") {
-          val expected = List(DoNothing(theFile.remoteKey))
+          val expected = List(DoNothing(bucket, theFile.remoteKey))
           val result = invoke(input)
           assertResult(expected)(result)
         }
@@ -47,7 +48,7 @@ class ActionGeneratorSuite
           matchByHash = Set(otherRemoteMetadata), // other matches
           matchByKey = None) // remote is missing
         it("copy from other key") {
-          val expected = List(ToCopy(otherRemoteKey, theHash, theRemoteKey)) // copy
+          val expected = List(ToCopy(bucket, otherRemoteKey, theHash, theRemoteKey)) // copy
           val result = invoke(input)
           assertResult(expected)(result)
         }
@@ -59,7 +60,7 @@ class ActionGeneratorSuite
           matchByHash = Set.empty, // other no matches
           matchByKey = None) // remote is missing
         it("upload") {
-          val expected = List(ToUpload(theFile)) // upload
+          val expected = List(ToUpload(bucket, theFile)) // upload
           val result = invoke(input)
           assertResult(expected)(result)
         }
@@ -78,7 +79,7 @@ class ActionGeneratorSuite
           matchByHash = Set(otherRemoteMetadata), // other matches
           matchByKey = Some(oldRemoteMetadata)) // remote exists
         it("copy from other key") {
-          val expected = List(ToCopy(otherRemoteKey, theHash, theRemoteKey)) // copy
+          val expected = List(ToCopy(bucket, otherRemoteKey, theHash, theRemoteKey)) // copy
           val result = invoke(input)
           assertResult(expected)(result)
         }
@@ -94,7 +95,7 @@ class ActionGeneratorSuite
           matchByKey = Some(theRemoteMetadata) // remote exists
         )
         it("upload") {
-          val expected = List(ToUpload(theFile)) // upload
+          val expected = List(ToUpload(bucket, theFile)) // upload
           val result = invoke(input)
           assertResult(expected)(result)
         }
@@ -105,5 +106,4 @@ class ActionGeneratorSuite
         }
       }
     }
-  }
 }

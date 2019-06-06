@@ -4,13 +4,14 @@ import cats.effect.IO
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.transfer.TransferManager
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
+import net.kemitix.s3thorp.S3Action.{CopyS3Action, DeleteS3Action}
 import net.kemitix.s3thorp._
 import net.kemitix.s3thorp.domain.{Bucket, Config, LocalFile, MD5Hash, RemoteKey, S3ObjectsData}
 import software.amazon.awssdk.services.s3.model.{Bucket => _}
 
 class ThorpS3Client(ioS3Client: S3CatsIOClient,
-                            amazonS3Client: => AmazonS3,
-                            amazonS3TransferManager: => TransferManager)
+                    amazonS3Client: => AmazonS3,
+                    amazonS3TransferManager: => TransferManager)
   extends S3Client
     with S3ClientLogging
     with QuoteStripper {
@@ -25,7 +26,7 @@ class ThorpS3Client(ioS3Client: S3CatsIOClient,
 
   override def listObjects(bucket: Bucket,
                            prefix: RemoteKey)
-                          (implicit c: Config): IO[S3ObjectsData] =
+                          (implicit info: Int => String => Unit): IO[S3ObjectsData] =
     objectLister.listObjects(bucket, prefix)
 
 
@@ -33,22 +34,26 @@ class ThorpS3Client(ioS3Client: S3CatsIOClient,
                     sourceKey: RemoteKey,
                     hash: MD5Hash,
                     targetKey: RemoteKey)
-                   (implicit c: Config): IO[CopyS3Action] =
+                   (implicit info: Int => String => Unit): IO[CopyS3Action] =
     copier.copy(bucket, sourceKey,hash, targetKey)
 
 
   override def upload(localFile: LocalFile,
                       bucket: Bucket,
                       progressListener: UploadProgressListener,
-                      tryCount: Int)
-                     (implicit c: Config): IO[S3Action] =
-
-    if (multiPartUploader.accepts(localFile)) multiPartUploader.upload(localFile, bucket, progressListener, 1)
-    else uploader.upload(localFile, bucket, progressListener, tryCount)
+                      multiPartThreshold: Long,
+                      tryCount: Int,
+                      maxRetries: Int)
+                     (implicit info: Int => String => Unit,
+                      warn: String => Unit): IO[S3Action] =
+    if (multiPartUploader.accepts(localFile)(multiPartThreshold))
+      multiPartUploader.upload(localFile, bucket, progressListener, multiPartThreshold, 1, maxRetries)
+    else
+      uploader.upload(localFile, bucket, progressListener, multiPartThreshold, tryCount, maxRetries)
 
   override def delete(bucket: Bucket,
                       remoteKey: RemoteKey)
-                     (implicit c: Config): IO[DeleteS3Action] =
+                     (implicit info: Int => String => Unit): IO[DeleteS3Action] =
     deleter.delete(bucket, remoteKey)
 
 }

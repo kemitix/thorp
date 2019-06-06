@@ -1,25 +1,26 @@
 package net.kemitix.s3thorp
 
+import net.kemitix.s3thorp.S3Action.{CopyS3Action, DeleteS3Action, UploadS3Action}
 import net.kemitix.s3thorp.domain.Config
 
 // Logging for the Sync class
-trait SyncLogging extends Logging {
+object SyncLogging {
 
-  def logRunStart(implicit c: Config): Unit =
-    log1(s"Bucket: ${c.bucket.name}, Prefix: ${c.prefix.key}, Source: ${c.source}, " +
+  def logRunStart(info: Int => String => Unit)(implicit c: Config): Unit =
+    info(1)(s"Bucket: ${c.bucket.name}, Prefix: ${c.prefix.key}, Source: ${c.source}, " +
       s"Filter: ${c.filters.map{ f => f.filter}.mkString(""", """)} " +
-      s"Exclude: ${c.excludes.map{ f => f.exclude}.mkString(""", """)}")(c)
+      s"Exclude: ${c.excludes.map{ f => f.exclude}.mkString(""", """)}")
 
-  def logFileScan(implicit c: Config): Unit =
-    log1(s"Scanning local files: ${c.source}...")
+  def logFileScan(info: Int => String => Unit)(implicit c: Config): Unit =
+    info(1)(s"Scanning local files: ${c.source}...")
 
-
-  def logRunFinished(actions: List[S3Action])
+  def logRunFinished(actions: List[S3Action],
+                     info: Int => String => Unit)
                     (implicit c: Config): Unit = {
     val counters = actions.foldLeft(Counters())(logActivity)
-    log1(s"Uploaded ${counters.uploaded} files")
-    log1(s"Copied   ${counters.copied} files")
-    log1(s"Deleted  ${counters.deleted} files")
+    info(1)(s"Uploaded ${counters.uploaded} files")
+    info(1)(s"Copied   ${counters.copied} files")
+    info(1)(s"Deleted  ${counters.deleted} files")
   }
 
   private def logActivity(implicit c: Config): (Counters, S3Action) => Counters =

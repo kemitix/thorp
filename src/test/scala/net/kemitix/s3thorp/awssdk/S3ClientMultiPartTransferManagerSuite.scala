@@ -7,8 +7,9 @@ import com.amazonaws.AmazonClientException
 import com.amazonaws.services.s3.model
 import com.amazonaws.services.s3.transfer.model.UploadResult
 import com.amazonaws.services.s3.transfer.{PauseResult, PersistableUpload, Transfer, TransferManager, TransferManagerBuilder, TransferProgress, Upload}
+import net.kemitix.s3thorp.S3Action.UploadS3Action
 import net.kemitix.s3thorp.domain.{Bucket, Config, LastModified, LocalFile, MD5Hash, RemoteKey}
-import net.kemitix.s3thorp.{KeyGenerator, MD5HashGenerator, Resource, UploadS3Action}
+import net.kemitix.s3thorp.{KeyGenerator, MD5HashGenerator, Resource}
 import org.scalatest.FunSpec
 
 class S3ClientMultiPartTransferManagerSuite
@@ -18,8 +19,10 @@ class S3ClientMultiPartTransferManagerSuite
   private val source = Resource(this, "..")
   private val prefix = RemoteKey("prefix")
   implicit private val config: Config = Config(Bucket("bucket"), prefix, source = source)
+  implicit private val logInfo: Int => String => Unit = l => m => ()
+  implicit private val logWarn: String => Unit = w => ()
   private val fileToKey = generateKey(config.source, config.prefix) _
-  private val fileToHash = (file: File) => new MD5HashGenerator {}.md5File(file)
+  private val fileToHash = (file: File) => MD5HashGenerator.md5File(file)
   val lastModified = LastModified(Instant.now())
 
   describe("S3ClientMultiPartTransferManagerSuite") {
@@ -32,7 +35,7 @@ class S3ClientMultiPartTransferManagerSuite
           assert(smallFile.file.length < 5 * 1024 * 1024)
         }
         it("should not accept small-file") {
-          assertResult(false)(uploader.accepts(smallFile))
+          assertResult(false)(uploader.accepts(smallFile)(config.multiPartThreshold))
         }
       }
       describe("big-file") {
@@ -41,7 +44,7 @@ class S3ClientMultiPartTransferManagerSuite
           assert(bigFile.file.length > 5 * 1024 * 1024)
         }
         it("should accept big-file") {
-          assertResult(true)(uploader.accepts(bigFile))
+          assertResult(true)(uploader.accepts(bigFile)(config.multiPartThreshold))
         }
       }
     }
@@ -64,7 +67,7 @@ class S3ClientMultiPartTransferManagerSuite
       val uploader = new S3ClientMultiPartTransferManager(amazonS3TransferManager)
       it("should upload") {
         val expected = UploadS3Action(returnedKey, returnedHash)
-        val result = uploader.upload(bigFile, config.bucket, progressListener, 1).unsafeRunSync
+        val result = uploader.upload(bigFile, config.bucket, progressListener, config.multiPartThreshold, 1, config.maxRetries).unsafeRunSync
         assertResult(expected)(result)
       }
     }

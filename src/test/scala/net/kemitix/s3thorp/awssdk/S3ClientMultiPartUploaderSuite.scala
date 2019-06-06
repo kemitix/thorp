@@ -16,9 +16,12 @@ class S3ClientMultiPartUploaderSuite
 
   private val source = Resource(this, "..")
   private val prefix = RemoteKey("prefix")
-  implicit private val config: Config = Config(Bucket("bucket"), prefix, source = source)
+  private val bucket = Bucket("bucket")
+  implicit private val config: Config = Config(bucket, prefix, source = source)
+  implicit private val logInfo: Int => String => Unit = l => m => ()
+  implicit private val logWarn: String => Unit = w => ()
   private val fileToKey = generateKey(config.source, config.prefix) _
-  private val fileToHash = (file: File) => new MD5HashGenerator {}.md5File(file)
+  private val fileToHash = (file: File) => MD5HashGenerator.md5File(file)
 
   describe("multi-part uploader accepts") {
     val uploader = new S3ClientMultiPartUploader(new MyAmazonS3Client {})
@@ -30,7 +33,7 @@ class S3ClientMultiPartUploaderSuite
       val smallFile = LocalFile.resolve("small-file", MD5Hash(""), source, fileToKey, fileToHash)
       assert(smallFile.file.exists, "sample small file is missing")
       assert(smallFile.file.length == 5 * 1024 * 1023, "sample small file is wrong size")
-      val result = uploader.accepts(smallFile)
+      val result = uploader.accepts(smallFile)(config.multiPartThreshold)
       assertResult(false)(result)
     }
     it("should accept big file") {
@@ -40,7 +43,7 @@ class S3ClientMultiPartUploaderSuite
       val bigFile = LocalFile.resolve("big-file", MD5Hash(""), source, fileToKey, fileToHash)
       assert(bigFile.file.exists, "sample big file is missing")
       assert(bigFile.file.length == 5 * 1024 * 1025, "sample big file is wrong size")
-      val result = uploader.accepts(bigFile)
+      val result = uploader.accepts(bigFile)(config.multiPartThreshold)
       assertResult(true)(result)
     }
   }
@@ -99,7 +102,7 @@ class S3ClientMultiPartUploaderSuite
         // split -d -b $((5 * 1024 * 1025 / 2)) big-file
         // creates x00 and x01
         // md5sum x0[01]
-        val result = uploader.parts(theFile, createUploadResponse).unsafeRunSync.toList
+        val result = uploader.parts(bucket, theFile, createUploadResponse, config.multiPartThreshold).unsafeRunSync.toList
         it("should create two parts") {
           assertResult(2)(result.size)
         }
@@ -115,7 +118,7 @@ class S3ClientMultiPartUploaderSuite
       describe("upload part") {
         it("should uploadPart") {
           val expected = uploadPartResponse3
-          val result = uploader.uploadPart(theFile)(config)(uploadPartRequest3).unsafeRunSync
+          val result = uploader.uploadPart(theFile)(logInfo, logWarn)(uploadPartRequest3).unsafeRunSync
           assertResult(expected)(result)
         }
       }
@@ -152,7 +155,7 @@ class S3ClientMultiPartUploaderSuite
         }
       }
       describe("create abort request") {
-        val abortRequest = uploader.createAbortRequest(uploadId, theFile)
+        val abortRequest = uploader.createAbortRequest(uploadId, bucket, theFile)
         it("should have the upload id") {
           assertResult(uploadId)(abortRequest.getUploadId)
         }
@@ -173,7 +176,7 @@ class S3ClientMultiPartUploaderSuite
       describe("upload") {
         describe("when all okay") {
           val uploader = new RecordingMultiPartUploader()
-          uploader.upload(theFile, config.bucket, progressListener, 1).unsafeRunSync
+          invoke(uploader, theFile, progressListener)
           it("should initiate the upload") {
             assert(uploader.initiated.get)
           }
@@ -186,7 +189,7 @@ class S3ClientMultiPartUploaderSuite
         }
         describe("when initiate upload fails") {
           val uploader = new RecordingMultiPartUploader(initOkay = false)
-          uploader.upload(theFile, config.bucket, progressListener, 1).unsafeRunSync
+          invoke(uploader, theFile, progressListener)
           it("should not upload any parts") {
             assertResult(Set())(uploader.partsUploaded.get)
           }
@@ -196,7 +199,7 @@ class S3ClientMultiPartUploaderSuite
         }
         describe("when uploading a part fails once") {
           val uploader = new RecordingMultiPartUploader(partTriesRequired = 2)
-          uploader.upload(theFile, config.bucket, progressListener, 1).unsafeRunSync
+          invoke(uploader, theFile, progressListener)
           it("should initiate the upload") {
             assert(uploader.initiated.get)
           }
@@ -209,7 +212,7 @@ class S3ClientMultiPartUploaderSuite
         }
         describe("when uploading a part fails too many times") {
           val uploader = new RecordingMultiPartUploader(partTriesRequired = 4)
-          uploader.upload(theFile, config.bucket, progressListener, 1).unsafeRunSync
+          invoke(uploader, theFile, progressListener)
           it("should initiate the upload") {
             assert(uploader.initiated.get)
           }
@@ -281,5 +284,9 @@ class S3ClientMultiPartUploaderSuite
             canceled set true
           }
         }) {}
+  }
+
+  private def invoke(uploader: S3ClientMultiPartUploader, theFile: LocalFile, progressListener: UploadProgressListener) = {
+    uploader.upload(theFile, bucket, progressListener, config.multiPartThreshold, 1, config.maxRetries).unsafeRunSync
   }
 }

@@ -7,6 +7,7 @@ import com.amazonaws.services.s3.model
 import com.amazonaws.services.s3.model.PutObjectResult
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
+import net.kemitix.s3thorp.S3Action.UploadS3Action
 import net.kemitix.s3thorp._
 import net.kemitix.s3thorp.domain.{Bucket, Config, HashModified, KeyModified, LastModified, LocalFile, MD5Hash, RemoteKey, S3ObjectsData}
 import org.scalatest.FunSpec
@@ -19,8 +20,10 @@ class S3ClientSuite
 
   private val prefix = RemoteKey("prefix")
   implicit private val config: Config = Config(Bucket("bucket"), prefix, source = source)
+  implicit private val logInfo: Int => String => Unit = l => m => ()
+  implicit private val logWarn: String => Unit = w => ()
   private val fileToKey = generateKey(config.source, config.prefix) _
-  private val fileToHash = (file: File) => new MD5HashGenerator {}.md5File(file)
+  private val fileToHash = (file: File) => MD5HashGenerator.md5File(file)
 
   describe("getS3Status") {
     val hash = MD5Hash("hash")
@@ -40,7 +43,7 @@ class S3ClientSuite
         keydiffhash.remoteKey -> HashModified(diffhash, lastModified)))
 
     def invoke(self: S3Client, localFile: LocalFile) = {
-      self.getS3Status(localFile)(s3ObjectsData)
+      S3MetaDataEnricher.getS3Status(localFile)(s3ObjectsData)
     }
 
     describe("when remote key exists") {
@@ -80,10 +83,10 @@ class S3ClientSuite
 
   describe("upload") {
     def invoke(s3Client: ThorpS3Client, localFile: LocalFile, bucket: Bucket, progressListener: UploadProgressListener) =
-      s3Client.upload(localFile, bucket, progressListener, 1).unsafeRunSync
+      s3Client.upload(localFile, bucket, progressListener, config.multiPartThreshold, 1, config.maxRetries).unsafeRunSync
     describe("when uploading a file") {
       val source = Resource(this, "../upload")
-      val md5Hash = new MD5HashGenerator {}.md5File(source.toPath.resolve("root-file").toFile)
+      val md5Hash = MD5HashGenerator.md5File(source.toPath.resolve("root-file").toFile)
       val amazonS3 = new MyAmazonS3 {
         override def putObject(putObjectRequest: model.PutObjectRequest): PutObjectResult = {
           val result = new PutObjectResult
