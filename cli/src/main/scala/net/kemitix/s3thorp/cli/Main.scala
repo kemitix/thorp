@@ -14,12 +14,12 @@ object Main extends IOApp {
   val defaultConfig: Config =
     Config(source = Paths.get(".").toFile)
 
-  val md5HashGenerator: File => MD5Hash = file => new MD5HashGenerator {}.md5File(file)(defaultConfig)
-
   def program(args: List[String]): IO[ExitCode] =
     for {
       config <- ParseArgs(args, defaultConfig)
       logger = new Logger(config.verbose)
+      info = (l: Int) => (m: String) => logger.info(l)(m)
+      md5HashGenerator = (file: File) => new MD5HashGenerator {}.md5File(file)(info)
       _ <- IO(logger.info(1)("S3Thorp - hashed sync for s3"))
       _ <- Sync.run(
         S3ClientBuilder.defaultClient,

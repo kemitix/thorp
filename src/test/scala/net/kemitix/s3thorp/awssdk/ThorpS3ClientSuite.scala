@@ -17,6 +17,7 @@ class ThorpS3ClientSuite extends FunSpec {
     val source = Resource(this, "../upload")
     val prefix = RemoteKey("prefix")
     implicit val config: Config = Config(Bucket("bucket"), prefix, source = source)
+    implicit val logInfo: Int => String => Unit = l => m => ()
 
     val lm = LastModified(Instant.now)
 

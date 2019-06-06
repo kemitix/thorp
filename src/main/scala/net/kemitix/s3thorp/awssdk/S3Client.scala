@@ -13,23 +13,26 @@ trait S3Client {
 
   def listObjects(bucket: Bucket,
                   prefix: RemoteKey
-                 )(implicit c: Config): IO[S3ObjectsData]
+                 )(implicit info: Int => String => Unit): IO[S3ObjectsData]
 
   def upload(localFile: LocalFile,
              bucket: Bucket,
              uploadProgressListener: UploadProgressListener,
-             tryCount: Int
-            )(implicit c: Config): IO[S3Action]
+             multiPartThreshold: Long,
+             tryCount: Int,
+             maxRetries: Int)
+            (implicit info: Int => String => Unit,
+             warn: String => Unit): IO[S3Action]
 
   def copy(bucket: Bucket,
            sourceKey: RemoteKey,
            hash: MD5Hash,
            targetKey: RemoteKey
-          )(implicit c: Config): IO[CopyS3Action]
+          )(implicit info: Int => String => Unit): IO[CopyS3Action]
 
   def delete(bucket: Bucket,
              remoteKey: RemoteKey
-            )(implicit c: Config): IO[DeleteS3Action]
+            )(implicit info: Int => String => Unit): IO[DeleteS3Action]
 
 }
 

@@ -22,21 +22,21 @@ object Sync {
           error: String => Unit)
          (implicit c: Config): IO[Unit] = {
     logRunStart(info)
-    s3Client.listObjects(c.bucket, c.prefix)
+    s3Client.listObjects(c.bucket, c.prefix)(info)
       .map { implicit s3ObjectsData => {
         logFileScan(info)
         val actions = for {
           file <- findFiles(c.source, md5HashGenerator, info)
           data <- getMetadata(file)
           action <- createActions(data)
-          s3Action <- submitAction(s3Client, action)
+          s3Action <- submitAction(s3Client, action)(c, info, warn)
         } yield s3Action
         val sorted = sort(actions.sequence)
         val list = sorted.unsafeRunSync.toList
         val delActions = (for {
           key <- s3ObjectsData.byKey.keys
           if key.isMissingLocally(c.source, c.prefix)
-          ioDelAction <- submitAction(s3Client, ToDelete(key))
+          ioDelAction <- submitAction(s3Client, ToDelete(c.bucket, key))(c, info, warn)
         } yield ioDelAction).toStream.sequence
         val delList = delActions.unsafeRunSync.toList
         logRunFinished(list ++ delList, info)

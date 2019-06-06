@@ -13,15 +13,18 @@ class S3ClientMultiPartTransferManager(transferManager: => TransferManager)
     with S3ClientMultiPartUploaderLogging {
 
   def accepts(localFile: LocalFile)
-             (implicit c: Config): Boolean =
-    localFile.file.length >= c.multiPartThreshold
+             (implicit multiPartThreshold: Long): Boolean =
+    localFile.file.length >= multiPartThreshold
 
   override
   def upload(localFile: LocalFile,
              bucket: Bucket,
              uploadProgressListener: UploadProgressListener,
-             tryCount: Int)
-            (implicit c: Config): IO[S3Action] = {
+             multiPartThreshold: Long,
+             tryCount: Int,
+             maxRetries: Int)
+            (implicit info: Int => String => Unit,
+             warn: String => Unit): IO[S3Action] = {
     val putObjectRequest: PutObjectRequest =
       new PutObjectRequest(bucket.name, localFile.remoteKey.key, localFile.file)
         .withGeneralProgressListener(progressListener(uploadProgressListener))

@@ -23,6 +23,9 @@ class SyncSuite
   private val source = Resource(this, "upload")
   private val prefix = RemoteKey("prefix")
   implicit private val config: Config = Config(Bucket("bucket"), prefix, source = source)
+  implicit private val logInfo: Int => String => Unit = l => i => ()
+  implicit private val logWarn: String => Unit = w => ()
+  def logError: String => Unit = e => ()
   private val lastModified = LastModified(Instant.now)
   val fileToKey: File => RemoteKey = generateKey(source, prefix)
   val fileToHash = (file: File) => new MD5HashGenerator {}.md5File(file)
@@ -31,15 +34,11 @@ class SyncSuite
   val rootFile = LocalFile.resolve("root-file", rootHash, source, fileToKey, fileToHash)
   val leafFile = LocalFile.resolve("subdir/leaf-file", leafHash, source, fileToKey, fileToHash)
 
-  val md5HashGenerator: File => MD5Hash = file => new MD5HashGenerator {}.md5File(file)(config)
+  val md5HashGenerator: File => MD5Hash = file => new MD5HashGenerator {}.md5File(file)
 
   def putObjectRequest(bucket: Bucket, remoteKey: RemoteKey, localFile: LocalFile) = {
     (bucket.name, remoteKey.key, localFile.file)
   }
-
-  def logInfo: Int => String => Unit = l => i => ()
-  def logWarn: String => Unit = w => ()
-  def logError: String => Unit = e => ()
 
   describe("run") {
     val testBucket = Bucket("bucket")
@@ -175,13 +174,16 @@ class SyncSuite
     var copiesRecord: Map[RemoteKey, RemoteKey] = Map()
     var deletionsRecord: Set[RemoteKey] = Set()
 
-    override def listObjects(bucket: Bucket, prefix: RemoteKey)(implicit c: Config) = IO {s3ObjectsData}
+    override def listObjects(bucket: Bucket, prefix: RemoteKey)(implicit info: Int => String => Unit) = IO {s3ObjectsData}
 
     override def upload(localFile: LocalFile,
                         bucket: Bucket,
                         progressListener: UploadProgressListener,
-                        tryCount: Int
-                       )(implicit c: Config) = IO {
+                        multiPartThreshold: Long,
+                        tryCount: Int,
+                        maxRetries: Int)
+                       (implicit info: Int => String => Unit,
+                        warn: String => Unit) = IO {
       if (bucket == testBucket)
         uploadsRecord += (localFile.relative.toString -> localFile.remoteKey)
       UploadS3Action(localFile.remoteKey, MD5Hash("some hash value"))
@@ -191,7 +193,7 @@ class SyncSuite
                       sourceKey: RemoteKey,
                       hash: MD5Hash,
                       targetKey: RemoteKey
-                     )(implicit c: Config) = IO {
+                     )(implicit info: Int => String => Unit) = IO {
       if (bucket == testBucket)
         copiesRecord += (sourceKey -> targetKey)
       CopyS3Action(targetKey)
@@ -199,7 +201,7 @@ class SyncSuite
 
     override def delete(bucket: Bucket,
                         remoteKey: RemoteKey
-                       )(implicit c: Config) = IO {
+                       )(implicit info: Int => String => Unit) = IO {
       if (bucket == testBucket)
         deletionsRecord += remoteKey
       DeleteS3Action(remoteKey)

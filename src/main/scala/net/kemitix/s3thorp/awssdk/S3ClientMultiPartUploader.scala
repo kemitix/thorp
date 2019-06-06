@@ -18,11 +18,11 @@ private class S3ClientMultiPartUploader(s3Client: AmazonS3)
     with QuoteStripper {
 
   def accepts(localFile: LocalFile)
-             (implicit c: Config): Boolean =
-    localFile.file.length >= c.multiPartThreshold
+             (implicit multiPartThreshold: Long): Boolean =
+    localFile.file.length >= multiPartThreshold
 
   def createUpload(bucket: Bucket, localFile: LocalFile)
-                  (implicit c: Config): IO[InitiateMultipartUploadResult] = {
+                  (implicit info: Int => String => Unit): IO[InitiateMultipartUploadResult] = {
     logMultiPartUploadInitiate(localFile)
     IO(s3Client initiateMultipartUpload createUploadRequest(bucket, localFile))
   }
@@ -32,12 +32,13 @@ private class S3ClientMultiPartUploader(s3Client: AmazonS3)
       bucket.name,
       localFile.remoteKey.key)
 
-  def parts(localFile: LocalFile,
-            response: InitiateMultipartUploadResult)
-           (implicit c: Config): IO[Stream[UploadPartRequest]] = {
+  def parts(bucket: Bucket,
+            localFile: LocalFile,
+            response: InitiateMultipartUploadResult,
+            threshold: Long)
+           (implicit info: Int => String => Unit): IO[Stream[UploadPartRequest]] = {
     val fileSize = localFile.file.length
     val maxParts = 1024 // arbitrary, supports upto 10,000 (I, think)
-    val threshold = c.multiPartThreshold
     val nParts = Math.min((fileSize / threshold) + 1, maxParts).toInt
     val partSize = fileSize / nParts
     val maxUpload = nParts * partSize
@@ -52,19 +53,19 @@ private class S3ClientMultiPartUploader(s3Client: AmazonS3)
         chunkSize = Math.min(fileSize - offSet, partSize)
         partHash = md5FilePart(localFile.file, offSet, chunkSize)
         _ = logMultiPartUploadPartDetails(localFile, partNumber, partHash)
-        uploadPartRequest = createUploadPartRequest(localFile, response, partNumber, chunkSize, partHash)
+        uploadPartRequest = createUploadPartRequest(bucket, localFile, response, partNumber, chunkSize, partHash)
       } yield uploadPartRequest
     }
   }
 
-  private def createUploadPartRequest(localFile: LocalFile,
+  private def createUploadPartRequest(bucket: Bucket,
+                                      localFile: LocalFile,
                                       response: InitiateMultipartUploadResult,
                                       partNumber: Int,
                                       chunkSize: Long,
-                                      partHash: MD5Hash)
-                                     (implicit c: Config) = {
+                                      partHash: MD5Hash) = {
     new UploadPartRequest()
-      .withBucketName(c.bucket.name)
+      .withBucketName(bucket.name)
       .withKey(localFile.remoteKey.key)
       .withUploadId(response.getUploadId)
       .withPartNumber(partNumber)
@@ -75,7 +76,8 @@ private class S3ClientMultiPartUploader(s3Client: AmazonS3)
   }
 
   def uploadPart(localFile: LocalFile)
-                (implicit c: Config): UploadPartRequest => IO[UploadPartResult] =
+                (implicit info: Int => String => Unit,
+                 warn: String => Unit): UploadPartRequest => IO[UploadPartResult] =
     partRequest => {
       logMultiPartUploadPart(localFile, partRequest)
       IO(s3Client.uploadPart(partRequest))
@@ -88,13 +90,14 @@ private class S3ClientMultiPartUploader(s3Client: AmazonS3)
 
   def uploadParts(localFile: LocalFile,
                   parts: Stream[UploadPartRequest])
-                 (implicit c: Config): IO[Stream[UploadPartResult]] =
+                 (implicit info: Int => String => Unit,
+                  warn: String => Unit): IO[Stream[UploadPartResult]] =
     (parts map uploadPart(localFile)).sequence
 
   def completeUpload(createUploadResponse: InitiateMultipartUploadResult,
                      uploadPartResponses: Stream[UploadPartResult],
                      localFile: LocalFile)
-                    (implicit c: Config): IO[CompleteMultipartUploadResult] = {
+                    (implicit info: Int => String => Unit): IO[CompleteMultipartUploadResult] = {
     logMultiPartUploadCompleted(createUploadResponse, uploadPartResponses, localFile)
     IO(s3Client completeMultipartUpload createCompleteRequest(createUploadResponse, uploadPartResponses.toList))
   }
@@ -108,27 +111,33 @@ private class S3ClientMultiPartUploader(s3Client: AmazonS3)
       .withPartETags(uploadPartResult.asJava)
   }
 
-  def cancel(uploadId: String, localFile: LocalFile)
-            (implicit c: Config): IO[Unit] = {
+  def cancel(uploadId: String,
+             bucket: Bucket,
+             localFile: LocalFile)
+            (implicit info: Int => String => Unit,
+             warn: String => Unit): IO[Unit] = {
     logMultiPartUploadCancelling(localFile)
-    IO(s3Client abortMultipartUpload createAbortRequest(uploadId, localFile))
+    IO(s3Client abortMultipartUpload createAbortRequest(uploadId, bucket, localFile))
   }
 
   def createAbortRequest(uploadId: String,
-                         localFile: LocalFile)
-                        (implicit c: Config): AbortMultipartUploadRequest =
-    new AbortMultipartUploadRequest(c.bucket.name, localFile.remoteKey.key, uploadId)
+                         bucket: Bucket,
+                         localFile: LocalFile): AbortMultipartUploadRequest =
+    new AbortMultipartUploadRequest(bucket.name, localFile.remoteKey.key, uploadId)
 
   override def upload(localFile: LocalFile,
                       bucket: Bucket,
                       progressListener: UploadProgressListener,
-                      tryCount: Int)
-                     (implicit c: Config): IO[S3Action] = {
+                      multiPartThreshold: Long,
+                      tryCount: Int,
+                      maxRetries: Int)
+                     (implicit info: Int => String => Unit,
+                      warn: String => Unit): IO[S3Action] = {
     logMultiPartUploadStart(localFile, tryCount)
 
     (for {
       createUploadResponse <- createUpload(bucket, localFile)
-      parts <- parts(localFile, createUploadResponse)
+      parts <- parts(bucket, localFile, createUploadResponse, multiPartThreshold)
       uploadPartResponses <- uploadParts(localFile, parts)
       completedUploadResponse <- completeUpload(createUploadResponse, uploadPartResponses, localFile)
     } yield completedUploadResponse)
@@ -138,11 +147,11 @@ private class S3ClientMultiPartUploader(s3Client: AmazonS3)
       .map(UploadS3Action(localFile.remoteKey, _))
       .handleErrorWith {
         case CancellableMultiPartUpload(e, uploadId) =>
-          if (tryCount >= c.maxRetries) IO(logErrorCancelling(e, localFile)) *> cancel(uploadId, localFile) *> IO.pure(ErroredS3Action(localFile.remoteKey, e))
-          else IO(logErrorRetrying(e, localFile, tryCount)) *> upload(localFile, bucket, progressListener, tryCount + 1)
+          if (tryCount >= maxRetries) IO(logErrorCancelling(e, localFile)) *> cancel(uploadId, bucket, localFile) *> IO.pure(ErroredS3Action(localFile.remoteKey, e))
+          else IO(logErrorRetrying(e, localFile, tryCount)) *> upload(localFile, bucket, progressListener, multiPartThreshold, tryCount + 1, maxRetries)
         case NonFatal(e) =>
-          if (tryCount >= c.maxRetries) IO(logErrorUnknown(e, localFile)) *> IO.pure(ErroredS3Action(localFile.remoteKey, e))
-          else IO(logErrorRetrying(e, localFile, tryCount)) *> upload(localFile, bucket, progressListener, tryCount + 1)
+          if (tryCount >= maxRetries) IO(logErrorUnknown(e, localFile)) *> IO.pure(ErroredS3Action(localFile.remoteKey, e))
+          else IO(logErrorRetrying(e, localFile, tryCount)) *> upload(localFile, bucket, progressListener, multiPartThreshold, tryCount + 1, maxRetries)
       }
   }
 }

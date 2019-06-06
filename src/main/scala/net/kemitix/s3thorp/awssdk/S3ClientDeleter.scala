@@ -11,7 +11,7 @@ class S3ClientDeleter(s3Client: S3CatsIOClient)
 
   def delete(bucket: Bucket,
              remoteKey: RemoteKey)
-            (implicit c: Config): IO[DeleteS3Action] = {
+            (implicit info: Int => String => Unit): IO[DeleteS3Action] = {
     val request = DeleteObjectRequest.builder
       .bucket(bucket.name)
       .key(remoteKey.key).build

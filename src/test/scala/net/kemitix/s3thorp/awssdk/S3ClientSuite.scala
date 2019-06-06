@@ -20,6 +20,8 @@ class S3ClientSuite
 
   private val prefix = RemoteKey("prefix")
   implicit private val config: Config = Config(Bucket("bucket"), prefix, source = source)
+  implicit private val logInfo: Int => String => Unit = l => m => ()
+  implicit private val logWarn: String => Unit = w => ()
   private val fileToKey = generateKey(config.source, config.prefix) _
   private val fileToHash = (file: File) => new MD5HashGenerator {}.md5File(file)
 
@@ -81,7 +83,7 @@ class S3ClientSuite
 
   describe("upload") {
     def invoke(s3Client: ThorpS3Client, localFile: LocalFile, bucket: Bucket, progressListener: UploadProgressListener) =
-      s3Client.upload(localFile, bucket, progressListener, 1).unsafeRunSync
+      s3Client.upload(localFile, bucket, progressListener, config.multiPartThreshold, 1, config.maxRetries).unsafeRunSync
     describe("when uploading a file") {
       val source = Resource(this, "../upload")
       val md5Hash = new MD5HashGenerator {}.md5File(source.toPath.resolve("root-file").toFile)

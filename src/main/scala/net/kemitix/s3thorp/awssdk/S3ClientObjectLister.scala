@@ -14,7 +14,7 @@ class S3ClientObjectLister(s3Client: S3CatsIOClient)
 
   def listObjects(bucket: Bucket,
                            prefix: RemoteKey)
-                          (implicit c: Config): IO[S3ObjectsData] = {
+                          (implicit info: Int => String => Unit): IO[S3ObjectsData] = {
     val request = ListObjectsV2Request.builder
       .bucket(bucket.name)
       .prefix(prefix.key).build

@@ -5,11 +5,10 @@ import java.security.MessageDigest
 
 import net.kemitix.s3thorp.domain.{Config, MD5Hash}
 
-trait MD5HashGenerator
-  extends Logging {
+trait MD5HashGenerator {
 
   def md5File(file: File)
-             (implicit c: Config): MD5Hash =  {
+             (implicit info: Int => String => Unit): MD5Hash =  {
     val hash = md5FilePart(file, 0, file.length)
     hash
   }
@@ -17,14 +16,14 @@ trait MD5HashGenerator
   def md5FilePart(file: File,
                   offset: Long,
                   size: Long)
-                 (implicit c: Config): MD5Hash = {
-    log5(s"md5:reading:offset $offset:size $size:$file")
+                 (implicit info: Int => String => Unit): MD5Hash = {
+    info(5)(s"md5:reading:offset $offset:size $size:$file")
     val fis = new FileInputStream(file)
     fis skip offset
     val buffer = new Array[Byte](size.toInt)
     fis read buffer
     val hash = md5PartBody(buffer)
-    log5(s"md5:generated:${hash.hash}")
+    info(5)(s"md5:generated:${hash.hash}")
     hash
   }
 

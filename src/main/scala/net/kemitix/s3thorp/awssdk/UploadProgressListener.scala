@@ -4,7 +4,7 @@ import net.kemitix.s3thorp.awssdk.UploadEvent.{ByteTransferEvent, RequestEvent, 
 import net.kemitix.s3thorp.domain.{Config, LocalFile}
 
 class UploadProgressListener(localFile: LocalFile)
-  (implicit c: Config)
+  (implicit info: Int => String => Unit)
   extends UploadProgressLogging {
 
   def listener: UploadEvent => Unit =

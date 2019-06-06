@@ -4,24 +4,25 @@ import cats.effect.IO
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.PutObjectRequest
 import net.kemitix.s3thorp.S3Action.UploadS3Action
-import net.kemitix.s3thorp._
 import net.kemitix.s3thorp.domain.{Bucket, Config, LocalFile, MD5Hash}
 
-class S3ClientPutObjectUploader(s3Client: => AmazonS3)
+class S3ClientPutObjectUploader(amazonS3: => AmazonS3)
   extends S3ClientUploader
     with S3ClientLogging
     with QuoteStripper {
 
-  override def accepts(localFile: LocalFile)(implicit c: Config): Boolean = true
+  override def accepts(localFile: LocalFile)(implicit multiPartThreshold: Long): Boolean = true
 
-  override
-  def upload(localFile: LocalFile,
-             bucket: Bucket,
-             uploadProgressListener: UploadProgressListener,
-             tryCount: Int)
-            (implicit c: Config): IO[UploadS3Action] = {
+  override def upload(localFile: LocalFile,
+                      bucket: Bucket,
+                      uploadProgressListener: UploadProgressListener,
+                      multiPartThreshold: Long,
+                      tryCount: Int,
+                      maxRetries: Int)
+                     (implicit info: Int => String => Unit,
+                      warn: String => Unit): IO[UploadS3Action] = {
     val request = putObjectRequest(localFile, bucket, uploadProgressListener)
-    IO(s3Client.putObject(request))
+    IO(amazonS3.putObject(request))
       .bracket(
         logUploadStart(localFile, bucket))(
         logUploadFinish(localFile, bucket))

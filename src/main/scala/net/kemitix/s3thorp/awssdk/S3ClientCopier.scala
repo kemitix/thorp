@@ -13,7 +13,7 @@ class S3ClientCopier(s3Client: S3CatsIOClient)
            sourceKey: RemoteKey,
            hash: MD5Hash,
            targetKey: RemoteKey)
-          (implicit c: Config): IO[CopyS3Action] = {
+          (implicit info: Int => String => Unit): IO[CopyS3Action] = {
     val request = CopyObjectRequest.builder
       .bucket(bucket.name)
       .copySource(s"${bucket.name}/${sourceKey.key}")

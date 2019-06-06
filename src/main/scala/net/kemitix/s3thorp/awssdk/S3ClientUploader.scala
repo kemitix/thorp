@@ -9,15 +9,16 @@ import net.kemitix.s3thorp.awssdk.UploadEvent.{ByteTransferEvent, RequestEvent, 
 trait S3ClientUploader {
 
   def accepts(localFile: LocalFile)
-             (implicit c: Config): Boolean
+             (implicit multiPartThreshold: Long): Boolean
 
   def upload(localFile: LocalFile,
              bucket: Bucket,
              progressListener: UploadProgressListener,
-             tryCount: Int)
-            (implicit c: Config): IO[S3Action]
-
-
+             multiPartThreshold: Long,
+             tryCount: Int,
+             maxRetries: Int)
+            (implicit info: Int => String => Unit,
+             warn: String => Unit): IO[S3Action]
 
   def progressListener(uploadProgressListener: UploadProgressListener): ProgressListener = {
     new ProgressListener {
