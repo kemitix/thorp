@@ -13,7 +13,7 @@ libraryDependencies += "com.github.j5ik2o" %% "reactive-aws-s3-core" % "1.1.3"
 libraryDependencies += "com.github.j5ik2o" %% "reactive-aws-s3-cats" % "1.1.3"
 
 // AWS SDK - multi-part upload
-libraryDependencies += "com.amazonaws" % "aws-java-sdk-s3" % "1.11.563"
+libraryDependencies += "com.amazonaws" % "aws-java-sdk-s3" % "1.11.564"
 
 // Logging
 libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2"
