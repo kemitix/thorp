@@ -7,9 +7,9 @@ import net.kemitix.s3thorp.aws.api.S3Action.UploadS3Action
 import net.kemitix.s3thorp.aws.api.{S3Action, UploadProgressListener}
 import net.kemitix.s3thorp.domain.{Bucket, LocalFile, MD5Hash, RemoteKey}
 
-class S3ClientMultiPartTransferManager(transferManager: => TransferManager)
+class S3ClientTransferManager(transferManager: => TransferManager)
   extends S3ClientUploader
-    with S3ClientMultiPartUploaderLogging {
+    with S3ClientTransferManagerLogging {
 
   def accepts(localFile: LocalFile)
              (implicit multiPartThreshold: Long): Boolean =

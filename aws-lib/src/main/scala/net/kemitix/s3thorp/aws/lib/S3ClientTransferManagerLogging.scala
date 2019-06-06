@@ -3,7 +3,7 @@ package net.kemitix.s3thorp.aws.lib
 import com.amazonaws.services.s3.model.{AmazonS3Exception, InitiateMultipartUploadResult, UploadPartRequest, UploadPartResult}
 import net.kemitix.s3thorp.domain.{LocalFile, MD5Hash}
 
-trait S3ClientMultiPartUploaderLogging
+trait S3ClientTransferManagerLogging
   extends S3ClientLogging {
 
   private val prefix = "multi-part upload"

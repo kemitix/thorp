@@ -15,7 +15,7 @@ import net.kemitix.s3thorp.core.{MD5HashGenerator, Resource}
 import net.kemitix.s3thorp.domain._
 import org.scalatest.FunSpec
 
-class S3ClientMultiPartTransferManagerSuite
+class S3ClientTransferManagerSuite
   extends FunSpec {
 
   private val source = Resource(this, ".")
@@ -30,7 +30,7 @@ class S3ClientMultiPartTransferManagerSuite
   describe("S3ClientMultiPartTransferManagerSuite") {
     describe("accepts") {
       val transferManager = new MyTransferManager(("", "", new File("")), RemoteKey(""), MD5Hash(""))
-      val uploader = new S3ClientMultiPartTransferManager(transferManager)
+      val uploader = new S3ClientTransferManager(transferManager)
       describe("small-file") {
         val smallFile = LocalFile.resolve("small-file", MD5Hash("the-hash"), source, fileToKey, fileToHash)
         it("should be a small-file") {
@@ -66,7 +66,7 @@ class S3ClientMultiPartTransferManagerSuite
         signature = (config.bucket.name, bigFile.remoteKey.key, bigFile.file),
         returnedKey = returnedKey,
         returnedHash = returnedHash)
-      val uploader = new S3ClientMultiPartTransferManager(amazonS3TransferManager)
+      val uploader = new S3ClientTransferManager(amazonS3TransferManager)
       it("should upload") {
         val expected = UploadS3Action(returnedKey, returnedHash)
         val result = uploader.upload(bigFile, config.bucket, progressListener, config.multiPartThreshold, 1, config.maxRetries).unsafeRunSync
