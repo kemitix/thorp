@@ -1,20 +1,20 @@
 package net.kemitix.s3thorp.awssdk
 
-import scala.collection.JavaConverters._
 import cats.effect.IO
 import cats.implicits._
 import com.amazonaws.services.s3.AmazonS3
-import com.amazonaws.services.s3.model.{AbortMultipartUploadRequest, AmazonS3Exception, CompleteMultipartUploadRequest, CompleteMultipartUploadResult, InitiateMultipartUploadRequest, InitiateMultipartUploadResult, PartETag, UploadPartRequest, UploadPartResult}
+import com.amazonaws.services.s3.model._
+import net.kemitix.s3thorp.MD5HashGenerator.md5FilePart
 import net.kemitix.s3thorp.S3Action.{ErroredS3Action, UploadS3Action}
 import net.kemitix.s3thorp._
-import net.kemitix.s3thorp.domain.{Bucket, Config, LocalFile, MD5Hash}
+import net.kemitix.s3thorp.domain.{Bucket, LocalFile, MD5Hash}
 
+import scala.collection.JavaConverters._
 import scala.util.control.NonFatal
 
 private class S3ClientMultiPartUploader(s3Client: AmazonS3)
   extends S3ClientUploader
     with S3ClientMultiPartUploaderLogging
-    with MD5HashGenerator
     with QuoteStripper {
 
   def accepts(localFile: LocalFile)

@@ -17,7 +17,7 @@ class S3MetaDataEnricherSuite
   implicit private val config: Config = Config(Bucket("bucket"), prefix, source = source)
   implicit private val logInfo: Int => String => Unit = l => i => ()
   private val fileToKey = generateKey(config.source, config.prefix) _
-  private val fileToHash = (file: File) => new MD5HashGenerator {}.md5File(file)
+  private val fileToHash = (file: File) => MD5HashGenerator.md5File(file)
   val lastModified = LastModified(Instant.now())
 
   describe("enrich with metadata") {

@@ -12,12 +12,11 @@ class MD5HashGeneratorTest extends FunSpec {
   implicit private val config: Config = Config(Bucket("bucket"), prefix, source = source)
   implicit private val logInfo: Int => String => Unit = l => i => ()
 
-  new MD5HashGenerator {
     describe("read a small file (smaller than buffer)") {
       val file = Resource(this, "upload/root-file")
       it("should generate the correct hash") {
         val expected = MD5Hash("a3a6ac11a0eb577b81b3bb5c95cc8a6e")
-        val result = md5File(file)
+        val result = MD5HashGenerator.md5File(file)
         assertResult(expected)(result)
       }
     }
@@ -26,7 +25,7 @@ class MD5HashGeneratorTest extends FunSpec {
       val buffer: Array[Byte] = Files.readAllBytes(file.toPath)
       it("should generate the correct hash") {
         val expected = MD5Hash("a3a6ac11a0eb577b81b3bb5c95cc8a6e")
-        val result = md5PartBody(buffer)
+        val result = MD5HashGenerator.md5PartBody(buffer)
         assertResult(expected)(result)
       }
     }
@@ -34,7 +33,7 @@ class MD5HashGeneratorTest extends FunSpec {
       val file = Resource(this, "big-file")
       it("should generate the correct hash") {
         val expected = MD5Hash("b1ab1f7680138e6db7309200584e35d8")
-        val result = md5File(file)
+        val result = MD5HashGenerator.md5File(file)
         assertResult(expected)(result)
       }
     }
@@ -45,18 +44,17 @@ class MD5HashGeneratorTest extends FunSpec {
       describe("when starting at the beginning of the file") {
         it("should generate the correct hash") {
           val expected = MD5Hash("aadf0d266cefe0fcdb241a51798d74b3")
-          val result = md5FilePart(file, 0, halfFileLength)
+          val result = MD5HashGenerator.md5FilePart(file, 0, halfFileLength)
           assertResult(expected)(result)
         }
       }
       describe("when starting in the middle of the file") {
         it("should generate the correct hash") {
           val expected = MD5Hash("16e08d53ca36e729d808fd5e4f7e35dc")
-          val result = md5FilePart(file, halfFileLength, halfFileLength)
+          val result = MD5HashGenerator.md5FilePart(file, halfFileLength, halfFileLength)
           assertResult(expected)(result)
         }
       }
     }
-  }
 
 }

@@ -28,13 +28,13 @@ class SyncSuite
   def logError: String => Unit = e => ()
   private val lastModified = LastModified(Instant.now)
   val fileToKey: File => RemoteKey = generateKey(source, prefix)
-  val fileToHash = (file: File) => new MD5HashGenerator {}.md5File(file)
+  val fileToHash = (file: File) => MD5HashGenerator.md5File(file)
   val rootHash = MD5Hash("a3a6ac11a0eb577b81b3bb5c95cc8a6e")
   val leafHash = MD5Hash("208386a650bdec61cfcd7bd8dcb6b542")
   val rootFile = LocalFile.resolve("root-file", rootHash, source, fileToKey, fileToHash)
   val leafFile = LocalFile.resolve("subdir/leaf-file", leafHash, source, fileToKey, fileToHash)
 
-  val md5HashGenerator: File => MD5Hash = file => new MD5HashGenerator {}.md5File(file)
+  val md5HashGenerator: File => MD5Hash = file => MD5HashGenerator.md5File(file)
 
   def putObjectRequest(bucket: Bucket, remoteKey: RemoteKey, localFile: LocalFile) = {
     (bucket.name, remoteKey.key, localFile.file)

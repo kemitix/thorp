@@ -5,7 +5,7 @@ import java.security.MessageDigest
 
 import net.kemitix.s3thorp.domain.{Config, MD5Hash}
 
-trait MD5HashGenerator {
+object MD5HashGenerator {
 
   def md5File(file: File)
              (implicit info: Int => String => Unit): MD5Hash =  {
