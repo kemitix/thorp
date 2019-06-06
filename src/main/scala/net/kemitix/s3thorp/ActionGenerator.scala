@@ -1,5 +1,6 @@
 package net.kemitix.s3thorp
 
+import net.kemitix.s3thorp.Action.{DoNothing, ToCopy, ToUpload}
 import net.kemitix.s3thorp.domain.{Config, LocalFile, RemoteKey, RemoteMetaData, S3MetaData}
 
 object ActionGenerator {

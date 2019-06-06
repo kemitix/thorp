@@ -1,6 +1,7 @@
 package net.kemitix.s3thorp
 
 import cats.effect.IO
+import net.kemitix.s3thorp.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
 import net.kemitix.s3thorp.awssdk.{S3Client, UploadProgressListener}
 import net.kemitix.s3thorp.domain.Config
 

@@ -4,6 +4,7 @@ import java.io.File
 
 import cats.effect.IO
 import cats.implicits._
+import net.kemitix.s3thorp.Action.ToDelete
 import net.kemitix.s3thorp.ActionGenerator.createActions
 import net.kemitix.s3thorp.ActionSubmitter.submitAction
 import net.kemitix.s3thorp.LocalFileStream.findFiles
