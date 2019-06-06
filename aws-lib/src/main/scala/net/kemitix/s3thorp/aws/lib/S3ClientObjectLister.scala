@@ -21,8 +21,8 @@ class S3ClientObjectLister(amazonS3: AmazonS3)
     IO {
       amazonS3.listObjectsV2(request)
     }.bracket(
-        logListObjectsStart(bucket, prefix))(
-        logListObjectsFinish(bucket,prefix))
+      logListObjectsStart(bucket, prefix))(
+      logListObjectsFinish(bucket,prefix))
       .map(_.getObjectSummaries)
       .map(_.asScala)
       .map(_.toStream)

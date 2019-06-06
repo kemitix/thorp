@@ -1,7 +1,7 @@
 package net.kemitix.s3thorp.aws.lib
 
 import cats.effect.IO
-import com.amazonaws.services.s3.model.{ListObjectsV2Result, PutObjectResult}
+import com.amazonaws.services.s3.model.{CopyObjectResult, ListObjectsV2Result, PutObjectResult}
 import net.kemitix.s3thorp.domain.{Bucket, LocalFile, RemoteKey}
 import software.amazon.awssdk.services.s3.model.{CopyObjectResponse, DeleteObjectResponse, ListObjectsV2Response}
 
@@ -44,7 +44,7 @@ object S3ClientLogging {
   def logCopyStart(bucket: Bucket,
                    sourceKey: RemoteKey,
                    targetKey: RemoteKey)
-                  (implicit info: Int => String => Unit): CopyObjectResponse => IO[CopyObjectResponse] = {
+                  (implicit info: Int => String => Unit): CopyObjectResult => IO[CopyObjectResult] = {
     in => IO {
       info(4)(s"Copy: ${bucket.name}:${sourceKey.key} => ${targetKey.key}")
       in
@@ -54,7 +54,7 @@ object S3ClientLogging {
   def logCopyFinish(bucket: Bucket,
                     sourceKey: RemoteKey,
                     targetKey: RemoteKey)
-                   (implicit info: Int => String => Unit): CopyObjectResponse => IO[Unit] = {
+                   (implicit info: Int => String => Unit): CopyObjectResult => IO[Unit] = {
     in => IO {
       info(3)(s"Copied: ${bucket.name}:${sourceKey.key} => ${targetKey.key}")
     }
