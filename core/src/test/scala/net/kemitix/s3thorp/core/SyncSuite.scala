@@ -1,4 +1,4 @@
-package net.kemitix.s3thorp.aws.lib
+package net.kemitix.s3thorp.core
 
 import java.io.File
 import java.time.Instant
@@ -6,7 +6,6 @@ import java.time.Instant
 import cats.effect.IO
 import net.kemitix.s3thorp.aws.api.S3Action.{CopyS3Action, DeleteS3Action, UploadS3Action}
 import net.kemitix.s3thorp.aws.api.{S3Client, UploadProgressListener}
-import net.kemitix.s3thorp.core.{KeyGenerator, MD5HashGenerator, Resource, Sync}
 import net.kemitix.s3thorp.domain._
 import org.scalatest.FunSpec
 
