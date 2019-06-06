@@ -5,9 +5,9 @@ import java.nio.file.Paths
 
 import cats.effect.ExitCase.{Canceled, Completed, Error}
 import cats.effect.{ExitCode, IO, IOApp}
-import net.kemitix.s3thorp.MD5HashGenerator.md5File
-import net.kemitix.s3thorp.Sync
+import net.kemitix.s3thorp.core.MD5HashGenerator.md5File
 import net.kemitix.s3thorp.aws.lib.S3ClientBuilder
+import net.kemitix.s3thorp.core.Sync
 import net.kemitix.s3thorp.domain.Config
 
 object Main extends IOApp {

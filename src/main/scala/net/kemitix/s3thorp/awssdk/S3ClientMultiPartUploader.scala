@@ -4,7 +4,7 @@ import cats.effect.IO
 import cats.implicits._
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model._
-import net.kemitix.s3thorp.MD5HashGenerator.md5FilePart
+import net.kemitix.s3thorp.core.MD5HashGenerator.md5FilePart
 import net.kemitix.s3thorp.aws.api.S3Action.{ErroredS3Action, UploadS3Action}
 import net.kemitix.s3thorp.aws.api.{S3Action, UploadProgressListener}
 import net.kemitix.s3thorp.domain.{Bucket, LocalFile, MD5Hash}

@@ -6,16 +6,16 @@ import java.time.Instant
 import com.amazonaws.services.s3.model.{PutObjectRequest, PutObjectResult}
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
-import net.kemitix.s3thorp._
 import net.kemitix.s3thorp.aws.api.S3Action.UploadS3Action
 import net.kemitix.s3thorp.aws.api.{S3Client, UploadProgressListener}
+import net.kemitix.s3thorp.core.{KeyGenerator, MD5HashGenerator, Resource, S3MetaDataEnricher, Sync}
 import net.kemitix.s3thorp.domain.{Bucket, Config, HashModified, KeyModified, LastModified, LocalFile, MD5Hash, RemoteKey, S3ObjectsData}
 import org.scalatest.FunSpec
 
 class S3ClientSuite
   extends FunSpec {
 
-  val source = Resource(this, "../upload")
+  val source = Resource(this, "upload")
 
   private val prefix = RemoteKey("prefix")
   implicit private val config: Config = Config(Bucket("bucket"), prefix, source = source)
@@ -84,7 +84,7 @@ class S3ClientSuite
     def invoke(s3Client: ThorpS3Client, localFile: LocalFile, bucket: Bucket, progressListener: UploadProgressListener) =
       s3Client.upload(localFile, bucket, progressListener, config.multiPartThreshold, 1, config.maxRetries).unsafeRunSync
     describe("when uploading a file") {
-      val source = Resource(this, "../upload")
+      val source = Resource(this, "upload")
       val md5Hash = MD5HashGenerator.md5File(source.toPath.resolve("root-file").toFile)
       val amazonS3 = new MyAmazonS3 {
         override def putObject(putObjectRequest: PutObjectRequest): PutObjectResult = {

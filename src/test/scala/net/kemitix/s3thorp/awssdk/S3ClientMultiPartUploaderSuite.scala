@@ -6,15 +6,15 @@ import scala.collection.JavaConverters._
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger, AtomicReference}
 
 import com.amazonaws.services.s3.model.{Bucket => _, _}
-import net.kemitix.s3thorp._
 import net.kemitix.s3thorp.aws.api.UploadProgressListener
+import net.kemitix.s3thorp.core.{KeyGenerator, MD5HashGenerator, Resource, Sync}
 import net.kemitix.s3thorp.domain.{Bucket, Config, LocalFile, MD5Hash, RemoteKey}
 import org.scalatest.FunSpec
 
 class S3ClientMultiPartUploaderSuite
   extends FunSpec {
 
-  private val source = Resource(this, "..")
+  private val source = Resource(this, ".")
   private val prefix = RemoteKey("prefix")
   private val bucket = Bucket("bucket")
   implicit private val config: Config = Config(bucket, prefix, source = source)

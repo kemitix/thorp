@@ -11,6 +11,7 @@ import com.github.j5ik2o.reactive.aws.s3.S3AsyncClient
 import net.kemitix.s3thorp.aws.api.S3Action.{CopyS3Action, DeleteS3Action, UploadS3Action}
 import net.kemitix.s3thorp.aws.api.{S3Client, UploadProgressListener}
 import net.kemitix.s3thorp.awssdk.MyAmazonS3
+import net.kemitix.s3thorp.core.{KeyGenerator, MD5HashGenerator, Resource, Sync}
 import net.kemitix.s3thorp.domain._
 import org.scalatest.FunSpec
 import software.amazon.awssdk.services.s3
@@ -20,7 +21,7 @@ import software.amazon.awssdk.services.s3.{S3AsyncClient => JavaS3AsyncClient}
 class SyncSuite
   extends FunSpec {
 
-  private val source = Resource(this, "upload")
+  private val source = Resource(this, "awssdk/upload")
   private val prefix = RemoteKey("prefix")
   implicit private val config: Config = Config(Bucket("bucket"), prefix, source = source)
   implicit private val logInfo: Int => String => Unit = l => i => ()
@@ -42,7 +43,7 @@ class SyncSuite
 
   describe("run") {
     val testBucket = Bucket("bucket")
-    val source = Resource(this, "upload")
+    val source = Resource(this, "awssdk/upload")
     // source contains the files root-file and subdir/leaf-file
     val config = Config(Bucket("bucket"), RemoteKey("prefix"), source = source)
     val rootRemoteKey = RemoteKey("prefix/root-file")
