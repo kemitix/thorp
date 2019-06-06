@@ -4,6 +4,7 @@ import cats.effect.IO
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.transfer.TransferManager
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
+import net.kemitix.s3thorp.S3Action.{CopyS3Action, DeleteS3Action}
 import net.kemitix.s3thorp._
 import net.kemitix.s3thorp.domain.{Bucket, Config, LocalFile, MD5Hash, RemoteKey, S3ObjectsData}
 import software.amazon.awssdk.services.s3.model.{Bucket => _}

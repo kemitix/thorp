@@ -4,6 +4,7 @@ import cats.effect.IO
 import com.amazonaws.event.{ProgressEvent, ProgressEventType, ProgressListener}
 import com.amazonaws.services.s3.model.PutObjectRequest
 import com.amazonaws.services.s3.transfer.TransferManager
+import net.kemitix.s3thorp.S3Action.UploadS3Action
 import net.kemitix.s3thorp._
 import net.kemitix.s3thorp.domain.{Bucket, Config, LocalFile, MD5Hash, RemoteKey}
 

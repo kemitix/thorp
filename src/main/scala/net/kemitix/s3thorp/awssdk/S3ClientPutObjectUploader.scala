@@ -3,6 +3,7 @@ package net.kemitix.s3thorp.awssdk
 import cats.effect.IO
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.PutObjectRequest
+import net.kemitix.s3thorp.S3Action.UploadS3Action
 import net.kemitix.s3thorp._
 import net.kemitix.s3thorp.domain.{Bucket, Config, LocalFile, MD5Hash}
 

@@ -5,6 +5,7 @@ import com.amazonaws.services.s3.transfer.{TransferManager, TransferManagerBuild
 import com.amazonaws.services.s3.{AmazonS3, AmazonS3ClientBuilder}
 import com.github.j5ik2o.reactive.aws.s3.S3AsyncClient
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
+import net.kemitix.s3thorp.S3Action.{CopyS3Action, DeleteS3Action}
 import net.kemitix.s3thorp._
 import net.kemitix.s3thorp.domain._
 
