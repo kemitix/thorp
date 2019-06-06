@@ -52,6 +52,7 @@ object Sync {
   }
 
   private def sortCopyActionsFirst(ioActions: IO[Stream[S3Action]]) =
-    ioActions.flatMap { actions => IO { actions.sorted } }
+    for { actions <- ioActions }
+      yield actions.sorted
 
 }
