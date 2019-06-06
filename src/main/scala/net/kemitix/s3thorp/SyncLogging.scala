@@ -19,13 +19,13 @@ object SyncLogging {
   def logRunFinished(actions: Stream[S3Action],
                      info: Int => String => Unit)
                     (implicit c: Config): IO[Unit] = IO {
-    val counters = actions.foldLeft(Counters())(logActivity)
+    val counters = actions.foldLeft(Counters())(countActivities)
     info(1)(s"Uploaded ${counters.uploaded} files")
     info(1)(s"Copied   ${counters.copied} files")
     info(1)(s"Deleted  ${counters.deleted} files")
   }
 
-  private def logActivity(implicit c: Config): (Counters, S3Action) => Counters =
+  private def countActivities(implicit c: Config): (Counters, S3Action) => Counters =
     (counters: Counters, s3Action: S3Action) => {
       s3Action match {
         case UploadS3Action(remoteKey, _) =>
