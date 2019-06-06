@@ -283,7 +283,7 @@ class S3ClientMultiPartUploaderSuite
           override def abortMultipartUpload(abortMultipartUploadRequest: AbortMultipartUploadRequest): Unit = {
             canceled set true
           }
-        }) {}
+        })
   }
 
   private def invoke(uploader: S3ClientMultiPartUploader, theFile: LocalFile, progressListener: UploadProgressListener) = {
