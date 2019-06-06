@@ -1,7 +1,7 @@
 package net.kemitix.s3thorp.aws.lib
 
 import cats.effect.IO
-import com.amazonaws.services.s3.model.PutObjectResult
+import com.amazonaws.services.s3.model.{ListObjectsV2Result, PutObjectResult}
 import net.kemitix.s3thorp.domain.{Bucket, LocalFile, RemoteKey}
 import software.amazon.awssdk.services.s3.model.{CopyObjectResponse, DeleteObjectResponse, ListObjectsV2Response}
 
@@ -9,7 +9,7 @@ object S3ClientLogging {
 
   def logListObjectsStart(bucket: Bucket,
                           prefix: RemoteKey)
-                         (implicit info: Int => String => Unit): ListObjectsV2Response => IO[ListObjectsV2Response] = {
+                         (implicit info: Int => String => Unit): ListObjectsV2Result => IO[ListObjectsV2Result] = {
     in => IO {
       info(3)(s"Fetch S3 Summary: ${bucket.name}:${prefix.key}")
       in
@@ -18,7 +18,7 @@ object S3ClientLogging {
 
   def logListObjectsFinish(bucket: Bucket,
                            prefix: RemoteKey)
-                          (implicit info: Int => String => Unit): ListObjectsV2Response => IO[Unit] = {
+                          (implicit info: Int => String => Unit): ListObjectsV2Result => IO[Unit] = {
     in => IO {
       info(2)(s"Fetched S3 Summary: ${bucket.name}:${prefix.key}")
     }

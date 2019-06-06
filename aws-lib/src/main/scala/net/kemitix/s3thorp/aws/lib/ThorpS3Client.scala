@@ -14,7 +14,7 @@ class ThorpS3Client(ioS3Client: S3CatsIOClient,
                     amazonS3TransferManager: => TransferManager)
   extends S3Client {
 
-  lazy val objectLister = new S3ClientObjectLister(ioS3Client)
+  lazy val objectLister = new S3ClientObjectLister(amazonS3Client)
   lazy val copier = new S3ClientCopier(ioS3Client)
   lazy val uploader = new S3ClientTransferManager(amazonS3TransferManager)
   lazy val deleter = new S3ClientDeleter(ioS3Client)
