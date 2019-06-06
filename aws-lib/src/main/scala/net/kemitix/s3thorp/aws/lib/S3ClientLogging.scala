@@ -5,7 +5,7 @@ import com.amazonaws.services.s3.model.PutObjectResult
 import net.kemitix.s3thorp.domain.{Bucket, LocalFile, RemoteKey}
 import software.amazon.awssdk.services.s3.model.{CopyObjectResponse, DeleteObjectResponse, ListObjectsV2Response}
 
-trait S3ClientLogging {
+object S3ClientLogging {
 
   def logListObjectsStart(bucket: Bucket,
                           prefix: RemoteKey)

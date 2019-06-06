@@ -3,8 +3,7 @@ package net.kemitix.s3thorp.aws.lib
 import com.amazonaws.services.s3.model.{AmazonS3Exception, InitiateMultipartUploadResult, UploadPartRequest, UploadPartResult}
 import net.kemitix.s3thorp.domain.{LocalFile, MD5Hash}
 
-trait S3ClientTransferManagerLogging
-  extends S3ClientLogging {
+object S3ClientTransferManagerLogging {
 
   private val prefix = "transfer-manager"
 

@@ -12,8 +12,7 @@ import software.amazon.awssdk.services.s3.model.{Bucket => _}
 class ThorpS3Client(ioS3Client: S3CatsIOClient,
                     amazonS3Client: => AmazonS3,
                     amazonS3TransferManager: => TransferManager)
-  extends S3Client
-    with S3ClientLogging {
+  extends S3Client {
 
   lazy val objectLister = new S3ClientObjectLister(ioS3Client)
   lazy val copier = new S3ClientCopier(ioS3Client)

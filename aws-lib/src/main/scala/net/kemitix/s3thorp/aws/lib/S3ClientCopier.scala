@@ -3,11 +3,11 @@ package net.kemitix.s3thorp.aws.lib
 import cats.effect.IO
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
 import net.kemitix.s3thorp.aws.api.S3Action.CopyS3Action
+import net.kemitix.s3thorp.aws.lib.S3ClientLogging.{logCopyFinish, logCopyStart}
 import net.kemitix.s3thorp.domain.{Bucket, MD5Hash, RemoteKey}
 import software.amazon.awssdk.services.s3.model.CopyObjectRequest
 
-class S3ClientCopier(s3Client: S3CatsIOClient)
-  extends S3ClientLogging {
+class S3ClientCopier(s3Client: S3CatsIOClient) {
 
   def copy(bucket: Bucket,
            sourceKey: RemoteKey,
