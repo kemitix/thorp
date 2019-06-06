@@ -15,8 +15,6 @@ class ThorpS3Client(ioS3Client: S3CatsIOClient,
   extends S3Client
     with S3ClientLogging {
 
-//  lazy val amazonS3Client = AmazonS3ClientBuilder.defaultClient
-//  lazy val amazonS3TransferManager = TransferManagerBuilder.defaultTransferManager
   lazy val objectLister = new S3ClientObjectLister(ioS3Client)
   lazy val copier = new S3ClientCopier(ioS3Client)
   lazy val uploader = new S3ClientPutObjectUploader(amazonS3Client)
@@ -28,14 +26,12 @@ class ThorpS3Client(ioS3Client: S3CatsIOClient,
                           (implicit info: Int => String => Unit): IO[S3ObjectsData] =
     objectLister.listObjects(bucket, prefix)
 
-
   override def copy(bucket: Bucket,
                     sourceKey: RemoteKey,
                     hash: MD5Hash,
                     targetKey: RemoteKey)
                    (implicit info: Int => String => Unit): IO[CopyS3Action] =
     copier.copy(bucket, sourceKey,hash, targetKey)
-
 
   override def upload(localFile: LocalFile,
                       bucket: Bucket,
