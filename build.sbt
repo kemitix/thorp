@@ -29,6 +29,10 @@ lazy val legacyRoot = (project in file("."))
       "-Ypartial-unification")
   ).dependsOn(core)
 
+val testDependencies = libraryDependencies ++= Seq(
+  "org.scalatest" %% "scalatest" % "3.0.7" % "test"
+)
+
 // cli -> aws-lib (-> legacyRoot) -> core -> aws-api -> domain
 
 lazy val cli = (project in file("cli"))
@@ -46,6 +50,7 @@ lazy val `aws-lib` = (project in file("aws-lib"))
 
 lazy val core = (project in file("core"))
   .dependsOn(`aws-api`)
+  .settings(testDependencies)
 
 lazy val `aws-api` = (project in file("aws-api"))
   .dependsOn(domain)
@@ -56,9 +61,4 @@ lazy val `aws-api` = (project in file("aws-api"))
   )
 
 lazy val domain = (project in file("domain"))
-  .settings(
-    libraryDependencies ++= Seq(
-      // testing
-      "org.scalatest" %% "scalatest" % "3.0.7" % "test"
-    )
-  )
+  .settings(testDependencies)
