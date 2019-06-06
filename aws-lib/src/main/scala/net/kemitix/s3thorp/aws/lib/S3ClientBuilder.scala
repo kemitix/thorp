@@ -5,7 +5,6 @@ import com.amazonaws.services.s3.{AmazonS3, AmazonS3ClientBuilder}
 import com.github.j5ik2o.reactive.aws.s3.S3AsyncClient
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
 import net.kemitix.s3thorp.aws.api.S3Client
-import net.kemitix.s3thorp.awssdk.{JavaClientWrapper, ThorpS3Client}
 
 object S3ClientBuilder {
 
