@@ -19,7 +19,7 @@ val awsSdkDependencies = Seq(
     "com.github.j5ik2o" %% "reactive-aws-s3-core" % "1.1.3",
     "com.github.j5ik2o" %% "reactive-aws-s3-cats" % "1.1.3",
     // AWS SDK - multi-part upload
-    "com.amazonaws" % "aws-java-sdk-s3" % "1.11.564",
+    "com.amazonaws" % "aws-java-sdk-s3" % "1.11.566",
   )
 )
 val loggingSettings = Seq(
