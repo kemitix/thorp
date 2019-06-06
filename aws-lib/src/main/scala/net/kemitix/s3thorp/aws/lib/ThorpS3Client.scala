@@ -17,8 +17,7 @@ class ThorpS3Client(ioS3Client: S3CatsIOClient,
 
   lazy val objectLister = new S3ClientObjectLister(ioS3Client)
   lazy val copier = new S3ClientCopier(ioS3Client)
-  lazy val uploader = new S3ClientPutObjectUploader(amazonS3Client)
-  lazy val multiPartUploader = new S3ClientMultiPartTransferManager(amazonS3TransferManager)
+  lazy val uploader = new S3ClientMultiPartTransferManager(amazonS3TransferManager)
   lazy val deleter = new S3ClientDeleter(ioS3Client)
 
   override def listObjects(bucket: Bucket,
@@ -41,10 +40,7 @@ class ThorpS3Client(ioS3Client: S3CatsIOClient,
                       maxRetries: Int)
                      (implicit info: Int => String => Unit,
                       warn: String => Unit): IO[S3Action] =
-    if (multiPartUploader.accepts(localFile)(multiPartThreshold))
-      multiPartUploader.upload(localFile, bucket, progressListener, multiPartThreshold, 1, maxRetries)
-    else
-      uploader.upload(localFile, bucket, progressListener, multiPartThreshold, tryCount, maxRetries)
+    uploader.upload(localFile, bucket, progressListener, multiPartThreshold, 1, maxRetries)
 
   override def delete(bucket: Bucket,
                       remoteKey: RemoteKey)
