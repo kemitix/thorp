@@ -6,7 +6,7 @@ import net.kemitix.s3thorp.domain.{LocalFile, MD5Hash}
 trait S3ClientTransferManagerLogging
   extends S3ClientLogging {
 
-  private val prefix = "multi-part upload"
+  private val prefix = "transfer-manager"
 
   def logMultiPartUploadStart(localFile: LocalFile,
                               tryCount: Int)
