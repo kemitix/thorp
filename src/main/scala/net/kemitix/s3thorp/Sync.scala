@@ -13,9 +13,11 @@ import net.kemitix.s3thorp.SyncLogging.{logFileScan, logRunFinished, logRunStart
 import net.kemitix.s3thorp.awssdk.S3Client
 import net.kemitix.s3thorp.domain.{Config, MD5Hash}
 
-class Sync(s3Client: S3Client, md5HashGenerator: File => MD5Hash) {
+object Sync {
 
-  def run(info: Int => String => Unit,
+  def run(s3Client: S3Client,
+          md5HashGenerator: File => MD5Hash,
+          info: Int => String => Unit,
           warn: String => Unit,
           error: String => Unit)
          (implicit c: Config): IO[Unit] = {

@@ -16,15 +16,15 @@ object Main extends IOApp {
 
   val md5HashGenerator: File => MD5Hash = file => new MD5HashGenerator {}.md5File(file)(defaultConfig)
 
-  val sync = new Sync(S3ClientBuilder.defaultClient, md5HashGenerator)
-
   val logger = new Logger
 
   def program(args: List[String]): IO[ExitCode] =
     for {
       config <- ParseArgs(args, defaultConfig)
       _ <- IO(logger.info(1)("S3Thorp - hashed sync for s3")(config))
-      _ <- sync.run(
+      _ <- Sync.run(
+        S3ClientBuilder.defaultClient,
+        md5HashGenerator,
         l => i => logger.info(l)(i)(config),
         w => logger.warn(w),
         e => logger.error(e))(config)

@@ -52,8 +52,7 @@ class SyncSuite
       val s3Client = new RecordingClient(testBucket, S3ObjectsData(
         byHash = Map(),
         byKey = Map()))
-      val sync = new Sync(s3Client, md5HashGenerator)
-      sync.run(logInfo, logWarn, logError)(config).unsafeRunSync
+      Sync.run(s3Client, md5HashGenerator, logInfo, logWarn, logError)(config).unsafeRunSync
       it("uploads all files") {
         val expectedUploads = Map(
           "subdir/leaf-file" -> leafRemoteKey,
@@ -79,8 +78,7 @@ class SyncSuite
           RemoteKey("prefix/root-file") -> HashModified(rootHash, lastModified),
           RemoteKey("prefix/subdir/leaf-file") -> HashModified(leafHash, lastModified)))
       val s3Client = new RecordingClient(testBucket, s3ObjectsData)
-      val sync = new Sync(s3Client, md5HashGenerator)
-      sync.run(logInfo, logWarn, logError)(config).unsafeRunSync
+      Sync.run(s3Client, md5HashGenerator, logInfo, logWarn, logError)(config).unsafeRunSync
       it("uploads nothing") {
         val expectedUploads = Map()
         assertResult(expectedUploads)(s3Client.uploadsRecord)
@@ -106,8 +104,7 @@ class SyncSuite
           RemoteKey("prefix/root-file-old") -> HashModified(rootHash, lastModified),
           RemoteKey("prefix/subdir/leaf-file") -> HashModified(leafHash, lastModified)))
       val s3Client = new RecordingClient(testBucket, s3ObjectsData)
-      val sync = new Sync(s3Client, md5HashGenerator)
-      sync.run(logInfo, logWarn, logError)(config).unsafeRunSync
+      Sync.run(s3Client, md5HashGenerator, logInfo, logWarn, logError)(config).unsafeRunSync
       it("uploads nothing") {
         val expectedUploads = Map()
         assertResult(expectedUploads)(s3Client.uploadsRecord)
@@ -135,8 +132,7 @@ class SyncSuite
         byKey = Map(
           deletedKey -> HashModified(deletedHash, lastModified)))
       val s3Client = new RecordingClient(testBucket, s3ObjectsData)
-      val sync = new Sync(s3Client, md5HashGenerator)
-      sync.run(logInfo, logWarn, logError)(config).unsafeRunSync
+      Sync.run(s3Client, md5HashGenerator, logInfo, logWarn, logError)(config).unsafeRunSync
       it("deleted key") {
         val expectedDeletions = Set(deletedKey)
         assertResult(expectedDeletions)(s3Client.deletionsRecord)
@@ -147,9 +143,8 @@ class SyncSuite
       val recordingS3Client = new RecordingS3Client
       val transferManager = TransferManagerBuilder.standard
         .withS3Client(recordingS3Client).build
-      val client = S3ClientBuilder.createClient(recordingS3ClientLegacy, recordingS3Client, transferManager)
-      val sync = new Sync(client, md5HashGenerator)
-      sync.run(logInfo, logWarn, logError)(config).unsafeRunSync
+      val s3Client = S3ClientBuilder.createClient(recordingS3ClientLegacy, recordingS3Client, transferManager)
+      Sync.run(s3Client, md5HashGenerator, logInfo, logWarn, logError)(config).unsafeRunSync
       it("invokes the underlying Java s3client") {
         val expected = Set(
           putObjectRequest(testBucket, rootRemoteKey, rootFile),
@@ -163,8 +158,7 @@ class SyncSuite
       val configWithExclusion = config.copy(excludes = List(Exclude("leaf")))
       val s3ObjectsData = S3ObjectsData(Map(), Map())
       val s3Client = new RecordingClient(testBucket, s3ObjectsData)
-      val sync = new Sync(s3Client, md5HashGenerator)
-      sync.run(logInfo, logWarn, logError)(configWithExclusion).unsafeRunSync
+      Sync.run(s3Client, md5HashGenerator, logInfo, logWarn, logError)(configWithExclusion).unsafeRunSync
       it("is not uploaded") {
         val expectedUploads = Map(
           "root-file" -> rootRemoteKey
