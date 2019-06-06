@@ -23,12 +23,11 @@ trait S3ClientUploader {
   def progressListener(uploadProgressListener: UploadProgressListener): ProgressListener = {
     new ProgressListener {
       override def progressChanged(event: ProgressEvent): Unit = {
-        if (event.getEventType.isTransferEvent)
-          TransferEvent(event.getEventType.name)
-        else if (event.getEventType equals ProgressEventType.RESPONSE_BYTE_TRANSFER_EVENT)
-          ByteTransferEvent(event.getEventType.name)
-        else
-          RequestEvent(event.getEventType.name, event.getBytes, event.getBytesTransferred)
+        event match {
+          case e if e.getEventType.isTransferEvent => TransferEvent(e.getEventType.name)
+          case e if e.getEventType equals ProgressEventType.RESPONSE_BYTE_TRANSFER_EVENT => ByteTransferEvent(e.getEventType.name)
+          case e => RequestEvent(e.getEventType.name, e.getBytes, e.getBytesTransferred)
+        }
       }
     }
   }

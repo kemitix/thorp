@@ -50,11 +50,7 @@ object ActionGenerator {
   private def copyFile(bucket: Bucket,
                        localFile: LocalFile,
                        matchByHash: Set[RemoteMetaData]): Stream[Action] =
-    Stream(
-      ToCopy(
-        bucket,
-        sourceKey = matchByHash.head.remoteKey,
-        hash = localFile.hash,
-        targetKey = localFile.remoteKey))
+    matchByHash.headOption.map(_.remoteKey).toStream.map {sourceKey =>
+      ToCopy(bucket, sourceKey, localFile.hash, localFile.remoteKey)}
 
 }

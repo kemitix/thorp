@@ -13,8 +13,7 @@ class ThorpS3Client(ioS3Client: S3CatsIOClient,
                     amazonS3Client: => AmazonS3,
                     amazonS3TransferManager: => TransferManager)
   extends S3Client
-    with S3ClientLogging
-    with QuoteStripper {
+    with S3ClientLogging {
 
 //  lazy val amazonS3Client = AmazonS3ClientBuilder.defaultClient
 //  lazy val amazonS3TransferManager = TransferManagerBuilder.defaultTransferManager

@@ -5,12 +5,12 @@ import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.PutObjectRequest
 import net.kemitix.s3thorp.aws.api.S3Action.UploadS3Action
 import net.kemitix.s3thorp.aws.api.UploadProgressListener
+import net.kemitix.s3thorp.core.QuoteStripper.stripQuotes
 import net.kemitix.s3thorp.domain.{Bucket, LocalFile, MD5Hash}
 
 class S3ClientPutObjectUploader(amazonS3: => AmazonS3)
   extends S3ClientUploader
-    with S3ClientLogging
-    with QuoteStripper {
+    with S3ClientLogging {
 
   override def accepts(localFile: LocalFile)(implicit multiPartThreshold: Long): Boolean = true
 

@@ -4,12 +4,12 @@ import java.io.File
 import java.time.Instant
 
 import com.amazonaws.AmazonClientException
+import com.amazonaws.event.ProgressListener
 import com.amazonaws.services.s3.model
 import com.amazonaws.services.s3.transfer.model.UploadResult
 import com.amazonaws.services.s3.transfer._
 import net.kemitix.s3thorp.aws.api.S3Action.UploadS3Action
 import net.kemitix.s3thorp.aws.api.UploadProgressListener
-import net.kemitix.s3thorp.aws.lib.S3ClientMultiPartTransferManager
 import net.kemitix.s3thorp.core.KeyGenerator.generateKey
 import net.kemitix.s3thorp.core.{MD5HashGenerator, Resource}
 import net.kemitix.s3thorp.domain._
@@ -114,8 +114,6 @@ class S3ClientMultiPartTransferManagerSuite
     override def getState: Transfer.TransferState = ???
 
     override def getProgress: TransferProgress = ???
-
-    import com.amazonaws.event.ProgressListener
 
     override def addProgressListener(listener: ProgressListener): Unit = ???
 

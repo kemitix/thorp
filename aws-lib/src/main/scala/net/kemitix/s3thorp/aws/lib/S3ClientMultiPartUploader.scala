@@ -6,6 +6,7 @@ import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model._
 import net.kemitix.s3thorp.aws.api.S3Action.{ErroredS3Action, UploadS3Action}
 import net.kemitix.s3thorp.aws.api.{S3Action, UploadProgressListener}
+import net.kemitix.s3thorp.core.QuoteStripper.stripQuotes
 import net.kemitix.s3thorp.core.MD5HashGenerator.md5FilePart
 import net.kemitix.s3thorp.domain.{Bucket, LocalFile, MD5Hash}
 
@@ -14,8 +15,7 @@ import scala.util.control.NonFatal
 
 private class S3ClientMultiPartUploader(s3Client: AmazonS3)
   extends S3ClientUploader
-    with S3ClientMultiPartUploaderLogging
-    with QuoteStripper {
+    with S3ClientMultiPartUploaderLogging {
 
   def accepts(localFile: LocalFile)
              (implicit multiPartThreshold: Long): Boolean =
