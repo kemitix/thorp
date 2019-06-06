@@ -3,8 +3,9 @@ package net.kemitix.s3thorp.awssdk
 import cats.effect.IO
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.PutObjectRequest
-import net.kemitix.s3thorp.S3Action.UploadS3Action
-import net.kemitix.s3thorp.domain.{Bucket, Config, LocalFile, MD5Hash}
+import net.kemitix.s3thorp.aws.api.S3Action.UploadS3Action
+import net.kemitix.s3thorp.aws.api.UploadProgressListener
+import net.kemitix.s3thorp.domain.{Bucket, LocalFile, MD5Hash}
 
 class S3ClientPutObjectUploader(amazonS3: => AmazonS3)
   extends S3ClientUploader

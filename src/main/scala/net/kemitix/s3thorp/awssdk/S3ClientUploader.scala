@@ -2,9 +2,9 @@ package net.kemitix.s3thorp.awssdk
 
 import cats.effect.IO
 import com.amazonaws.event.{ProgressEvent, ProgressEventType, ProgressListener}
-import net.kemitix.s3thorp.domain.{Bucket, Config, LocalFile}
-import net.kemitix.s3thorp.S3Action
-import net.kemitix.s3thorp.awssdk.UploadEvent.{ByteTransferEvent, RequestEvent, TransferEvent}
+import net.kemitix.s3thorp.aws.api.UploadEvent.{ByteTransferEvent, RequestEvent, TransferEvent}
+import net.kemitix.s3thorp.aws.api.{S3Action, UploadProgressListener}
+import net.kemitix.s3thorp.domain.{Bucket, LocalFile}
 
 trait S3ClientUploader {
 

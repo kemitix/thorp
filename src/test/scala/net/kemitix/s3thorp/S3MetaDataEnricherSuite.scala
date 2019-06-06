@@ -4,7 +4,8 @@ import java.io.File
 import java.time.Instant
 
 import net.kemitix.s3thorp.S3MetaDataEnricher.{getMetadata, getS3Status}
-import net.kemitix.s3thorp.awssdk.{S3Client, S3ClientBuilder}
+import net.kemitix.s3thorp.aws.api.S3Client
+import net.kemitix.s3thorp.awssdk.S3ClientBuilder
 import net.kemitix.s3thorp.domain.{Bucket, Config, HashModified, KeyModified, LastModified, LocalFile, MD5Hash, RemoteKey, RemoteMetaData, S3MetaData, S3ObjectsData}
 import org.scalatest.FunSpec
 

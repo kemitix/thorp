@@ -49,6 +49,11 @@ lazy val core = (project in file("core"))
 
 lazy val `aws-api` = (project in file("aws-api"))
   .dependsOn(domain)
+  .settings(
+    libraryDependencies ++= Seq(
+      "org.typelevel" %% "cats-effect" % "1.2.0"
+    )
+  )
 
 lazy val domain = (project in file("domain"))
   .settings(

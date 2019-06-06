@@ -1,4 +1,4 @@
-package net.kemitix.s3thorp
+package net.kemitix.s3thorp.aws.api
 
 import net.kemitix.s3thorp.domain.{MD5Hash, RemoteKey}
 

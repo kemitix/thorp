@@ -1,12 +1,11 @@
 package net.kemitix.s3thorp.awssdk
 
 import cats.effect.IO
-import com.amazonaws.event.{ProgressEvent, ProgressEventType, ProgressListener}
 import com.amazonaws.services.s3.model.PutObjectRequest
 import com.amazonaws.services.s3.transfer.TransferManager
-import net.kemitix.s3thorp.S3Action.UploadS3Action
-import net.kemitix.s3thorp._
-import net.kemitix.s3thorp.domain.{Bucket, Config, LocalFile, MD5Hash, RemoteKey}
+import net.kemitix.s3thorp.aws.api.S3Action.UploadS3Action
+import net.kemitix.s3thorp.aws.api.{S3Action, UploadProgressListener}
+import net.kemitix.s3thorp.domain.{Bucket, LocalFile, MD5Hash, RemoteKey}
 
 class S3ClientMultiPartTransferManager(transferManager: => TransferManager)
   extends S3ClientUploader

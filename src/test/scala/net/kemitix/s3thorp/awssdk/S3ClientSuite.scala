@@ -3,12 +3,12 @@ package net.kemitix.s3thorp.awssdk
 import java.io.File
 import java.time.Instant
 
-import com.amazonaws.services.s3.model
-import com.amazonaws.services.s3.model.PutObjectResult
+import com.amazonaws.services.s3.model.{PutObjectRequest, PutObjectResult}
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
-import net.kemitix.s3thorp.S3Action.UploadS3Action
 import net.kemitix.s3thorp._
+import net.kemitix.s3thorp.aws.api.S3Action.UploadS3Action
+import net.kemitix.s3thorp.aws.api.{S3Client, UploadProgressListener}
 import net.kemitix.s3thorp.domain.{Bucket, Config, HashModified, KeyModified, LastModified, LocalFile, MD5Hash, RemoteKey, S3ObjectsData}
 import org.scalatest.FunSpec
 
@@ -88,7 +88,7 @@ class S3ClientSuite
       val source = Resource(this, "../upload")
       val md5Hash = MD5HashGenerator.md5File(source.toPath.resolve("root-file").toFile)
       val amazonS3 = new MyAmazonS3 {
-        override def putObject(putObjectRequest: model.PutObjectRequest): PutObjectResult = {
+        override def putObject(putObjectRequest: PutObjectRequest): PutObjectResult = {
           val result = new PutObjectResult
           result.setETag(md5Hash.hash)
           result

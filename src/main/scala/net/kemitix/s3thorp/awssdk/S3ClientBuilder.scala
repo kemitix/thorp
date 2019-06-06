@@ -1,11 +1,10 @@
-package net.kemitix.s3thorp.aws.lib
+package net.kemitix.s3thorp.awssdk
 
 import com.amazonaws.services.s3.transfer.{TransferManager, TransferManagerBuilder}
 import com.amazonaws.services.s3.{AmazonS3, AmazonS3ClientBuilder}
 import com.github.j5ik2o.reactive.aws.s3.S3AsyncClient
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
 import net.kemitix.s3thorp.aws.api.S3Client
-import net.kemitix.s3thorp.awssdk.{JavaClientWrapper, ThorpS3Client}
 
 object S3ClientBuilder {
 
@@ -15,9 +14,11 @@ object S3ClientBuilder {
     new ThorpS3Client(S3CatsIOClient(s3AsyncClient), amazonS3Client, amazonS3TransferManager)
   }
 
-  val defaultClient: S3Client =
-    createClient(new JavaClientWrapper {}.underlying,
-      AmazonS3ClientBuilder.defaultClient,
-      TransferManagerBuilder.defaultTransferManager)
+  val defaultClient: S3Client = {
+    val s3AsyncClient: S3AsyncClient = new JavaClientWrapper {}.underlying
+    val amazonS3Client = AmazonS3ClientBuilder.defaultClient
+    val transferManager = TransferManagerBuilder.standard.withS3Client(amazonS3Client).build
+    createClient(s3AsyncClient, amazonS3Client, transferManager)
+  }
 
 }

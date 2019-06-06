@@ -10,7 +10,8 @@ import net.kemitix.s3thorp.ActionSubmitter.submitAction
 import net.kemitix.s3thorp.LocalFileStream.findFiles
 import net.kemitix.s3thorp.S3MetaDataEnricher.getMetadata
 import net.kemitix.s3thorp.SyncLogging.{logFileScan, logRunFinished, logRunStart}
-import net.kemitix.s3thorp.awssdk.S3Client
+import net.kemitix.s3thorp.aws.api.S3Action
+import net.kemitix.s3thorp.aws.api.S3Client
 import net.kemitix.s3thorp.domain.{Config, MD5Hash}
 
 object Sync {

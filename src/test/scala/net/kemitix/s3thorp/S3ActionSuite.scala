@@ -1,6 +1,6 @@
 package net.kemitix.s3thorp
 
-import net.kemitix.s3thorp.S3Action.{CopyS3Action, DeleteS3Action, UploadS3Action}
+import net.kemitix.s3thorp.aws.api.S3Action.{CopyS3Action, DeleteS3Action, UploadS3Action}
 import net.kemitix.s3thorp.domain.{MD5Hash, RemoteKey}
 import org.scalatest.FunSpec
 

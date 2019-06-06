@@ -1,4 +1,4 @@
-package net.kemitix.s3thorp.awssdk
+package net.kemitix.s3thorp.aws.api
 
 sealed trait UploadEvent {
   def name: String

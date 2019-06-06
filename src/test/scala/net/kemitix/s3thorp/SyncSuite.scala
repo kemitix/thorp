@@ -5,12 +5,13 @@ import java.time.Instant
 import java.util.concurrent.CompletableFuture
 
 import cats.effect.IO
-import com.amazonaws.services.s3.model._
+import com.amazonaws.services.s3.model.{PutObjectRequest, PutObjectResult}
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder
 import com.github.j5ik2o.reactive.aws.s3.S3AsyncClient
-import net.kemitix.s3thorp.S3Action.{CopyS3Action, DeleteS3Action, UploadS3Action}
-import net.kemitix.s3thorp.awssdk.{MyAmazonS3, S3Client, S3ClientBuilder, UploadProgressListener}
-import net.kemitix.s3thorp.domain.{Bucket, Config, Exclude, HashModified, KeyModified, LastModified, LocalFile, MD5Hash, RemoteKey, S3ObjectsData}
+import net.kemitix.s3thorp.aws.api.S3Action.{CopyS3Action, DeleteS3Action, UploadS3Action}
+import net.kemitix.s3thorp.aws.api.{S3Client, UploadProgressListener}
+import net.kemitix.s3thorp.awssdk.MyAmazonS3
+import net.kemitix.s3thorp.domain._
 import org.scalatest.FunSpec
 import software.amazon.awssdk.services.s3
 import software.amazon.awssdk.services.s3.model.{ListObjectsV2Request, ListObjectsV2Response}
@@ -142,7 +143,7 @@ class SyncSuite
       val recordingS3Client = new RecordingS3Client
       val transferManager = TransferManagerBuilder.standard
         .withS3Client(recordingS3Client).build
-      val s3Client = S3ClientBuilder.createClient(recordingS3ClientLegacy, recordingS3Client, transferManager)
+      val s3Client: S3Client = net.kemitix.s3thorp.awssdk.S3ClientBuilder.createClient(recordingS3ClientLegacy, recordingS3Client, transferManager)
       Sync.run(s3Client, md5HashGenerator, logInfo, logWarn, logError)(config).unsafeRunSync
       it("invokes the underlying Java s3client") {
         val expected = Set(
