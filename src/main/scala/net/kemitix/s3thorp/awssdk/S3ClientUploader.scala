@@ -4,6 +4,7 @@ import cats.effect.IO
 import com.amazonaws.event.{ProgressEvent, ProgressEventType, ProgressListener}
 import net.kemitix.s3thorp.domain.{Bucket, Config, LocalFile}
 import net.kemitix.s3thorp.S3Action
+import net.kemitix.s3thorp.awssdk.UploadEvent.{ByteTransferEvent, RequestEvent, TransferEvent}
 
 trait S3ClientUploader {
 
@@ -22,11 +23,11 @@ trait S3ClientUploader {
     new ProgressListener {
       override def progressChanged(event: ProgressEvent): Unit = {
         if (event.getEventType.isTransferEvent)
-          UploadTransferEvent(event.getEventType.name)
+          TransferEvent(event.getEventType.name)
         else if (event.getEventType equals ProgressEventType.RESPONSE_BYTE_TRANSFER_EVENT)
-          UploadByteTransferEvent(event.getEventType.name)
+          ByteTransferEvent(event.getEventType.name)
         else
-          UploadRequestEvent(event.getEventType.name, event.getBytes, event.getBytesTransferred)
+          RequestEvent(event.getEventType.name, event.getBytes, event.getBytesTransferred)
       }
     }
   }
