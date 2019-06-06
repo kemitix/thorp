@@ -1,3 +1,8 @@
+val applicationSettings = Seq(
+  name := "s3thorp",
+  version := "0.1",
+  scalaVersion := "2.12.8"
+)
 val testDependencies = Seq(
   libraryDependencies ++= Seq(
     "org.scalatest" %% "scalatest" % "3.0.7" % "test"
@@ -36,34 +41,28 @@ val catsEffectsSettings = Seq(
     "-language:higherKinds",
     "-Ypartial-unification")
 )
-lazy val legacyRoot = (project in file("."))
-  .settings(
-    name := "s3thorp",
-    version := "0.1",
-    scalaVersion := "2.12.8"
-  )
-  .dependsOn(`aws-lib`)
 
-// cli (-> legacyRoot)-> aws-lib  -> core -> aws-api -> domain
+// cli -> aws-lib -> core -> aws-api -> domain
 
 lazy val cli = (project in file("cli"))
-  .dependsOn(`aws-lib`)
-  .aggregate(legacyRoot, `aws-api`, core, `aws-lib`, domain)
+  .settings(applicationSettings)
+  .aggregate(`aws-lib`, core, `aws-api`, domain)
   .settings(loggingSettings)
   .settings(commandLineParsing)
+  .dependsOn(`aws-lib`)
 
 lazy val `aws-lib` = (project in file("aws-lib"))
-  .dependsOn(core)
   .settings(awsSdkDependencies)
   .settings(testDependencies)
+  .dependsOn(core)
 
 lazy val core = (project in file("core"))
-  .dependsOn(`aws-api`)
   .settings(testDependencies)
+  .dependsOn(`aws-api`)
 
 lazy val `aws-api` = (project in file("aws-api"))
-  .dependsOn(domain)
   .settings(catsEffectsSettings)
+  .dependsOn(domain)
 
 lazy val domain = (project in file("domain"))
   .settings(testDependencies)
