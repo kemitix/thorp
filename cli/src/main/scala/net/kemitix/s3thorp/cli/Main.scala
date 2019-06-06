@@ -16,26 +16,27 @@ object Main extends IOApp {
 
   val md5HashGenerator: File => MD5Hash = file => new MD5HashGenerator {}.md5File(file)(defaultConfig)
 
-  val logger = new Logger
-
   def program(args: List[String]): IO[ExitCode] =
     for {
       config <- ParseArgs(args, defaultConfig)
-      _ <- IO(logger.info(1)("S3Thorp - hashed sync for s3")(config))
+      logger = new Logger(config.verbose)
+      _ <- IO(logger.info(1)("S3Thorp - hashed sync for s3"))
       _ <- Sync.run(
         S3ClientBuilder.defaultClient,
         md5HashGenerator,
-        l => i => logger.info(l)(i)(config),
+        l => i => logger.info(l)(i),
         w => logger.warn(w),
         e => logger.error(e))(config)
     } yield ExitCode.Success
 
-  override def run(args: List[String]): IO[ExitCode] =
+  override def run(args: List[String]): IO[ExitCode] = {
+    val logger = new Logger(1)
     program(args)
       .guaranteeCase {
         case Canceled => IO(logger.warn("Interrupted"))
         case Error(e) => IO(logger.error(e.getMessage))
-        case Completed => IO(logger.info(1)("Done")(defaultConfig))
+        case Completed => IO(logger.info(1)("Done"))
       }
+  }
 
 }
