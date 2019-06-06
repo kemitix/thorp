@@ -22,18 +22,19 @@ object Sync {
           warn: String => Unit,
           error: String => Unit)
          (implicit c: Config): IO[Unit] = {
-    def createCopyUploadActions(s3Data: S3ObjectsData) = {
-      sortCopyActionsFirst(
-        (for {
+    def copyUploadActions(s3Data: S3ObjectsData) = {
+      for {actions <- {
+        for {
           file <- findFiles(c.source, md5HashGenerator, info)
           data <- getMetadata(file, s3Data)
           action <- createActions(data)
           s3Action <- submitAction(s3Client, action)(c, info, warn)
-        } yield s3Action)
-          .sequence)
+        } yield s3Action
+      }.sequence
+      } yield actions.sorted
     }
 
-    def createDeleteActions(s3ObjectsData: S3ObjectsData) = {
+    def deleteActions(s3ObjectsData: S3ObjectsData) = {
       (for {
         key <- s3ObjectsData.byKey.keys
         if key.isMissingLocally(c.source, c.prefix)
@@ -45,14 +46,10 @@ object Sync {
       _ <- logRunStart(info)
       s3data <- s3Client.listObjects(c.bucket, c.prefix)(info)
       _ <- logFileScan(info)
-      copyUploadActions <- createCopyUploadActions(s3data)
-      deleteAction <- createDeleteActions(s3data)
+      copyUploadActions <- copyUploadActions(s3data)
+      deleteAction <- deleteActions(s3data)
       _ <- logRunFinished(copyUploadActions ++ deleteAction, info)
     } yield ()
   }
-
-  private def sortCopyActionsFirst(ioActions: IO[Stream[S3Action]]) =
-    for { actions <- ioActions }
-      yield actions.sorted
 
 }
