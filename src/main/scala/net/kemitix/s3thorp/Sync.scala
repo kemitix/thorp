@@ -12,7 +12,7 @@ import net.kemitix.s3thorp.S3MetaDataEnricher.getMetadata
 import net.kemitix.s3thorp.SyncLogging.{logFileScan, logRunFinished, logRunStart}
 import net.kemitix.s3thorp.aws.api.S3Action
 import net.kemitix.s3thorp.aws.api.S3Client
-import net.kemitix.s3thorp.domain.{Config, MD5Hash}
+import net.kemitix.s3thorp.domain.{Config, MD5Hash, S3ObjectsData}
 
 object Sync {
 
@@ -22,28 +22,36 @@ object Sync {
           warn: String => Unit,
           error: String => Unit)
          (implicit c: Config): IO[Unit] = {
+    def createCopyUploadActions(s3Data: S3ObjectsData) = {
+      sortCopyActionsFirst(
+        (for {
+          file <- findFiles(c.source, md5HashGenerator, info)
+          data <- getMetadata(file, s3Data)
+          action <- createActions(data)
+          s3Action <- submitAction(s3Client, action)(c, info, warn)
+        } yield s3Action)
+          .sequence)
+    }
+
+    def createDeleteActions(s3ObjectsData: S3ObjectsData) = {
+      (for {
+        key <- s3ObjectsData.byKey.keys
+        if key.isMissingLocally(c.source, c.prefix)
+        ioDelAction <- submitAction(s3Client, ToDelete(c.bucket, key))(c, info, warn)
+      } yield ioDelAction).toStream.sequence
+    }
+
     for {
-      _ <- IO{logRunStart(info)}
-      _ <- s3Client.listObjects(c.bucket, c.prefix)(info)
-        .map { implicit s3ObjectsData => {
-          logFileScan(info)
-          val actions = for {
-            file <- findFiles(c.source, md5HashGenerator, info)
-            data <- getMetadata(file)
-            action <- createActions(data)
-            s3Action <- submitAction(s3Client, action)(c, info, warn)
-          } yield s3Action
-          val sorted = sort(actions.sequence)
-          val delActions = (for {
-            key <- s3ObjectsData.byKey.keys
-            if key.isMissingLocally(c.source, c.prefix)
-            ioDelAction <- submitAction(s3Client, ToDelete(c.bucket, key))(c, info, warn)
-          } yield ioDelAction).toStream.sequence
-          logRunFinished(list ++ delList, info)
-        }}} yield ()
+      _ <- logRunStart(info)
+      s3data <- s3Client.listObjects(c.bucket, c.prefix)(info)
+      _ <- logFileScan(info)
+      copyUploadActions <- createCopyUploadActions(s3data)
+      deleteAction <- createDeleteActions(s3data)
+      _ <- logRunFinished(copyUploadActions ++ deleteAction, info)
+    } yield ()
   }
 
-  private def sort(ioActions: IO[Stream[S3Action]]) =
+  private def sortCopyActionsFirst(ioActions: IO[Stream[S3Action]]) =
     ioActions.flatMap { actions => IO { actions.sorted } }
 
 }

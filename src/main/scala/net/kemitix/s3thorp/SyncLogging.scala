@@ -1,5 +1,6 @@
 package net.kemitix.s3thorp
 
+import cats.effect.IO
 import net.kemitix.s3thorp.aws.api.S3Action.{CopyS3Action, DeleteS3Action, UploadS3Action}
 import net.kemitix.s3thorp.aws.api.S3Action
 import net.kemitix.s3thorp.domain.Config
@@ -7,17 +8,17 @@ import net.kemitix.s3thorp.domain.Config
 // Logging for the Sync class
 object SyncLogging {
 
-  def logRunStart(info: Int => String => Unit)(implicit c: Config): Unit =
+  def logRunStart[F[_]](info: Int => String => Unit)(implicit c: Config): IO[Unit] = IO {
     info(1)(s"Bucket: ${c.bucket.name}, Prefix: ${c.prefix.key}, Source: ${c.source}, " +
       s"Filter: ${c.filters.map{ f => f.filter}.mkString(""", """)} " +
-      s"Exclude: ${c.excludes.map{ f => f.exclude}.mkString(""", """)}")
+      s"Exclude: ${c.excludes.map{ f => f.exclude}.mkString(""", """)}")}
 
-  def logFileScan(info: Int => String => Unit)(implicit c: Config): Unit =
-    info(1)(s"Scanning local files: ${c.source}...")
+  def logFileScan(info: Int => String => Unit)(implicit c: Config): IO[Unit] = IO{
+    info(1)(s"Scanning local files: ${c.source}...")}
 
-  def logRunFinished(actions: List[S3Action],
+  def logRunFinished(actions: Stream[S3Action],
                      info: Int => String => Unit)
-                    (implicit c: Config): Unit = {
+                    (implicit c: Config): IO[Unit] = IO {
     val counters = actions.foldLeft(Counters())(logActivity)
     info(1)(s"Uploaded ${counters.uploaded} files")
     info(1)(s"Copied   ${counters.copied} files")
