@@ -10,14 +10,13 @@ import net.kemitix.s3thorp.domain.{Bucket, Config, HashModified, KeyModified, La
 import org.scalatest.FunSpec
 
 class S3MetaDataEnricherSuite
-  extends FunSpec
-    with KeyGenerator {
+  extends FunSpec {
 
   private val source = Resource(this, "upload")
   private val prefix = RemoteKey("prefix")
   implicit private val config: Config = Config(Bucket("bucket"), prefix, source = source)
   implicit private val logInfo: Int => String => Unit = l => i => ()
-  private val fileToKey = generateKey(config.source, config.prefix) _
+  private val fileToKey = KeyGenerator.generateKey(config.source, config.prefix) _
   private val fileToHash = (file: File) => MD5HashGenerator.md5File(file)
   val lastModified = LastModified(Instant.now())
 

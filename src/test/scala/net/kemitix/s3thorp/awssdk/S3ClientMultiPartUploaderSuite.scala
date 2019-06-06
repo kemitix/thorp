@@ -12,8 +12,7 @@ import net.kemitix.s3thorp.domain.{Bucket, Config, LocalFile, MD5Hash, RemoteKey
 import org.scalatest.FunSpec
 
 class S3ClientMultiPartUploaderSuite
-  extends FunSpec
-    with KeyGenerator {
+  extends FunSpec {
 
   private val source = Resource(this, "..")
   private val prefix = RemoteKey("prefix")
@@ -21,7 +20,7 @@ class S3ClientMultiPartUploaderSuite
   implicit private val config: Config = Config(bucket, prefix, source = source)
   implicit private val logInfo: Int => String => Unit = l => m => ()
   implicit private val logWarn: String => Unit = w => ()
-  private val fileToKey = generateKey(config.source, config.prefix) _
+  private val fileToKey = KeyGenerator.generateKey(config.source, config.prefix) _
   private val fileToHash = (file: File) => MD5HashGenerator.md5File(file)
 
   describe("multi-part uploader accepts") {

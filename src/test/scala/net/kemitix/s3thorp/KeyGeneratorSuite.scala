@@ -7,11 +7,10 @@ import org.scalatest.FunSpec
 
 class KeyGeneratorSuite extends FunSpec {
 
-  new KeyGenerator {
     private val source: File = Resource(this, "upload")
     private val prefix = RemoteKey("prefix")
     implicit private val config: Config = Config(Bucket("bucket"), prefix, source = source)
-    private val fileToKey = generateKey(config.source, config.prefix) _
+    private val fileToKey = KeyGenerator.generateKey(config.source, config.prefix) _
 
     describe("key generator") {
       def resolve(subdir: String): File = {
@@ -32,5 +31,5 @@ class KeyGeneratorSuite extends FunSpec {
         }
       }
     }
-  }
+
 }

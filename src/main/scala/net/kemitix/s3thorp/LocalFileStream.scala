@@ -2,10 +2,10 @@ package net.kemitix.s3thorp
 
 import java.io.File
 
+import net.kemitix.s3thorp.KeyGenerator.generateKey
 import net.kemitix.s3thorp.domain.{Config, LocalFile, MD5Hash}
 
-object LocalFileStream
-  extends KeyGenerator {
+object LocalFileStream {
 
   def findFiles(file: File,
                 md5HashGenerator: File => MD5Hash,

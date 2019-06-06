@@ -18,8 +18,7 @@ import software.amazon.awssdk.services.s3.model.{ListObjectsV2Request, ListObjec
 import software.amazon.awssdk.services.s3.{S3AsyncClient => JavaS3AsyncClient}
 
 class SyncSuite
-  extends FunSpec
-    with KeyGenerator {
+  extends FunSpec {
 
   private val source = Resource(this, "upload")
   private val prefix = RemoteKey("prefix")
@@ -28,7 +27,7 @@ class SyncSuite
   implicit private val logWarn: String => Unit = w => ()
   def logError: String => Unit = e => ()
   private val lastModified = LastModified(Instant.now)
-  val fileToKey: File => RemoteKey = generateKey(source, prefix)
+  val fileToKey: File => RemoteKey = KeyGenerator.generateKey(source, prefix)
   val fileToHash = (file: File) => MD5HashGenerator.md5File(file)
   val rootHash = MD5Hash("a3a6ac11a0eb577b81b3bb5c95cc8a6e")
   val leafHash = MD5Hash("208386a650bdec61cfcd7bd8dcb6b542")

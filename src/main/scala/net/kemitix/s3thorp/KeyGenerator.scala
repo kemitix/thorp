@@ -4,7 +4,7 @@ import java.io.File
 
 import net.kemitix.s3thorp.domain.RemoteKey
 
-trait KeyGenerator {
+object KeyGenerator {
 
   def generateKey(source: File, prefix: RemoteKey)
                  (file: File): RemoteKey = {

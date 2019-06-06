@@ -7,6 +7,7 @@ import com.amazonaws.AmazonClientException
 import com.amazonaws.services.s3.model
 import com.amazonaws.services.s3.transfer.model.UploadResult
 import com.amazonaws.services.s3.transfer.{PauseResult, PersistableUpload, Transfer, TransferManager, TransferManagerBuilder, TransferProgress, Upload}
+import net.kemitix.s3thorp.KeyGenerator.generateKey
 import net.kemitix.s3thorp.aws.api.S3Action.UploadS3Action
 import net.kemitix.s3thorp.aws.api.UploadProgressListener
 import net.kemitix.s3thorp.domain.{Bucket, Config, LastModified, LocalFile, MD5Hash, RemoteKey}
@@ -14,8 +15,7 @@ import net.kemitix.s3thorp.{KeyGenerator, MD5HashGenerator, Resource}
 import org.scalatest.FunSpec
 
 class S3ClientMultiPartTransferManagerSuite
-  extends FunSpec
-    with KeyGenerator {
+  extends FunSpec {
 
   private val source = Resource(this, "..")
   private val prefix = RemoteKey("prefix")

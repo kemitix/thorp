@@ -13,8 +13,7 @@ import net.kemitix.s3thorp.domain.{Bucket, Config, HashModified, KeyModified, La
 import org.scalatest.FunSpec
 
 class S3ClientSuite
-  extends FunSpec
-    with KeyGenerator {
+  extends FunSpec {
 
   val source = Resource(this, "../upload")
 
@@ -22,7 +21,7 @@ class S3ClientSuite
   implicit private val config: Config = Config(Bucket("bucket"), prefix, source = source)
   implicit private val logInfo: Int => String => Unit = l => m => ()
   implicit private val logWarn: String => Unit = w => ()
-  private val fileToKey = generateKey(config.source, config.prefix) _
+  private val fileToKey = KeyGenerator.generateKey(config.source, config.prefix) _
   private val fileToHash = (file: File) => MD5HashGenerator.md5File(file)
 
   describe("getS3Status") {
@@ -101,7 +100,7 @@ class S3ClientSuite
 //            IO(PutObjectResponse.builder().eTag(md5Hash.hash).build())
         }, amazonS3, amazonS3TransferManager)
       val prefix = RemoteKey("prefix")
-      val localFile: LocalFile = LocalFile.resolve("root-file", md5Hash, source, generateKey(source, prefix), fileToHash)
+      val localFile: LocalFile = LocalFile.resolve("root-file", md5Hash, source, KeyGenerator.generateKey(source, prefix), fileToHash)
       val bucket: Bucket = Bucket("a-bucket")
       val remoteKey: RemoteKey = RemoteKey("prefix/root-file")
       val progressListener = new UploadProgressListener(localFile)
