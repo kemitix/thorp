@@ -7,7 +7,6 @@ import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.PutObjectRequest
 import com.amazonaws.services.s3.transfer.model.UploadResult
 import com.amazonaws.services.s3.transfer.{TransferManager, Upload}
-import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
 import net.kemitix.s3thorp.aws.api.S3Action.UploadS3Action
 import net.kemitix.s3thorp.aws.api.{S3Client, UploadProgressListener}
 import net.kemitix.s3thorp.core.{KeyGenerator, MD5HashGenerator, Resource, S3MetaDataEnricher}
@@ -87,10 +86,9 @@ class S3ClientSuite
   describe("upload") {
 
     describe("when uploading a file") {
-      val s3CatsIOClient = stub[S3CatsIOClient]
       val amazonS3 = stub[AmazonS3]
       val amazonS3TransferManager = stub[TransferManager]
-      val s3Client = new ThorpS3Client(s3CatsIOClient, amazonS3, amazonS3TransferManager)
+      val s3Client = new ThorpS3Client(amazonS3, amazonS3TransferManager)
 
       val prefix = RemoteKey("prefix")
       val md5Hash = MD5HashGenerator.md5File(source.toPath.resolve("root-file").toFile)

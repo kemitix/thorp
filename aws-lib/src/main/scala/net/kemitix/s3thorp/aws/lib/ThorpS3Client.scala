@@ -3,14 +3,11 @@ package net.kemitix.s3thorp.aws.lib
 import cats.effect.IO
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.transfer.TransferManager
-import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
 import net.kemitix.s3thorp.aws.api.S3Action.{CopyS3Action, DeleteS3Action}
 import net.kemitix.s3thorp.aws.api.{S3Action, S3Client, UploadProgressListener}
 import net.kemitix.s3thorp.domain._
-import software.amazon.awssdk.services.s3.model.{Bucket => _}
 
-class ThorpS3Client(ioS3Client: S3CatsIOClient,
-                    amazonS3Client: => AmazonS3,
+class ThorpS3Client(amazonS3Client: => AmazonS3,
                     amazonS3TransferManager: => TransferManager)
   extends S3Client {
 

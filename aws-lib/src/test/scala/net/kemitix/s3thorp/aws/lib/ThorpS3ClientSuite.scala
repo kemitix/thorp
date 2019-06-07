@@ -6,7 +6,6 @@ import java.util.Date
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.{ListObjectsV2Request, ListObjectsV2Result, S3ObjectSummary}
 import com.amazonaws.services.s3.transfer.TransferManager
-import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
 import net.kemitix.s3thorp.core.Resource
 import net.kemitix.s3thorp.domain._
 import org.scalamock.scalatest.MockFactory
@@ -45,10 +44,9 @@ class ThorpS3ClientSuite
     val k2 = RemoteKey("key2")
     val o2 = objectSummary(h2, k2, lm)
 
-    val s3CatsIOClient = stub[S3CatsIOClient]
     val amazonS3 = stub[AmazonS3]
     val amazonS3TransferManager = stub[TransferManager]
-    val s3Client = new ThorpS3Client(s3CatsIOClient, amazonS3, amazonS3TransferManager)
+    val s3Client = new ThorpS3Client(amazonS3, amazonS3TransferManager)
 
     val myFakeResponse = new ListObjectsV2Result()
     val summaries = myFakeResponse.getObjectSummaries
