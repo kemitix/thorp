@@ -3,18 +3,21 @@ package net.kemitix.s3thorp.aws.lib
 import java.io.File
 import java.time.Instant
 
-import com.amazonaws.services.s3.model.{PutObjectRequest, PutObjectResult}
-import com.amazonaws.services.s3.transfer.TransferManagerBuilder
+import com.amazonaws.services.s3.AmazonS3
+import com.amazonaws.services.s3.model.PutObjectRequest
+import com.amazonaws.services.s3.transfer.model.UploadResult
+import com.amazonaws.services.s3.transfer.{TransferManager, Upload}
 import com.github.j5ik2o.reactive.aws.s3.cats.S3CatsIOClient
 import net.kemitix.s3thorp.aws.api.S3Action.UploadS3Action
 import net.kemitix.s3thorp.aws.api.{S3Client, UploadProgressListener}
-import net.kemitix.s3thorp.aws.lib.{JavaClientWrapper, ThorpS3Client}
 import net.kemitix.s3thorp.core.{KeyGenerator, MD5HashGenerator, Resource, S3MetaDataEnricher}
 import net.kemitix.s3thorp.domain._
+import org.scalamock.scalatest.MockFactory
 import org.scalatest.FunSpec
 
 class S3ClientSuite
-  extends FunSpec {
+  extends FunSpec
+    with MockFactory {
 
   val source = Resource(this, "upload")
 
@@ -84,29 +87,32 @@ class S3ClientSuite
   describe("upload") {
     def invoke(s3Client: ThorpS3Client, localFile: LocalFile, bucket: Bucket, progressListener: UploadProgressListener) =
       s3Client.upload(localFile, bucket, progressListener, config.multiPartThreshold, 1, config.maxRetries).unsafeRunSync
+
     describe("when uploading a file") {
-      val source = Resource(this, "upload")
-      val md5Hash = MD5HashGenerator.md5File(source.toPath.resolve("root-file").toFile)
-      val amazonS3 = new MyAmazonS3 {
-        override def putObject(putObjectRequest: PutObjectRequest): PutObjectResult = {
-          val result = new PutObjectResult
-          result.setETag(md5Hash.hash)
-          result
-        }
-      }
-      val amazonS3TransferManager = TransferManagerBuilder.standard().withS3Client(amazonS3).build
-      val s3Client = new ThorpS3Client(
-        new S3CatsIOClient with JavaClientWrapper {
-//          override def putObject(putObjectRequest: PutObjectRequest, requestBody: RB) =
-//            IO(PutObjectResponse.builder().eTag(md5Hash.hash).build())
-        }, amazonS3, amazonS3TransferManager)
+      val s3CatsIOClient = stub[S3CatsIOClient]
+      val amazonS3 = stub[AmazonS3]
+      val amazonS3TransferManager = stub[TransferManager]
+      val s3Client = new ThorpS3Client(s3CatsIOClient, amazonS3, amazonS3TransferManager)
+
       val prefix = RemoteKey("prefix")
+      val md5Hash = MD5HashGenerator.md5File(source.toPath.resolve("root-file").toFile)
       val localFile: LocalFile = LocalFile.resolve("root-file", md5Hash, source, KeyGenerator.generateKey(source, prefix), fileToHash)
       val bucket: Bucket = Bucket("a-bucket")
       val remoteKey: RemoteKey = RemoteKey("prefix/root-file")
       val progressListener = new UploadProgressListener(localFile)
+
+      //(amazonS3TransferManager upload _).expects(*)
+      val upload = stub[Upload]
+      (amazonS3TransferManager upload (_: PutObjectRequest)).when(*).returns(upload)
+      val uploadResult = stub[UploadResult]
+      (upload.waitForUploadResult _).when().returns(uploadResult)
+      (uploadResult.getETag _).when().returns(md5Hash.hash)
+      (uploadResult.getKey _).when().returns(remoteKey.key)
+
       it("should return hash of uploaded file") {
-        assertResult(UploadS3Action(remoteKey, md5Hash))(invoke(s3Client, localFile, bucket, progressListener))
+        val expected = UploadS3Action(remoteKey, md5Hash)
+        val result = invoke(s3Client, localFile, bucket, progressListener)
+        assertResult(expected)(result)
       }
     }
   }
