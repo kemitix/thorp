@@ -28,10 +28,10 @@ class S3ClientTransferManager(transferManager: => TransferManager)
       new PutObjectRequest(bucket.name, localFile.remoteKey.key, localFile.file)
         .withGeneralProgressListener(progressListener(uploadProgressListener))
     for {
-      _ <- IO{logMultiPartUploadStart(localFile, tryCount)}
+      _ <- logMultiPartUploadStart(localFile, tryCount)
       upload = transferManager.upload(putObjectRequest)
-      result <- IO{upload.waitForUploadResult()}
-      _ <- IO{logMultiPartUploadFinished(localFile)}
+      result <- IO{upload.waitForUploadResult}
+      _ <- logMultiPartUploadFinished(localFile)
     } yield UploadS3Action(RemoteKey(result.getKey), MD5Hash(result.getETag))
   }
 }
