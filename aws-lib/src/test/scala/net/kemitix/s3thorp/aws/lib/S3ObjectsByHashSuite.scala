@@ -1,15 +1,14 @@
 package net.kemitix.s3thorp.aws.lib
 
 import java.time.Instant
+import java.util.Date
 
-import net.kemitix.s3thorp.aws.lib.S3ObjectsByHash
+import com.amazonaws.services.s3.model.S3ObjectSummary
 import net.kemitix.s3thorp.domain.{KeyModified, LastModified, MD5Hash, RemoteKey}
 import org.scalatest.FunSpec
-import software.amazon.awssdk.services.s3.model.S3Object
 
 class S3ObjectsByHashSuite extends FunSpec {
 
-  new S3ObjectsByHash {
     describe("grouping s3 object together by their hash values") {
       val hash = MD5Hash("hash")
       val key1 = RemoteKey("key-1")
@@ -22,17 +21,19 @@ class S3ObjectsByHashSuite extends FunSpec {
         val expected: Map[MD5Hash, Set[KeyModified]] = Map(
           hash -> Set(KeyModified(key1, lastModified), KeyModified(key2, lastModified))
         )
-        val result = byHash(os)
+        val result = S3ObjectsByHash.byHash(os)
         assertResult(expected)(result)
       }
     }
-  }
 
-  private def s3object(md5Hash: MD5Hash, remoteKey: RemoteKey, lastModified: LastModified): S3Object =
-    S3Object.builder
-      .eTag(md5Hash.hash)
-      .key(remoteKey.key)
-      .lastModified(lastModified.when)
-      .build
+  private def s3object(md5Hash: MD5Hash,
+                       remoteKey: RemoteKey,
+                       lastModified: LastModified): S3ObjectSummary = {
+    val summary = new S3ObjectSummary()
+    summary.setETag(md5Hash.hash)
+    summary.setKey(remoteKey.key)
+    summary.setLastModified(Date.from(lastModified.when))
+    summary
+  }
 
 }
