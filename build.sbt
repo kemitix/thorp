@@ -16,10 +16,6 @@ val commandLineParsing = Seq(
 )
 val awsSdkDependencies = Seq(
   libraryDependencies ++= Seq(
-    /// wraps the in-preview Java SDK V2 which is incomplete and doesn't support multi-part uploads
-    "com.github.j5ik2o" %% "reactive-aws-s3-core" % "1.1.3",
-    "com.github.j5ik2o" %% "reactive-aws-s3-cats" % "1.1.3",
-    // AWS SDK - multi-part upload
     "com.amazonaws" % "aws-java-sdk-s3" % "1.11.566",
   )
 )
