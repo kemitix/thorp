@@ -101,7 +101,6 @@ class S3ClientSuite
       val remoteKey: RemoteKey = RemoteKey("prefix/root-file")
       val progressListener = new UploadProgressListener(localFile)
 
-      //(amazonS3TransferManager upload _).expects(*)
       val upload = stub[Upload]
       (amazonS3TransferManager upload (_: PutObjectRequest)).when(*).returns(upload)
       val uploadResult = stub[UploadResult]
