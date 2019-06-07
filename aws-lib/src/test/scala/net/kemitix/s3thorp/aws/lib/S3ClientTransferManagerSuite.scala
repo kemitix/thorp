@@ -5,7 +5,7 @@ import java.time.Instant
 
 import com.amazonaws.AmazonClientException
 import com.amazonaws.event.ProgressListener
-import com.amazonaws.services.s3.model
+import com.amazonaws.services.s3.{AmazonS3, model}
 import com.amazonaws.services.s3.transfer.model.UploadResult
 import com.amazonaws.services.s3.transfer._
 import net.kemitix.s3thorp.aws.api.S3Action.UploadS3Action
@@ -13,10 +13,12 @@ import net.kemitix.s3thorp.aws.api.UploadProgressListener
 import net.kemitix.s3thorp.core.KeyGenerator.generateKey
 import net.kemitix.s3thorp.core.{MD5HashGenerator, Resource}
 import net.kemitix.s3thorp.domain._
+import org.scalamock.scalatest.MockFactory
 import org.scalatest.FunSpec
 
 class S3ClientTransferManagerSuite
-  extends FunSpec {
+  extends FunSpec
+    with MockFactory {
 
   private val source = Resource(this, ".")
   private val prefix = RemoteKey("prefix")
@@ -60,7 +62,7 @@ class S3ClientTransferManagerSuite
       val returnedHash = MD5Hash("returned-hash")
       val bigFile = LocalFile.resolve("small-file", MD5Hash("the-hash"), source, fileToKey, fileToHash)
       val progressListener = new UploadProgressListener(bigFile)
-      val amazonS3 = new MyAmazonS3 {}
+      val amazonS3 = mock[AmazonS3]
       val amazonS3TransferManager = TransferManagerBuilder.standard().withS3Client(amazonS3).build
         new MyTransferManager(
         signature = (config.bucket.name, bigFile.remoteKey.key, bigFile.file),
