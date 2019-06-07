@@ -31,7 +31,7 @@ class S3ClientTransferManagerSuite
 
   describe("S3ClientMultiPartTransferManagerSuite") {
     describe("accepts") {
-      val transferManager = new MyTransferManager(("", "", new File("")), RemoteKey(""), MD5Hash(""))
+      val transferManager = stub[TransferManager]
       val uploader = new S3ClientTransferManager(transferManager)
       describe("small-file") {
         val smallFile = LocalFile.resolve("small-file", MD5Hash("the-hash"), source, fileToKey, fileToHash)
@@ -64,10 +64,6 @@ class S3ClientTransferManagerSuite
       val progressListener = new UploadProgressListener(bigFile)
       val amazonS3 = mock[AmazonS3]
       val amazonS3TransferManager = TransferManagerBuilder.standard().withS3Client(amazonS3).build
-        new MyTransferManager(
-        signature = (config.bucket.name, bigFile.remoteKey.key, bigFile.file),
-        returnedKey = returnedKey,
-        returnedHash = returnedHash)
       val uploader = new S3ClientTransferManager(amazonS3TransferManager)
       it("should upload") {
         val expected = UploadS3Action(returnedKey, returnedHash)
@@ -76,54 +72,4 @@ class S3ClientTransferManagerSuite
       }
     }
   }
-
-  class MyTransferManager(signature: (String, String, File),
-                          returnedKey: RemoteKey,
-                          returnedHash: MD5Hash) extends TransferManager {
-    override def upload(bucketName: String, key: String, file: File): Upload = {
-      if ((bucketName, key, file) == signature) {
-        new MyUpload {
-          override def waitForUploadResult(): UploadResult = {
-            val result = new UploadResult()
-            result.setBucketName(bucketName)
-            result.setETag(returnedHash.hash)
-            result.setKey(returnedKey.key)
-            result.setVersionId("version-id")
-            result
-          }
-        }
-      } else new MyUpload
-    }
-  }
-  class MyUpload extends Upload {
-
-    override def waitForUploadResult(): UploadResult = ???
-
-    override def pause(): PersistableUpload = ???
-
-    override def tryPause(forceCancelTransfers: Boolean): PauseResult[PersistableUpload] = ???
-
-    override def abort(): Unit = ???
-
-    override def isDone: Boolean = ???
-
-    override def waitForCompletion(): Unit = ???
-
-    override def waitForException(): AmazonClientException = ???
-
-    override def getDescription: String = ???
-
-    override def getState: Transfer.TransferState = ???
-
-    override def getProgress: TransferProgress = ???
-
-    override def addProgressListener(listener: ProgressListener): Unit = ???
-
-    override def removeProgressListener(listener: ProgressListener): Unit = ???
-
-    override def addProgressListener(listener: model.ProgressListener): Unit = ???
-
-    override def removeProgressListener(listener: model.ProgressListener): Unit = ???
-  }
-
 }
