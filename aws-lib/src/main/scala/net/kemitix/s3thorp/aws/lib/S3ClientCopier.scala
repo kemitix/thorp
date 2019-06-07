@@ -16,7 +16,7 @@ class S3ClientCopier(amazonS3: AmazonS3) {
           (implicit info: Int => String => Unit): IO[CopyS3Action] = {
     val request =
       new CopyObjectRequest(
-        bucket.name, s"${bucket.name}/${sourceKey.key}",
+        bucket.name, sourceKey.key,
         bucket.name, targetKey.key)
         .withMatchingETagConstraint(hash.hash)
     IO {
