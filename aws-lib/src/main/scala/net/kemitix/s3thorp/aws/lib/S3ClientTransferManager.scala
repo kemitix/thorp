@@ -27,12 +27,11 @@ class S3ClientTransferManager(transferManager: => TransferManager)
     val putObjectRequest: PutObjectRequest =
       new PutObjectRequest(bucket.name, localFile.remoteKey.key, localFile.file)
         .withGeneralProgressListener(progressListener(uploadProgressListener))
-    IO {
-      logMultiPartUploadStart(localFile, tryCount)
-      val result = transferManager.upload(putObjectRequest)
-        .waitForUploadResult()
-      logMultiPartUploadFinished(localFile)
-      UploadS3Action(RemoteKey(result.getKey), MD5Hash(result.getETag))
-    }
+    for {
+      _ <- IO{logMultiPartUploadStart(localFile, tryCount)}
+      upload = transferManager.upload(putObjectRequest)
+      result <- IO{upload.waitForUploadResult()}
+      _ <- IO{logMultiPartUploadFinished(localFile)}
+    } yield UploadS3Action(RemoteKey(result.getKey), MD5Hash(result.getETag))
   }
 }
