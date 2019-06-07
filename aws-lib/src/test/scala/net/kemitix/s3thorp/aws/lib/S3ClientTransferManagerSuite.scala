@@ -5,7 +5,7 @@ import java.time.Instant
 
 import com.amazonaws.AmazonClientException
 import com.amazonaws.event.ProgressListener
-import com.amazonaws.services.s3.model
+import com.amazonaws.services.s3.{AmazonS3, model}
 import com.amazonaws.services.s3.transfer.model.UploadResult
 import com.amazonaws.services.s3.transfer._
 import net.kemitix.s3thorp.aws.api.S3Action.UploadS3Action
@@ -13,10 +13,12 @@ import net.kemitix.s3thorp.aws.api.UploadProgressListener
 import net.kemitix.s3thorp.core.KeyGenerator.generateKey
 import net.kemitix.s3thorp.core.{MD5HashGenerator, Resource}
 import net.kemitix.s3thorp.domain._
+import org.scalamock.scalatest.MockFactory
 import org.scalatest.FunSpec
 
-class S3ClientMultiPartTransferManagerSuite
-  extends FunSpec {
+class S3ClientTransferManagerSuite
+  extends FunSpec
+    with MockFactory {
 
   private val source = Resource(this, ".")
   private val prefix = RemoteKey("prefix")
@@ -29,8 +31,8 @@ class S3ClientMultiPartTransferManagerSuite
 
   describe("S3ClientMultiPartTransferManagerSuite") {
     describe("accepts") {
-      val transferManager = new MyTransferManager(("", "", new File("")), RemoteKey(""), MD5Hash(""))
-      val uploader = new S3ClientMultiPartTransferManager(transferManager)
+      val transferManager = stub[TransferManager]
+      val uploader = new S3ClientTransferManager(transferManager)
       describe("small-file") {
         val smallFile = LocalFile.resolve("small-file", MD5Hash("the-hash"), source, fileToKey, fileToHash)
         it("should be a small-file") {
@@ -60,13 +62,9 @@ class S3ClientMultiPartTransferManagerSuite
       val returnedHash = MD5Hash("returned-hash")
       val bigFile = LocalFile.resolve("small-file", MD5Hash("the-hash"), source, fileToKey, fileToHash)
       val progressListener = new UploadProgressListener(bigFile)
-      val amazonS3 = new MyAmazonS3 {}
+      val amazonS3 = mock[AmazonS3]
       val amazonS3TransferManager = TransferManagerBuilder.standard().withS3Client(amazonS3).build
-        new MyTransferManager(
-        signature = (config.bucket.name, bigFile.remoteKey.key, bigFile.file),
-        returnedKey = returnedKey,
-        returnedHash = returnedHash)
-      val uploader = new S3ClientMultiPartTransferManager(amazonS3TransferManager)
+      val uploader = new S3ClientTransferManager(amazonS3TransferManager)
       it("should upload") {
         val expected = UploadS3Action(returnedKey, returnedHash)
         val result = uploader.upload(bigFile, config.bucket, progressListener, config.multiPartThreshold, 1, config.maxRetries).unsafeRunSync
@@ -74,54 +72,4 @@ class S3ClientMultiPartTransferManagerSuite
       }
     }
   }
-
-  class MyTransferManager(signature: (String, String, File),
-                          returnedKey: RemoteKey,
-                          returnedHash: MD5Hash) extends TransferManager {
-    override def upload(bucketName: String, key: String, file: File): Upload = {
-      if ((bucketName, key, file) == signature) {
-        new MyUpload {
-          override def waitForUploadResult(): UploadResult = {
-            val result = new UploadResult()
-            result.setBucketName(bucketName)
-            result.setETag(returnedHash.hash)
-            result.setKey(returnedKey.key)
-            result.setVersionId("version-id")
-            result
-          }
-        }
-      } else new MyUpload
-    }
-  }
-  class MyUpload extends Upload {
-
-    override def waitForUploadResult(): UploadResult = ???
-
-    override def pause(): PersistableUpload = ???
-
-    override def tryPause(forceCancelTransfers: Boolean): PauseResult[PersistableUpload] = ???
-
-    override def abort(): Unit = ???
-
-    override def isDone: Boolean = ???
-
-    override def waitForCompletion(): Unit = ???
-
-    override def waitForException(): AmazonClientException = ???
-
-    override def getDescription: String = ???
-
-    override def getState: Transfer.TransferState = ???
-
-    override def getProgress: TransferProgress = ???
-
-    override def addProgressListener(listener: ProgressListener): Unit = ???
-
-    override def removeProgressListener(listener: ProgressListener): Unit = ???
-
-    override def addProgressListener(listener: model.ProgressListener): Unit = ???
-
-    override def removeProgressListener(listener: model.ProgressListener): Unit = ???
-  }
-
 }

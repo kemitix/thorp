@@ -5,11 +5,11 @@ import com.amazonaws.services.s3.model.PutObjectRequest
 import com.amazonaws.services.s3.transfer.TransferManager
 import net.kemitix.s3thorp.aws.api.S3Action.UploadS3Action
 import net.kemitix.s3thorp.aws.api.{S3Action, UploadProgressListener}
+import net.kemitix.s3thorp.aws.lib.S3ClientTransferManagerLogging.{logMultiPartUploadFinished, logMultiPartUploadStart}
 import net.kemitix.s3thorp.domain.{Bucket, LocalFile, MD5Hash, RemoteKey}
 
-class S3ClientMultiPartTransferManager(transferManager: => TransferManager)
-  extends S3ClientUploader
-    with S3ClientMultiPartUploaderLogging {
+class S3ClientTransferManager(transferManager: => TransferManager)
+  extends S3ClientUploader {
 
   def accepts(localFile: LocalFile)
              (implicit multiPartThreshold: Long): Boolean =
@@ -27,12 +27,11 @@ class S3ClientMultiPartTransferManager(transferManager: => TransferManager)
     val putObjectRequest: PutObjectRequest =
       new PutObjectRequest(bucket.name, localFile.remoteKey.key, localFile.file)
         .withGeneralProgressListener(progressListener(uploadProgressListener))
-    IO {
-      logMultiPartUploadStart(localFile, tryCount)
-      val result = transferManager.upload(putObjectRequest)
-        .waitForUploadResult()
-      logMultiPartUploadFinished(localFile)
-      UploadS3Action(RemoteKey(result.getKey), MD5Hash(result.getETag))
-    }
+    for {
+      _ <- logMultiPartUploadStart(localFile, tryCount)
+      upload = transferManager.upload(putObjectRequest)
+      result <- IO{upload.waitForUploadResult}
+      _ <- logMultiPartUploadFinished(localFile)
+    } yield UploadS3Action(RemoteKey(result.getKey), MD5Hash(result.getETag))
   }
 }

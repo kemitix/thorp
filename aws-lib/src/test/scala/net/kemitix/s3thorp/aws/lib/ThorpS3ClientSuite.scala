@@ -1,18 +1,19 @@
 package net.kemitix.s3thorp.aws.lib
 
 import java.time.Instant
+import java.util.Date
 
-import cats.effect.IO
-import com.amazonaws.services.s3.transfer.TransferManagerBuilder
-import net.kemitix.s3thorp.aws.lib.ThorpS3Client
+import com.amazonaws.services.s3.AmazonS3
+import com.amazonaws.services.s3.model.{ListObjectsV2Request, ListObjectsV2Result, S3ObjectSummary}
+import com.amazonaws.services.s3.transfer.TransferManager
 import net.kemitix.s3thorp.core.Resource
 import net.kemitix.s3thorp.domain._
+import org.scalamock.scalatest.MockFactory
 import org.scalatest.FunSpec
-import software.amazon.awssdk.services.s3.model.{ListObjectsV2Request, ListObjectsV2Response, S3Object}
 
-import scala.collection.JavaConverters._
-
-class ThorpS3ClientSuite extends FunSpec {
+class ThorpS3ClientSuite
+  extends FunSpec
+    with MockFactory {
 
   describe("listObjectsInPrefix") {
     val source = Resource(this, "upload")
@@ -25,26 +26,35 @@ class ThorpS3ClientSuite extends FunSpec {
     val h1 = MD5Hash("hash1")
 
     val k1a = RemoteKey("key1a")
-    val o1a = S3Object.builder.eTag(h1.hash).key(k1a.key).lastModified(lm.when).build
+
+    def objectSummary(hash: MD5Hash, remoteKey: RemoteKey, lastModified: LastModified) = {
+      val summary = new S3ObjectSummary()
+      summary.setETag(hash.hash)
+      summary.setKey(remoteKey.key)
+      summary.setLastModified(Date.from(lastModified.when))
+      summary
+    }
+
+    val o1a = objectSummary(h1, k1a, lm)
 
     val k1b = RemoteKey("key1b")
-    val o1b = S3Object.builder.eTag(h1.hash).key(k1b.key).lastModified(lm.when).build
+    val o1b = objectSummary(h1, k1b, lm)
 
     val h2 = MD5Hash("hash2")
     val k2 = RemoteKey("key2")
-    val o2 = S3Object.builder.eTag(h2.hash).key(k2.key).lastModified(lm.when).build
+    val o2 = objectSummary(h2, k2, lm)
 
-    val myFakeResponse: IO[ListObjectsV2Response] = IO {
-      ListObjectsV2Response.builder()
-        .contents(List(o1a, o1b, o2).asJava)
-        .build()
-    }
-    val amazonS3 = new MyAmazonS3 {}
-    val amazonS3TransferManager = TransferManagerBuilder.standard().withS3Client(amazonS3).build
-    val s3client = new ThorpS3Client(new MyS3CatsIOClient {
-      override def listObjectsV2(listObjectsV2Request: ListObjectsV2Request): IO[ListObjectsV2Response] =
-        myFakeResponse
-    }, amazonS3, amazonS3TransferManager)
+    val amazonS3 = stub[AmazonS3]
+    val amazonS3TransferManager = stub[TransferManager]
+    val s3Client = new ThorpS3Client(amazonS3, amazonS3TransferManager)
+
+    val myFakeResponse = new ListObjectsV2Result()
+    val summaries = myFakeResponse.getObjectSummaries
+    summaries.add(o1a)
+    summaries.add(o1b)
+    summaries.add(o2)
+    (amazonS3 listObjectsV2 (_: ListObjectsV2Request)).when(*).returns(myFakeResponse)
+
     it("should build list of hash lookups, with duplicate objects grouped by hash") {
       val expected = S3ObjectsData(
         byHash = Map(
@@ -54,7 +64,7 @@ class ThorpS3ClientSuite extends FunSpec {
           k1a -> HashModified(h1, lm),
           k1b -> HashModified(h1, lm),
           k2 -> HashModified(h2, lm)))
-      val result: S3ObjectsData = s3client.listObjects(Bucket("bucket"), RemoteKey("prefix")).unsafeRunSync()
+      val result = s3Client.listObjects(Bucket("bucket"), RemoteKey("prefix")).unsafeRunSync
       assertResult(expected.byHash.keys)(result.byHash.keys)
       assertResult(expected.byKey.keys)(result.byKey.keys)
       assertResult(expected)(result)

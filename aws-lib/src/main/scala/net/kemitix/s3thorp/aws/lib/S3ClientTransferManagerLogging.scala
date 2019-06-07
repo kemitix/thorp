@@ -1,21 +1,21 @@
 package net.kemitix.s3thorp.aws.lib
 
+import cats.effect.IO
 import com.amazonaws.services.s3.model.{AmazonS3Exception, InitiateMultipartUploadResult, UploadPartRequest, UploadPartResult}
 import net.kemitix.s3thorp.domain.{LocalFile, MD5Hash}
 
-trait S3ClientMultiPartUploaderLogging
-  extends S3ClientLogging {
+object S3ClientTransferManagerLogging {
 
-  private val prefix = "multi-part upload"
+  private val prefix = "transfer-manager"
 
   def logMultiPartUploadStart(localFile: LocalFile,
                               tryCount: Int)
-                             (implicit info: Int => String => Unit): Unit =
-    info(1)(s"$prefix:upload:try $tryCount: ${localFile.remoteKey.key}")
+                             (implicit info: Int => String => Unit): IO[Unit] =
+    IO{info(1)(s"$prefix:upload:try $tryCount: ${localFile.remoteKey.key}")}
 
   def logMultiPartUploadFinished(localFile: LocalFile)
-                                (implicit info: Int => String => Unit): Unit =
-    info(4)(s"$prefix:upload:finished: ${localFile.remoteKey.key}")
+                                (implicit info: Int => String => Unit): IO[Unit] =
+    IO{info(4)(s"$prefix:upload:finished: ${localFile.remoteKey.key}")}
 
   def logMultiPartUploadInitiate(localFile: LocalFile)
                                 (implicit info: Int => String => Unit): Unit =

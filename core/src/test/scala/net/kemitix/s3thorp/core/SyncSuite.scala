@@ -1,21 +1,13 @@
-package net.kemitix.s3thorp.aws.lib
+package net.kemitix.s3thorp.core
 
 import java.io.File
 import java.time.Instant
-import java.util.concurrent.CompletableFuture
 
 import cats.effect.IO
-import com.amazonaws.services.s3.model.{PutObjectRequest, PutObjectResult}
-import com.amazonaws.services.s3.transfer.TransferManagerBuilder
-import com.github.j5ik2o.reactive.aws.s3.S3AsyncClient
 import net.kemitix.s3thorp.aws.api.S3Action.{CopyS3Action, DeleteS3Action, UploadS3Action}
 import net.kemitix.s3thorp.aws.api.{S3Client, UploadProgressListener}
-import net.kemitix.s3thorp.core.{KeyGenerator, MD5HashGenerator, Resource, Sync}
 import net.kemitix.s3thorp.domain._
 import org.scalatest.FunSpec
-import software.amazon.awssdk.services.s3
-import software.amazon.awssdk.services.s3.model.{ListObjectsV2Request, ListObjectsV2Response}
-import software.amazon.awssdk.services.s3.{S3AsyncClient => JavaS3AsyncClient}
 
 class SyncSuite
   extends FunSpec {
@@ -136,22 +128,6 @@ class SyncSuite
         assertResult(expectedDeletions)(s3Client.deletionsRecord)
       }
     }
-    describe("io actions execute") {
-      val recordingS3ClientLegacy = new RecordingS3ClientLegacy
-      val recordingS3Client = new RecordingS3Client
-      val transferManager = TransferManagerBuilder.standard
-        .withS3Client(recordingS3Client).build
-      val s3Client: S3Client = S3ClientBuilder.createClient(recordingS3ClientLegacy, recordingS3Client, transferManager)
-      Sync.run(s3Client, md5HashGenerator, logInfo, logWarn, logError)(config).unsafeRunSync
-      it("invokes the underlying Java s3client") {
-        val expected = Set(
-          putObjectRequest(testBucket, rootRemoteKey, rootFile),
-          putObjectRequest(testBucket, leafRemoteKey, leafFile)
-        )
-        val result = recordingS3Client.puts map {r => (r.getBucketName, r.getKey, r.getFile)}
-        assertResult(expected)(result)
-      }
-    }
     describe("when a file is file is excluded") {
       val configWithExclusion = config.copy(excludes = List(Exclude("leaf")))
       val s3ObjectsData = S3ObjectsData(Map(), Map())
@@ -166,14 +142,20 @@ class SyncSuite
     }
   }
 
-  class RecordingClient(testBucket: Bucket, s3ObjectsData: S3ObjectsData)
+  class RecordingClient(testBucket: Bucket,
+                        s3ObjectsData: S3ObjectsData)
     extends S3Client {
 
     var uploadsRecord: Map[String, RemoteKey] = Map()
     var copiesRecord: Map[RemoteKey, RemoteKey] = Map()
     var deletionsRecord: Set[RemoteKey] = Set()
 
-    override def listObjects(bucket: Bucket, prefix: RemoteKey)(implicit info: Int => String => Unit) = IO {s3ObjectsData}
+    override def listObjects(bucket: Bucket,
+                             prefix: RemoteKey)
+                            (implicit info: Int => String => Unit) =
+      IO {
+        s3ObjectsData
+      }
 
     override def upload(localFile: LocalFile,
                         bucket: Bucket,
@@ -182,57 +164,31 @@ class SyncSuite
                         tryCount: Int,
                         maxRetries: Int)
                        (implicit info: Int => String => Unit,
-                        warn: String => Unit) = IO {
-      if (bucket == testBucket)
-        uploadsRecord += (localFile.relative.toString -> localFile.remoteKey)
-      UploadS3Action(localFile.remoteKey, MD5Hash("some hash value"))
-    }
+                        warn: String => Unit) =
+      IO {
+        if (bucket == testBucket)
+          uploadsRecord += (localFile.relative.toString -> localFile.remoteKey)
+        UploadS3Action(localFile.remoteKey, MD5Hash("some hash value"))
+      }
 
     override def copy(bucket: Bucket,
                       sourceKey: RemoteKey,
                       hash: MD5Hash,
                       targetKey: RemoteKey
-                     )(implicit info: Int => String => Unit) = IO {
-      if (bucket == testBucket)
-        copiesRecord += (sourceKey -> targetKey)
-      CopyS3Action(targetKey)
-    }
+                     )(implicit info: Int => String => Unit) =
+      IO {
+        if (bucket == testBucket)
+          copiesRecord += (sourceKey -> targetKey)
+        CopyS3Action(targetKey)
+      }
 
     override def delete(bucket: Bucket,
                         remoteKey: RemoteKey
-                       )(implicit info: Int => String => Unit) = IO {
-      if (bucket == testBucket)
-        deletionsRecord += remoteKey
-      DeleteS3Action(remoteKey)
-    }
-  }
-
-  class RecordingS3ClientLegacy extends S3AsyncClient {
-    var lists: Set[ListObjectsV2Request] = Set()
-    var puts: Set[PutObjectRequest] = Set()
-    override val underlying: s3.S3AsyncClient = new JavaS3AsyncClient {
-      override def serviceName(): String = "s3Recorder"
-
-      override def close(): Unit = ()
-
-      override def listObjectsV2(listObjectsV2Request: ListObjectsV2Request): CompletableFuture[ListObjectsV2Response] = {
-        lists += listObjectsV2Request
-        CompletableFuture.completedFuture(ListObjectsV2Response.builder().build())
+                       )(implicit info: Int => String => Unit) =
+      IO {
+        if (bucket == testBucket)
+          deletionsRecord += remoteKey
+        DeleteS3Action(remoteKey)
       }
-
-    }
   }
-  class RecordingS3Client extends MyAmazonS3 {
-    var lists: Set[ListObjectsV2Request] = Set()
-    var puts: Set[PutObjectRequest] = Set()
-
-    override def putObject(putObjectRequest: PutObjectRequest): PutObjectResult = {
-      puts += putObjectRequest
-      val result = new PutObjectResult
-      result.setETag("not-null")
-      result
-    }
-
-  }
-
 }
