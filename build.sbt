@@ -30,7 +30,7 @@ val loggingSettings = Seq(
 )
 val catsEffectsSettings = Seq(
   libraryDependencies ++=  Seq(
-    "org.typelevel" %% "cats-effect" % "1.2.0"
+    "org.typelevel" %% "cats-effect" % "1.3.1"
   ),
   // recommended for cats-effects
   scalacOptions ++= Seq(
