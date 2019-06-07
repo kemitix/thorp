@@ -1,9 +1,8 @@
 package net.kemitix.s3thorp.aws.lib
 
 import cats.effect.IO
-import com.amazonaws.services.s3.model.{CopyObjectResult, ListObjectsV2Result, PutObjectResult}
+import com.amazonaws.services.s3.model.{CopyObjectResult, DeleteObjectsResult, ListObjectsV2Result, PutObjectResult}
 import net.kemitix.s3thorp.domain.{Bucket, LocalFile, RemoteKey}
-import software.amazon.awssdk.services.s3.model.{CopyObjectResponse, DeleteObjectResponse, ListObjectsV2Response}
 
 object S3ClientLogging {
 
@@ -62,19 +61,12 @@ object S3ClientLogging {
 
   def logDeleteStart(bucket: Bucket,
                      remoteKey: RemoteKey)
-                    (implicit info: Int => String => Unit): DeleteObjectResponse => IO[DeleteObjectResponse] = {
-    in => IO {
-      info(4)(s"Delete: ${bucket.name}:${remoteKey.key}")
-      in
-    }
-  }
+                    (implicit info: Int => String => Unit): IO[Unit] =
+    IO{info(4)(s"Delete: ${bucket.name}:${remoteKey.key}")}
 
   def logDeleteFinish(bucket: Bucket,
                       remoteKey: RemoteKey)
-                     (implicit info: Int => String => Unit): DeleteObjectResponse => IO[Unit] = {
-    in => IO {
-      info(3)(s"Deleted: ${bucket.name}:${remoteKey.key}")
-    }
-  }
+                     (implicit info: Int => String => Unit): IO[Unit] =
+    IO {info(3)(s"Deleted: ${bucket.name}:${remoteKey.key}")}
 
 }
