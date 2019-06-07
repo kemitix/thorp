@@ -2,7 +2,7 @@ package net.kemitix.s3thorp.aws.lib
 
 import cats.effect.IO
 import com.amazonaws.services.s3.AmazonS3
-import com.amazonaws.services.s3.model.{ListObjectsV2Request, S3ObjectSummary}
+import com.amazonaws.services.s3.model.ListObjectsV2Request
 import net.kemitix.s3thorp.aws.lib.S3ClientLogging.{logListObjectsFinish, logListObjectsStart}
 import net.kemitix.s3thorp.aws.lib.S3ObjectsByHash.byHash
 import net.kemitix.s3thorp.aws.lib.S3ObjectsByKey.byKey
