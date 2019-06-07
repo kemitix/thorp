@@ -16,7 +16,7 @@ val commandLineParsing = Seq(
 )
 val awsSdkDependencies = Seq(
   libraryDependencies ++= Seq(
-    "com.amazonaws" % "aws-java-sdk-s3" % "1.11.566",
+    "com.amazonaws" % "aws-java-sdk-s3" % "1.11.567",
     // override the versions AWS uses, which is they do to preserve Java 6 compatibility
     "com.fasterxml.jackson.core" % "jackson-databind" % "2.9.9",
     "com.fasterxml.jackson.dataformat" % "jackson-dataformat-cbor" % "2.9.9"
@@ -30,7 +30,7 @@ val loggingSettings = Seq(
 )
 val catsEffectsSettings = Seq(
   libraryDependencies ++=  Seq(
-    "org.typelevel" %% "cats-effect" % "1.2.0"
+    "org.typelevel" %% "cats-effect" % "1.3.1"
   ),
   // recommended for cats-effects
   scalacOptions ++= Seq(
