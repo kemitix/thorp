@@ -4,7 +4,7 @@ import java.io.File
 
 import cats.effect.IO
 import cats.implicits._
-import net.kemitix.s3thorp.aws.api.S3Client
+import net.kemitix.s3thorp.aws.api.{S3Action, S3Client}
 import net.kemitix.s3thorp.core.Action.ToDelete
 import net.kemitix.s3thorp.core.ActionGenerator.createActions
 import net.kemitix.s3thorp.core.ActionSubmitter.submitAction
@@ -16,38 +16,36 @@ import net.kemitix.s3thorp.domain.{Config, MD5Hash, S3ObjectsData}
 object Sync {
 
   def run(s3Client: S3Client,
-          md5HashGenerator: File => MD5Hash,
+          md5HashGenerator: File => IO[MD5Hash],
           info: Int => String => Unit,
           warn: String => Unit,
           error: String => Unit)
          (implicit c: Config): IO[Unit] = {
-    def copyUploadActions(s3Data: S3ObjectsData) = {
-      for {actions <- {
-        for {
-          file <- findFiles(c.source, md5HashGenerator, info)
-          data <- getMetadata(file, s3Data)
-          action <- createActions(data)
-          s3Action <- submitAction(s3Client, action)(c, info, warn)
-        } yield s3Action
-      }.sequence
-      } yield actions.sorted
-    }
 
-    def deleteActions(s3ObjectsData: S3ObjectsData) = {
+    def copyUploadActions(s3Data: S3ObjectsData): IO[Stream[S3Action]] =
+      (for {
+        sFiles <- findFiles(c.source, md5HashGenerator, info)
+        sData <- IO(sFiles.map(file => getMetadata(file, s3Data)))
+        sActions <- IO(sData.flatMap(s3MetaData => createActions(s3MetaData)))
+        sS3Actions <- IO(sActions.flatMap(action => submitAction(s3Client, action)(c, info, warn)))
+      } yield sS3Actions.sequence)
+        .flatten
+        .map(streamS3Actions => streamS3Actions.sorted)
+
+    def deleteActions(s3ObjectsData: S3ObjectsData): IO[Stream[S3Action]] =
       (for {
         key <- s3ObjectsData.byKey.keys
         if key.isMissingLocally(c.source, c.prefix)
         ioDelAction <- submitAction(s3Client, ToDelete(c.bucket, key))(c, info, warn)
       } yield ioDelAction).toStream.sequence
-    }
 
     for {
       _ <- logRunStart(info)
       s3data <- s3Client.listObjects(c.bucket, c.prefix)(info)
       _ <- logFileScan(info)
       copyUploadActions <- copyUploadActions(s3data)
-      deleteAction <- deleteActions(s3data)
-      _ <- logRunFinished(copyUploadActions ++ deleteAction, info)
+      deleteActions <- deleteActions(s3data)
+      _ <- logRunFinished(copyUploadActions ++ deleteActions, info)
     } yield ()
   }
 

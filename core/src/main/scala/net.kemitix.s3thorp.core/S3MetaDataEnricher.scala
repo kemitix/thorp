@@ -6,12 +6,11 @@ object S3MetaDataEnricher {
 
   def getMetadata(localFile: LocalFile,
                   s3ObjectsData: S3ObjectsData)
-                 (implicit c: Config): Stream[S3MetaData] = {
+                 (implicit c: Config): S3MetaData = {
     val (keyMatches, hashMatches) = getS3Status(localFile, s3ObjectsData)
-    Stream(
-      S3MetaData(localFile,
-        matchByKey = keyMatches map { hm => RemoteMetaData(localFile.remoteKey, hm.hash, hm.modified) },
-        matchByHash = hashMatches map { km => RemoteMetaData(km.key, localFile.hash, km.modified) }))
+    S3MetaData(localFile,
+      matchByKey = keyMatches map { hm => RemoteMetaData(localFile.remoteKey, hm.hash, hm.modified) },
+      matchByHash = hashMatches map { km => RemoteMetaData(km.key, localFile.hash, km.modified) })
   }
 
   def getS3Status(localFile: LocalFile,
