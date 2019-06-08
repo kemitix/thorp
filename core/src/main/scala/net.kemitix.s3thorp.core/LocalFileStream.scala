@@ -32,10 +32,10 @@ object LocalFileStream {
         }
 
       def filterIsIncluded(f: File): Boolean =
-        f.isDirectory || c.filters.forall { filter => filter isIncluded f.toPath }
+        f.isDirectory || c.includes.forall(_.isIncluded(f.toPath))
 
       def excludeIsIncluded(f: File): Boolean =
-        c.excludes.forall { exclude => exclude isIncluded f.toPath }
+        c.excludes.forall(_.isIncluded(f.toPath))
 
       def isIncluded(f: File): Boolean =
         filterIsIncluded(f) && excludeIsIncluded(f)
