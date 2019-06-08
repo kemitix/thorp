@@ -28,10 +28,12 @@ object ParseArgs {
         .action((str, c) => c.copy(prefix = RemoteKey(str)))
         .text("Prefix within the S3 Bucket"),
       opt[Seq[String]]('i', "include")
-        .action((str, c) => c.copy(includes = str.map(Include)))
+        .unbounded()
+        .action((str, c) => c.copy(includes = c.includes ++ str.map(Include)))
         .text("Include only matching paths"),
       opt[Seq[String]]('x', "exclude")
-        .action((str,c) => c.copy(excludes = str.map(Exclude)))
+        .unbounded()
+        .action((str,c) => c.copy(excludes = c.excludes ++ str.map(Exclude)))
         .text("Exclude matching paths"),
       opt[Int]('v', "verbose")
         .validate(i =>
