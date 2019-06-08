@@ -24,6 +24,7 @@ object MD5HashGenerator {
     fis read buffer
     val hash = md5PartBody(buffer)
     info(5)(s"md5:generated:${hash.hash}")
+    fis.close
     hash
   }
 
