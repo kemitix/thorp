@@ -1,9 +1,7 @@
 package net.kemitix.s3thorp.core
 
-import java.io.File
 import java.time.Instant
 
-import net.kemitix.s3thorp.aws.api.S3Client
 import net.kemitix.s3thorp.core.S3MetaDataEnricher.{getMetadata, getS3Status}
 import net.kemitix.s3thorp.domain._
 import org.scalatest.FunSpec
@@ -16,14 +14,13 @@ class S3MetaDataEnricherSuite
   implicit private val config: Config = Config(Bucket("bucket"), prefix, source = source)
   implicit private val logInfo: Int => String => Unit = l => i => ()
   private val fileToKey = KeyGenerator.generateKey(config.source, config.prefix) _
-  private val fileToHash = (file: File) => MD5HashGenerator.md5File(file)
   val lastModified = LastModified(Instant.now())
 
   describe("enrich with metadata") {
 
       describe("#1a local exists, remote exists, remote matches, other matches - do nothing") {
         val theHash: MD5Hash = MD5Hash("the-file-hash")
-        val theFile: LocalFile = LocalFile.resolve("the-file", theHash, source, fileToKey, fileToHash)
+        val theFile: LocalFile = LocalFile.resolve("the-file", theHash, source, fileToKey)
         val theRemoteKey: RemoteKey = theFile.remoteKey
         val s3: S3ObjectsData = S3ObjectsData(
           byHash = Map(theHash -> Set(KeyModified(theRemoteKey, lastModified))),
@@ -31,16 +28,16 @@ class S3MetaDataEnricherSuite
         )
         val theRemoteMetadata = RemoteMetaData(theRemoteKey, theHash, lastModified)
         it("generates valid metadata") {
-          val expected = Stream(S3MetaData(theFile,
+          val expected = S3MetaData(theFile,
             matchByHash = Set(theRemoteMetadata),
-            matchByKey = Some(theRemoteMetadata)))
+            matchByKey = Some(theRemoteMetadata))
           val result = getMetadata(theFile, s3)
           assertResult(expected)(result)
         }
       }
       describe("#1b local exists, remote exists, remote matches, other no matches - do nothing") {
         val theHash: MD5Hash = MD5Hash("the-file-hash")
-        val theFile: LocalFile = LocalFile.resolve("the-file", theHash, source, fileToKey, fileToHash)
+        val theFile: LocalFile = LocalFile.resolve("the-file", theHash, source, fileToKey)
         val theRemoteKey: RemoteKey = prefix.resolve("the-file")
         val s3: S3ObjectsData = S3ObjectsData(
           byHash = Map(theHash -> Set(KeyModified(theRemoteKey, lastModified))),
@@ -48,16 +45,16 @@ class S3MetaDataEnricherSuite
         )
         val theRemoteMetadata = RemoteMetaData(theRemoteKey, theHash, lastModified)
         it("generates valid metadata") {
-          val expected = Stream(S3MetaData(theFile,
+          val expected = S3MetaData(theFile,
             matchByHash = Set(theRemoteMetadata),
-            matchByKey = Some(theRemoteMetadata)))
+            matchByKey = Some(theRemoteMetadata))
           val result = getMetadata(theFile, s3)
           assertResult(expected)(result)
         }
       }
       describe("#2 local exists, remote is missing, remote no match, other matches - copy") {
         val theHash = MD5Hash("the-hash")
-        val theFile = LocalFile.resolve("the-file", theHash, source, fileToKey, fileToHash)
+        val theFile = LocalFile.resolve("the-file", theHash, source, fileToKey)
         val otherRemoteKey = RemoteKey("other-key")
         val s3: S3ObjectsData = S3ObjectsData(
           byHash = Map(theHash -> Set(KeyModified(otherRemoteKey, lastModified))),
@@ -65,31 +62,31 @@ class S3MetaDataEnricherSuite
         )
         val otherRemoteMetadata = RemoteMetaData(otherRemoteKey, theHash, lastModified)
         it("generates valid metadata") {
-          val expected = Stream(S3MetaData(theFile,
+          val expected = S3MetaData(theFile,
             matchByHash = Set(otherRemoteMetadata),
-            matchByKey = None))
+            matchByKey = None)
           val result = getMetadata(theFile, s3)
           assertResult(expected)(result)
         }
       }
       describe("#3 local exists, remote is missing, remote no match, other no matches - upload") {
         val theHash = MD5Hash("the-hash")
-        val theFile = LocalFile.resolve("the-file", theHash, source, fileToKey, fileToHash)
+        val theFile = LocalFile.resolve("the-file", theHash, source, fileToKey)
         val s3: S3ObjectsData = S3ObjectsData(
           byHash = Map(),
           byKey = Map()
         )
         it("generates valid metadata") {
-          val expected = Stream(S3MetaData(theFile,
+          val expected = S3MetaData(theFile,
             matchByHash = Set.empty,
-            matchByKey = None))
+            matchByKey = None)
           val result = getMetadata(theFile, s3)
           assertResult(expected)(result)
         }
       }
       describe("#4 local exists, remote exists, remote no match, other matches - copy") {
         val theHash = MD5Hash("the-hash")
-        val theFile = LocalFile.resolve("the-file", theHash, source, fileToKey, fileToHash)
+        val theFile = LocalFile.resolve("the-file", theHash, source, fileToKey)
         val theRemoteKey = theFile.remoteKey
         val oldHash = MD5Hash("old-hash")
         val otherRemoteKey = prefix.resolve("other-key")
@@ -105,16 +102,16 @@ class S3MetaDataEnricherSuite
         val theRemoteMetadata = RemoteMetaData(theRemoteKey, oldHash, lastModified)
         val otherRemoteMetadata = RemoteMetaData(otherRemoteKey, theHash, lastModified)
         it("generates valid metadata") {
-          val expected = Stream(S3MetaData(theFile,
+          val expected = S3MetaData(theFile,
             matchByHash = Set(otherRemoteMetadata),
-            matchByKey = Some(theRemoteMetadata)))
+            matchByKey = Some(theRemoteMetadata))
           val result = getMetadata(theFile, s3)
           assertResult(expected)(result)
         }
       }
       describe("#5 local exists, remote exists, remote no match, other no matches - upload") {
         val theHash = MD5Hash("the-hash")
-        val theFile = LocalFile.resolve("the-file", theHash, source, fileToKey, fileToHash)
+        val theFile = LocalFile.resolve("the-file", theHash, source, fileToKey)
         val theRemoteKey = theFile.remoteKey
         val oldHash = MD5Hash("old-hash")
         val s3: S3ObjectsData = S3ObjectsData(
@@ -127,9 +124,9 @@ class S3MetaDataEnricherSuite
         )
         val theRemoteMetadata = RemoteMetaData(theRemoteKey, oldHash, lastModified)
         it("generates valid metadata") {
-          val expected = Stream(S3MetaData(theFile,
+          val expected = S3MetaData(theFile,
             matchByHash = Set.empty,
-            matchByKey = Some(theRemoteMetadata)))
+            matchByKey = Some(theRemoteMetadata))
           val result = getMetadata(theFile, s3)
           assertResult(expected)(result)
         }
@@ -138,20 +135,20 @@ class S3MetaDataEnricherSuite
 
   describe("getS3Status") {
     val hash = MD5Hash("hash")
-    val localFile = LocalFile.resolve("the-file", hash, source, fileToKey, fileToHash)
+    val localFile = LocalFile.resolve("the-file", hash, source, fileToKey)
     val key = localFile.remoteKey
-    val keyotherkey = LocalFile.resolve("other-key-same-hash", hash, source, fileToKey, fileToHash)
-    val diffhash = MD5Hash("diff")
-    val keydiffhash = LocalFile.resolve("other-key-diff-hash", diffhash, source, fileToKey, fileToHash)
+    val keyOtherKey = LocalFile.resolve("other-key-same-hash", hash, source, fileToKey)
+    val diffHash = MD5Hash("diff")
+    val keyDiffHash = LocalFile.resolve("other-key-diff-hash", diffHash, source, fileToKey)
     val lastModified = LastModified(Instant.now)
     val s3ObjectsData: S3ObjectsData = S3ObjectsData(
       byHash = Map(
-        hash -> Set(KeyModified(key, lastModified), KeyModified(keyotherkey.remoteKey, lastModified)),
-        diffhash -> Set(KeyModified(keydiffhash.remoteKey, lastModified))),
+        hash -> Set(KeyModified(key, lastModified), KeyModified(keyOtherKey.remoteKey, lastModified)),
+        diffHash -> Set(KeyModified(keyDiffHash.remoteKey, lastModified))),
       byKey = Map(
         key -> HashModified(hash, lastModified),
-        keyotherkey.remoteKey -> HashModified(hash, lastModified),
-        keydiffhash.remoteKey -> HashModified(diffhash, lastModified)))
+        keyOtherKey.remoteKey -> HashModified(hash, lastModified),
+        keyDiffHash.remoteKey -> HashModified(diffHash, lastModified)))
 
     def invoke(localFile: LocalFile) = {
       getS3Status(localFile, s3ObjectsData)
@@ -163,14 +160,14 @@ class S3MetaDataEnricherSuite
           (Some(HashModified(hash, lastModified)),
             Set(
               KeyModified(key, lastModified),
-              KeyModified(keyotherkey.remoteKey, lastModified)))
+              KeyModified(keyOtherKey.remoteKey, lastModified)))
         )(invoke(localFile))
       }
     }
 
     describe("when remote key does not exist and no others matches hash") {
       it("should return (None, Set.empty)") {
-        val localFile = LocalFile.resolve("missing-file", MD5Hash("unique"), source, fileToKey, fileToHash)
+        val localFile = LocalFile.resolve("missing-file", MD5Hash("unique"), source, fileToKey)
         assertResult(
           (None,
             Set.empty)
@@ -181,9 +178,9 @@ class S3MetaDataEnricherSuite
     describe("when remote key exists and no others match hash") {
       it("should return (None, Set.nonEmpty)") {
         assertResult(
-          (Some(HashModified(diffhash, lastModified)),
-            Set(KeyModified(keydiffhash.remoteKey, lastModified)))
-        )(invoke(keydiffhash))
+          (Some(HashModified(diffHash, lastModified)),
+            Set(KeyModified(keyDiffHash.remoteKey, lastModified)))
+        )(invoke(keyDiffHash))
       }
     }
 

@@ -1,6 +1,5 @@
 package net.kemitix.s3thorp.aws.lib
 
-import java.io.File
 import java.time.Instant
 
 import com.amazonaws.services.s3.AmazonS3
@@ -9,7 +8,8 @@ import com.amazonaws.services.s3.transfer.model.UploadResult
 import com.amazonaws.services.s3.transfer.{TransferManager, Upload}
 import net.kemitix.s3thorp.aws.api.S3Action.UploadS3Action
 import net.kemitix.s3thorp.aws.api.{S3Client, UploadProgressListener}
-import net.kemitix.s3thorp.core.{KeyGenerator, MD5HashGenerator, Resource, S3MetaDataEnricher}
+import net.kemitix.s3thorp.core.MD5HashData.rootHash
+import net.kemitix.s3thorp.core.{KeyGenerator, Resource, S3MetaDataEnricher}
 import net.kemitix.s3thorp.domain._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.FunSpec
@@ -25,15 +25,14 @@ class S3ClientSuite
   implicit private val logInfo: Int => String => Unit = l => m => ()
   implicit private val logWarn: String => Unit = w => ()
   private val fileToKey = KeyGenerator.generateKey(config.source, config.prefix) _
-  private val fileToHash = (file: File) => MD5HashGenerator.md5File(file)
 
   describe("getS3Status") {
     val hash = MD5Hash("hash")
-    val localFile = LocalFile.resolve("the-file", hash, source, fileToKey, fileToHash)
+    val localFile = LocalFile.resolve("the-file", hash, source, fileToKey)
     val key = localFile.remoteKey
-    val keyotherkey = LocalFile.resolve("other-key-same-hash", hash, source, fileToKey, fileToHash)
+    val keyotherkey = LocalFile.resolve("other-key-same-hash", hash, source, fileToKey)
     val diffhash = MD5Hash("diff")
-    val keydiffhash = LocalFile.resolve("other-key-diff-hash", diffhash, source, fileToKey, fileToHash)
+    val keydiffhash = LocalFile.resolve("other-key-diff-hash", diffhash, source, fileToKey)
     val lastModified = LastModified(Instant.now)
     val s3ObjectsData: S3ObjectsData = S3ObjectsData(
       byHash = Map(
@@ -63,7 +62,7 @@ class S3ClientSuite
     describe("when remote key does not exist and no others matches hash") {
       val s3Client = S3ClientBuilder.defaultClient
       it("should return (None, Set.empty)") {
-        val localFile = LocalFile.resolve("missing-file", MD5Hash("unique"), source, fileToKey, fileToHash)
+        val localFile = LocalFile.resolve("missing-file", MD5Hash("unique"), source, fileToKey)
         assertResult(
           (None,
             Set.empty)
@@ -91,8 +90,7 @@ class S3ClientSuite
       val s3Client = new ThorpS3Client(amazonS3, amazonS3TransferManager)
 
       val prefix = RemoteKey("prefix")
-      val md5Hash = MD5HashGenerator.md5File(source.toPath.resolve("root-file").toFile)
-      val localFile: LocalFile = LocalFile.resolve("root-file", md5Hash, source, KeyGenerator.generateKey(source, prefix), fileToHash)
+      val localFile: LocalFile = LocalFile.resolve("root-file", rootHash, source, KeyGenerator.generateKey(source, prefix))
       val bucket: Bucket = Bucket("a-bucket")
       val remoteKey: RemoteKey = RemoteKey("prefix/root-file")
       val progressListener = new UploadProgressListener(localFile)
@@ -101,13 +99,13 @@ class S3ClientSuite
       (amazonS3TransferManager upload (_: PutObjectRequest)).when(*).returns(upload)
       val uploadResult = stub[UploadResult]
       (upload.waitForUploadResult _).when().returns(uploadResult)
-      (uploadResult.getETag _).when().returns(md5Hash.hash)
+      (uploadResult.getETag _).when().returns(rootHash.hash)
       (uploadResult.getKey _).when().returns(remoteKey.key)
 
       it("should return hash of uploaded file") {
         pending
         //FIXME: works okay on its own, but fails when run with others
-        val expected = UploadS3Action(remoteKey, md5Hash)
+        val expected = UploadS3Action(remoteKey, rootHash)
         val result = s3Client.upload(localFile, bucket, progressListener, config.multiPartThreshold, 1, config.maxRetries).unsafeRunSync
         assertResult(expected)(result)
       }

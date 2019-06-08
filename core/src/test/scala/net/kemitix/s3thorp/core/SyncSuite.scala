@@ -6,6 +6,7 @@ import java.time.Instant
 import cats.effect.IO
 import net.kemitix.s3thorp.aws.api.S3Action.{CopyS3Action, DeleteS3Action, UploadS3Action}
 import net.kemitix.s3thorp.aws.api.{S3Client, UploadProgressListener}
+import net.kemitix.s3thorp.core.MD5HashData.{leafHash, rootHash}
 import net.kemitix.s3thorp.domain._
 import org.scalatest.FunSpec
 
@@ -17,16 +18,13 @@ class SyncSuite
   implicit private val config: Config = Config(Bucket("bucket"), prefix, source = source)
   implicit private val logInfo: Int => String => Unit = l => i => ()
   implicit private val logWarn: String => Unit = w => ()
-  def logError: String => Unit = e => ()
+  private def logError: String => Unit = e => ()
   private val lastModified = LastModified(Instant.now)
-  val fileToKey: File => RemoteKey = KeyGenerator.generateKey(source, prefix)
-  val fileToHash = (file: File) => MD5HashGenerator.md5File(file)
-  val rootHash = MD5Hash("a3a6ac11a0eb577b81b3bb5c95cc8a6e")
-  val leafHash = MD5Hash("208386a650bdec61cfcd7bd8dcb6b542")
-  val rootFile = LocalFile.resolve("root-file", rootHash, source, fileToKey, fileToHash)
-  val leafFile = LocalFile.resolve("subdir/leaf-file", leafHash, source, fileToKey, fileToHash)
+  private val fileToKey: File => RemoteKey = KeyGenerator.generateKey(source, prefix)
+  private val rootFile = LocalFile.resolve("root-file", rootHash, source, fileToKey)
+  private val leafFile = LocalFile.resolve("subdir/leaf-file", leafHash, source, fileToKey)
 
-  val md5HashGenerator: File => MD5Hash = file => MD5HashGenerator.md5File(file)
+  private val md5HashGenerator = MD5HashGenerator.md5File(_)
 
   def putObjectRequest(bucket: Bucket, remoteKey: RemoteKey, localFile: LocalFile) = {
     (bucket.name, remoteKey.key, localFile.file)
@@ -84,8 +82,6 @@ class SyncSuite
     }
     describe("when a file is renamed it is moved on S3 with no upload") {
       // 'root-file-old' should be renamed as 'root-file'
-      val rootHash = MD5Hash("a3a6ac11a0eb577b81b3bb5c95cc8a6e")
-      val leafHash = MD5Hash("208386a650bdec61cfcd7bd8dcb6b542")
       val s3ObjectsData = S3ObjectsData(
         byHash = Map(
           rootHash -> Set(KeyModified(RemoteKey("prefix/root-file-old"), lastModified)),
@@ -128,7 +124,7 @@ class SyncSuite
         assertResult(expectedDeletions)(s3Client.deletionsRecord)
       }
     }
-    describe("when a file is file is excluded") {
+    describe("when a file is excluded") {
       val configWithExclusion = config.copy(excludes = List(Exclude("leaf")))
       val s3ObjectsData = S3ObjectsData(Map(), Map())
       val s3Client = new RecordingClient(testBucket, s3ObjectsData)
