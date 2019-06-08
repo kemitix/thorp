@@ -9,9 +9,7 @@ import net.kemitix.s3thorp.domain.Config
 object SyncLogging {
 
   def logRunStart[F[_]](info: Int => String => Unit)(implicit c: Config): IO[Unit] = IO {
-    info(1)(s"Bucket: ${c.bucket.name}, Prefix: ${c.prefix.key}, Source: ${c.source}, " +
-      s"Include: ${c.includes.map{_.include}.mkString(""", """)} " +
-      s"Exclude: ${c.excludes.map{_.exclude}.mkString(""", """)}")}
+    info(1)(s"Bucket: ${c.bucket.name}, Prefix: ${c.prefix.key}, Source: ${c.source}, ")}
 
   def logFileScan(info: Int => String => Unit)(implicit c: Config): IO[Unit] = IO{
     info(1)(s"Scanning local files: ${c.source}...")}
