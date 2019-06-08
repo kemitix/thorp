@@ -1,10 +1,11 @@
 package net.kemitix.s3thorp.core
 
 import java.io.File
+import java.nio.file.Path
 
 import cats.effect.IO
 import net.kemitix.s3thorp.core.KeyGenerator.generateKey
-import net.kemitix.s3thorp.domain.{Config, LocalFile, MD5Hash}
+import net.kemitix.s3thorp.domain.{Config, Filter, LocalFile, MD5Hash}
 
 object LocalFileStream {
 
@@ -12,6 +13,8 @@ object LocalFileStream {
                 md5HashGenerator: File => IO[MD5Hash],
                 info: Int => String => Unit)
                (implicit c: Config): IO[Stream[LocalFile]] = {
+
+    val filters: Path => Boolean = Filter.isIncluded(c.filters)
 
     def loop(file: File): IO[Stream[LocalFile]] = {
 
@@ -22,7 +25,7 @@ object LocalFileStream {
         }
           .map(fs =>
             Stream(fs: _*)
-              .filter(isIncluded))
+              .filter(f => filters(f.toPath)))
 
       def recurseIntoSubDirectories(file: File)(implicit c: Config): IO[Stream[LocalFile]] =
         file match {
@@ -30,15 +33,6 @@ object LocalFileStream {
           case _ => for(hash <- md5HashGenerator(file))
             yield Stream(LocalFile(file, c.source, hash, generateKey(c.source, c.prefix)))
         }
-
-      def filterIsIncluded(f: File): Boolean =
-        f.isDirectory || c.includes.forall(_.isIncluded(f.toPath))
-
-      def excludeIsIncluded(f: File): Boolean =
-        c.excludes.forall(_.isIncluded(f.toPath))
-
-      def isIncluded(f: File): Boolean =
-        filterIsIncluded(f) && excludeIsIncluded(f)
 
       def recurse(fs: Stream[File]): IO[Stream[LocalFile]] =
         fs.foldLeft(IO.pure(Stream.empty[LocalFile]))((acc, f) =>

@@ -6,8 +6,7 @@ final case class Config(
                          bucket: Bucket = Bucket(""),
                          prefix: RemoteKey = RemoteKey(""),
                          verbose: Int = 1,
-                         includes: Seq[Include] = List(),
-                         excludes: Seq[Exclude] = List(),
+                         filters: List[Filter] = List(),
                          multiPartThreshold: Long = 1024 * 1024 * 5,
                          maxRetries: Int = 3,
                          source: File

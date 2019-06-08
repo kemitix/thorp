@@ -7,6 +7,7 @@ import cats.effect.IO
 import net.kemitix.s3thorp.aws.api.S3Action.{CopyS3Action, DeleteS3Action, UploadS3Action}
 import net.kemitix.s3thorp.aws.api.{S3Client, UploadProgressListener}
 import net.kemitix.s3thorp.core.MD5HashData.{leafHash, rootHash}
+import net.kemitix.s3thorp.domain.Filter.Exclude
 import net.kemitix.s3thorp.domain._
 import org.scalatest.FunSpec
 
@@ -125,7 +126,7 @@ class SyncSuite
       }
     }
     describe("when a file is excluded") {
-      val configWithExclusion = config.copy(excludes = List(Exclude("leaf")))
+      val configWithExclusion = config.copy(filters = List(Exclude("leaf")))
       val s3ObjectsData = S3ObjectsData(Map(), Map())
       val s3Client = new RecordingClient(testBucket, s3ObjectsData)
       Sync.run(s3Client, md5HashGenerator, logInfo, logWarn, logError)(configWithExclusion).unsafeRunSync
