@@ -1,4 +1,4 @@
-package net.kemitix.s3thorp.core
+package net.kemitix.s3thorp.aws.lib
 
 import net.kemitix.s3thorp.domain.MD5Hash
 

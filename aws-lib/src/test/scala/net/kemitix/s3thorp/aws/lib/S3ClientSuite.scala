@@ -8,7 +8,7 @@ import com.amazonaws.services.s3.transfer.model.UploadResult
 import com.amazonaws.services.s3.transfer.{TransferManager, Upload}
 import net.kemitix.s3thorp.aws.api.S3Action.UploadS3Action
 import net.kemitix.s3thorp.aws.api.{S3Client, UploadProgressListener}
-import net.kemitix.s3thorp.core.MD5HashData.rootHash
+import net.kemitix.s3thorp.aws.lib.MD5HashData.rootHash
 import net.kemitix.s3thorp.core.{KeyGenerator, Resource, S3MetaDataEnricher}
 import net.kemitix.s3thorp.domain._
 import org.scalamock.scalatest.MockFactory
@@ -90,9 +90,10 @@ class S3ClientSuite
       val s3Client = new ThorpS3Client(amazonS3, amazonS3TransferManager)
 
       val prefix = RemoteKey("prefix")
-      val localFile: LocalFile = LocalFile.resolve("root-file", rootHash, source, KeyGenerator.generateKey(source, prefix))
-      val bucket: Bucket = Bucket("a-bucket")
-      val remoteKey: RemoteKey = RemoteKey("prefix/root-file")
+      val localFile =
+        LocalFile.resolve("root-file", rootHash, source, KeyGenerator.generateKey(source, prefix))
+      val bucket = Bucket("a-bucket")
+      val remoteKey = RemoteKey("prefix/root-file")
       val progressListener = new UploadProgressListener(localFile)
 
       val upload = stub[Upload]
