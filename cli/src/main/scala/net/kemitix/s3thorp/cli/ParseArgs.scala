@@ -4,7 +4,8 @@ import java.nio.file.Paths
 
 import cats.effect.IO
 import net.kemitix.s3thorp._
-import net.kemitix.s3thorp.domain.{Bucket, Config, Exclude, Filter, RemoteKey}
+import net.kemitix.s3thorp.domain.Filter.{Exclude, Include}
+import net.kemitix.s3thorp.domain.{Bucket, Config, RemoteKey}
 import scopt.OParser
 import scopt.OParser.{builder, parse, sequence}
 
@@ -27,11 +28,13 @@ object ParseArgs {
       opt[String]('p', "prefix")
         .action((str, c) => c.copy(prefix = RemoteKey(str)))
         .text("Prefix within the S3 Bucket"),
-      opt[Seq[String]]('f', "filter")
-      .action((str, c) => c.copy(filters = str.map(Filter)))
-        .text("Filter only matching paths"),
+      opt[Seq[String]]('i', "include")
+        .unbounded()
+        .action((str, c) => c.copy(filters = c.filters ++ str.map(Include)))
+        .text("Include only matching paths"),
       opt[Seq[String]]('x', "exclude")
-        .action((str,c) => c.copy(excludes = str.map(Exclude)))
+        .unbounded()
+        .action((str,c) => c.copy(filters = c.filters ++ str.map(Exclude)))
         .text("Exclude matching paths"),
       opt[Int]('v', "verbose")
         .validate(i =>
