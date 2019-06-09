@@ -11,7 +11,8 @@ object S3ClientTransferManagerLogging {
                              (implicit info: Int => String => IO[Unit]): IO[Unit] =
     {
       val tryMessage = if (tryCount == 1) "" else s"try $tryCount"
-      info(1)(s"upload:$tryMessage:${localFile.remoteKey.key}")
+      val size = localFile.file.length
+      info(1)(s"upload:$tryMessage:$size:${localFile.remoteKey.key}")
     }
 
   def logMultiPartUploadFinished(localFile: LocalFile)
