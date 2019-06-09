@@ -26,11 +26,11 @@ object SyncLogging {
   private def countActivities(implicit c: Config): (Counters, S3Action) => Counters =
     (counters: Counters, s3Action: S3Action) => {
       s3Action match {
-        case UploadS3Action(remoteKey, _) =>
+        case _: UploadS3Action =>
           counters.copy(uploaded = counters.uploaded + 1)
-        case CopyS3Action(remoteKey) =>
+        case _: CopyS3Action =>
           counters.copy(copied = counters.copied + 1)
-        case DeleteS3Action(remoteKey) =>
+        case _: DeleteS3Action =>
           counters.copy(deleted = counters.deleted + 1)
         case _ => counters
       }
