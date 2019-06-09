@@ -14,9 +14,11 @@ class S3ClientDeleter(amazonS3: AmazonS3) {
             (implicit info: Int => String => IO[Unit]): IO[DeleteS3Action] =
     for {
       _ <- logDeleteStart(bucket, remoteKey)
-      request = new DeleteObjectRequest(bucket.name, remoteKey.key)
-      _ <- IO{amazonS3.deleteObject(request)}
+      _ <- deleteObject(bucket, remoteKey)
       _ <- logDeleteFinish(bucket, remoteKey)
     } yield DeleteS3Action(remoteKey)
 
+  private def deleteObject(bucket: Bucket, remoteKey: RemoteKey) = IO {
+    amazonS3.deleteObject(new DeleteObjectRequest(bucket.name, remoteKey.key))
+  }
 }
