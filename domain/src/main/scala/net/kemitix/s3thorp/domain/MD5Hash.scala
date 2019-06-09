@@ -1,7 +1,9 @@
 package net.kemitix.s3thorp.domain
 
-final case class MD5Hash(hash: String) {
+import net.kemitix.s3thorp.domain.QuoteStripper.stripQuotes
 
-  require(!hash.contains("\""))
+final case class MD5Hash(in: String) {
+
+  lazy val hash: String = in filter stripQuotes
 
 }
