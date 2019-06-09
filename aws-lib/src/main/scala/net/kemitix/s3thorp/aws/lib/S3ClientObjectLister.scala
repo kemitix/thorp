@@ -14,7 +14,7 @@ class S3ClientObjectLister(amazonS3: AmazonS3) {
 
   def listObjects(bucket: Bucket,
                   prefix: RemoteKey)
-                 (implicit info: Int => String => Unit): IO[S3ObjectsData] = {
+                 (implicit info: Int => String => IO[Unit]): IO[S3ObjectsData] = {
 
     type Token = String
     type Batch = (Stream[S3ObjectSummary], Option[Token])

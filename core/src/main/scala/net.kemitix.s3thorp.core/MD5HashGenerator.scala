@@ -9,13 +9,13 @@ import net.kemitix.s3thorp.domain.MD5Hash
 object MD5HashGenerator {
 
   def md5File(file: File)
-             (implicit info: Int => String => Unit): IO[MD5Hash] =
+             (implicit info: Int => String => IO[Unit]): IO[MD5Hash] =
     md5FilePart(file, 0, file.length)
 
   def md5FilePart(file: File,
                   offset: Long,
                   size: Long)
-                 (implicit info: Int => String => Unit): IO[MD5Hash] = {
+                 (implicit info: Int => String => IO[Unit]): IO[MD5Hash] = {
     val buffer = new Array[Byte](size.toInt)
 
     def readIntoBuffer = {

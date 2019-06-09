@@ -22,8 +22,8 @@ class S3ClientTransferManager(transferManager: => TransferManager) {
              multiPartThreshold: Long,
              tryCount: Int,
              maxRetries: Int)
-            (implicit info: Int => String => Unit,
-             warn: String => Unit): IO[S3Action] = {
+            (implicit info: Int => String => IO[Unit],
+             warn: String => IO[Unit]): IO[S3Action] = {
     val putObjectRequest: PutObjectRequest =
       new PutObjectRequest(bucket.name, localFile.remoteKey.key, localFile.file)
         .withGeneralProgressListener(progressListener(uploadProgressListener))

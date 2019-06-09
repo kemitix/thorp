@@ -2,6 +2,7 @@ package net.kemitix.s3thorp.aws.lib
 
 import java.time.Instant
 
+import cats.effect.IO
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.transfer._
 import net.kemitix.s3thorp.aws.api.S3Action.UploadS3Action
@@ -19,8 +20,8 @@ class S3ClientTransferManagerSuite
   private val source = Resource(this, ".")
   private val prefix = RemoteKey("prefix")
   implicit private val config: Config = Config(Bucket("bucket"), prefix, source = source)
-  implicit private val logInfo: Int => String => Unit = l => m => ()
-  implicit private val logWarn: String => Unit = w => ()
+  implicit private val logInfo: Int => String => IO[Unit] = _ => _ => IO.unit
+  implicit private val logWarn: String => IO[Unit] = _ => IO.unit
   private val fileToKey = generateKey(config.source, config.prefix) _
   val lastModified = LastModified(Instant.now())
 

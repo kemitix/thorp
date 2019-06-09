@@ -8,15 +8,17 @@ import net.kemitix.s3thorp.domain.Config
 // Logging for the Sync class
 object SyncLogging {
 
-  def logRunStart[F[_]](info: Int => String => Unit)(implicit c: Config): IO[Unit] = IO {
-    info(1)(s"Bucket: ${c.bucket.name}, Prefix: ${c.prefix.key}, Source: ${c.source}, ")}
+  def logRunStart[F[_]](info: Int => String => IO[Unit])
+                       (implicit c: Config): IO[Unit] =
+    info(1)(s"Bucket: ${c.bucket.name}, Prefix: ${c.prefix.key}, Source: ${c.source}, ")
 
-  def logFileScan(info: Int => String => Unit)(implicit c: Config): IO[Unit] = IO{
-    info(1)(s"Scanning local files: ${c.source}...")}
+  def logFileScan(info: Int => String => IO[Unit])
+                 (implicit c: Config): IO[Unit] =
+    info(1)(s"Scanning local files: ${c.source}...")
 
   def logRunFinished(actions: Stream[S3Action],
-                     info: Int => String => Unit)
-                    (implicit c: Config): IO[Unit] = IO {
+                     info: Int => String => IO[Unit])
+                    (implicit c: Config): IO[Unit] = {
     val counters = actions.foldLeft(Counters())(countActivities)
     info(1)(s"Uploaded ${counters.uploaded} files")
     info(1)(s"Copied   ${counters.copied} files")

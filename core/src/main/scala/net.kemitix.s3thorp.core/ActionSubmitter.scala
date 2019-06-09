@@ -10,8 +10,8 @@ object ActionSubmitter {
 
   def submitAction(s3Client: S3Client, action: Action)
                   (implicit c: Config,
-                   info: Int => String => Unit,
-                   warn: String => Unit): Stream[IO[S3Action]] = {
+                   info: Int => String => IO[Unit],
+                   warn: String => IO[Unit]): Stream[IO[S3Action]] = {
     Stream(
       action match {
         case ToUpload(bucket, localFile) =>
