@@ -15,17 +15,23 @@ object ActionSubmitter {
     Stream(
       action match {
         case ToUpload(bucket, localFile) =>
-          info(4)(s"    Upload: ${localFile.relative}")
-          val progressListener = new UploadProgressListener(localFile)
-          s3Client.upload(localFile, bucket, progressListener, c.multiPartThreshold, 1, c.maxRetries)
+          for {
+            _ <- info(4) (s"    Upload: ${localFile.relative}")
+            progressListener = new UploadProgressListener(localFile)
+            action <- s3Client.upload(localFile, bucket, progressListener, c.multiPartThreshold, 1, c.maxRetries)
+          } yield action
         case ToCopy(bucket, sourceKey, hash, targetKey) =>
-          info(4)(s"      Copy: ${sourceKey.key} => ${targetKey.key}")
-          s3Client.copy(bucket, sourceKey, hash, targetKey)
+          for {
+            _ <- info(4)(s"      Copy: ${sourceKey.key} => ${targetKey.key}")
+            action <- s3Client.copy(bucket, sourceKey, hash, targetKey)
+          } yield action
         case ToDelete(bucket, remoteKey) =>
-          info(4)(s"    Delete: ${remoteKey.key}")
-          s3Client.delete(bucket, remoteKey)
-        case DoNothing(bucket, remoteKey) => IO {
-          DoNothingS3Action(remoteKey)}
+          for {
+            _ <- info(4)(s"    Delete: ${remoteKey.key}")
+            action <- s3Client.delete(bucket, remoteKey)
+          } yield action
+        case DoNothing(bucket, remoteKey) =>
+          IO.pure(DoNothingS3Action(remoteKey))
       })
   }
 }
