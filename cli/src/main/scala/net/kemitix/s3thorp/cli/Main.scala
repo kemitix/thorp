@@ -21,7 +21,7 @@ object Main extends IOApp {
       logger = new Logger(config.verbose)
       info = (l: Int) => (m: String) => logger.info(l)(m)
       md5HashGenerator = (file: File) => md5File(file)(info)
-      _ <- IO(logger.info(1)("S3Thorp - hashed sync for s3"))
+      _ <- logger.info(1)("S3Thorp - hashed sync for s3")
       _ <- Sync.run(
         S3ClientBuilder.defaultClient,
         md5HashGenerator,
@@ -34,9 +34,9 @@ object Main extends IOApp {
     val logger = new Logger(1)
     program(args)
       .guaranteeCase {
-        case Canceled => IO(logger.warn("Interrupted"))
-        case Error(e) => IO(logger.error(e.getMessage))
-        case Completed => IO(logger.info(1)("Done"))
+        case Canceled => logger.warn("Interrupted")
+        case Error(e) => logger.error(e.getMessage)
+        case Completed => logger.info(1)("Done")
       }
   }
 
