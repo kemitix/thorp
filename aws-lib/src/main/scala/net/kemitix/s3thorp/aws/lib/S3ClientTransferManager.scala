@@ -35,15 +35,12 @@ class S3ClientTransferManager(transferManager: => TransferManager) {
     } yield UploadS3Action(RemoteKey(result.getKey), MD5Hash(result.getETag))
   }
 
-
   def progressListener(uploadProgressListener: UploadProgressListener): ProgressListener = {
-    new ProgressListener {
-      override def progressChanged(event: ProgressEvent): Unit = {
-        event match {
-          case e if e.getEventType.isTransferEvent => TransferEvent(e.getEventType.name)
-          case e if e.getEventType equals ProgressEventType.RESPONSE_BYTE_TRANSFER_EVENT => ByteTransferEvent(e.getEventType.name)
-          case e => RequestEvent(e.getEventType.name, e.getBytes, e.getBytesTransferred)
-        }
+    event: ProgressEvent => {
+      event match {
+        case e if e.getEventType.isTransferEvent => TransferEvent(e.getEventType.name)
+        case e if e.getEventType equals ProgressEventType.RESPONSE_BYTE_TRANSFER_EVENT => ByteTransferEvent(e.getEventType.name)
+        case e => RequestEvent(e.getEventType.name, e.getBytes, e.getBytesTransferred)
       }
     }
   }
