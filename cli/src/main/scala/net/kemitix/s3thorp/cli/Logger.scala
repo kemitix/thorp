@@ -1,16 +1,15 @@
 package net.kemitix.s3thorp.cli
 
 import cats.effect.IO
-import com.typesafe.scalalogging.LazyLogging
 
-class Logger(verbosity: Int) extends LazyLogging {
+class Logger(verbosity: Int)  {
 
   def info(level: Int)(message: String): IO[Unit] =
-    if (verbosity >= level) IO(logger.info(s"1:$message"))
+    if (verbosity >= level) IO(println(s"[INFO:1] $message"))
     else IO.unit
 
-  def warn(message: String): IO[Unit] = IO(logger.warn(message))
+  def warn(message: String): IO[Unit] = IO(println(s"[  WARN] $message"))
 
-  def error(message: String): IO[Unit] = IO(logger.error(message))
+  def error(message: String): IO[Unit] = IO(println(s"[ ERROR] $message"))
 
 }
