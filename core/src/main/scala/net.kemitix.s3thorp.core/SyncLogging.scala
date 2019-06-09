@@ -18,12 +18,14 @@ object SyncLogging {
 
   def logRunFinished(actions: Stream[S3Action],
                      info: Int => String => IO[Unit])
-                    (implicit c: Config): IO[Unit] = {
-    val counters = actions.foldLeft(Counters())(countActivities)
-    info(1)(s"Uploaded ${counters.uploaded} files")
-    info(1)(s"Copied   ${counters.copied} files")
-    info(1)(s"Deleted  ${counters.deleted} files")
-  }
+                    (implicit c: Config): IO[Unit] =
+    for {
+      _ <- IO.unit
+      counters = actions.foldLeft(Counters())(countActivities)
+      _ <- info(1)(s"Uploaded ${counters.uploaded} files")
+      _ <- info(1)(s"Copied   ${counters.copied} files")
+      _ <- info(1)(s"Deleted  ${counters.deleted} files")
+    } yield ()
 
   private def countActivities(implicit c: Config): (Counters, S3Action) => Counters =
     (counters: Counters, s3Action: S3Action) => {
