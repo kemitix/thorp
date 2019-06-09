@@ -10,7 +10,7 @@ object S3ClientLogging {
                           prefix: RemoteKey)
                          (implicit info: Int => String => IO[Unit]): Stream[S3ObjectSummary] => IO[Stream[S3ObjectSummary]] =
     in => for {
-      _ <- info(3)(s"Fetch S3 Summary: ${bucket.name}:${prefix.key}")
+      _ <- info(1)(s"Fetch S3 Summary: ${bucket.name}:${prefix.key}")
     } yield in
 
   def logListObjectsFinish(bucket: Bucket,
