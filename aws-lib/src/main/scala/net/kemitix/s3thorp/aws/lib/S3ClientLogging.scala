@@ -8,15 +8,13 @@ object S3ClientLogging {
 
   def logListObjectsStart(bucket: Bucket,
                           prefix: RemoteKey)
-                         (implicit info: Int => String => IO[Unit]): Stream[S3ObjectSummary] => IO[Stream[S3ObjectSummary]] =
-    in => for {
-      _ <- info(1)(s"Fetch S3 Summary: ${bucket.name}:${prefix.key}")
-    } yield in
+                         (implicit info: Int => String => IO[Unit]): IO[Unit] =
+    info(1)(s"Fetch S3 Summary: ${bucket.name}:${prefix.key}")
 
   def logListObjectsFinish(bucket: Bucket,
                            prefix: RemoteKey)
-                          (implicit info: Int => String => IO[Unit]): Stream[S3ObjectSummary] => IO[Unit] =
-    _ => info(2)(s"Fetched S3 Summary: ${bucket.name}:${prefix.key}")
+                          (implicit info: Int => String => IO[Unit]): IO[Unit] =
+    info(2)(s"Fetched S3 Summary: ${bucket.name}:${prefix.key}")
 
   def logUploadStart(localFile: LocalFile,
                      bucket: Bucket)

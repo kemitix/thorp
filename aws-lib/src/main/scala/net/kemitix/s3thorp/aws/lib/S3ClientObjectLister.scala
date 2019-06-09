@@ -19,17 +19,13 @@ class S3ClientObjectLister(amazonS3: AmazonS3) {
     type Token = String
     type Batch = (Stream[S3ObjectSummary], Option[Token])
 
-    val requestInitial = new ListObjectsV2Request()
-      .withBucketName(bucket.name)
-      .withPrefix(prefix.key)
-
     val requestMore = (token:Token) => new ListObjectsV2Request()
       .withBucketName(bucket.name)
       .withPrefix(prefix.key)
       .withContinuationToken(token)
 
     def fetchBatch: ListObjectsV2Request => IO[Batch] =
-      request => IO{
+      request => IO {
         val result = amazonS3.listObjectsV2(request)
         val more: Option[Token] =
           if (result.isTruncated) Some(result.getNextContinuationToken)
@@ -37,21 +33,28 @@ class S3ClientObjectLister(amazonS3: AmazonS3) {
         (result.getObjectSummaries.asScala.toStream, more)
       }
 
-    def fetchAll: ListObjectsV2Request => IO[Stream[S3ObjectSummary]] =
+    def fetch: ListObjectsV2Request => IO[Stream[S3ObjectSummary]] =
       request =>
           for {
             batch <- fetchBatch(request)
             (summaries, more) = batch
             rest <- more match {
               case None => IO{Stream()}
-              case Some(token) => fetchAll(requestMore(token))
+              case Some(token) => fetch(requestMore(token))
             }
           } yield summaries ++ rest
 
-    fetchAll(requestInitial)
-      .bracket(
-        logListObjectsStart(bucket, prefix))(
-        logListObjectsFinish(bucket,prefix))
+    IO {
+      new ListObjectsV2Request()
+        .withBucketName(bucket.name)
+        .withPrefix(prefix.key)
+    }.bracket {
+      request =>
+        for {
+          _ <- logListObjectsStart(bucket, prefix)
+          summaries <- fetch(request)
+        } yield summaries
+    }(_ => logListObjectsFinish(bucket,prefix))
       .map(os => S3ObjectsData(byHash(os), byKey(os)))
   }
 
