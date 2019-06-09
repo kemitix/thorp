@@ -14,15 +14,18 @@ class S3ClientCopier(amazonS3: AmazonS3) {
            hash: MD5Hash,
            targetKey: RemoteKey)
           (implicit info: Int => String => IO[Unit]): IO[CopyS3Action] = {
-    val request =
+    IO {
       new CopyObjectRequest(
         bucket.name, sourceKey.key,
         bucket.name, targetKey.key)
         .withMatchingETagConstraint(hash.hash)
-    IO(amazonS3.copyObject(request))
-      .bracket(
-        logCopyStart(bucket, sourceKey, targetKey))(
-        logCopyFinish(bucket, sourceKey,targetKey))
+    }.bracket {
+      request =>
+        for {
+          _ <- logCopyStart(bucket, sourceKey, targetKey)
+          result <- IO(amazonS3.copyObject(request))
+        } yield result
+    }(_ => logCopyFinish(bucket, sourceKey,targetKey))
       .map(_ => CopyS3Action(targetKey))
   }
 

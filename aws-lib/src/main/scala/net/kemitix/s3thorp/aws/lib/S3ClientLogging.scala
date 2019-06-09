@@ -31,16 +31,14 @@ object S3ClientLogging {
   def logCopyStart(bucket: Bucket,
                    sourceKey: RemoteKey,
                    targetKey: RemoteKey)
-                  (implicit info: Int => String => IO[Unit]): CopyObjectResult => IO[CopyObjectResult] =
-    in => for {
-      _ <- info(1)(s"Copy: ${bucket.name}:${sourceKey.key} => ${targetKey.key}")
-    } yield in
+                  (implicit info: Int => String => IO[Unit]): IO[Unit] =
+    info(1)(s"Copy: ${bucket.name}:${sourceKey.key} => ${targetKey.key}")
 
   def logCopyFinish(bucket: Bucket,
                     sourceKey: RemoteKey,
                     targetKey: RemoteKey)
-                   (implicit info: Int => String => IO[Unit]): CopyObjectResult => IO[Unit] =
-    _ => info(2)(s"Copied: ${bucket.name}:${sourceKey.key} => ${targetKey.key}")
+                   (implicit info: Int => String => IO[Unit]): IO[Unit] =
+    info(2)(s"Copied: ${bucket.name}:${sourceKey.key} => ${targetKey.key}")
 
   def logDeleteStart(bucket: Bucket,
                      remoteKey: RemoteKey)
