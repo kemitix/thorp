@@ -34,10 +34,10 @@ object MD5HashGenerator {
     def readFile = openFile.bracket(readIntoBuffer)(closeFile)
 
     for {
-      _ <- IO(info(5)(s"md5:reading:offset $offset:size $size:$file"))
+      _ <- info(5)(s"md5:reading:offset $offset:size $size:$file")
       _ <- readFile
       hash = md5PartBody(buffer)
-      _ <- IO (info(5)(s"md5:generated:${hash.hash}"))
+      _ <- info(4)(s"md5:generated:${hash.hash}:$file")
     } yield hash
   }
 
