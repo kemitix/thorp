@@ -3,14 +3,14 @@ package net.kemitix.s3thorp.aws.lib
 import cats.effect.IO
 import com.amazonaws.event.{ProgressEvent, ProgressEventType, ProgressListener}
 import com.amazonaws.services.s3.model.PutObjectRequest
-import com.amazonaws.services.s3.transfer.TransferManager
+import com.amazonaws.services.s3.transfer.{TransferManager => AmazonTransferManager}
 import net.kemitix.s3thorp.aws.api.S3Action.UploadS3Action
 import net.kemitix.s3thorp.aws.api.UploadEvent.{ByteTransferEvent, RequestEvent, TransferEvent}
-import net.kemitix.s3thorp.aws.api.{S3Action, UploadEvent, UploadProgressListener}
-import net.kemitix.s3thorp.aws.lib.TransferManagerLogging.{logMultiPartUploadFinished, logMultiPartUploadStart}
+import net.kemitix.s3thorp.aws.api.{S3Action, UploadProgressListener}
+import net.kemitix.s3thorp.aws.lib.UploaderLogging.{logMultiPartUploadFinished, logMultiPartUploadStart}
 import net.kemitix.s3thorp.domain.{Bucket, LocalFile, MD5Hash, RemoteKey}
 
-class TransferManager(transferManager: => TransferManager) {
+class Uploader(transferManager: => AmazonTransferManager) {
 
   def accepts(localFile: LocalFile)
              (implicit multiPartThreshold: Long): Boolean =
