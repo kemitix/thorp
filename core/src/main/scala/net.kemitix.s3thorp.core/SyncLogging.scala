@@ -2,13 +2,13 @@ package net.kemitix.s3thorp.core
 
 import cats.effect.IO
 import net.kemitix.s3thorp.aws.api.S3Action
-import net.kemitix.s3thorp.aws.api.S3Action.{CopyS3Action, DeleteS3Action, UploadS3Action}
+import net.kemitix.s3thorp.aws.api.S3Action.{CopyS3Action, DeleteS3Action, ErroredS3Action, UploadS3Action}
 import net.kemitix.s3thorp.domain.Config
 
 // Logging for the Sync class
 object SyncLogging {
 
-  def logRunStart[F[_]](info: Int => String => IO[Unit])
+  def logRunStart(info: Int => String => IO[Unit])
                        (implicit c: Config): IO[Unit] =
     info(1)(s"Bucket: ${c.bucket.name}, Prefix: ${c.prefix.key}, Source: ${c.source}, ")
 
@@ -25,6 +25,7 @@ object SyncLogging {
       _ <- info(1)(s"Uploaded ${counters.uploaded} files")
       _ <- info(1)(s"Copied   ${counters.copied} files")
       _ <- info(1)(s"Deleted  ${counters.deleted} files")
+      _ <- info(1)(s"Errors   ${counters.errors}")
     } yield ()
 
   private def countActivities(implicit c: Config): (Counters, S3Action) => Counters =
@@ -36,6 +37,8 @@ object SyncLogging {
           counters.copy(copied = counters.copied + 1)
         case _: DeleteS3Action =>
           counters.copy(deleted = counters.deleted + 1)
+        case ErroredS3Action(k, e) =>
+          counters.copy(errors = counters.errors + 1)
         case _ => counters
       }
     }
