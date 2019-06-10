@@ -3,12 +3,15 @@ package net.kemitix.s3thorp.aws.lib
 import cats.effect.IO
 import com.amazonaws.event.{ProgressEvent, ProgressEventType, ProgressListener}
 import com.amazonaws.services.s3.model.PutObjectRequest
+import com.amazonaws.services.s3.transfer.model.UploadResult
 import com.amazonaws.services.s3.transfer.{TransferManager => AmazonTransferManager}
-import net.kemitix.s3thorp.aws.api.S3Action.UploadS3Action
+import net.kemitix.s3thorp.aws.api.S3Action.{ErroredS3Action, UploadS3Action}
 import net.kemitix.s3thorp.aws.api.UploadEvent.{ByteTransferEvent, RequestEvent, TransferEvent}
 import net.kemitix.s3thorp.aws.api.{S3Action, UploadProgressListener}
 import net.kemitix.s3thorp.aws.lib.UploaderLogging.{logMultiPartUploadFinished, logMultiPartUploadStart}
 import net.kemitix.s3thorp.domain.{Bucket, LocalFile, MD5Hash, RemoteKey}
+
+import scala.util.Try
 
 class Uploader(transferManager: => AmazonTransferManager) {
 
@@ -23,21 +26,32 @@ class Uploader(transferManager: => AmazonTransferManager) {
              tryCount: Int,
              maxRetries: Int)
             (implicit info: Int => String => IO[Unit],
-             warn: String => IO[Unit]): IO[S3Action] = {
+             warn: String => IO[Unit]): IO[S3Action] =
     for {
       _ <- logMultiPartUploadStart(localFile, tryCount)
-      listener = progressListener(uploadProgressListener)
-      putObjectRequest = request(localFile, bucket, listener)
-      upload = transferManager.upload(putObjectRequest)
-      result <- IO{upload.waitForUploadResult}
+      upload <- upload(localFile, bucket, uploadProgressListener)
       _ <- logMultiPartUploadFinished(localFile)
-    } yield UploadS3Action(RemoteKey(result.getKey), MD5Hash(result.getETag))
+    } yield upload match {
+      case Right(r) => UploadS3Action(RemoteKey(r.getKey), MD5Hash(r.getETag))
+      case Left(e) => ErroredS3Action(localFile.remoteKey, e)
+    }
+
+  private def upload(localFile: LocalFile,
+                     bucket: Bucket,
+                     uploadProgressListener: UploadProgressListener,
+                    ): IO[Either[Throwable, UploadResult]] = {
+    val listener = progressListener(uploadProgressListener)
+    val putObjectRequest = request(localFile, bucket, listener)
+    IO {
+      Try(transferManager.upload(putObjectRequest))
+        .map(_.waitForUploadResult)
+        .toEither
+    }
   }
 
-  private def request(localFile: LocalFile, bucket: Bucket, listener: ProgressListener): PutObjectRequest = {
+  private def request(localFile: LocalFile, bucket: Bucket, listener: ProgressListener): PutObjectRequest =
     new PutObjectRequest(bucket.name, localFile.remoteKey.key, localFile.file)
       .withGeneralProgressListener(listener)
-  }
 
   private def progressListener(uploadProgressListener: UploadProgressListener) =
     new ProgressListener {
