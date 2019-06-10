@@ -14,8 +14,8 @@ trait UploadProgressLogging {
                  (implicit info: Int => String => IO[Unit]): IO[Unit] =
     info(2)(s"Transfer:${event.name}: ${localFile.remoteKey.key}")
 
-  val CLEAR_LINE = s"\u001B[2K\r"
-  val PROGRESS_BAR_LENGTH = 100
+  val clearLine = s"\u001B[2K\r"
+  val progressBarLength = 100
 
   def logRequestCycle(localFile: LocalFile,
                       event: RequestEvent,
@@ -26,13 +26,13 @@ trait UploadProgressLogging {
     val done = ((bytesTransferred.toDouble / fileLength.toDouble) * 100).toInt
     if (done < 100) {
       val head = s"$GREEN_B$GREEN#$RESET" * done
-      val tail = " " * (PROGRESS_BAR_LENGTH - done)
+      val tail = " " * (progressBarLength - done)
       val bar = s"[$head$tail]"
       val transferred = sizeInEnglish(bytesTransferred)
       val fileSize = sizeInEnglish(fileLength)
-      IO(print(s"$bar $transferred of $fileSize $remoteKey$CLEAR_LINE"))
+      IO(print(s"$bar $transferred of $fileSize $remoteKey$clearLine"))
     } else
-      IO(print(CLEAR_LINE))
+      IO(print(clearLine))
   }
 
   def logByteTransfer(event: ByteTransferEvent)
