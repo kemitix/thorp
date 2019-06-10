@@ -1,11 +1,11 @@
 package net.kemitix.s3thorp.aws.api
 
 import cats.effect.IO
-
-import io.AnsiColor._
 import net.kemitix.s3thorp.aws.api.UploadEvent.{ByteTransferEvent, RequestEvent, TransferEvent}
+import net.kemitix.s3thorp.domain.LocalFile
 import net.kemitix.s3thorp.domain.SizeTranslation.sizeInEnglish
-import net.kemitix.s3thorp.domain.{LocalFile, SizeTranslation}
+
+import scala.io.AnsiColor._
 
 trait UploadProgressLogging {
 
