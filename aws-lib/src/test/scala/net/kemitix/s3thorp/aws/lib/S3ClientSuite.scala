@@ -2,6 +2,7 @@ package net.kemitix.s3thorp.aws.lib
 
 import java.time.Instant
 
+import cats.effect.IO
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.PutObjectRequest
 import com.amazonaws.services.s3.transfer.model.UploadResult
@@ -22,8 +23,8 @@ class S3ClientSuite
 
   private val prefix = RemoteKey("prefix")
   implicit private val config: Config = Config(Bucket("bucket"), prefix, source = source)
-  implicit private val logInfo: Int => String => Unit = l => m => ()
-  implicit private val logWarn: String => Unit = w => ()
+  implicit private val logInfo: Int => String => IO[Unit] = _ => _ => IO.unit
+  implicit private val logWarn: String => IO[Unit] = _ => IO.unit
   private val fileToKey = KeyGenerator.generateKey(config.source, config.prefix) _
 
   describe("getS3Status") {

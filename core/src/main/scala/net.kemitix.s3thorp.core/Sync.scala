@@ -17,9 +17,9 @@ object Sync {
 
   def run(s3Client: S3Client,
           md5HashGenerator: File => IO[MD5Hash],
-          info: Int => String => Unit,
-          warn: String => Unit,
-          error: String => Unit)
+          info: Int => String => IO[Unit],
+          warn: String => IO[Unit],
+          error: String => IO[Unit])
          (implicit c: Config): IO[Unit] = {
 
     def copyUploadActions(s3Data: S3ObjectsData): IO[Stream[S3Action]] =

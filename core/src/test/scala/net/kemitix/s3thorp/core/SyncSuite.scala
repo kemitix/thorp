@@ -17,9 +17,9 @@ class SyncSuite
   private val source = Resource(this, "upload")
   private val prefix = RemoteKey("prefix")
   implicit private val config: Config = Config(Bucket("bucket"), prefix, source = source)
-  implicit private val logInfo: Int => String => Unit = l => i => ()
-  implicit private val logWarn: String => Unit = w => ()
-  private def logError: String => Unit = e => ()
+  implicit private val logInfo: Int => String => IO[Unit] = _ => _ => IO.unit
+  implicit private val logWarn: String => IO[Unit] = _ => IO.unit
+  private def logError: String => IO[Unit] = _ => IO.unit
   private val lastModified = LastModified(Instant.now)
   private val fileToKey: File => RemoteKey = KeyGenerator.generateKey(source, prefix)
   private val rootFile = LocalFile.resolve("root-file", rootHash, source, fileToKey)
@@ -149,10 +149,8 @@ class SyncSuite
 
     override def listObjects(bucket: Bucket,
                              prefix: RemoteKey)
-                            (implicit info: Int => String => Unit) =
-      IO {
-        s3ObjectsData
-      }
+                            (implicit info: Int => String => IO[Unit]) =
+      IO.pure(s3ObjectsData)
 
     override def upload(localFile: LocalFile,
                         bucket: Bucket,
@@ -160,8 +158,8 @@ class SyncSuite
                         multiPartThreshold: Long,
                         tryCount: Int,
                         maxRetries: Int)
-                       (implicit info: Int => String => Unit,
-                        warn: String => Unit) =
+                       (implicit info: Int => String => IO[Unit],
+                        warn: String => IO[Unit]) =
       IO {
         if (bucket == testBucket)
           uploadsRecord += (localFile.relative.toString -> localFile.remoteKey)
@@ -172,7 +170,7 @@ class SyncSuite
                       sourceKey: RemoteKey,
                       hash: MD5Hash,
                       targetKey: RemoteKey
-                     )(implicit info: Int => String => Unit) =
+                     )(implicit info: Int => String => IO[Unit]) =
       IO {
         if (bucket == testBucket)
           copiesRecord += (sourceKey -> targetKey)
@@ -181,7 +179,7 @@ class SyncSuite
 
     override def delete(bucket: Bucket,
                         remoteKey: RemoteKey
-                       )(implicit info: Int => String => Unit) =
+                       )(implicit info: Int => String => IO[Unit]) =
       IO {
         if (bucket == testBucket)
           deletionsRecord += remoteKey

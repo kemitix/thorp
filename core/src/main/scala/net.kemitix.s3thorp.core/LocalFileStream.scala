@@ -11,7 +11,7 @@ object LocalFileStream {
 
   def findFiles(file: File,
                 md5HashGenerator: File => IO[MD5Hash],
-                info: Int => String => Unit)
+                info: Int => String => IO[Unit])
                (implicit c: Config): IO[Stream[LocalFile]] = {
 
     val filters: Path => Boolean = Filter.isIncluded(c.filters)

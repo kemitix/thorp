@@ -3,6 +3,7 @@ package net.kemitix.s3thorp.aws.lib
 import java.time.Instant
 import java.util.Date
 
+import cats.effect.IO
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.{ListObjectsV2Request, ListObjectsV2Result, S3ObjectSummary}
 import com.amazonaws.services.s3.transfer.TransferManager
@@ -19,7 +20,7 @@ class ThorpS3ClientSuite
     val source = Resource(this, "upload")
     val prefix = RemoteKey("prefix")
     implicit val config: Config = Config(Bucket("bucket"), prefix, source = source)
-    implicit val logInfo: Int => String => Unit = l => m => ()
+    implicit val logInfo: Int => String => IO[Unit] = _ => _ => IO.unit
 
     val lm = LastModified(Instant.now)
 

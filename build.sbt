@@ -22,12 +22,6 @@ val awsSdkDependencies = Seq(
     "com.fasterxml.jackson.dataformat" % "jackson-dataformat-cbor" % "2.9.9"
   )
 )
-val loggingSettings = Seq(
-  libraryDependencies ++= Seq(
-    "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
-    "org.slf4j" % "slf4j-log4j12" % "1.7.26",
-  )
-)
 val catsEffectsSettings = Seq(
   libraryDependencies ++=  Seq(
     "org.typelevel" %% "cats-effect" % "1.3.1"
@@ -47,7 +41,6 @@ val catsEffectsSettings = Seq(
 lazy val cli = (project in file("cli"))
   .settings(applicationSettings)
   .aggregate(`aws-lib`, core, `aws-api`, domain)
-  .settings(loggingSettings)
   .settings(commandLineParsing)
   .dependsOn(`aws-lib`)
 

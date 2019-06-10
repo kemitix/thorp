@@ -8,29 +8,33 @@ import net.kemitix.s3thorp.domain.Config
 // Logging for the Sync class
 object SyncLogging {
 
-  def logRunStart[F[_]](info: Int => String => Unit)(implicit c: Config): IO[Unit] = IO {
-    info(1)(s"Bucket: ${c.bucket.name}, Prefix: ${c.prefix.key}, Source: ${c.source}, ")}
+  def logRunStart[F[_]](info: Int => String => IO[Unit])
+                       (implicit c: Config): IO[Unit] =
+    info(1)(s"Bucket: ${c.bucket.name}, Prefix: ${c.prefix.key}, Source: ${c.source}, ")
 
-  def logFileScan(info: Int => String => Unit)(implicit c: Config): IO[Unit] = IO{
-    info(1)(s"Scanning local files: ${c.source}...")}
+  def logFileScan(info: Int => String => IO[Unit])
+                 (implicit c: Config): IO[Unit] =
+    info(1)(s"Scanning local files: ${c.source}...")
 
   def logRunFinished(actions: Stream[S3Action],
-                     info: Int => String => Unit)
-                    (implicit c: Config): IO[Unit] = IO {
-    val counters = actions.foldLeft(Counters())(countActivities)
-    info(1)(s"Uploaded ${counters.uploaded} files")
-    info(1)(s"Copied   ${counters.copied} files")
-    info(1)(s"Deleted  ${counters.deleted} files")
-  }
+                     info: Int => String => IO[Unit])
+                    (implicit c: Config): IO[Unit] =
+    for {
+      _ <- IO.unit
+      counters = actions.foldLeft(Counters())(countActivities)
+      _ <- info(1)(s"Uploaded ${counters.uploaded} files")
+      _ <- info(1)(s"Copied   ${counters.copied} files")
+      _ <- info(1)(s"Deleted  ${counters.deleted} files")
+    } yield ()
 
   private def countActivities(implicit c: Config): (Counters, S3Action) => Counters =
     (counters: Counters, s3Action: S3Action) => {
       s3Action match {
-        case UploadS3Action(remoteKey, _) =>
+        case _: UploadS3Action =>
           counters.copy(uploaded = counters.uploaded + 1)
-        case CopyS3Action(remoteKey) =>
+        case _: CopyS3Action =>
           counters.copy(copied = counters.copied + 1)
-        case DeleteS3Action(remoteKey) =>
+        case _: DeleteS3Action =>
           counters.copy(deleted = counters.deleted + 1)
         case _ => counters
       }
