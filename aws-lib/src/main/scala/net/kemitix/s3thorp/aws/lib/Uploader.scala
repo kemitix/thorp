@@ -3,6 +3,7 @@ package net.kemitix.s3thorp.aws.lib
 import cats.effect.IO
 import com.amazonaws.event.{ProgressEvent, ProgressEventType, ProgressListener}
 import com.amazonaws.services.s3.model.PutObjectRequest
+import com.amazonaws.services.s3.transfer.model.UploadResult
 import com.amazonaws.services.s3.transfer.{TransferManager => AmazonTransferManager}
 import net.kemitix.s3thorp.aws.api.S3Action.UploadS3Action
 import net.kemitix.s3thorp.aws.api.UploadEvent.{ByteTransferEvent, RequestEvent, TransferEvent}
@@ -26,12 +27,19 @@ class Uploader(transferManager: => AmazonTransferManager) {
              warn: String => IO[Unit]): IO[S3Action] = {
     for {
       _ <- logMultiPartUploadStart(localFile, tryCount)
-      listener = progressListener(uploadProgressListener)
-      putObjectRequest = request(localFile, bucket, listener)
-      upload = transferManager.upload(putObjectRequest)
-      result <- IO{upload.waitForUploadResult}
+      result <- upload(localFile, bucket, uploadProgressListener)
       _ <- logMultiPartUploadFinished(localFile)
     } yield UploadS3Action(RemoteKey(result.getKey), MD5Hash(result.getETag))
+  }
+
+  private def upload(localFile: LocalFile,
+                     bucket: Bucket,
+                     uploadProgressListener: UploadProgressListener,
+                    ): IO[UploadResult] = {
+    val listener = progressListener(uploadProgressListener)
+    val putObjectRequest = request(localFile, bucket, listener)
+    val upload = transferManager.upload(putObjectRequest)
+    IO(upload.waitForUploadResult)
   }
 
   private def request(localFile: LocalFile, bucket: Bucket, listener: ProgressListener): PutObjectRequest = {
