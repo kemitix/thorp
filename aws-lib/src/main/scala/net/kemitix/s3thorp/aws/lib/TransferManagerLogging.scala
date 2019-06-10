@@ -5,7 +5,7 @@ import net.kemitix.s3thorp.domain.Terminal.clearLine
 import net.kemitix.s3thorp.domain.SizeTranslation.sizeInEnglish
 import net.kemitix.s3thorp.domain.LocalFile
 
-object S3ClientTransferManagerLogging {
+object TransferManagerLogging {
 
   def logMultiPartUploadStart(localFile: LocalFile,
                               tryCount: Int)

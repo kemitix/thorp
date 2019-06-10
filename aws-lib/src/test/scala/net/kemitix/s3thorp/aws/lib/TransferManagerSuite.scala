@@ -13,7 +13,7 @@ import net.kemitix.s3thorp.domain._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.FunSpec
 
-class S3ClientTransferManagerSuite
+class TransferManagerSuite
   extends FunSpec
     with MockFactory {
 
@@ -28,7 +28,7 @@ class S3ClientTransferManagerSuite
   describe("S3ClientMultiPartTransferManagerSuite") {
     describe("accepts") {
       val transferManager = stub[TransferManager]
-      val uploader = new S3ClientTransferManager(transferManager)
+      val uploader = new TransferManager(transferManager)
       describe("small-file") {
         val smallFile = LocalFile.resolve("small-file", MD5Hash("the-hash"), source, fileToKey)
         it("should be a small-file") {
@@ -60,7 +60,7 @@ class S3ClientTransferManagerSuite
       val progressListener = new UploadProgressListener(bigFile)
       val amazonS3 = mock[AmazonS3]
       val amazonS3TransferManager = TransferManagerBuilder.standard().withS3Client(amazonS3).build
-      val uploader = new S3ClientTransferManager(amazonS3TransferManager)
+      val uploader = new TransferManager(amazonS3TransferManager)
       it("should upload") {
         val expected = UploadS3Action(returnedKey, returnedHash)
         val result = uploader.upload(bigFile, config.bucket, progressListener, config.multiPartThreshold, 1, config.maxRetries).unsafeRunSync
