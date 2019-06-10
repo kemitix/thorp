@@ -1,7 +1,7 @@
 package net.kemitix.s3thorp.aws.lib
 
 import cats.effect.IO
-import com.amazonaws.services.s3.model.{CopyObjectResult, DeleteObjectsResult, ListObjectsV2Result, PutObjectResult, S3ObjectSummary}
+import com.amazonaws.services.s3.model.PutObjectResult
 import net.kemitix.s3thorp.domain.{Bucket, LocalFile, RemoteKey}
 
 object S3ClientLogging {
