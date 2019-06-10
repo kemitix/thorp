@@ -37,8 +37,7 @@ class Uploader(transferManager: => AmazonTransferManager) {
                     ): IO[UploadResult] = {
     val listener = progressListener(uploadProgressListener)
     val putObjectRequest = request(localFile, bucket, listener)
-    val upload = transferManager.upload(putObjectRequest)
-    IO(upload.waitForUploadResult)
+    IO(transferManager.upload(putObjectRequest).waitForUploadResult)
   }
 
   private def request(localFile: LocalFile, bucket: Bucket, listener: ProgressListener): PutObjectRequest =
