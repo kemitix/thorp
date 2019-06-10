@@ -24,13 +24,12 @@ class Uploader(transferManager: => AmazonTransferManager) {
              tryCount: Int,
              maxRetries: Int)
             (implicit info: Int => String => IO[Unit],
-             warn: String => IO[Unit]): IO[S3Action] = {
+             warn: String => IO[Unit]): IO[S3Action] =
     for {
       _ <- logMultiPartUploadStart(localFile, tryCount)
       result <- upload(localFile, bucket, uploadProgressListener)
       _ <- logMultiPartUploadFinished(localFile)
     } yield UploadS3Action(RemoteKey(result.getKey), MD5Hash(result.getETag))
-  }
 
   private def upload(localFile: LocalFile,
                      bucket: Bucket,
@@ -42,10 +41,9 @@ class Uploader(transferManager: => AmazonTransferManager) {
     IO(upload.waitForUploadResult)
   }
 
-  private def request(localFile: LocalFile, bucket: Bucket, listener: ProgressListener): PutObjectRequest = {
+  private def request(localFile: LocalFile, bucket: Bucket, listener: ProgressListener): PutObjectRequest =
     new PutObjectRequest(bucket.name, localFile.remoteKey.key, localFile.file)
       .withGeneralProgressListener(listener)
-  }
 
   private def progressListener(uploadProgressListener: UploadProgressListener) =
     new ProgressListener {
