@@ -6,45 +6,57 @@ import java.security.MessageDigest
 import cats.effect.IO
 import net.kemitix.s3thorp.domain.MD5Hash
 
+import scala.collection.immutable.NumericRange
+
 object MD5HashGenerator {
 
   def md5File(file: File)
-             (implicit info: Int => String => IO[Unit]): IO[MD5Hash] =
-    md5FilePart(file, 0, file.length)
+             (implicit info: Int => String => IO[Unit]): IO[MD5Hash] = {
 
-  def md5FilePart(file: File,
-                  offset: Long,
-                  size: Long)
-                 (implicit info: Int => String => IO[Unit]): IO[MD5Hash] = {
-    val buffer = new Array[Byte](size.toInt)
+    val maxBufferSize = 8048
 
-    def readIntoBuffer = {
-      fis: FileInputStream =>
-        IO {
-          fis skip offset
-          fis read buffer
-          fis
-        }
-    }
-
-    def closeFile = {fis: FileInputStream => IO(fis.close())}
+    val defaultBuffer = new Array[Byte](maxBufferSize)
 
     def openFile = IO(new FileInputStream(file))
 
-    def readFile = openFile.bracket(readIntoBuffer)(closeFile)
+    def closeFile = {fis: FileInputStream => IO(fis.close())}
+
+    def nextChunkSize(currentOffset: Long) = {
+      // a value between 1 and maxBufferSize
+      val toRead = file.length - currentOffset
+      val result = Math.min(maxBufferSize, toRead)
+      result.toInt
+    }
+
+    def readToBuffer(fis: FileInputStream,
+                     currentOffset: Long) = {
+      val buffer =
+        if (nextChunkSize(currentOffset) < maxBufferSize)
+          new Array[Byte](nextChunkSize(currentOffset))
+        else
+          defaultBuffer
+      fis read buffer
+      buffer
+    }
+
+    def readFile: IO[String] = openFile
+      .bracket(fis => IO {
+        val md5 = MessageDigest getInstance "MD5"
+        NumericRange(0, file.length, maxBufferSize)
+          .foreach{currentOffset => {
+            val buffer = readToBuffer(fis, currentOffset)
+            md5 update buffer
+          }
+        }
+        (md5.digest map ("%02x" format _)).mkString
+    })(closeFile)
 
     for {
-      _ <- info(5)(s"md5:reading:offset $offset:size $size:$file")
-      _ <- readFile
-      hash = md5PartBody(buffer)
+      _ <- info(5)(s"md5:reading:size ${file.length}:$file")
+      md5 <- readFile
+      hash = MD5Hash(md5)
       _ <- info(4)(s"md5:generated:${hash.hash}:$file")
     } yield hash
-  }
-
-  def md5PartBody(partBody: Array[Byte]): MD5Hash = {
-    val md5 = MessageDigest getInstance "MD5"
-    md5 update partBody
-    MD5Hash((md5.digest map ("%02x" format _)).mkString)
   }
 
 }
