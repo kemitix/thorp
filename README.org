@@ -2,7 +2,7 @@
 
 Synchronisation of files with S3 using the hash of the file contents.
 
-[[https://www.codacy.com/app/kemitix/s3thorp][https://api.codacy.com/project/badge/Grade/14ea6ad0825249c994a27a82d3485180]]
+[[https://www.codacy.com/app/kemitix/s3thorp][file:https://api.codacy.com/project/badge/Grade/14ea6ad0825249c994a27a82d3485180]]
 
 Originally based on Alex Kudlick's [[https://github.com/akud/aws-s3-sync-by-hash][aws-s3-sync-by-hash]].
 
