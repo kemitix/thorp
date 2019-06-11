@@ -14,12 +14,15 @@ hash of the file contents.
     s3thorp
     Usage: s3thorp [options]
 
-      -s, --source <value>             Source directory to sync to S3
-      -b, --bucket <value>             S3 bucket name
-      -p, --prefix <value>             Prefix within the S3 Bucket
-      -x, --exclude <value>[,<values>] Exclude matching paths
-      -v, --verbose <value>            Verbosity level (1-5)
+      -s, --source <value>  Source directory to sync to S3
+      -b, --bucket <value>  S3 bucket name
+      -p, --prefix <value>  Prefix within the S3 Bucket
+      -i, --include <value> Include matching paths
+      -x, --exclude <value> Exclude matching paths
+      -v, --verbose <value> Verbosity level (1-5)
   #+end_example
+
+The ~--include~ and ~--exclude~ parameters can be used more than once.
 
 * Behaviour
 
@@ -35,24 +38,3 @@ When considering a local file, the following table governs what should happen:
 | 5 | exists     | exists     | no match         | no matches         | upload              |
 | 6 | is missing | exists     | -                | -                  | delete              |
 |---+------------+------------+------------------+--------------------+---------------------|
-
-* Creating Native Images
-
-Note: the created image currently can't be run outside of the base of
-the project. See [[https://github.com/kemitix/s3thorp/issues/15][Issue #15]]
-
-  - Download and install GraalVM
-    - https://github.com/oracle/graal/releases
-  - Install ~native-image~ using the graal updater
-    #+begin_example bash
-      gu install native-image
-    #+end_example
-  - Create native image
-    #+begin_example bash
-      native-image -cp `sbt 'export runtime:fullClasspath'|tail -n 1` \
-                   -H:Name=s3thorp \
-                   -H:Class=net.kemitix.s3thorp.Main \
-                   --allow-incomplete-classpath \
-                   --force-fallback
-    #+end_example
-  - Resulting file requires a JDK for execution
