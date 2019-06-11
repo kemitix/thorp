@@ -40,3 +40,14 @@ When considering a local file, the following table governs what should happen:
 | 5 | exists     | exists     | no match         | no matches         | upload              |
 | 6 | is missing | exists     | -                | -                  | delete              |
 |---+------------+------------+------------------+--------------------+---------------------|
+
+* Executable JAR
+
+To build as an executable jar, perform `sbt assembly`
+
+This will create the file
+`cli/target/scala-2.12/s3thorp-assembly-$VERSION.jar` (where $VERSION
+is substituted)
+
+Copy and rename this file as `s3thorp.jar` into the same directory as
+the `bin/s3throp` shell script.
