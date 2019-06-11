@@ -5,7 +5,7 @@ val applicationSettings = Seq(
 )
 val testDependencies = Seq(
   libraryDependencies ++= Seq(
-    "org.scalatest" %% "scalatest" % "3.0.7" % Test,
+    "org.scalatest" %% "scalatest" % "3.0.8" % Test,
     "org.scalamock" %% "scalamock" % "4.2.0" % Test
   )
 )
