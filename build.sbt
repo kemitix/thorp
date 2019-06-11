@@ -1,7 +1,12 @@
+val commonSettings = Seq(
+  version := "0.1",
+  organization := "net.kemitix",
+  scalaVersion := "2.12.8",
+  test in assembly := {}
+)
+
 val applicationSettings = Seq(
   name := "s3thorp",
-  version := "0.1",
-  scalaVersion := "2.12.8"
 )
 val testDependencies = Seq(
   libraryDependencies ++= Seq(
@@ -39,23 +44,33 @@ val catsEffectsSettings = Seq(
 // cli -> aws-lib -> core -> aws-api -> domain
 
 lazy val cli = (project in file("cli"))
+  .settings(commonSettings)
+  .settings(mainClass in assembly := Some("net.kemitix.s3thorp.cli.Main"))
   .settings(applicationSettings)
   .aggregate(`aws-lib`, core, `aws-api`, domain)
   .settings(commandLineParsing)
   .dependsOn(`aws-lib`)
 
 lazy val `aws-lib` = (project in file("aws-lib"))
+  .settings(commonSettings)
+  .settings(assemblyJarName in assembly := "aws-lib.jar")
   .settings(awsSdkDependencies)
   .settings(testDependencies)
   .dependsOn(core)
 
 lazy val core = (project in file("core"))
+  .settings(commonSettings)
+  .settings(assemblyJarName in assembly := "core.jar")
   .settings(testDependencies)
   .dependsOn(`aws-api`)
 
 lazy val `aws-api` = (project in file("aws-api"))
+  .settings(commonSettings)
+  .settings(assemblyJarName in assembly := "aws-api.jar")
   .settings(catsEffectsSettings)
   .dependsOn(domain)
 
 lazy val domain = (project in file("domain"))
+  .settings(commonSettings)
+  .settings(assemblyJarName in assembly := "domain.jar")
   .settings(testDependencies)
