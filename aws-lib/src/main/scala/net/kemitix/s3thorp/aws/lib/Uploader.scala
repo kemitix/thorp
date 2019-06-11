@@ -2,7 +2,7 @@ package net.kemitix.s3thorp.aws.lib
 
 import cats.effect.IO
 import com.amazonaws.event.{ProgressEvent, ProgressEventType, ProgressListener}
-import com.amazonaws.services.s3.model.PutObjectRequest
+import com.amazonaws.services.s3.model.{ObjectMetadata, PutObjectRequest}
 import com.amazonaws.services.s3.transfer.model.UploadResult
 import com.amazonaws.services.s3.transfer.{TransferManager => AmazonTransferManager}
 import net.kemitix.s3thorp.aws.api.S3Action.{ErroredS3Action, UploadS3Action}
@@ -49,9 +49,13 @@ class Uploader(transferManager: => AmazonTransferManager) {
     }
   }
 
-  private def request(localFile: LocalFile, bucket: Bucket, listener: ProgressListener): PutObjectRequest =
+  private def request(localFile: LocalFile, bucket: Bucket, listener: ProgressListener): PutObjectRequest = {
+    val metadata = new ObjectMetadata()
+    metadata.setContentMD5(localFile.hash.hash)
     new PutObjectRequest(bucket.name, localFile.remoteKey.key, localFile.file)
+      .withMetadata(metadata)
       .withGeneralProgressListener(listener)
+  }
 
   private def progressListener(uploadProgressListener: UploadProgressListener) =
     new ProgressListener {
