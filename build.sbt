@@ -1,6 +1,6 @@
 val applicationSettings = Seq(
   name := "s3thorp",
-  version := "0.1",
+  version := "0.4.0",
   scalaVersion := "2.12.8"
 )
 val testDependencies = Seq(
