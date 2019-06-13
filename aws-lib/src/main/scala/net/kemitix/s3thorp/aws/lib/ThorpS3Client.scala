@@ -13,7 +13,7 @@ class ThorpS3Client(amazonS3Client: => AmazonS3,
 
   lazy val objectLister = new S3ClientObjectLister[IO](amazonS3Client)
   lazy val copier = new S3ClientCopier[IO](amazonS3Client)
-  lazy val uploader = new Uploader(amazonS3TransferManager)
+  lazy val uploader = new Uploader[IO](amazonS3TransferManager)
   lazy val deleter = new S3ClientDeleter(amazonS3Client)
 
   override def listObjects(bucket: Bucket,

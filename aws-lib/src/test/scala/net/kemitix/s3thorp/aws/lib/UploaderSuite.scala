@@ -2,7 +2,7 @@ package net.kemitix.s3thorp.aws.lib
 
 import java.time.Instant
 
-import cats.effect.IO
+import cats.Id
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.transfer._
 import net.kemitix.s3thorp.aws.api.S3Action.UploadS3Action
@@ -20,8 +20,8 @@ class UploaderSuite
   private val source = Resource(this, ".")
   private val prefix = RemoteKey("prefix")
   implicit private val config: Config = Config(Bucket("bucket"), prefix, source = source)
-  implicit private val logInfo: Int => String => IO[Unit] = _ => _ => IO.unit
-  implicit private val logWarn: String => IO[Unit] = _ => IO.unit
+  implicit private val logInfo: Int => String => Id[Unit] = _ => _ => ()
+  implicit private val logWarn: String => Id[Unit] = _ => ()
   private val fileToKey = generateKey(config.source, config.prefix) _
   val lastModified = LastModified(Instant.now())
 
@@ -63,7 +63,7 @@ class UploaderSuite
       val uploader = new Uploader(amazonS3TransferManager)
       it("should upload") {
         val expected = UploadS3Action(returnedKey, returnedHash)
-        val result = uploader.upload(bigFile, config.bucket, progressListener, config.multiPartThreshold, 1, config.maxRetries).unsafeRunSync
+        val result = uploader.upload(bigFile, config.bucket, progressListener, config.multiPartThreshold, 1, config.maxRetries)
         assertResult(expected)(result)
       }
     }

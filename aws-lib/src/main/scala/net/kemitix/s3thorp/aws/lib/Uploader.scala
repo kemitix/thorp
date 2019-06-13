@@ -1,7 +1,7 @@
 package net.kemitix.s3thorp.aws.lib
 
 import cats.Monad
-import cats.effect.IO
+import cats.implicits._
 import com.amazonaws.event.{ProgressEvent, ProgressEventType, ProgressListener}
 import com.amazonaws.services.s3.model.PutObjectRequest
 import com.amazonaws.services.s3.transfer.model.UploadResult
@@ -14,7 +14,7 @@ import net.kemitix.s3thorp.domain.{Bucket, LocalFile, MD5Hash, RemoteKey}
 
 import scala.util.Try
 
-class Uploader(transferManager: => AmazonTransferManager) {
+class Uploader[M[_]: Monad](transferManager: => AmazonTransferManager) {
 
   def accepts(localFile: LocalFile)
              (implicit multiPartThreshold: Long): Boolean =
@@ -26,12 +26,12 @@ class Uploader(transferManager: => AmazonTransferManager) {
              multiPartThreshold: Long,
              tryCount: Int,
              maxRetries: Int)
-            (implicit info: Int => String => IO[Unit],
-             warn: String => IO[Unit]): IO[S3Action] =
+            (implicit info: Int => String => M[Unit],
+             warn: String => M[Unit]): M[S3Action] =
     for {
-      _ <- logMultiPartUploadStart[IO](localFile, tryCount)
+      _ <- logMultiPartUploadStart[M](localFile, tryCount)
       upload <- transfer(localFile, bucket, uploadProgressListener)
-      _ <- logMultiPartUploadFinished[IO](localFile)
+      _ <- logMultiPartUploadFinished[M](localFile)
     } yield upload match {
       case Right(r) => UploadS3Action(RemoteKey(r.getKey), MD5Hash(r.getETag))
       case Left(e) => ErroredS3Action(localFile.remoteKey, e)
@@ -40,10 +40,10 @@ class Uploader(transferManager: => AmazonTransferManager) {
   private def transfer(localFile: LocalFile,
                        bucket: Bucket,
                        uploadProgressListener: UploadProgressListener,
-                      ): IO[Either[Throwable, UploadResult]] = {
-    val listener = progressListener(uploadProgressListener)
+                      ): M[Either[Throwable, UploadResult]] = {
+    val listener: ProgressListener = progressListener(uploadProgressListener)
     val putObjectRequest = request(localFile, bucket, listener)
-    IO {
+    Monad[M].pure {
       Try(transferManager.upload(putObjectRequest))
         .map(_.waitForUploadResult)
         .toEither
