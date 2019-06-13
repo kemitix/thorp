@@ -12,7 +12,7 @@ class UploadProgressListener(localFile: LocalFile)
 
   def listener: UploadEvent => IO[Unit] =
     {
-      case e: TransferEvent => logTransfer(localFile, e)
+      case e: TransferEvent => logTransfer[IO](localFile, e)
       case e: RequestEvent => {
         val transferred = e.transferred
         bytesTransferred += transferred

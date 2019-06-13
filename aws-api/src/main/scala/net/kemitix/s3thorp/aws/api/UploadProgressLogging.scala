@@ -1,18 +1,19 @@
 package net.kemitix.s3thorp.aws.api
 
+import cats.Monad
 import cats.effect.IO
 import net.kemitix.s3thorp.aws.api.UploadEvent.{ByteTransferEvent, RequestEvent, TransferEvent}
 import net.kemitix.s3thorp.domain.Terminal.{clearLine, returnToPreviousLine}
-import net.kemitix.s3thorp.domain.{Terminal, LocalFile}
+import net.kemitix.s3thorp.domain.{LocalFile, Terminal}
 import net.kemitix.s3thorp.domain.SizeTranslation.sizeInEnglish
 
 import scala.io.AnsiColor._
 
 trait UploadProgressLogging {
 
-  def logTransfer(localFile: LocalFile,
+  def logTransfer[M[_]: Monad](localFile: LocalFile,
                   event: TransferEvent)
-                 (implicit info: Int => String => IO[Unit]): IO[Unit] =
+                 (implicit info: Int => String => M[Unit]): M[Unit] =
     info(2)(s"Transfer:${event.name}: ${localFile.remoteKey.key}")
 
   private val oneHundredPercent = 100
