@@ -16,13 +16,6 @@ object S3ClientLogging {
                           (implicit info: Int => String => IO[Unit]): IO[Unit] =
     info(2)(s"Fetched S3 Summary: ${bucket.name}:${prefix.key}")
 
-  def logUploadStart(localFile: LocalFile,
-                     bucket: Bucket)
-                    (implicit info: Int => String => IO[Unit]): PutObjectResult => IO[PutObjectResult] =
-    in => for {
-      _ <- info(1)(s"Uploading: ${bucket.name}:${localFile.remoteKey.key}")
-    } yield in
-
   def logUploadFinish(localFile: LocalFile,
                       bucket: Bucket)
                      (implicit info: Int => String => IO[Unit]): PutObjectResult => IO[Unit] =
