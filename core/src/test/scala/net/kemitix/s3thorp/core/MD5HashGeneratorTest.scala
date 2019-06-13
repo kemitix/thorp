@@ -17,7 +17,7 @@ class MD5HashGeneratorTest extends FunSpec {
     describe("read a small file (smaller than buffer)") {
       val file = Resource(this, "upload/root-file")
       it("should generate the correct hash") {
-        val result = MD5HashGenerator.md5File(file).unsafeRunSync
+        val result = MD5HashGenerator.md5File[IO](file).unsafeRunSync
         assertResult(rootHash)(result)
       }
     }
@@ -25,7 +25,7 @@ class MD5HashGeneratorTest extends FunSpec {
       val file = Resource(this, "big-file")
       it("should generate the correct hash") {
         val expected = MD5Hash("b1ab1f7680138e6db7309200584e35d8")
-        val result = MD5HashGenerator.md5File(file).unsafeRunSync
+        val result = MD5HashGenerator.md5File[IO](file).unsafeRunSync
         assertResult(expected)(result)
       }
     }

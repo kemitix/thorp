@@ -25,7 +25,7 @@ class SyncSuite
   private val rootFile = LocalFile.resolve("root-file", rootHash, source, fileToKey)
   private val leafFile = LocalFile.resolve("subdir/leaf-file", leafHash, source, fileToKey)
 
-  private val md5HashGenerator = MD5HashGenerator.md5File(_)
+  private val md5HashGenerator = MD5HashGenerator.md5File[IO](_)
 
   def putObjectRequest(bucket: Bucket, remoteKey: RemoteKey, localFile: LocalFile) = {
     (bucket.name, remoteKey.key, localFile.file)

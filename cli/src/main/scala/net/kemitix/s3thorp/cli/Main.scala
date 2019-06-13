@@ -20,15 +20,19 @@ object Main extends IOApp {
       config <- ParseArgs(args, defaultConfig)
       logger = new Logger[IO](config.verbose)
       info = (l: Int) => (m: String) => logger.info(l)(m)
-      md5HashGenerator = (file: File) => md5File(file)(info)
       _ <- logger.info(1)("S3Thorp - hashed sync for s3")
       _ <- Sync.run(
         S3ClientBuilder.defaultClient,
-        md5HashGenerator,
-        l => i => logger.info(l)(i),
+        hashGenerator(info),
+        info,
         w => logger.warn(w),
         e => logger.error(e))(config)
     } yield ExitCode.Success
+
+  private def hashGenerator(info: Int => String => IO[Unit]) = {
+    implicit val logInfo: Int => String => IO[Unit] = info
+    file: File => md5File[IO](file)
+  }
 
   override def run(args: List[String]): IO[ExitCode] = {
     val logger = new Logger[IO](1)
