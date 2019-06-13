@@ -22,8 +22,8 @@ object Sync {
           error: String => IO[Unit])
          (implicit c: Config): IO[Unit] = {
 
-    implicit val logInfo = info
-    implicit val logWarn = warn
+    implicit val logInfo: Int => String => IO[Unit] = info
+    implicit val logWarn: String => IO[Unit] = warn
 
     def copyUploadActions(s3Data: S3ObjectsData): IO[Stream[S3Action]] =
       (for {
