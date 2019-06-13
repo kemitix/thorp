@@ -1,32 +1,34 @@
 package net.kemitix.s3thorp.aws.lib
 
-import cats.effect.IO
+import cats.Monad
+import cats.implicits._
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.CopyObjectRequest
 import net.kemitix.s3thorp.aws.api.S3Action.CopyS3Action
 import net.kemitix.s3thorp.aws.lib.S3ClientLogging.{logCopyFinish, logCopyStart}
 import net.kemitix.s3thorp.domain.{Bucket, MD5Hash, RemoteKey}
 
-class S3ClientCopier(amazonS3: AmazonS3) {
+class S3ClientCopier[M[_]: Monad](amazonS3: AmazonS3) {
 
   def copy(bucket: Bucket,
            sourceKey: RemoteKey,
            hash: MD5Hash,
            targetKey: RemoteKey)
-          (implicit info: Int => String => IO[Unit]): IO[CopyS3Action] = {
-    IO {
-      new CopyObjectRequest(
-        bucket.name, sourceKey.key,
-        bucket.name, targetKey.key)
+          (implicit info: Int => String => M[Unit]): M[CopyS3Action] =
+  for {
+    _ <- logCopyStart[M](bucket, sourceKey, targetKey)
+    _ <- copyObject(bucket, sourceKey, hash, targetKey)
+    _ <- logCopyFinish[M](bucket, sourceKey,targetKey)
+  } yield CopyS3Action(targetKey)
+
+  private def copyObject(bucket: Bucket,
+                         sourceKey: RemoteKey,
+                         hash: MD5Hash,
+                         targetKey: RemoteKey) = {
+    val request =
+      new CopyObjectRequest(bucket.name, sourceKey.key, bucket.name, targetKey.key)
         .withMatchingETagConstraint(hash.hash)
-    }.bracket {
-      request =>
-        for {
-          _ <- logCopyStart[IO](bucket, sourceKey, targetKey)
-          result <- IO(amazonS3.copyObject(request))
-        } yield result
-    }(_ => logCopyFinish[IO](bucket, sourceKey,targetKey))
-      .map(_ => CopyS3Action(targetKey))
+    Monad[M].pure(amazonS3.copyObject(request))
   }
 
 }
