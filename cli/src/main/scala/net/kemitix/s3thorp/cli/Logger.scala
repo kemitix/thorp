@@ -1,15 +1,16 @@
 package net.kemitix.s3thorp.cli
 
-import cats.effect.IO
+import cats.Monad
 
-class Logger(verbosity: Int)  {
 
-  def info(level: Int)(message: String): IO[Unit] =
-    if (verbosity >= level) IO(println(s"[INFO:$level] $message"))
-    else IO.unit
+class Logger[M[_]: Monad](verbosity: Int)  {
 
-  def warn(message: String): IO[Unit] = IO(println(s"[  WARN] $message"))
+  def info(level: Int)(message: String): M[Unit] =
+    if (verbosity >= level) Monad[M].pure(println(s"[INFO:$level] $message"))
+    else Monad[M].unit
 
-  def error(message: String): IO[Unit] = IO(println(s"[ ERROR] $message"))
+  def warn(message: String): M[Unit] = Monad[M].pure(println(s"[  WARN] $message"))
+
+  def error(message: String): M[Unit] = Monad[M].pure(println(s"[ ERROR] $message"))
 
 }

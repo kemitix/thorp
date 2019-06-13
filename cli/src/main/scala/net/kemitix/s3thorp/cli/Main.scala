@@ -18,7 +18,7 @@ object Main extends IOApp {
   def program(args: List[String]): IO[ExitCode] =
     for {
       config <- ParseArgs(args, defaultConfig)
-      logger = new Logger(config.verbose)
+      logger = new Logger[IO](config.verbose)
       info = (l: Int) => (m: String) => logger.info(l)(m)
       md5HashGenerator = (file: File) => md5File(file)(info)
       _ <- logger.info(1)("S3Thorp - hashed sync for s3")
@@ -31,7 +31,7 @@ object Main extends IOApp {
     } yield ExitCode.Success
 
   override def run(args: List[String]): IO[ExitCode] = {
-    val logger = new Logger(1)
+    val logger = new Logger[IO](1)
     program(args)
       .guaranteeCase {
         case Canceled => logger.warn("Interrupted")
