@@ -1,6 +1,7 @@
 package net.kemitix.s3thorp.aws.lib
 
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.Date
 
 import cats.Id
@@ -22,7 +23,7 @@ class ThorpS3ClientSuite
     implicit val config: Config = Config(Bucket("bucket"), prefix, source = source)
     implicit val logInfo: Int => String => Id[Unit] = _ => _ => ()
 
-    val lm = LastModified(Instant.now)
+    val lm = LastModified(Instant.now.truncatedTo(ChronoUnit.MILLIS))
 
     val h1 = MD5Hash("hash1")
 
