@@ -11,7 +11,7 @@ import net.kemitix.s3thorp.core.ActionSubmitter.submitAction
 import net.kemitix.s3thorp.core.LocalFileStream.findFiles
 import net.kemitix.s3thorp.core.S3MetaDataEnricher.getMetadata
 import net.kemitix.s3thorp.core.SyncLogging.{logFileScan, logRunFinished, logRunStart}
-import net.kemitix.s3thorp.domain.{Config, MD5Hash, S3ObjectsData}
+import net.kemitix.s3thorp.domain.{Config, LocalFile, MD5Hash, S3MetaData, S3ObjectsData}
 
 object Sync {
 
@@ -25,13 +25,22 @@ object Sync {
     implicit val logInfo: Int => String => IO[Unit] = info
     implicit val logWarn: String => IO[Unit] = warn
 
+    def metaData(s3Data: S3ObjectsData, sFiles: Stream[LocalFile]) =
+      IO(sFiles.map(file => getMetadata(file, s3Data)))
+
+    def actions(sData: Stream[S3MetaData]) =
+      IO(sData.flatMap(s3MetaData => createActions(s3MetaData)))
+
+    def submit(sActions: Stream[Action]) =
+      IO(sActions.flatMap(action => submitAction[IO](s3Client, action)))
+
     def copyUploadActions(s3Data: S3ObjectsData): IO[Stream[S3Action]] =
       (for {
-        sFiles <- findFiles(c.source, md5HashGenerator, info)
-        sData <- IO(sFiles.map(file => getMetadata(file, s3Data)))
-        sActions <- IO(sData.flatMap(s3MetaData => createActions(s3MetaData)))
-        sS3Actions <- IO(sActions.flatMap(action => submitAction[IO](s3Client, action)))
-      } yield sS3Actions.sequence)
+        files <- findFiles(c.source, md5HashGenerator, info)
+        metaData <- metaData(s3Data, files)
+        actions <- actions(metaData)
+        s3Actions <- submit(actions)
+      } yield s3Actions.sequence)
         .flatten
         .map(streamS3Actions => streamS3Actions.sorted)
 
@@ -40,7 +49,9 @@ object Sync {
         key <- s3ObjectsData.byKey.keys
         if key.isMissingLocally(c.source, c.prefix)
         ioDelAction <- submitAction[IO](s3Client, ToDelete(c.bucket, key))
-      } yield ioDelAction).toStream.sequence
+      } yield ioDelAction)
+        .toStream
+        .sequence
 
     for {
       _ <- logRunStart(info)
