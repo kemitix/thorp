@@ -16,7 +16,7 @@ class UploadProgressListener(localFile: LocalFile)
       case e: RequestEvent => {
         val transferred = e.transferred
         bytesTransferred += transferred
-        logRequestCycle(localFile, e, bytesTransferred)
+        logRequestCycle[IO](localFile, e, bytesTransferred)
       }
       case e: ByteTransferEvent => logByteTransfer(e)
     }

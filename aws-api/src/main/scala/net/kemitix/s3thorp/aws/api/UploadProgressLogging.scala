@@ -18,10 +18,10 @@ trait UploadProgressLogging {
 
   private val oneHundredPercent = 100
 
-  def logRequestCycle(localFile: LocalFile,
-                      event: RequestEvent,
-                      bytesTransferred: Long)
-                     (implicit info: Int => String => IO[Unit]): IO[Unit] = {
+  def logRequestCycle[M[_]: Monad](localFile: LocalFile,
+                                   event: RequestEvent,
+                                   bytesTransferred: Long)
+                                  (implicit info: Int => String => M[Unit]): M[Unit] = {
     val remoteKey = localFile.remoteKey.key
     val fileLength = localFile.file.length
     val consoleWidth = Terminal.width - 2
@@ -32,9 +32,9 @@ trait UploadProgressLogging {
       val bar = s"[$head$tail]"
       val transferred = sizeInEnglish(bytesTransferred)
       val fileSize = sizeInEnglish(fileLength)
-      IO(print(s"${clearLine}Uploading $transferred of $fileSize : $remoteKey\n$bar$returnToPreviousLine"))
+      Monad[M].pure(print(s"${clearLine}Uploading $transferred of $fileSize : $remoteKey\n$bar$returnToPreviousLine"))
     } else
-      IO(print(clearLine))
+      Monad[M].pure(print(clearLine))
   }
 
   def logByteTransfer(event: ByteTransferEvent)
