@@ -1,5 +1,6 @@
 package net.kemitix.s3thorp.aws.lib
 
+import cats.Monad
 import cats.effect.IO
 import com.amazonaws.event.{ProgressEvent, ProgressEventType, ProgressListener}
 import com.amazonaws.services.s3.model.PutObjectRequest
@@ -21,7 +22,7 @@ class Uploader(transferManager: => AmazonTransferManager) {
 
   def upload(localFile: LocalFile,
              bucket: Bucket,
-             uploadProgressListener: UploadProgressListener[IO],
+             uploadProgressListener: UploadProgressListener,
              multiPartThreshold: Long,
              tryCount: Int,
              maxRetries: Int)
@@ -29,17 +30,17 @@ class Uploader(transferManager: => AmazonTransferManager) {
              warn: String => IO[Unit]): IO[S3Action] =
     for {
       _ <- logMultiPartUploadStart[IO](localFile, tryCount)
-      upload <- upload(localFile, bucket, uploadProgressListener)
+      upload <- transfer(localFile, bucket, uploadProgressListener)
       _ <- logMultiPartUploadFinished[IO](localFile)
     } yield upload match {
       case Right(r) => UploadS3Action(RemoteKey(r.getKey), MD5Hash(r.getETag))
       case Left(e) => ErroredS3Action(localFile.remoteKey, e)
     }
 
-  private def upload(localFile: LocalFile,
-                     bucket: Bucket,
-                     uploadProgressListener: UploadProgressListener[IO],
-                    ): IO[Either[Throwable, UploadResult]] = {
+  private def transfer(localFile: LocalFile,
+                       bucket: Bucket,
+                       uploadProgressListener: UploadProgressListener,
+                      ): IO[Either[Throwable, UploadResult]] = {
     val listener = progressListener(uploadProgressListener)
     val putObjectRequest = request(localFile, bucket, listener)
     IO {
@@ -53,19 +54,21 @@ class Uploader(transferManager: => AmazonTransferManager) {
     new PutObjectRequest(bucket.name, localFile.remoteKey.key, localFile.file)
       .withGeneralProgressListener(listener)
 
-  private def progressListener(uploadProgressListener: UploadProgressListener[IO]) =
+  private def progressListener(uploadProgressListener: UploadProgressListener) =
     new ProgressListener {
       override def progressChanged(progressEvent: ProgressEvent): Unit = {
-        uploadProgressListener.listener(
-          progressEvent match {
-            case e: ProgressEvent if isTransfer(e) =>
-              TransferEvent(e.getEventType.name)
-            case e: ProgressEvent if isByteTransfer(e) =>
-              ByteTransferEvent(e.getEventType.name)
-            case e: ProgressEvent =>
-              RequestEvent(e.getEventType.name, e.getBytes, e.getBytesTransferred)
-          })
-          .unsafeRunSync // the listener doesn't execute otherwise as it is never returned
+        uploadProgressListener.listener(eventHandler(progressEvent))
+      }
+
+      private def eventHandler(progressEvent: ProgressEvent) = {
+        progressEvent match {
+          case e: ProgressEvent if isTransfer(e) =>
+            TransferEvent(e.getEventType.name)
+          case e: ProgressEvent if isByteTransfer(e) =>
+            ByteTransferEvent(e.getEventType.name)
+          case e: ProgressEvent =>
+            RequestEvent(e.getEventType.name, e.getBytes, e.getBytesTransferred)
+        }
       }
     }
 
