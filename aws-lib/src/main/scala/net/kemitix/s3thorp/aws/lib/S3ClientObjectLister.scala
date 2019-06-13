@@ -51,10 +51,10 @@ class S3ClientObjectLister(amazonS3: AmazonS3) {
     }.bracket {
       request =>
         for {
-          _ <- logListObjectsStart(bucket, prefix)
+          _ <- logListObjectsStart[IO](bucket, prefix)
           summaries <- fetch(request)
         } yield summaries
-    }(_ => logListObjectsFinish(bucket,prefix))
+    }(_ => logListObjectsFinish[IO](bucket,prefix))
       .map(os => S3ObjectsData(byHash(os), byKey(os)))
   }
 

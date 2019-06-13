@@ -22,10 +22,10 @@ class S3ClientCopier(amazonS3: AmazonS3) {
     }.bracket {
       request =>
         for {
-          _ <- logCopyStart(bucket, sourceKey, targetKey)
+          _ <- logCopyStart[IO](bucket, sourceKey, targetKey)
           result <- IO(amazonS3.copyObject(request))
         } yield result
-    }(_ => logCopyFinish(bucket, sourceKey,targetKey))
+    }(_ => logCopyFinish[IO](bucket, sourceKey,targetKey))
       .map(_ => CopyS3Action(targetKey))
   }
 
