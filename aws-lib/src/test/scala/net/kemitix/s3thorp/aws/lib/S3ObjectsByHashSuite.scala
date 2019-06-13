@@ -1,6 +1,7 @@
 package net.kemitix.s3thorp.aws.lib
 
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.Date
 
 import com.amazonaws.services.s3.model.S3ObjectSummary
@@ -13,7 +14,7 @@ class S3ObjectsByHashSuite extends FunSpec {
       val hash = MD5Hash("hash")
       val key1 = RemoteKey("key-1")
       val key2 = RemoteKey("key-2")
-      val lastModified = LastModified(Instant.now)
+      val lastModified = LastModified(Instant.now.truncatedTo(ChronoUnit.MILLIS))
       val o1 = s3object(hash, key1, lastModified)
       val o2 = s3object(hash, key2, lastModified)
       val os = Stream(o1, o2)
