@@ -28,9 +28,9 @@ class Uploader(transferManager: => AmazonTransferManager) {
             (implicit info: Int => String => IO[Unit],
              warn: String => IO[Unit]): IO[S3Action] =
     for {
-      _ <- logMultiPartUploadStart(localFile, tryCount)
+      _ <- logMultiPartUploadStart[IO](localFile, tryCount)
       upload <- upload(localFile, bucket, uploadProgressListener)
-      _ <- logMultiPartUploadFinished(localFile)
+      _ <- logMultiPartUploadFinished[IO](localFile)
     } yield upload match {
       case Right(r) => UploadS3Action(RemoteKey(r.getKey), MD5Hash(r.getETag))
       case Left(e) => ErroredS3Action(localFile.remoteKey, e)
