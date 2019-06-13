@@ -2,7 +2,7 @@ package net.kemitix.s3thorp.aws.lib
 
 import java.time.Instant
 
-import cats.effect.IO
+import cats.Id
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.PutObjectRequest
 import com.amazonaws.services.s3.transfer.model.UploadResult
@@ -23,8 +23,8 @@ class S3ClientSuite
 
   private val prefix = RemoteKey("prefix")
   implicit private val config: Config = Config(Bucket("bucket"), prefix, source = source)
-  implicit private val logInfo: Int => String => IO[Unit] = _ => _ => IO.unit
-  implicit private val logWarn: String => IO[Unit] = _ => IO.unit
+  implicit private val logInfo: Int => String => Id[Unit] = _ => _ => ()
+  implicit private val logWarn: String => Id[Unit] = _ => ()
   private val fileToKey = KeyGenerator.generateKey(config.source, config.prefix) _
 
   describe("getS3Status") {
@@ -44,7 +44,7 @@ class S3ClientSuite
         keyotherkey.remoteKey -> HashModified(hash, lastModified),
         keydiffhash.remoteKey -> HashModified(diffhash, lastModified)))
 
-    def invoke(self: S3Client[IO], localFile: LocalFile) = {
+    def invoke(self: S3Client[Id], localFile: LocalFile) = {
       S3MetaDataEnricher.getS3Status(localFile, s3ObjectsData)
     }
 
@@ -108,7 +108,7 @@ class S3ClientSuite
         pending
         //FIXME: works okay on its own, but fails when run with others
         val expected = UploadS3Action(remoteKey, rootHash)
-        val result = s3Client.upload(localFile, bucket, progressListener, config.multiPartThreshold, 1, config.maxRetries).unsafeRunSync
+        val result = s3Client.upload(localFile, bucket, progressListener, config.multiPartThreshold, 1, config.maxRetries)
         assertResult(expected)(result)
       }
     }
