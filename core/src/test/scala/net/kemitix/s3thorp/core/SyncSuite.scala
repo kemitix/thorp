@@ -141,7 +141,7 @@ class SyncSuite
 
   class RecordingClient(testBucket: Bucket,
                         s3ObjectsData: S3ObjectsData)
-    extends S3Client {
+    extends S3Client[IO] {
 
     var uploadsRecord: Map[String, RemoteKey] = Map()
     var copiesRecord: Map[RemoteKey, RemoteKey] = Map()

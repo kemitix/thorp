@@ -15,7 +15,7 @@ import net.kemitix.s3thorp.domain.{Config, MD5Hash, S3ObjectsData}
 
 object Sync {
 
-  def run(s3Client: S3Client,
+  def run(s3Client: S3Client[IO],
           md5HashGenerator: File => IO[MD5Hash],
           info: Int => String => IO[Unit],
           warn: String => IO[Unit],

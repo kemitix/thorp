@@ -9,7 +9,7 @@ import net.kemitix.s3thorp.domain._
 
 class ThorpS3Client(amazonS3Client: => AmazonS3,
                     amazonS3TransferManager: => TransferManager)
-  extends S3Client {
+  extends S3Client[IO] {
 
   lazy val objectLister = new S3ClientObjectLister[IO](amazonS3Client)
   lazy val copier = new S3ClientCopier[IO](amazonS3Client)

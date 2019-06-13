@@ -8,7 +8,7 @@ import net.kemitix.s3thorp.domain.Config
 
 object ActionSubmitter {
 
-  def submitAction(s3Client: S3Client, action: Action)
+  def submitAction(s3Client: S3Client[IO], action: Action)
                   (implicit c: Config,
                    info: Int => String => IO[Unit],
                    warn: String => IO[Unit]): Stream[IO[S3Action]] = {

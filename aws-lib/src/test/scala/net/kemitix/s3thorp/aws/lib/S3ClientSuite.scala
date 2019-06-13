@@ -44,7 +44,7 @@ class S3ClientSuite
         keyotherkey.remoteKey -> HashModified(hash, lastModified),
         keydiffhash.remoteKey -> HashModified(diffhash, lastModified)))
 
-    def invoke(self: S3Client, localFile: LocalFile) = {
+    def invoke(self: S3Client[IO], localFile: LocalFile) = {
       S3MetaDataEnricher.getS3Status(localFile, s3ObjectsData)
     }
 
