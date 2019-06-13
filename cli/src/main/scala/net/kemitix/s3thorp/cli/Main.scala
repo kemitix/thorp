@@ -21,12 +21,12 @@ object Main extends IOApp {
       logger = new Logger[IO](config.verbose)
       info = (l: Int) => (m: String) => logger.info(l)(m)
       _ <- logger.info(1)("S3Thorp - hashed sync for s3")
-      _ <- Sync.run(
+      _ <- Sync.run[IO](
+        config,
         S3ClientBuilder.defaultClient,
         hashGenerator(info),
         info,
-        w => logger.warn(w),
-        e => logger.error(e))(config)
+        w => logger.warn(w))
     } yield ExitCode.Success
 
   private def hashGenerator(info: Int => String => IO[Unit]) = {
