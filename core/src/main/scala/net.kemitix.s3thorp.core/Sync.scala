@@ -22,12 +22,15 @@ object Sync {
           error: String => IO[Unit])
          (implicit c: Config): IO[Unit] = {
 
+    implicit val logInfo = info
+    implicit val logWarn = warn
+
     def copyUploadActions(s3Data: S3ObjectsData): IO[Stream[S3Action]] =
       (for {
         sFiles <- findFiles(c.source, md5HashGenerator, info)
         sData <- IO(sFiles.map(file => getMetadata(file, s3Data)))
         sActions <- IO(sData.flatMap(s3MetaData => createActions(s3MetaData)))
-        sS3Actions <- IO(sActions.flatMap(action => submitAction(s3Client, action)(c, info, warn)))
+        sS3Actions <- IO(sActions.flatMap(action => submitAction[IO](s3Client, action)))
       } yield sS3Actions.sequence)
         .flatten
         .map(streamS3Actions => streamS3Actions.sorted)
@@ -36,7 +39,7 @@ object Sync {
       (for {
         key <- s3ObjectsData.byKey.keys
         if key.isMissingLocally(c.source, c.prefix)
-        ioDelAction <- submitAction(s3Client, ToDelete(c.bucket, key))(c, info, warn)
+        ioDelAction <- submitAction[IO](s3Client, ToDelete(c.bucket, key))
       } yield ioDelAction).toStream.sequence
 
     for {

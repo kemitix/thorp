@@ -1,6 +1,7 @@
 package net.kemitix.s3thorp.core
 
-import cats.effect.IO
+import cats.Monad
+import cats.implicits._
 import net.kemitix.s3thorp.aws.api.S3Action.DoNothingS3Action
 import net.kemitix.s3thorp.aws.api.{S3Action, S3Client, UploadProgressListener}
 import net.kemitix.s3thorp.core.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
@@ -8,10 +9,10 @@ import net.kemitix.s3thorp.domain.Config
 
 object ActionSubmitter {
 
-  def submitAction(s3Client: S3Client[IO], action: Action)
-                  (implicit c: Config,
-                   info: Int => String => IO[Unit],
-                   warn: String => IO[Unit]): Stream[IO[S3Action]] = {
+  def submitAction[M[_]: Monad](s3Client: S3Client[M], action: Action)
+                               (implicit c: Config,
+                                info: Int => String => M[Unit],
+                                warn: String => M[Unit]): Stream[M[S3Action]] = {
     Stream(
       action match {
         case ToUpload(bucket, localFile) =>
@@ -31,7 +32,7 @@ object ActionSubmitter {
             action <- s3Client.delete(bucket, remoteKey)
           } yield action
         case DoNothing(bucket, remoteKey) =>
-          IO.pure(DoNothingS3Action(remoteKey))
+          Monad[M].pure(DoNothingS3Action(remoteKey))
       })
   }
 }
