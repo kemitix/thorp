@@ -13,11 +13,9 @@ class UploadProgressListener[M[_]: Monad](localFile: LocalFile)
   def listener: UploadEvent => M[Unit] =
     {
       case e: TransferEvent => logTransfer(localFile, e)
-      case e: RequestEvent => {
-        val transferred = e.transferred
-        bytesTransferred += transferred
+      case e: RequestEvent =>
+        bytesTransferred += e.transferred
         logRequestCycle(localFile, e, bytesTransferred)
-      }
       case e: ByteTransferEvent => logByteTransfer(e)
     }
 }
