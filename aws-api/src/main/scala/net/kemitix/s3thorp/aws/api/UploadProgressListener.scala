@@ -18,6 +18,6 @@ class UploadProgressListener(localFile: LocalFile)
         bytesTransferred += transferred
         logRequestCycle[IO](localFile, e, bytesTransferred)
       }
-      case e: ByteTransferEvent => logByteTransfer(e)
+      case e: ByteTransferEvent => logByteTransfer[IO](e)
     }
 }

@@ -1,7 +1,6 @@
 package net.kemitix.s3thorp.aws.api
 
 import cats.Monad
-import cats.effect.IO
 import net.kemitix.s3thorp.aws.api.UploadEvent.{ByteTransferEvent, RequestEvent, TransferEvent}
 import net.kemitix.s3thorp.domain.Terminal.{clearLine, returnToPreviousLine}
 import net.kemitix.s3thorp.domain.{LocalFile, Terminal}
@@ -37,8 +36,8 @@ trait UploadProgressLogging {
       Monad[M].pure(print(clearLine))
   }
 
-  def logByteTransfer(event: ByteTransferEvent)
-                     (implicit info: Int => String => IO[Unit]): IO[Unit] =
+  def logByteTransfer[M[_]: Monad](event: ByteTransferEvent)
+                     (implicit info: Int => String => M[Unit]): M[Unit] =
     info(3)(".")
 
 }
