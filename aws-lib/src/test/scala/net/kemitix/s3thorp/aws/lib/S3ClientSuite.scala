@@ -95,7 +95,7 @@ class S3ClientSuite
         LocalFile.resolve("root-file", rootHash, source, KeyGenerator.generateKey(source, prefix))
       val bucket = Bucket("a-bucket")
       val remoteKey = RemoteKey("prefix/root-file")
-      val progressListener = new UploadProgressListener(localFile)
+      val progressListener = new UploadProgressListener[IO](localFile)
 
       val upload = stub[Upload]
       (amazonS3TransferManager upload (_: PutObjectRequest)).when(*).returns(upload)

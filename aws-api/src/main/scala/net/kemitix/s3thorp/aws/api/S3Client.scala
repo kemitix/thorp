@@ -12,7 +12,7 @@ trait S3Client {
 
   def upload(localFile: LocalFile,
              bucket: Bucket,
-             uploadProgressListener: UploadProgressListener,
+             uploadProgressListener: UploadProgressListener[IO],
              multiPartThreshold: Long,
              tryCount: Int,
              maxRetries: Int)

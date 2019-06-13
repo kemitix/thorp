@@ -21,7 +21,7 @@ class Uploader(transferManager: => AmazonTransferManager) {
 
   def upload(localFile: LocalFile,
              bucket: Bucket,
-             uploadProgressListener: UploadProgressListener,
+             uploadProgressListener: UploadProgressListener[IO],
              multiPartThreshold: Long,
              tryCount: Int,
              maxRetries: Int)
@@ -38,7 +38,7 @@ class Uploader(transferManager: => AmazonTransferManager) {
 
   private def upload(localFile: LocalFile,
                      bucket: Bucket,
-                     uploadProgressListener: UploadProgressListener,
+                     uploadProgressListener: UploadProgressListener[IO],
                     ): IO[Either[Throwable, UploadResult]] = {
     val listener = progressListener(uploadProgressListener)
     val putObjectRequest = request(localFile, bucket, listener)
@@ -53,7 +53,7 @@ class Uploader(transferManager: => AmazonTransferManager) {
     new PutObjectRequest(bucket.name, localFile.remoteKey.key, localFile.file)
       .withGeneralProgressListener(listener)
 
-  private def progressListener(uploadProgressListener: UploadProgressListener) =
+  private def progressListener(uploadProgressListener: UploadProgressListener[IO]) =
     new ProgressListener {
       override def progressChanged(progressEvent: ProgressEvent): Unit = {
         uploadProgressListener.listener(

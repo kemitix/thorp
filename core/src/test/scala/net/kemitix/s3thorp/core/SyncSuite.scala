@@ -154,7 +154,7 @@ class SyncSuite
 
     override def upload(localFile: LocalFile,
                         bucket: Bucket,
-                        progressListener: UploadProgressListener,
+                        progressListener: UploadProgressListener[IO],
                         multiPartThreshold: Long,
                         tryCount: Int,
                         maxRetries: Int)

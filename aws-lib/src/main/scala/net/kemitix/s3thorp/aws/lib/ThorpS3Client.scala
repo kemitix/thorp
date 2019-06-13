@@ -30,7 +30,7 @@ class ThorpS3Client(amazonS3Client: => AmazonS3,
 
   override def upload(localFile: LocalFile,
                       bucket: Bucket,
-                      progressListener: UploadProgressListener,
+                      progressListener: UploadProgressListener[IO],
                       multiPartThreshold: Long,
                       tryCount: Int,
                       maxRetries: Int)

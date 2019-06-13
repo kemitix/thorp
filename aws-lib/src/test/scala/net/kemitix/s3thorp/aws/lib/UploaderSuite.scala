@@ -57,7 +57,7 @@ class UploaderSuite
       val returnedKey = RemoteKey("returned-key")
       val returnedHash = MD5Hash("returned-hash")
       val bigFile = LocalFile.resolve("small-file", MD5Hash("the-hash"), source, fileToKey)
-      val progressListener = new UploadProgressListener(bigFile)
+      val progressListener = new UploadProgressListener[IO](bigFile)
       val amazonS3 = mock[AmazonS3]
       val amazonS3TransferManager = TransferManagerBuilder.standard().withS3Client(amazonS3).build
       val uploader = new Uploader(amazonS3TransferManager)

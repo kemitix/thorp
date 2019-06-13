@@ -17,7 +17,7 @@ object ActionSubmitter {
         case ToUpload(bucket, localFile) =>
           for {
             _ <- info(4) (s"    Upload: ${localFile.relative}")
-            progressListener = new UploadProgressListener(localFile)
+            progressListener = new UploadProgressListener[IO](localFile)
             action <- s3Client.upload(localFile, bucket, progressListener, c.multiPartThreshold, 1, c.maxRetries)
           } yield action
         case ToCopy(bucket, sourceKey, hash, targetKey) =>
