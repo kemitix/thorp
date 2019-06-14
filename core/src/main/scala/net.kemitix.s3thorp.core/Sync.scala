@@ -1,7 +1,5 @@
 package net.kemitix.s3thorp.core
 
-import java.io.File
-
 import cats.Monad
 import cats.implicits._
 import net.kemitix.s3thorp.aws.api.{S3Action, S3Client}
@@ -11,17 +9,15 @@ import net.kemitix.s3thorp.core.ActionSubmitter.submitAction
 import net.kemitix.s3thorp.core.LocalFileStream.findFiles
 import net.kemitix.s3thorp.core.S3MetaDataEnricher.getMetadata
 import net.kemitix.s3thorp.core.SyncLogging.{logFileScan, logRunFinished, logRunStart}
-import net.kemitix.s3thorp.domain.{Config, LocalFile, Logger, MD5Hash, S3MetaData, S3ObjectsData}
+import net.kemitix.s3thorp.domain._
 
 object Sync {
 
   def run[M[_]: Monad](config: Config,
-                       s3Client: S3Client[M],
-                       md5HashGenerator: File => M[MD5Hash],
-                       logger: Logger[M]): M[Unit] = {
+                       s3Client: S3Client[M])
+                      (implicit logger: Logger[M]): M[Unit] = {
 
     implicit val c: Config = config
-    implicit val implLogger: Logger[M] = logger
 
     def metaData(s3Data: S3ObjectsData, sFiles: Stream[LocalFile]) =
       Monad[M].pure(sFiles.map(file => getMetadata(file, s3Data)))
@@ -34,7 +30,7 @@ object Sync {
 
     def copyUploadActions(s3Data: S3ObjectsData): M[Stream[S3Action]] =
       (for {
-        files <- findFiles(c.source, md5HashGenerator)
+        files <- findFiles(c.source, MD5HashGenerator.md5File[M](_))
         metaData <- metaData(s3Data, files)
         actions <- actions(metaData)
         s3Actions <- submit(actions)
