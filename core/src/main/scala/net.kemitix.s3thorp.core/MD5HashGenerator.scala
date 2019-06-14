@@ -15,11 +15,8 @@ object MD5HashGenerator {
                           (implicit info: Int => String => M[Unit]): M[MD5Hash] = {
 
     val maxBufferSize = 8048
-
     val defaultBuffer = new Array[Byte](maxBufferSize)
-
     def openFile = Monad[M].pure(new FileInputStream(file))
-
     def closeFile = {fis: FileInputStream => Monad[M].pure(fis.close())}
 
     def nextChunkSize(currentOffset: Long) = {
@@ -32,10 +29,8 @@ object MD5HashGenerator {
     def readToBuffer(fis: FileInputStream,
                      currentOffset: Long) = {
       val buffer =
-        if (nextChunkSize(currentOffset) < maxBufferSize)
-          new Array[Byte](nextChunkSize(currentOffset))
-        else
-          defaultBuffer
+        if (nextChunkSize(currentOffset) < maxBufferSize) new Array[Byte](nextChunkSize(currentOffset))
+        else defaultBuffer
       fis read buffer
       buffer
     }
@@ -44,12 +39,10 @@ object MD5HashGenerator {
       Monad[M].pure {
         val md5 = MessageDigest getInstance "MD5"
         NumericRange(0, file.length, maxBufferSize)
-          .foreach {
-            currentOffset => {
+          .foreach { currentOffset => {
               val buffer = readToBuffer(fis, currentOffset)
               md5 update buffer
-            }
-          }
+            }}
         (md5.digest map ("%02x" format _)).mkString
       }
 
