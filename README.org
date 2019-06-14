@@ -19,12 +19,22 @@ hash of the file contents.
       -s, --source <value>  Source directory to sync to S3
       -b, --bucket <value>  S3 bucket name
       -p, --prefix <value>  Prefix within the S3 Bucket
+      -l, --last-modified   Ignore local files where last modified matches
       -i, --include <value> Include matching paths
       -x, --exclude <value> Exclude matching paths
       -d, --debug           Enable debug logging
   #+end_example
 
 The ~--include~ and ~--exclude~ parameters can be used more than once.
+
+** ~l~, ~-last-modified~
+
+Where the last modified time stamp for a local file matches the remote
+key, the files will be treated as the same. An MD5 hash for the local
+file will not be created, which could be expensive if the source
+directory is across a network and the files are large.
+
+For files on a local disk this flag shouldn't be needed.
 
 * Behaviour
 
