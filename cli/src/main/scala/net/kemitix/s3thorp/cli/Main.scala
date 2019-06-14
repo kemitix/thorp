@@ -19,7 +19,7 @@ object Main extends IOApp {
       .guaranteeCase {
           case Canceled => logger.warn("Interrupted")
           case Error(e) => logger.error(e.getMessage)
-          case Completed => logger.info(1)("Done")
+          case Completed => logger.info("Done")
       }
   }
 

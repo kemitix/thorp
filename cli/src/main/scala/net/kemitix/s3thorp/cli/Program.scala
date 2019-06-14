@@ -14,7 +14,7 @@ object Program {
 
   def apply[M[_]: Monad](config: Config): M[ExitCode] = {
     val logger = new Logger[M](config.verbose)
-    val info = (l: Int) => (m: String) => logger.info(l) (m)
+    val info = (_: Int) => (m: String) => logger.info(m)
     val warn = (w: String) => logger.warn(w)
     for {
       _ <- info(1)("S3Thorp - hashed sync for s3")
