@@ -12,7 +12,7 @@ object Main extends IOApp {
     Config(source = Paths.get(".").toFile)
 
   override def run(args: List[String]): IO[ExitCode] = {
-    val logger = new Logger[IO](1)
+    val logger = new PrintLogger[IO](1)
     ParseArgs(args, defaultConfig)
       .map(Program[IO])
       .getOrElse(IO(ExitCode.Error))

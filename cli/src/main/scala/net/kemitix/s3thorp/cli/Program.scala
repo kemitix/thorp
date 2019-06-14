@@ -13,7 +13,7 @@ import net.kemitix.s3thorp.domain.Config
 object Program {
 
   def apply[M[_]: Monad](config: Config): M[ExitCode] = {
-    val logger = new Logger[M](config.verbose)
+    val logger = new PrintLogger[M](config.verbose)
     val info = (_: Int) => (m: String) => logger.info(m)
     val warn = (w: String) => logger.warn(w)
     for {
