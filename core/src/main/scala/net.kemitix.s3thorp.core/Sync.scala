@@ -21,6 +21,7 @@ object Sync {
                        logger: Logger[M]): M[Unit] = {
 
     implicit val c: Config = config
+    implicit val implLogger: Logger[M] = logger
     implicit val logInfo: Int => String => M[Unit] = _ => logger.info(_)
     implicit val logWarn: String => M[Unit] = logger.warn
 
