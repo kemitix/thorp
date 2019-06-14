@@ -51,6 +51,19 @@ When considering a local file, the following table governs what should happen:
 | 6 | is missing | exists     | -                | -                  | delete              |
 |---+------------+------------+------------------+--------------------+---------------------|
 
+When the ~last-modified~ flag is set, then the following table is
+used:
+
+|----+------------+------------+---------------+--------------------+---------------------|
+|  # | local file | remote key | last-modified | hash of other keys | action              |
+|----+------------+------------+---------------+--------------------+---------------------|
+| 1a | exists     | exists     | matches       | -                  | do nothing          |
+| 1b | exists     | exists     | no-match      | -                  | see original table  |
+|  2 | exists     | is missing |               | matches            | copy from other key |
+|  3 | exists     | is missing |               | no matches         | upload              |
+|  6 | is missing | exists     |               | -                  | delete              |
+|----+------------+------------+---------------+--------------------+---------------------|
+
 * Executable JAR
 
 To build as an executable jar, perform `sbt assembly`
