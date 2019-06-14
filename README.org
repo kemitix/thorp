@@ -22,7 +22,6 @@ hash of the file contents.
       -i, --include <value> Include matching paths
       -x, --exclude <value> Exclude matching paths
       -d, --debug           Enable debug logging
-      -v, --verbose <value> Verbosity level (1-5)
   #+end_example
 
 The ~--include~ and ~--exclude~ parameters can be used more than once.

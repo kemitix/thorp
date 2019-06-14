@@ -5,7 +5,6 @@ import java.io.File
 final case class Config(
                          bucket: Bucket = Bucket(""),
                          prefix: RemoteKey = RemoteKey(""),
-                         verbose: Int = 1,
                          filters: List[Filter] = List(),
                          multiPartThreshold: Long = 1024 * 1024 * 5,
                          maxRetries: Int = 3,

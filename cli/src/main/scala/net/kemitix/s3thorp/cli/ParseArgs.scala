@@ -37,13 +37,7 @@ object ParseArgs {
         .text("Exclude matching paths"),
       opt[Unit]('d', "debug")
         .action((_, c) => c.copy(debug = true))
-        .text("Enable debug logging"),
-      opt[Int]('v', "verbose")
-        .validate(i =>
-          if (i >= 1 && i <= 5) Right(Unit)
-          else Left("Verbosity level must be between 1 and 5"))
-        .action((i, c) => c.copy(verbose = i))
-        .text("Verbosity level (1-5)")
+        .text("Enable debug logging")
     )
   }
 

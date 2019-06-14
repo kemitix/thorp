@@ -11,6 +11,10 @@ The format is based on [[https://keepachangelog.com/en/1.0.0/][Keep a Changelog]
 
    - ~-d~, ~--debug~ flag for log messages
 
+** Removed
+
+   - ~-v~ verbosity flag
+
 * [0.4.0] - 2019-06-11
 
 ** Added
