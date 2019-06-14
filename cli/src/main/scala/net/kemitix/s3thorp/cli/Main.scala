@@ -15,19 +15,15 @@ object Main extends IOApp {
   val defaultConfig: Config =
     Config(source = Paths.get(".").toFile)
 
-  def program(args: List[String]): IO[ExitCode] =
+  def program(config: Config): IO[ExitCode] = {
+    val logger = new Logger[IO] (config.verbose)
+    val info = (l: Int) => (m: String) => logger.info(l) (m)
+    val warn = (w: String) => logger.warn(w)
     for {
-      config <- ParseArgs(args, defaultConfig)
-      logger = new Logger[IO](config.verbose)
-      info = (l: Int) => (m: String) => logger.info(l)(m)
       _ <- logger.info(1)("S3Thorp - hashed sync for s3")
-      _ <- Sync.run[IO](
-        config,
-        S3ClientBuilder.defaultClient,
-        hashGenerator(info),
-        info,
-        w => logger.warn(w))
+      _ <- Sync.run[IO](config, S3ClientBuilder.defaultClient, hashGenerator(info), info, warn)
     } yield ExitCode.Success
+  }
 
   private def hashGenerator(info: Int => String => IO[Unit]) = {
     implicit val logInfo: Int => String => IO[Unit] = info
@@ -36,11 +32,13 @@ object Main extends IOApp {
 
   override def run(args: List[String]): IO[ExitCode] = {
     val logger = new Logger[IO](1)
-    program(args)
+    ParseArgs(args, defaultConfig)
+      .map(program)
+      .getOrElse(IO(ExitCode.Error))
       .guaranteeCase {
-        case Canceled => logger.warn("Interrupted")
-        case Error(e) => logger.error(e.getMessage)
-        case Completed => logger.info(1)("Done")
+          case Canceled => logger.warn("Interrupted")
+          case Error(e) => logger.error(e.getMessage)
+          case Completed => logger.info(1)("Done")
       }
   }
 

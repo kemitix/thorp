@@ -2,19 +2,16 @@ package net.kemitix.s3thorp.cli
 
 import java.nio.file.Paths
 
-import cats.effect.IO
-import net.kemitix.s3thorp._
 import net.kemitix.s3thorp.domain.Filter.{Exclude, Include}
 import net.kemitix.s3thorp.domain.{Bucket, Config, RemoteKey}
 import scopt.OParser
-import scopt.OParser.{builder, parse, sequence}
 
 object ParseArgs {
 
   val configParser: OParser[Unit, Config] = {
-    val parserBuilder = builder[Config]
+    val parserBuilder = OParser.builder[Config]
     import parserBuilder._
-    sequence(
+    OParser.sequence(
       programName("s3thorp"),
       head("s3thorp"),
       opt[String]('s', "source")
@@ -45,10 +42,7 @@ object ParseArgs {
     )
   }
 
-  def apply(args: List[String], defaultConfig: Config): IO[Config] =
-    parse(configParser, args, defaultConfig) match {
-      case Some(config) => IO.pure(config)
-      case _ => IO.raiseError(new IllegalArgumentException)
-    }
+  def apply(args: List[String], defaultConfig: Config): Option[Config] =
+    OParser.parse(configParser, args, defaultConfig)
 
 }
