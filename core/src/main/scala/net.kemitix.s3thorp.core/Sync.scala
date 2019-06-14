@@ -11,7 +11,7 @@ import net.kemitix.s3thorp.core.ActionSubmitter.submitAction
 import net.kemitix.s3thorp.core.LocalFileStream.findFiles
 import net.kemitix.s3thorp.core.S3MetaDataEnricher.getMetadata
 import net.kemitix.s3thorp.core.SyncLogging.{logFileScan, logRunFinished, logRunStart}
-import net.kemitix.s3thorp.domain.{Config, LocalFile, MD5Hash, S3MetaData, S3ObjectsData}
+import net.kemitix.s3thorp.domain.{Config, LocalFile, Logger, MD5Hash, S3MetaData, S3ObjectsData}
 
 object Sync {
 
@@ -54,7 +54,7 @@ object Sync {
 
     for {
       _ <- logRunStart[M]
-      s3data <- s3Client.listObjects(c.bucket, c.prefix)(logInfo)
+      s3data <- s3Client.listObjects(c.bucket, c.prefix)
       _ <- logFileScan[M]
       copyUploadActions <- copyUploadActions(s3data)
       deleteActions <- deleteActions(s3data)

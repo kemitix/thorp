@@ -1,6 +1,7 @@
 package net.kemitix.s3thorp.core
 
 import cats.Monad
+import net.kemitix.s3thorp.domain.Logger
 
 class DummyLogger[M[_]: Monad] extends Logger[M] {
 

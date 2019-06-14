@@ -7,8 +7,8 @@ import cats.effect.ExitCode
 import cats.implicits._
 import net.kemitix.s3thorp.aws.lib.S3ClientBuilder
 import net.kemitix.s3thorp.core.MD5HashGenerator.md5File
-import net.kemitix.s3thorp.core.{Logger, Sync}
-import net.kemitix.s3thorp.domain.Config
+import net.kemitix.s3thorp.core.Sync
+import net.kemitix.s3thorp.domain.{Config, Logger}
 
 object Program {
 

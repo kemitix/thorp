@@ -1,4 +1,4 @@
-package net.kemitix.s3thorp.core
+package net.kemitix.s3thorp.domain
 
 trait Logger[M[_]] {
 

@@ -2,7 +2,7 @@ package net.kemitix.s3thorp.core
 
 import cats.Id
 import net.kemitix.s3thorp.core.MD5HashData.rootHash
-import net.kemitix.s3thorp.domain.{Bucket, Config, MD5Hash, RemoteKey}
+import net.kemitix.s3thorp.domain.{Bucket, Config, Logger, MD5Hash, RemoteKey}
 import org.scalatest.FunSpec
 
 class MD5HashGeneratorTest extends FunSpec {

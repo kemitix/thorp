@@ -6,7 +6,7 @@ import java.nio.file.Path
 import cats.Monad
 import cats.implicits._
 import net.kemitix.s3thorp.core.KeyGenerator.generateKey
-import net.kemitix.s3thorp.domain.{Config, Filter, LocalFile, MD5Hash}
+import net.kemitix.s3thorp.domain.{Config, Filter, LocalFile, Logger, MD5Hash}
 
 object LocalFileStream {
 
