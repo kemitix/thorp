@@ -21,7 +21,7 @@ class ThorpS3ClientSuite
     val source = Resource(this, "upload")
     val prefix = RemoteKey("prefix")
     implicit val config: Config = Config(Bucket("bucket"), prefix, source = source)
-    implicit val logInfo: Int => String => Id[Unit] = _ => _ => ()
+    implicit val implLogger: Logger[Id] = new DummyLogger[Id]
 
     val lm = LastModified(Instant.now.truncatedTo(ChronoUnit.MILLIS))
 

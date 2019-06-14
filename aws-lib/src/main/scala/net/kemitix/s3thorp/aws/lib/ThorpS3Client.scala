@@ -18,7 +18,7 @@ class ThorpS3Client[M[_]: Monad](amazonS3Client: => AmazonS3,
 
   override def listObjects(bucket: Bucket,
                            prefix: RemoteKey)
-                          (implicit info: Int => String => M[Unit]): M[S3ObjectsData] =
+                          (implicit logger: Logger[M]): M[S3ObjectsData] =
     objectLister.listObjects(bucket, prefix)
 
   override def copy(bucket: Bucket,

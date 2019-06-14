@@ -2,19 +2,19 @@ package net.kemitix.s3thorp.aws.lib
 
 import cats.Monad
 import com.amazonaws.services.s3.model.PutObjectResult
-import net.kemitix.s3thorp.domain.{Bucket, LocalFile, RemoteKey}
+import net.kemitix.s3thorp.domain.{Bucket, LocalFile, Logger, RemoteKey}
 
 object S3ClientLogging {
 
   def logListObjectsStart[M[_]: Monad](bucket: Bucket,
                           prefix: RemoteKey)
-                         (implicit info: Int => String => M[Unit]): M[Unit] =
-    info(1)(s"Fetch S3 Summary: ${bucket.name}:${prefix.key}")
+                         (implicit logger: Logger[M]): M[Unit] =
+    logger.info(s"Fetch S3 Summary: ${bucket.name}:${prefix.key}")
 
   def logListObjectsFinish[M[_]: Monad](bucket: Bucket,
                            prefix: RemoteKey)
-                          (implicit info: Int => String => M[Unit]): M[Unit] =
-    info(2)(s"Fetched S3 Summary: ${bucket.name}:${prefix.key}")
+                          (implicit logger: Logger[M]): M[Unit] =
+    logger.info(s"Fetched S3 Summary: ${bucket.name}:${prefix.key}")
 
   def logUploadFinish[M[_]: Monad](localFile: LocalFile,
                       bucket: Bucket)

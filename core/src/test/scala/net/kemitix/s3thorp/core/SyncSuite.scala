@@ -147,7 +147,7 @@ class SyncSuite
 
     override def listObjects(bucket: Bucket,
                              prefix: RemoteKey)
-                            (implicit info: Int => String => Id[Unit]): S3ObjectsData =
+                            (implicit logger: Logger[Id]): S3ObjectsData =
       s3ObjectsData
 
     override def upload(localFile: LocalFile,

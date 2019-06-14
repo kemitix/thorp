@@ -22,7 +22,6 @@ object Sync {
 
     implicit val c: Config = config
     implicit val implLogger: Logger[M] = logger
-    implicit val logInfo: Int => String => M[Unit] = _ => logger.info(_)
 
     def metaData(s3Data: S3ObjectsData, sFiles: Stream[LocalFile]) =
       Monad[M].pure(sFiles.map(file => getMetadata(file, s3Data)))
