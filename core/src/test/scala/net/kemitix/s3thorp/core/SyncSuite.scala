@@ -39,7 +39,7 @@ class SyncSuite
       val s3Client = new RecordingClient(testBucket, S3ObjectsData(
         byHash = Map(),
         byKey = Map()))
-      Sync.run(config, s3Client, md5HashGenerator, logInfo, logWarn)
+      Sync.run(config, s3Client, md5HashGenerator, logger)
       it("uploads all files") {
         val expectedUploads = Map(
           "subdir/leaf-file" -> leafRemoteKey,
@@ -65,7 +65,7 @@ class SyncSuite
           RemoteKey("prefix/root-file") -> HashModified(rootHash, lastModified),
           RemoteKey("prefix/subdir/leaf-file") -> HashModified(leafHash, lastModified)))
       val s3Client = new RecordingClient(testBucket, s3ObjectsData)
-      Sync.run(config, s3Client, md5HashGenerator, logInfo, logWarn)
+      Sync.run(config, s3Client, md5HashGenerator, logger)
       it("uploads nothing") {
         val expectedUploads = Map()
         assertResult(expectedUploads)(s3Client.uploadsRecord)
@@ -89,7 +89,7 @@ class SyncSuite
           RemoteKey("prefix/root-file-old") -> HashModified(rootHash, lastModified),
           RemoteKey("prefix/subdir/leaf-file") -> HashModified(leafHash, lastModified)))
       val s3Client = new RecordingClient(testBucket, s3ObjectsData)
-      Sync.run(config, s3Client, md5HashGenerator, logInfo, logWarn)
+      Sync.run(config, s3Client, md5HashGenerator, logger)
       it("uploads nothing") {
         val expectedUploads = Map()
         assertResult(expectedUploads)(s3Client.uploadsRecord)
@@ -117,7 +117,7 @@ class SyncSuite
         byKey = Map(
           deletedKey -> HashModified(deletedHash, lastModified)))
       val s3Client = new RecordingClient(testBucket, s3ObjectsData)
-      Sync.run(config, s3Client, md5HashGenerator, logInfo, logWarn)
+      Sync.run(config, s3Client, md5HashGenerator, logger)
       it("deleted key") {
         val expectedDeletions = Set(deletedKey)
         assertResult(expectedDeletions)(s3Client.deletionsRecord)
@@ -127,7 +127,7 @@ class SyncSuite
       val config: Config = Config(Bucket("bucket"), prefix, source = source, filters = List(Exclude("leaf")))
       val s3ObjectsData = S3ObjectsData(Map(), Map())
       val s3Client = new RecordingClient(testBucket, s3ObjectsData)
-      Sync.run(config, s3Client, md5HashGenerator, logInfo, logWarn)
+      Sync.run(config, s3Client, md5HashGenerator, logger)
       it("is not uploaded") {
         val expectedUploads = Map(
           "root-file" -> rootRemoteKey

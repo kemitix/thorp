@@ -18,12 +18,11 @@ object Sync {
   def run[M[_]: Monad](config: Config,
                        s3Client: S3Client[M],
                        md5HashGenerator: File => M[MD5Hash],
-                       info: Int => String => M[Unit],
-                       warn: String => M[Unit]): M[Unit] = {
+                       logger: Logger[M]): M[Unit] = {
 
     implicit val c: Config = config
-    implicit val logInfo: Int => String => M[Unit] = info
-    implicit val logWarn: String => M[Unit] = warn
+    implicit val logInfo: Int => String => M[Unit] = _ => logger.info(_)
+    implicit val logWarn: String => M[Unit] = logger.warn
 
     def metaData(s3Data: S3ObjectsData, sFiles: Stream[LocalFile]) =
       Monad[M].pure(sFiles.map(file => getMetadata(file, s3Data)))
@@ -36,7 +35,7 @@ object Sync {
 
     def copyUploadActions(s3Data: S3ObjectsData): M[Stream[S3Action]] =
       (for {
-        files <- findFiles(c.source, md5HashGenerator, info)
+        files <- findFiles(c.source, md5HashGenerator, logInfo)
         metaData <- metaData(s3Data, files)
         actions <- actions(metaData)
         s3Actions <- submit(actions)
@@ -54,12 +53,12 @@ object Sync {
         .sequence
 
     for {
-      _ <- logRunStart(info)
-      s3data <- s3Client.listObjects(c.bucket, c.prefix)(info)
-      _ <- logFileScan(info)
+      _ <- logRunStart(logInfo)
+      s3data <- s3Client.listObjects(c.bucket, c.prefix)(logInfo)
+      _ <- logFileScan(logInfo)
       copyUploadActions <- copyUploadActions(s3data)
       deleteActions <- deleteActions(s3data)
-      _ <- logRunFinished(copyUploadActions ++ deleteActions, info)
+      _ <- logRunFinished(copyUploadActions ++ deleteActions, logInfo)
     } yield ()
   }
 

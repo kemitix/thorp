@@ -14,11 +14,9 @@ object Program {
 
   def apply[M[_]: Monad](config: Config): M[ExitCode] = {
     val logger = new PrintLogger[M](config.verbose)
-    val info = (_: Int) => (m: String) => logger.info(m)
-    val warn = (w: String) => logger.warn(w)
     for {
       _ <- logger.info("S3Thorp - hashed sync for s3")
-      _ <- Sync.run[M](config, S3ClientBuilder.defaultClient, hashGenerator(logger), info, warn)
+      _ <- Sync.run[M](config, S3ClientBuilder.defaultClient, hashGenerator(logger), logger)
     } yield ExitCode.Success
   }
 
