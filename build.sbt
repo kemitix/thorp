@@ -27,6 +27,19 @@ val awsSdkDependencies = Seq(
     "com.fasterxml.jackson.dataformat" % "jackson-dataformat-cbor" % "2.9.9"
   )
 )
+val catsSettings = Seq (
+  libraryDependencies ++=  Seq(
+    "org.typelevel" %% "cats-core" % "1.6.1"
+  ),
+  // recommended for cats-effects
+  scalacOptions ++= Seq(
+    "-feature",
+    "-deprecation",
+    "-unchecked",
+    "-language:postfixOps",
+    "-language:higherKinds",
+    "-Ypartial-unification")
+)
 val catsEffectsSettings = Seq(
   libraryDependencies ++=  Seq(
     "org.typelevel" %% "cats-effect" % "1.3.1"
@@ -47,6 +60,7 @@ lazy val cli = (project in file("cli"))
   .settings(commonSettings)
   .settings(mainClass in assembly := Some("net.kemitix.s3thorp.cli.Main"))
   .settings(applicationSettings)
+  .settings(catsEffectsSettings)
   .aggregate(`aws-lib`, core, `aws-api`, domain)
   .settings(commandLineParsing)
   .dependsOn(`aws-lib`)
@@ -67,7 +81,7 @@ lazy val core = (project in file("core"))
 lazy val `aws-api` = (project in file("aws-api"))
   .settings(commonSettings)
   .settings(assemblyJarName in assembly := "aws-api.jar")
-  .settings(catsEffectsSettings)
+  .settings(catsSettings)
   .dependsOn(domain)
 
 lazy val domain = (project in file("domain"))
