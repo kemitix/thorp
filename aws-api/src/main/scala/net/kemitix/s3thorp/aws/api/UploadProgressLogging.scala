@@ -1,9 +1,8 @@
 package net.kemitix.s3thorp.aws.api
 
-import cats.effect.IO
 import net.kemitix.s3thorp.aws.api.UploadEvent.{ByteTransferEvent, RequestEvent, TransferEvent}
 import net.kemitix.s3thorp.domain.Terminal.{clearLine, returnToPreviousLine}
-import net.kemitix.s3thorp.domain.{Terminal, LocalFile}
+import net.kemitix.s3thorp.domain.{LocalFile, Terminal}
 import net.kemitix.s3thorp.domain.SizeTranslation.sizeInEnglish
 
 import scala.io.AnsiColor._
@@ -11,16 +10,14 @@ import scala.io.AnsiColor._
 trait UploadProgressLogging {
 
   def logTransfer(localFile: LocalFile,
-                  event: TransferEvent)
-                 (implicit info: Int => String => IO[Unit]): IO[Unit] =
-    info(2)(s"Transfer:${event.name}: ${localFile.remoteKey.key}")
+                  event: TransferEvent): Unit =
+    println(s"Transfer:${event.name}: ${localFile.remoteKey.key}")
 
   private val oneHundredPercent = 100
 
   def logRequestCycle(localFile: LocalFile,
-                      event: RequestEvent,
-                      bytesTransferred: Long)
-                     (implicit info: Int => String => IO[Unit]): IO[Unit] = {
+                                   event: RequestEvent,
+                                   bytesTransferred: Long): Unit = {
     val remoteKey = localFile.remoteKey.key
     val fileLength = localFile.file.length
     val consoleWidth = Terminal.width - 2
@@ -31,13 +28,12 @@ trait UploadProgressLogging {
       val bar = s"[$head$tail]"
       val transferred = sizeInEnglish(bytesTransferred)
       val fileSize = sizeInEnglish(fileLength)
-      IO(print(s"${clearLine}Uploading $transferred of $fileSize : $remoteKey\n$bar$returnToPreviousLine"))
+      print(s"${clearLine}Uploading $transferred of $fileSize : $remoteKey\n$bar$returnToPreviousLine")
     } else
-      IO(print(clearLine))
+      print(clearLine)
   }
 
-  def logByteTransfer(event: ByteTransferEvent)
-                     (implicit info: Int => String => IO[Unit]): IO[Unit] =
-    info(3)(".")
+  def logByteTransfer(event: ByteTransferEvent): Unit =
+    print(".")
 
 }

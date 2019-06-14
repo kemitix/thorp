@@ -1,53 +1,46 @@
 package net.kemitix.s3thorp.aws.lib
 
-import cats.effect.IO
+import cats.Monad
 import com.amazonaws.services.s3.model.PutObjectResult
 import net.kemitix.s3thorp.domain.{Bucket, LocalFile, RemoteKey}
 
 object S3ClientLogging {
 
-  def logListObjectsStart(bucket: Bucket,
+  def logListObjectsStart[M[_]: Monad](bucket: Bucket,
                           prefix: RemoteKey)
-                         (implicit info: Int => String => IO[Unit]): IO[Unit] =
+                         (implicit info: Int => String => M[Unit]): M[Unit] =
     info(1)(s"Fetch S3 Summary: ${bucket.name}:${prefix.key}")
 
-  def logListObjectsFinish(bucket: Bucket,
+  def logListObjectsFinish[M[_]: Monad](bucket: Bucket,
                            prefix: RemoteKey)
-                          (implicit info: Int => String => IO[Unit]): IO[Unit] =
+                          (implicit info: Int => String => M[Unit]): M[Unit] =
     info(2)(s"Fetched S3 Summary: ${bucket.name}:${prefix.key}")
 
-  def logUploadStart(localFile: LocalFile,
-                     bucket: Bucket)
-                    (implicit info: Int => String => IO[Unit]): PutObjectResult => IO[PutObjectResult] =
-    in => for {
-      _ <- info(1)(s"Uploading: ${bucket.name}:${localFile.remoteKey.key}")
-    } yield in
-
-  def logUploadFinish(localFile: LocalFile,
+  def logUploadFinish[M[_]: Monad](localFile: LocalFile,
                       bucket: Bucket)
-                     (implicit info: Int => String => IO[Unit]): PutObjectResult => IO[Unit] =
+                     (implicit info: Int => String => M[Unit]): PutObjectResult => M[Unit] =
     _ => info(2)(s"Uploaded: ${bucket.name}:${localFile.remoteKey.key}")
 
-  def logCopyStart(bucket: Bucket,
-                   sourceKey: RemoteKey,
-                   targetKey: RemoteKey)
-                  (implicit info: Int => String => IO[Unit]): IO[Unit] =
+  def logCopyStart[M[_]: Monad](bucket: Bucket,
+                                sourceKey: RemoteKey,
+                                targetKey: RemoteKey)
+                               (implicit info: Int => String => M[Unit]): M[Unit] =
     info(1)(s"Copy: ${bucket.name}:${sourceKey.key} => ${targetKey.key}")
 
-  def logCopyFinish(bucket: Bucket,
+  def logCopyFinish[M[_]: Monad](bucket: Bucket,
                     sourceKey: RemoteKey,
                     targetKey: RemoteKey)
-                   (implicit info: Int => String => IO[Unit]): IO[Unit] =
+                   (implicit info: Int => String => M[Unit]): M[Unit] =
     info(2)(s"Copied: ${bucket.name}:${sourceKey.key} => ${targetKey.key}")
 
-  def logDeleteStart(bucket: Bucket,
+  def logDeleteStart[M[_]: Monad](bucket: Bucket,
                      remoteKey: RemoteKey)
-                    (implicit info: Int => String => IO[Unit]): IO[Unit] =
+                    (implicit info: Int => String => M[Unit]): M[Unit] =
       info(1)(s"Delete: ${bucket.name}:${remoteKey.key}")
 
-  def logDeleteFinish(bucket: Bucket,
+  def logDeleteFinish[M[_]: Monad](bucket: Bucket,
                       remoteKey: RemoteKey)
-                     (implicit info: Int => String => IO[Unit]): IO[Unit] =
+                     (implicit info: Int => String => M[Unit]): M[Unit] =
       info(2)(s"Deleted: ${bucket.name}:${remoteKey.key}")
 
 }
