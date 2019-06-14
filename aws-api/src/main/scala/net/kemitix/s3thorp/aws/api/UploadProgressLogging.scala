@@ -9,10 +9,6 @@ import scala.io.AnsiColor._
 
 trait UploadProgressLogging {
 
-  def logTransfer(localFile: LocalFile,
-                  event: TransferEvent): Unit =
-    println(s"Transfer:${event.name}: ${localFile.remoteKey.key}")
-
   private val oneHundredPercent = 100
 
   def logRequestCycle(localFile: LocalFile,
@@ -32,8 +28,5 @@ trait UploadProgressLogging {
     } else
       print(clearLine)
   }
-
-  def logByteTransfer(event: ByteTransferEvent): Unit =
-    print(".")
 
 }
