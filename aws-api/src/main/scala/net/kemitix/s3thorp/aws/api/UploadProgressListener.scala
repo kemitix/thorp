@@ -10,10 +10,9 @@ class UploadProgressListener(localFile: LocalFile)
 
   def listener: UploadEvent => Unit =
     {
-      case e: TransferEvent => logTransfer(localFile, e)
       case e: RequestEvent =>
         bytesTransferred += e.transferred
         logRequestCycle(localFile, e, bytesTransferred)
-      case e: ByteTransferEvent => logByteTransfer(e)
+      case _ => ()
     }
 }
