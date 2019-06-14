@@ -1,7 +1,7 @@
 package net.kemitix.thorp.cli
 
 import net.kemitix.thorp.core.Resource
-import net.kemitix.thorp.domain.Config
+import net.kemitix.thorp.domain.{Bucket, Config, LastModified}
 import org.scalatest.FunSpec
 
 import scala.util.Try
@@ -67,6 +67,33 @@ class ParseArgsTest extends FunSpec {
       val debugFlag = invokeWithDebug("-d")
       it("debug should be true") {
         assert(debugFlag.contains(true))
+      }
+    }
+  }
+
+  describe("parse - last modified") {
+    def invokeWithLastModified(lastModified: String) = {
+      val strings = List("--source", pathTo("."), "--bucket", "bucket", lastModified)
+        .filter(_ != "")
+      ParseArgs(strings, defaultConfig).map(_.lastModified)
+    }
+
+    describe("when no last-modified flag") {
+      val lastModifiedFlag = invokeWithLastModified("")
+      it("last-modified should be false") {
+        assert(lastModifiedFlag.contains(false))
+      }
+    }
+    describe("when long last-modified flag") {
+      val lastModifiedFlag = invokeWithLastModified("--last-modified")
+      it("last-modified should be true") {
+        assert(lastModifiedFlag.contains(true))
+      }
+    }
+    describe("when short last-modified flag") {
+      val lastModifiedFlag = invokeWithLastModified("-l")
+      it("last-modified should be true") {
+        assert(lastModifiedFlag.contains(true))
       }
     }
   }

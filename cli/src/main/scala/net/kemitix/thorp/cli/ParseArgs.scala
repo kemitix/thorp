@@ -35,6 +35,9 @@ object ParseArgs {
         .unbounded()
         .action((str,c) => c.copy(filters = c.filters ++ str.map(Exclude)))
         .text("Exclude matching paths"),
+      opt[Unit]('l', "last-modified")
+        .action((_, c) => c.copy(lastModified = true))
+        .text("Ignore local files where last modified matches"),
       opt[Unit]('d', "debug")
         .action((_, c) => c.copy(debug = true))
         .text("Enable debug logging")
