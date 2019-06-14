@@ -63,6 +63,7 @@ lazy val cli = (project in file("cli"))
   .settings(catsEffectsSettings)
   .aggregate(`aws-lib`, core, `aws-api`, domain)
   .settings(commandLineParsing)
+  .settings(testDependencies)
   .dependsOn(`aws-lib`)
 
 lazy val `aws-lib` = (project in file("aws-lib"))

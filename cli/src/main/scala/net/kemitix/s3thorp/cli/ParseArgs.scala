@@ -1,5 +1,6 @@
 package net.kemitix.s3thorp.cli
 
+import java.io.File
 import java.nio.file.Paths
 
 import net.kemitix.s3thorp.domain.Filter.{Exclude, Include}
@@ -16,6 +17,7 @@ object ParseArgs {
       head("s3thorp"),
       opt[String]('s', "source")
         .action((str, c) => c.copy(source = Paths.get(str).toFile))
+        .validate(s => if (new File(s).isDirectory) Right(()) else Left("Source is not a directory"))
         .required()
         .text("Source directory to sync to S3"),
       opt[String]('b', "bucket")
