@@ -34,8 +34,7 @@ class ThorpS3Client[M[_]: Monad](amazonS3Client: => AmazonS3,
                       multiPartThreshold: Long,
                       tryCount: Int,
                       maxRetries: Int)
-                     (implicit info: Int => String => M[Unit],
-                      warn: String => M[Unit]): M[S3Action] =
+                     (implicit logger: Logger[M]): M[S3Action] =
     uploader.upload(localFile, bucket, progressListener, multiPartThreshold, 1, maxRetries)
 
   override def delete(bucket: Bucket,

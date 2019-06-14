@@ -156,8 +156,7 @@ class SyncSuite
                         multiPartThreshold: Long,
                         tryCount: Int,
                         maxRetries: Int)
-                       (implicit info: Int => String => Id[Unit],
-                        warn: String => Id[Unit]): UploadS3Action = {
+                       (implicit logger: Logger[Id]): UploadS3Action = {
       if (bucket == testBucket)
         uploadsRecord += (localFile.relative.toString -> localFile.remoteKey)
       UploadS3Action(localFile.remoteKey, MD5Hash("some hash value"))

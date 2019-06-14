@@ -15,8 +15,7 @@ trait S3Client[M[_]] {
              multiPartThreshold: Long,
              tryCount: Int,
              maxRetries: Int)
-            (implicit info: Int => String => M[Unit],
-             warn: String => M[Unit]): M[S3Action]
+            (implicit logger: Logger[M]): M[S3Action]
 
   def copy(bucket: Bucket,
            sourceKey: RemoteKey,
