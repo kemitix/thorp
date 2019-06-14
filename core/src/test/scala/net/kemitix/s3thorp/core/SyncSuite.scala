@@ -17,6 +17,7 @@ class SyncSuite
   private val source = Resource(this, "upload")
   private val prefix = RemoteKey("prefix")
   val config = Config(Bucket("bucket"), prefix, source = source)
+  implicit private val logger: Logger[Id] = new DummyLogger[Id]
   implicit private val logInfo: Int => String => Id[Unit] = _ => _ => ()
   implicit private val logWarn: String => Id[Unit] = _ => ()
   private val lastModified = LastModified(Instant.now)
