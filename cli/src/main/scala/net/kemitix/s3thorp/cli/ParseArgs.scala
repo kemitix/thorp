@@ -35,6 +35,9 @@ object ParseArgs {
         .unbounded()
         .action((str,c) => c.copy(filters = c.filters ++ str.map(Exclude)))
         .text("Exclude matching paths"),
+      opt[Unit]('d', "debug")
+        .action((_, c) => c.copy(debug = true))
+        .text("Enable debug logging"),
       opt[Int]('v', "verbose")
         .validate(i =>
           if (i >= 1 && i <= 5) Right(Unit)

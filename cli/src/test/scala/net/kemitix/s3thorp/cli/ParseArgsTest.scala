@@ -12,9 +12,8 @@ class ParseArgsTest extends FunSpec {
   val defaultConfig: Config = Config(source = source)
 
   describe("parse - source") {
-    def invokeWithSource(path: String) = {
+    def invokeWithSource(path: String) =
       ParseArgs(List("--source", path, "--bucket", "bucket"), defaultConfig)
-    }
 
     describe("when source is a directory") {
       val result = invokeWithSource(pathTo("."))
@@ -42,6 +41,33 @@ class ParseArgsTest extends FunSpec {
     }
     describe("when source is a relative path to a missing path") {
       it("should fail") {pending}
+    }
+  }
+
+  describe("parse - debug") {
+    def invokeWithDebug(debug: String) = {
+      val strings = List("--source", pathTo("."), "--bucket", "bucket", debug)
+          .filter(_ != "")
+      ParseArgs(strings, defaultConfig).map(_.debug)
+    }
+
+    describe("when no debug flag") {
+      val debugFlag = invokeWithDebug("")
+      it("debug should be false") {
+        assert(debugFlag.contains(false))
+      }
+    }
+    describe("when long debug flag") {
+      val debugFlag = invokeWithDebug("--debug")
+      it("debug should be true") {
+        assert(debugFlag.contains(true))
+      }
+    }
+    describe("when short debug flag") {
+      val debugFlag = invokeWithDebug("-d")
+      it("debug should be true") {
+        assert(debugFlag.contains(true))
+      }
     }
   }
 
