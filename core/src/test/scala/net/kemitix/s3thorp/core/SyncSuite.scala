@@ -166,7 +166,7 @@ class SyncSuite
                       sourceKey: RemoteKey,
                       hash: MD5Hash,
                       targetKey: RemoteKey
-                     )(implicit info: Int => String => Id[Unit]): CopyS3Action = {
+                     )(implicit logger: Logger[Id]): CopyS3Action = {
       if (bucket == testBucket)
         copiesRecord += (sourceKey -> targetKey)
       CopyS3Action(targetKey)

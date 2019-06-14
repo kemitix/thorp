@@ -24,14 +24,14 @@ object S3ClientLogging {
   def logCopyStart[M[_]: Monad](bucket: Bucket,
                                 sourceKey: RemoteKey,
                                 targetKey: RemoteKey)
-                               (implicit info: Int => String => M[Unit]): M[Unit] =
-    info(1)(s"Copy: ${bucket.name}:${sourceKey.key} => ${targetKey.key}")
+                               (implicit logger: Logger[M]): M[Unit] =
+    logger.info(s"Copy: ${bucket.name}:${sourceKey.key} => ${targetKey.key}")
 
   def logCopyFinish[M[_]: Monad](bucket: Bucket,
                     sourceKey: RemoteKey,
                     targetKey: RemoteKey)
-                   (implicit info: Int => String => M[Unit]): M[Unit] =
-    info(2)(s"Copied: ${bucket.name}:${sourceKey.key} => ${targetKey.key}")
+                   (implicit logger: Logger[M]): M[Unit] =
+    logger.info(s"Copied: ${bucket.name}:${sourceKey.key} => ${targetKey.key}")
 
   def logDeleteStart[M[_]: Monad](bucket: Bucket,
                      remoteKey: RemoteKey)

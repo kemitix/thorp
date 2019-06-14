@@ -6,7 +6,7 @@ import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.CopyObjectRequest
 import net.kemitix.s3thorp.aws.api.S3Action.CopyS3Action
 import net.kemitix.s3thorp.aws.lib.S3ClientLogging.{logCopyFinish, logCopyStart}
-import net.kemitix.s3thorp.domain.{Bucket, MD5Hash, RemoteKey}
+import net.kemitix.s3thorp.domain.{Bucket, Logger, MD5Hash, RemoteKey}
 
 class S3ClientCopier[M[_]: Monad](amazonS3: AmazonS3) {
 
@@ -14,7 +14,7 @@ class S3ClientCopier[M[_]: Monad](amazonS3: AmazonS3) {
            sourceKey: RemoteKey,
            hash: MD5Hash,
            targetKey: RemoteKey)
-          (implicit info: Int => String => M[Unit]): M[CopyS3Action] =
+          (implicit logger: Logger[M]): M[CopyS3Action] =
   for {
     _ <- logCopyStart[M](bucket, sourceKey, targetKey)
     _ <- copyObject(bucket, sourceKey, hash, targetKey)

@@ -25,7 +25,7 @@ class ThorpS3Client[M[_]: Monad](amazonS3Client: => AmazonS3,
                     sourceKey: RemoteKey,
                     hash: MD5Hash,
                     targetKey: RemoteKey)
-                   (implicit info: Int => String => M[Unit]): M[CopyS3Action] =
+                   (implicit logger: Logger[M]): M[CopyS3Action] =
     copier.copy(bucket, sourceKey,hash, targetKey)
 
   override def upload(localFile: LocalFile,
