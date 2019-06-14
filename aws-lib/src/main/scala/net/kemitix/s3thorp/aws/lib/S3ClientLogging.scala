@@ -16,11 +16,6 @@ object S3ClientLogging {
                           (implicit logger: Logger[M]): M[Unit] =
     logger.info(s"Fetched S3 Summary: ${bucket.name}:${prefix.key}")
 
-  def logUploadFinish[M[_]: Monad](localFile: LocalFile,
-                      bucket: Bucket)
-                     (implicit info: Int => String => M[Unit]): PutObjectResult => M[Unit] =
-    _ => info(2)(s"Uploaded: ${bucket.name}:${localFile.remoteKey.key}")
-
   def logCopyStart[M[_]: Monad](bucket: Bucket,
                                 sourceKey: RemoteKey,
                                 targetKey: RemoteKey)
