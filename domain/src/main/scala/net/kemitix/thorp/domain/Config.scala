@@ -9,6 +9,7 @@ final case class Config(
                          multiPartThreshold: Long = 1024 * 1024 * 5,
                          maxRetries: Int = 3,
                          debug: Boolean = false,
+                         lastModified: Boolean = false,
                          source: File
 ) {
   require(source.isDirectory, s"Source must be a directory: $source")
