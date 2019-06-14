@@ -10,7 +10,8 @@ class LocalFileStreamSuite extends FunSpec {
 
   val uploadResource = Resource(this, "upload")
   implicit val config: Config = Config(source = uploadResource)
-  implicit private val logInfo: Int => String => Id[Unit] = l => i => ()
+  implicit private val logInfo: Int => String => Id[Unit] = _ => _ => ()
+  implicit private val logDebug: String => Id[Unit] = _ => ()
   val md5HashGenerator: File => Id[MD5Hash] = file => MD5HashGenerator.md5File[Id](file)
 
   describe("findFiles") {
