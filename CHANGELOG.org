@@ -10,6 +10,7 @@ The format is based on [[https://keepachangelog.com/en/1.0.0/][Keep a Changelog]
 ** Added
 
    - ~-d~, ~--debug~ flag for log messages
+   - ~-l~, ~--last-modified~ flag to use last modified stamp
 
 ** Changed
 
