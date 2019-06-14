@@ -9,23 +9,23 @@ import net.kemitix.s3thorp.domain.Config
 // Logging for the Sync class
 object SyncLogging {
 
-  def logRunStart[M[_]: Monad](info: Int => String => M[Unit])
-                       (implicit c: Config): M[Unit] =
-    info(1)(s"Bucket: ${c.bucket.name}, Prefix: ${c.prefix.key}, Source: ${c.source}, ")
+  def logRunStart[M[_]: Monad](implicit c: Config,
+                               logger: Logger[M]): M[Unit] =
+    logger.info(s"Bucket: ${c.bucket.name}, Prefix: ${c.prefix.key}, Source: ${c.source}, ")
 
-  def logFileScan[M[_]: Monad](info: Int => String => M[Unit])
-                 (implicit c: Config): M[Unit] =
-    info(1)(s"Scanning local files: ${c.source}...")
+  def logFileScan[M[_]: Monad](implicit c: Config,
+                               logger: Logger[M]): M[Unit] =
+    logger.info(s"Scanning local files: ${c.source}...")
 
-  def logRunFinished[M[_]: Monad](actions: Stream[S3Action],
-                     info: Int => String => M[Unit])
-                    (implicit c: Config): M[Unit] = {
+  def logRunFinished[M[_]: Monad](actions: Stream[S3Action])
+                                 (implicit c: Config,
+                                  logger: Logger[M]): M[Unit] = {
     val counters = actions.foldLeft(Counters())(countActivities)
     for {
-      _ <- info(1)(s"Uploaded ${counters.uploaded} files")
-      _ <- info(1)(s"Copied   ${counters.copied} files")
-      _ <- info(1)(s"Deleted  ${counters.deleted} files")
-      _ <- info(1)(s"Errors   ${counters.errors}")
+      _ <- logger.info(s"Uploaded ${counters.uploaded} files")
+      _ <- logger.info(s"Copied   ${counters.copied} files")
+      _ <- logger.info(s"Deleted  ${counters.deleted} files")
+      _ <- logger.info(s"Errors   ${counters.errors}")
     } yield ()
   }
 

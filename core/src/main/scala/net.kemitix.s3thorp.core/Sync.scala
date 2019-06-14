@@ -23,7 +23,6 @@ object Sync {
     implicit val c: Config = config
     implicit val implLogger: Logger[M] = logger
     implicit val logInfo: Int => String => M[Unit] = _ => logger.info(_)
-    implicit val logWarn: String => M[Unit] = logger.warn
 
     def metaData(s3Data: S3ObjectsData, sFiles: Stream[LocalFile]) =
       Monad[M].pure(sFiles.map(file => getMetadata(file, s3Data)))
@@ -54,12 +53,12 @@ object Sync {
         .sequence
 
     for {
-      _ <- logRunStart(logInfo)
+      _ <- logRunStart[M]
       s3data <- s3Client.listObjects(c.bucket, c.prefix)(logInfo)
-      _ <- logFileScan(logInfo)
+      _ <- logFileScan[M]
       copyUploadActions <- copyUploadActions(s3data)
       deleteActions <- deleteActions(s3data)
-      _ <- logRunFinished(copyUploadActions ++ deleteActions, logInfo)
+      _ <- logRunFinished[M](copyUploadActions ++ deleteActions)
     } yield ()
   }
 
