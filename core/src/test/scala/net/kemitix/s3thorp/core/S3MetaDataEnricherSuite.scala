@@ -12,7 +12,6 @@ class S3MetaDataEnricherSuite
   private val source = Resource(this, "upload")
   private val prefix = RemoteKey("prefix")
   implicit private val config: Config = Config(Bucket("bucket"), prefix, source = source)
-  implicit private val logInfo: Int => String => Unit = l => i => ()
   private val fileToKey = KeyGenerator.generateKey(config.source, config.prefix) _
   val lastModified = LastModified(Instant.now())
 

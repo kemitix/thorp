@@ -10,7 +10,7 @@ import net.kemitix.s3thorp.aws.api.S3Action.{ErroredS3Action, UploadS3Action}
 import net.kemitix.s3thorp.aws.api.UploadEvent.{ByteTransferEvent, RequestEvent, TransferEvent}
 import net.kemitix.s3thorp.aws.api.{S3Action, UploadProgressListener}
 import net.kemitix.s3thorp.aws.lib.UploaderLogging.{logMultiPartUploadFinished, logMultiPartUploadStart}
-import net.kemitix.s3thorp.domain.{Bucket, LocalFile, MD5Hash, RemoteKey}
+import net.kemitix.s3thorp.domain.{Bucket, LocalFile, Logger, MD5Hash, RemoteKey}
 
 import scala.util.Try
 
@@ -26,8 +26,7 @@ class Uploader[M[_]: Monad](transferManager: => AmazonTransferManager) {
              multiPartThreshold: Long,
              tryCount: Int,
              maxRetries: Int)
-            (implicit info: Int => String => M[Unit],
-             warn: String => M[Unit]): M[S3Action] =
+            (implicit logger: Logger[M]): M[S3Action] =
     for {
       _ <- logMultiPartUploadStart[M](localFile, tryCount)
       upload <- transfer(localFile, bucket, uploadProgressListener)

@@ -12,14 +12,14 @@ object Main extends IOApp {
     Config(source = Paths.get(".").toFile)
 
   override def run(args: List[String]): IO[ExitCode] = {
-    val logger = new Logger[IO](1)
+    val logger = new PrintLogger[IO](1)
     ParseArgs(args, defaultConfig)
       .map(Program[IO])
       .getOrElse(IO(ExitCode.Error))
       .guaranteeCase {
           case Canceled => logger.warn("Interrupted")
           case Error(e) => logger.error(e.getMessage)
-          case Completed => logger.info(1)("Done")
+          case Completed => logger.info("Done")
       }
   }
 

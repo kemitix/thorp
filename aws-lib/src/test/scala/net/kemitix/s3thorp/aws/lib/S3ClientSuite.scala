@@ -23,8 +23,7 @@ class S3ClientSuite
 
   private val prefix = RemoteKey("prefix")
   implicit private val config: Config = Config(Bucket("bucket"), prefix, source = source)
-  implicit private val logInfo: Int => String => Id[Unit] = _ => _ => ()
-  implicit private val logWarn: String => Id[Unit] = _ => ()
+  implicit private val implLogger: Logger[Id] = new DummyLogger[Id]
   private val fileToKey = KeyGenerator.generateKey(config.source, config.prefix) _
 
   describe("getS3Status") {

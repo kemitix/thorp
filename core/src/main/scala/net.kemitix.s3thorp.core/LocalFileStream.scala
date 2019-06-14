@@ -6,14 +6,14 @@ import java.nio.file.Path
 import cats.Monad
 import cats.implicits._
 import net.kemitix.s3thorp.core.KeyGenerator.generateKey
-import net.kemitix.s3thorp.domain.{Config, Filter, LocalFile, MD5Hash}
+import net.kemitix.s3thorp.domain.{Config, Filter, LocalFile, Logger, MD5Hash}
 
 object LocalFileStream {
 
   def findFiles[M[_]: Monad](file: File,
-                md5HashGenerator: File => M[MD5Hash],
-                info: Int => String => M[Unit])
-               (implicit c: Config): M[Stream[LocalFile]] = {
+                             md5HashGenerator: File => M[MD5Hash])
+                            (implicit c: Config,
+                             logger: Logger[M]): M[Stream[LocalFile]] = {
 
     val filters: Path => Boolean = Filter.isIncluded(c.filters)
 
@@ -41,10 +41,10 @@ object LocalFileStream {
             .flatMap(lfs => acc.map(s => s ++ lfs)))
 
       for {
-        _ <- info(2)(s"- Entering: $file")
+        _ <- logger.info(s"- Entering: $file")
         fs <- dirPaths(file)
         lfs <- recurse(fs)
-        _ <- info(5)(s"- Leaving : $file")
+        _ <- logger.debug(s"- Leaving : $file")
       } yield lfs
     }
 

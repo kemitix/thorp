@@ -5,14 +5,14 @@ import java.security.MessageDigest
 
 import cats.Monad
 import cats.implicits._
-import net.kemitix.s3thorp.domain.MD5Hash
+import net.kemitix.s3thorp.domain.{Logger, MD5Hash}
 
 import scala.collection.immutable.NumericRange
 
 object MD5HashGenerator {
 
   def md5File[M[_]: Monad](file: File)
-                          (implicit info: Int => String => M[Unit]): M[MD5Hash] = {
+                          (implicit logger: Logger[M]): M[MD5Hash] = {
 
     val maxBufferSize = 8048
     val defaultBuffer = new Array[Byte](maxBufferSize)
@@ -54,10 +54,10 @@ object MD5HashGenerator {
       } yield md5
 
     for {
-      _ <- info(5)(s"md5:reading:size ${file.length}:$file")
+      _ <- logger.debug(s"md5:reading:size ${file.length}:$file")
       md5 <- readFile
       hash = MD5Hash(md5)
-      _ <- info(4)(s"md5:generated:${hash.hash}:$file")
+      _ <- logger.debug(s"md5:generated:${hash.hash}:$file")
     } yield hash
   }
 

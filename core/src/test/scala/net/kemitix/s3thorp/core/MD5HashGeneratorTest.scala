@@ -2,7 +2,7 @@ package net.kemitix.s3thorp.core
 
 import cats.Id
 import net.kemitix.s3thorp.core.MD5HashData.rootHash
-import net.kemitix.s3thorp.domain.{Bucket, Config, MD5Hash, RemoteKey}
+import net.kemitix.s3thorp.domain.{Bucket, Config, Logger, MD5Hash, RemoteKey}
 import org.scalatest.FunSpec
 
 class MD5HashGeneratorTest extends FunSpec {
@@ -10,7 +10,7 @@ class MD5HashGeneratorTest extends FunSpec {
   private val source = Resource(this, "upload")
   private val prefix = RemoteKey("prefix")
   implicit private val config: Config = Config(Bucket("bucket"), prefix, source = source)
-  implicit private val logInfo: Int => String => Id[Unit] = l => i => ()
+  implicit private val logger: Logger[Id] = new DummyLogger[Id]
 
     describe("read a small file (smaller than buffer)") {
       val file = Resource(this, "upload/root-file")

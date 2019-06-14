@@ -13,7 +13,6 @@ class ActionGeneratorSuite
   private val prefix = RemoteKey("prefix")
   private val bucket = Bucket("bucket")
   implicit private val config: Config = Config(bucket, prefix, source = source)
-  implicit private val logInfo: Int => String => Unit = l => i => ()
   private val fileToKey = KeyGenerator.generateKey(config.source, config.prefix) _
   val lastModified = LastModified(Instant.now())
 

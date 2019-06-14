@@ -15,7 +15,7 @@ class S3ClientObjectLister[M[_]: Monad](amazonS3: AmazonS3) {
 
   def listObjects(bucket: Bucket,
                   prefix: RemoteKey)
-                 (implicit info: Int => String => M[Unit]): M[S3ObjectsData] = {
+                 (implicit logger: Logger[M]): M[S3ObjectsData] = {
 
     type Token = String
     type Batch = (Stream[S3ObjectSummary], Option[Token])

@@ -11,19 +11,17 @@ import net.kemitix.s3thorp.core.ActionSubmitter.submitAction
 import net.kemitix.s3thorp.core.LocalFileStream.findFiles
 import net.kemitix.s3thorp.core.S3MetaDataEnricher.getMetadata
 import net.kemitix.s3thorp.core.SyncLogging.{logFileScan, logRunFinished, logRunStart}
-import net.kemitix.s3thorp.domain.{Config, LocalFile, MD5Hash, S3MetaData, S3ObjectsData}
+import net.kemitix.s3thorp.domain.{Config, LocalFile, Logger, MD5Hash, S3MetaData, S3ObjectsData}
 
 object Sync {
 
   def run[M[_]: Monad](config: Config,
                        s3Client: S3Client[M],
                        md5HashGenerator: File => M[MD5Hash],
-                       info: Int => String => M[Unit],
-                       warn: String => M[Unit]): M[Unit] = {
+                       logger: Logger[M]): M[Unit] = {
 
     implicit val c: Config = config
-    implicit val logInfo: Int => String => M[Unit] = info
-    implicit val logWarn: String => M[Unit] = warn
+    implicit val implLogger: Logger[M] = logger
 
     def metaData(s3Data: S3ObjectsData, sFiles: Stream[LocalFile]) =
       Monad[M].pure(sFiles.map(file => getMetadata(file, s3Data)))
@@ -36,7 +34,7 @@ object Sync {
 
     def copyUploadActions(s3Data: S3ObjectsData): M[Stream[S3Action]] =
       (for {
-        files <- findFiles(c.source, md5HashGenerator, info)
+        files <- findFiles(c.source, md5HashGenerator)
         metaData <- metaData(s3Data, files)
         actions <- actions(metaData)
         s3Actions <- submit(actions)
@@ -54,12 +52,12 @@ object Sync {
         .sequence
 
     for {
-      _ <- logRunStart(info)
-      s3data <- s3Client.listObjects(c.bucket, c.prefix)(info)
-      _ <- logFileScan(info)
+      _ <- logRunStart[M]
+      s3data <- s3Client.listObjects(c.bucket, c.prefix)
+      _ <- logFileScan[M]
       copyUploadActions <- copyUploadActions(s3data)
       deleteActions <- deleteActions(s3data)
-      _ <- logRunFinished(copyUploadActions ++ deleteActions, info)
+      _ <- logRunFinished[M](copyUploadActions ++ deleteActions)
     } yield ()
   }
 

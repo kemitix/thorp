@@ -18,14 +18,14 @@ class ThorpS3Client[M[_]: Monad](amazonS3Client: => AmazonS3,
 
   override def listObjects(bucket: Bucket,
                            prefix: RemoteKey)
-                          (implicit info: Int => String => M[Unit]): M[S3ObjectsData] =
+                          (implicit logger: Logger[M]): M[S3ObjectsData] =
     objectLister.listObjects(bucket, prefix)
 
   override def copy(bucket: Bucket,
                     sourceKey: RemoteKey,
                     hash: MD5Hash,
                     targetKey: RemoteKey)
-                   (implicit info: Int => String => M[Unit]): M[CopyS3Action] =
+                   (implicit logger: Logger[M]): M[CopyS3Action] =
     copier.copy(bucket, sourceKey,hash, targetKey)
 
   override def upload(localFile: LocalFile,
@@ -34,13 +34,12 @@ class ThorpS3Client[M[_]: Monad](amazonS3Client: => AmazonS3,
                       multiPartThreshold: Long,
                       tryCount: Int,
                       maxRetries: Int)
-                     (implicit info: Int => String => M[Unit],
-                      warn: String => M[Unit]): M[S3Action] =
+                     (implicit logger: Logger[M]): M[S3Action] =
     uploader.upload(localFile, bucket, progressListener, multiPartThreshold, 1, maxRetries)
 
   override def delete(bucket: Bucket,
                       remoteKey: RemoteKey)
-                     (implicit info: Int => String => M[Unit]): M[DeleteS3Action] =
+                     (implicit logger: Logger[M]): M[DeleteS3Action] =
     deleter.delete(bucket, remoteKey)
 
 }
