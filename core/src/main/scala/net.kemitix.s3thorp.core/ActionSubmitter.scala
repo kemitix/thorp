@@ -12,8 +12,6 @@ object ActionSubmitter {
   def submitAction[M[_]: Monad](s3Client: S3Client[M], action: Action)
                                (implicit c: Config,
                                 logger: Logger[M]): Stream[M[S3Action]] = {
-    implicit val implInfo: Int => String => M[Unit] = _ => logger.info(_)
-    implicit val implWarn: String => M[Unit] = logger.warn
     Stream(
       action match {
         case ToUpload(bucket, localFile) =>

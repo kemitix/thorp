@@ -18,8 +18,6 @@ class SyncSuite
   private val prefix = RemoteKey("prefix")
   val config = Config(Bucket("bucket"), prefix, source = source)
   implicit private val logger: Logger[Id] = new DummyLogger[Id]
-  implicit private val logInfo: Int => String => Id[Unit] = _ => _ => ()
-  implicit private val logWarn: String => Id[Unit] = _ => ()
   private val lastModified = LastModified(Instant.now)
   private val fileToKey: File => RemoteKey = KeyGenerator.generateKey(source, prefix)
   private val rootFile = LocalFile.resolve("root-file", rootHash, source, fileToKey)
