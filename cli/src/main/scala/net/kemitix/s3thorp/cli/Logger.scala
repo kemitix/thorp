@@ -6,6 +6,7 @@ class Logger[M[_]: Monad](verbosity: Int)  {
 
   def debug(message: => String): M[Unit] = Monad[M].pure(println(s"[ DEBUG] $message"))
 
+  def info(message: => String): M[Unit] = Monad[M].pure(println(s"[  INFO] $message"))
   def info(level: Int)(message: String): M[Unit] =
     if (verbosity >= level) Monad[M].pure(println(s"[INFO:$level] $message"))
     else Monad[M].unit
