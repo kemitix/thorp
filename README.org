@@ -21,6 +21,7 @@ hash of the file contents.
       -p, --prefix <value>  Prefix within the S3 Bucket
       -i, --include <value> Include matching paths
       -x, --exclude <value> Exclude matching paths
+      -d, --debug           Enable debug logging
       -v, --verbose <value> Verbosity level (1-5)
   #+end_example
 

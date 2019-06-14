@@ -41,7 +41,7 @@ object LocalFileStream {
             .flatMap(lfs => acc.map(s => s ++ lfs)))
 
       for {
-        _ <- logger.info(s"- Entering: $file")
+        _ <- logger.debug(s"- Entering: $file")
         fs <- dirPaths(file)
         lfs <- recurse(fs)
         _ <- logger.debug(s"- Leaving : $file")
