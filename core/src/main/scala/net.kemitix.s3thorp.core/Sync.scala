@@ -36,7 +36,7 @@ object Sync {
 
     def copyUploadActions(s3Data: S3ObjectsData): M[Stream[S3Action]] =
       (for {
-        files <- findFiles(c.source, md5HashGenerator, logInfo)
+        files <- findFiles(c.source, md5HashGenerator)
         metaData <- metaData(s3Data, files)
         actions <- actions(metaData)
         s3Actions <- submit(actions)
