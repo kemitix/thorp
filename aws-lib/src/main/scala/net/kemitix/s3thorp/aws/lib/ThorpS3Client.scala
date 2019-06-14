@@ -39,7 +39,7 @@ class ThorpS3Client[M[_]: Monad](amazonS3Client: => AmazonS3,
 
   override def delete(bucket: Bucket,
                       remoteKey: RemoteKey)
-                     (implicit info: Int => String => M[Unit]): M[DeleteS3Action] =
+                     (implicit logger: Logger[M]): M[DeleteS3Action] =
     deleter.delete(bucket, remoteKey)
 
 }

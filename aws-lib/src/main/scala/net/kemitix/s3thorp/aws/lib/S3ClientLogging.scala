@@ -35,12 +35,12 @@ object S3ClientLogging {
 
   def logDeleteStart[M[_]: Monad](bucket: Bucket,
                      remoteKey: RemoteKey)
-                    (implicit info: Int => String => M[Unit]): M[Unit] =
-      info(1)(s"Delete: ${bucket.name}:${remoteKey.key}")
+                    (implicit logger: Logger[M]): M[Unit] =
+      logger.info(s"Delete: ${bucket.name}:${remoteKey.key}")
 
   def logDeleteFinish[M[_]: Monad](bucket: Bucket,
                       remoteKey: RemoteKey)
-                     (implicit info: Int => String => M[Unit]): M[Unit] =
-      info(2)(s"Deleted: ${bucket.name}:${remoteKey.key}")
+                     (implicit logger: Logger[M]): M[Unit] =
+      logger.info(s"Deleted: ${bucket.name}:${remoteKey.key}")
 
 }

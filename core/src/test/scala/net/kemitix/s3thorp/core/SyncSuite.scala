@@ -174,7 +174,7 @@ class SyncSuite
 
     override def delete(bucket: Bucket,
                         remoteKey: RemoteKey
-                       )(implicit info: Int => String => Id[Unit]): DeleteS3Action = {
+                       )(implicit logger: Logger[Id]): DeleteS3Action = {
       if (bucket == testBucket)
         deletionsRecord += remoteKey
       DeleteS3Action(remoteKey)

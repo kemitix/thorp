@@ -25,6 +25,6 @@ trait S3Client[M[_]] {
 
   def delete(bucket: Bucket,
              remoteKey: RemoteKey
-            )(implicit info: Int => String => M[Unit]): M[DeleteS3Action]
+            )(implicit logger: Logger[M]): M[DeleteS3Action]
 
 }
