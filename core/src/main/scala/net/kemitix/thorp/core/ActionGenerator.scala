@@ -1,5 +1,7 @@
 package net.kemitix.thorp.core
 
+import java.time.temporal.ChronoField
+
 import net.kemitix.thorp.core.Action.{DoNothing, ToCopy, ToUpload}
 import net.kemitix.thorp.domain._
 
@@ -8,6 +10,12 @@ object ActionGenerator {
   def createActions(s3MetaData: S3MetaData)
                    (implicit c: Config): Stream[Action] =
     s3MetaData match {
+
+      // last-modified flag is set, local file and remote key both exist, and last modified matches
+      case S3MetaData(localFile, _, Some(RemoteMetaData(remoteKey, _, lastModified)))
+        if c.lastModified &&
+          (lastModified matches localFile.file.lastModified)
+      => doNothing(c.bucket, remoteKey)
 
       // #1 local exists, remote exists, remote matches - do nothing
       case S3MetaData(localFile, _, Some(RemoteMetaData(remoteKey, remoteHash, _)))

@@ -20,6 +20,35 @@ class ActionGeneratorSuite
 
       def invoke(input: S3MetaData) = ActionGenerator.createActions(input).toList
 
+      describe("#0 local exists, remote exists, last modified matches") {
+        val remoteHash = MD5Hash("remote-hash")
+        val theFile = LocalFile.resolve("root-file", MD5HashData.rootHash, source, fileToKey)
+        val fileLastModified = theFile.file.lastModified
+        val when = Instant.ofEpochMilli(fileLastModified) // last modified matches
+        val remoteLastModified = LastModified(when)
+        val theRemoteMetadata = RemoteMetaData(theFile.remoteKey, remoteHash, remoteLastModified)
+        val input = S3MetaData(theFile, //local exists
+          matchByHash = Set(), // don't care if remote matches or not
+          matchByKey = Some(theRemoteMetadata) // remote exists
+        )
+        describe("last-modified flag is not set") {
+          val theConfig = config.copy(lastModified = false)
+          it ("upload") {
+            val expected = List(ToUpload(bucket, theFile))
+            val result = ActionGenerator.createActions(input)(theConfig).toList
+            assertResult(expected)(result)
+          }
+        }
+        describe("last-modified flag is set") {
+          val theConfig = config.copy(lastModified = true)
+          it ("do nothing") {
+            val expected = List(DoNothing(bucket, theFile.remoteKey))
+            val result = ActionGenerator.createActions(input)(theConfig).toList
+            assertResult(expected)(result)
+          }
+        }
+      }
+
       describe("#1 local exists, remote exists, remote matches - do nothing") {
         val theHash = MD5Hash("the-hash")
         val theFile = LocalFile.resolve("the-file", theHash, source, fileToKey)
