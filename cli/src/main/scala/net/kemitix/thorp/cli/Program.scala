@@ -12,7 +12,7 @@ object Program {
   def apply[M[_]: Monad](config: Config): M[ExitCode] = {
     implicit val logger: Logger[M] = new PrintLogger[M](config.debug)
     for {
-      _ <- logger.info("S3Thorp - hashed sync for s3")
+      _ <- logger.info("Thorp - hashed sync for cloud storage")
       _ <- Sync.run[M](config, S3ClientBuilder.defaultClient)
     } yield ExitCode.Success
   }
