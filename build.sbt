@@ -6,7 +6,7 @@ val commonSettings = Seq(
 )
 
 val applicationSettings = Seq(
-  name := "s3thorp",
+  name := "thorp",
 )
 val testDependencies = Seq(
   libraryDependencies ++= Seq(
