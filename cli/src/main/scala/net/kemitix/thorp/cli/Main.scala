@@ -4,7 +4,7 @@ import java.nio.file.Paths
 
 import cats.effect.ExitCase.{Canceled, Completed, Error}
 import cats.effect.{ExitCode, IO, IOApp}
-import net.kemitix.s3thorp.domain.Config
+import net.kemitix.thorp.domain.Config
 
 object Main extends IOApp {
 

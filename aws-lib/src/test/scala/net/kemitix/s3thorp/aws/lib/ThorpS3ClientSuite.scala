@@ -9,7 +9,7 @@ import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.{ListObjectsV2Request, ListObjectsV2Result, S3ObjectSummary}
 import com.amazonaws.services.s3.transfer.TransferManager
 import net.kemitix.s3thorp.core.Resource
-import net.kemitix.s3thorp.domain._
+import net.kemitix.thorp.domain._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.FunSpec
 

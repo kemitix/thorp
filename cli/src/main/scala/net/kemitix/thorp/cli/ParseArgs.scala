@@ -3,8 +3,8 @@ package net.kemitix.thorp.cli
 import java.io.File
 import java.nio.file.Paths
 
-import net.kemitix.s3thorp.domain.Filter.{Exclude, Include}
-import net.kemitix.s3thorp.domain.{Bucket, Config, RemoteKey}
+import net.kemitix.thorp.domain.Filter.{Exclude, Include}
+import net.kemitix.thorp.domain.{Bucket, Config, RemoteKey}
 import scopt.OParser
 
 object ParseArgs {

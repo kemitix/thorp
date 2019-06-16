@@ -3,7 +3,7 @@ package net.kemitix.s3thorp.core
 import java.io.File
 
 import cats.Id
-import net.kemitix.s3thorp.domain.{Config, LocalFile, Logger, MD5Hash}
+import net.kemitix.thorp.domain.{Config, LocalFile, Logger, MD5Hash}
 import org.scalatest.FunSpec
 
 class LocalFileStreamSuite extends FunSpec {

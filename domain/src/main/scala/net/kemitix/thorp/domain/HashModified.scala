@@ -1,4 +1,4 @@
-package net.kemitix.s3thorp.domain
+package net.kemitix.thorp.domain
 
 final case class HashModified(hash: MD5Hash,
                               modified: LastModified)

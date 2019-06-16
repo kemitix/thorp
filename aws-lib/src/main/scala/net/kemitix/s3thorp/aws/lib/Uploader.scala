@@ -10,7 +10,7 @@ import net.kemitix.s3thorp.aws.api.S3Action.{ErroredS3Action, UploadS3Action}
 import net.kemitix.s3thorp.aws.api.UploadEvent.{ByteTransferEvent, RequestEvent, TransferEvent}
 import net.kemitix.s3thorp.aws.api.{S3Action, UploadProgressListener}
 import net.kemitix.s3thorp.aws.lib.UploaderLogging.{logMultiPartUploadFinished, logMultiPartUploadStart}
-import net.kemitix.s3thorp.domain.{Bucket, LocalFile, Logger, MD5Hash, RemoteKey}
+import net.kemitix.thorp.domain._
 
 import scala.util.Try
 

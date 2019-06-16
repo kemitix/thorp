@@ -1,8 +1,8 @@
-package net.kemitix.s3thorp.domain
+package net.kemitix.thorp.domain
 
-import java.nio.file.{Path, Paths}
+import java.nio.file.Paths
 
-import net.kemitix.s3thorp.domain.Filter.{Exclude, Include}
+import net.kemitix.thorp.domain.Filter.{Exclude, Include}
 import org.scalatest.FunSpec
 
 class FiltersSuite extends FunSpec {

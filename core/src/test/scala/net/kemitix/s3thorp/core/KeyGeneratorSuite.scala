@@ -2,7 +2,7 @@ package net.kemitix.s3thorp.core
 
 import java.io.File
 
-import net.kemitix.s3thorp.domain.{Bucket, Config, RemoteKey}
+import net.kemitix.thorp.domain.{Bucket, Config, RemoteKey}
 import org.scalatest.FunSpec
 
 class KeyGeneratorSuite extends FunSpec {

@@ -5,7 +5,7 @@ import cats.implicits._
 import net.kemitix.s3thorp.aws.api.S3Action.DoNothingS3Action
 import net.kemitix.s3thorp.aws.api.{S3Action, S3Client, UploadProgressListener}
 import net.kemitix.s3thorp.core.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
-import net.kemitix.s3thorp.domain.{Config, Logger}
+import net.kemitix.thorp.domain.{Config, Logger}
 
 object ActionSubmitter {
 

@@ -9,7 +9,7 @@ import net.kemitix.s3thorp.core.ActionSubmitter.submitAction
 import net.kemitix.s3thorp.core.LocalFileStream.findFiles
 import net.kemitix.s3thorp.core.S3MetaDataEnricher.getMetadata
 import net.kemitix.s3thorp.core.SyncLogging.{logFileScan, logRunFinished, logRunStart}
-import net.kemitix.s3thorp.domain._
+import net.kemitix.thorp.domain._
 
 object Sync {
 

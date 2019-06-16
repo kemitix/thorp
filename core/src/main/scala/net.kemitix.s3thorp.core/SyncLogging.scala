@@ -4,7 +4,7 @@ import cats.Monad
 import cats.implicits._
 import net.kemitix.s3thorp.aws.api.S3Action
 import net.kemitix.s3thorp.aws.api.S3Action.{CopyS3Action, DeleteS3Action, ErroredS3Action, UploadS3Action}
-import net.kemitix.s3thorp.domain.{Config, Logger}
+import net.kemitix.thorp.domain.{Config, Logger}
 
 // Logging for the Sync class
 object SyncLogging {

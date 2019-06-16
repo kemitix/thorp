@@ -1,7 +1,7 @@
 package net.kemitix.thorp.cli
 
 import cats.Monad
-import net.kemitix.s3thorp.domain.Logger
+import net.kemitix.thorp.domain.Logger
 
 class PrintLogger[M[_]: Monad](isDebug: Boolean) extends Logger[M] {
 

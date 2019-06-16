@@ -1,6 +1,6 @@
 package net.kemitix.s3thorp.core
 
-import net.kemitix.s3thorp.domain._
+import net.kemitix.thorp.domain._
 
 object S3MetaDataEnricher {
 

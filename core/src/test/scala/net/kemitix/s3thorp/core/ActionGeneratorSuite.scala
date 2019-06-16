@@ -3,7 +3,7 @@ package net.kemitix.s3thorp.core
 import java.time.Instant
 
 import net.kemitix.s3thorp.core.Action.{DoNothing, ToCopy, ToUpload}
-import net.kemitix.s3thorp.domain._
+import net.kemitix.thorp.domain._
 import org.scalatest.FunSpec
 
 class ActionGeneratorSuite

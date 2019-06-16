@@ -1,7 +1,7 @@
 package net.kemitix.thorp.cli
 
 import net.kemitix.s3thorp.core.Resource
-import net.kemitix.s3thorp.domain.{Bucket, Config}
+import net.kemitix.thorp.domain.Config
 import org.scalatest.FunSpec
 
 import scala.util.Try

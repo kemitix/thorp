@@ -2,7 +2,7 @@ package net.kemitix.s3thorp.core
 
 import java.io.File
 
-import net.kemitix.s3thorp.domain.RemoteKey
+import net.kemitix.thorp.domain.RemoteKey
 
 object KeyGenerator {
 

@@ -9,7 +9,7 @@ import net.kemitix.s3thorp.aws.api.S3Action.UploadS3Action
 import net.kemitix.s3thorp.aws.api.UploadProgressListener
 import net.kemitix.s3thorp.core.KeyGenerator.generateKey
 import net.kemitix.s3thorp.core.Resource
-import net.kemitix.s3thorp.domain._
+import net.kemitix.thorp.domain._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.FunSpec
 

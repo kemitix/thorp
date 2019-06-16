@@ -5,7 +5,7 @@ import java.time.temporal.ChronoUnit
 import java.util.Date
 
 import com.amazonaws.services.s3.model.S3ObjectSummary
-import net.kemitix.s3thorp.domain.{KeyModified, LastModified, MD5Hash, RemoteKey}
+import net.kemitix.thorp.domain.{KeyModified, LastModified, MD5Hash, RemoteKey}
 import org.scalatest.FunSpec
 
 class S3ObjectsByHashSuite extends FunSpec {

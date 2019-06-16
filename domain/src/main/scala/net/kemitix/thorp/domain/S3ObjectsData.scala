@@ -1,4 +1,4 @@
-package net.kemitix.s3thorp.domain
+package net.kemitix.thorp.domain
 
 /**
   * A list of objects and their MD5 hash values.

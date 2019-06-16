@@ -1,7 +1,7 @@
 package net.kemitix.s3thorp.aws.api
 
 import net.kemitix.s3thorp.aws.api.S3Action.{CopyS3Action, DeleteS3Action}
-import net.kemitix.s3thorp.domain.{Bucket, LocalFile, Logger, MD5Hash, RemoteKey, S3ObjectsData}
+import net.kemitix.thorp.domain._
 
 trait S3Client[M[_]] {
 

@@ -7,7 +7,8 @@ import com.amazonaws.services.s3.model.{ListObjectsV2Request, S3ObjectSummary}
 import net.kemitix.s3thorp.aws.lib.S3ClientLogging.{logListObjectsFinish, logListObjectsStart}
 import net.kemitix.s3thorp.aws.lib.S3ObjectsByHash.byHash
 import net.kemitix.s3thorp.aws.lib.S3ObjectsByKey.byKey
-import net.kemitix.s3thorp.domain._
+import net.kemitix.thorp.domain
+import net.kemitix.thorp.domain.{Bucket, Logger, RemoteKey, S3ObjectsData}
 
 import scala.collection.JavaConverters._
 
@@ -54,7 +55,7 @@ class S3ClientObjectLister[M[_]: Monad](amazonS3: AmazonS3) {
       r = new ListObjectsV2Request().withBucketName(bucket.name).withPrefix(prefix.key)
       summaries <- fetch(r)
       _ <- logListObjectsFinish[M](bucket, prefix)
-    } yield S3ObjectsData(byHash(summaries), byKey(summaries))
+    } yield domain.S3ObjectsData(byHash(summaries), byKey(summaries))
   }
 
 }

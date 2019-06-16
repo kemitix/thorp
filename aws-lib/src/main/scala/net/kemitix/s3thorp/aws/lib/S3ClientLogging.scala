@@ -1,8 +1,7 @@
 package net.kemitix.s3thorp.aws.lib
 
 import cats.Monad
-import com.amazonaws.services.s3.model.PutObjectResult
-import net.kemitix.s3thorp.domain.{Bucket, LocalFile, Logger, RemoteKey}
+import net.kemitix.thorp.domain.{Bucket, Logger, RemoteKey}
 
 object S3ClientLogging {
 

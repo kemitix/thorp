@@ -7,8 +7,8 @@ import cats.Id
 import net.kemitix.s3thorp.aws.api.S3Action.{CopyS3Action, DeleteS3Action, UploadS3Action}
 import net.kemitix.s3thorp.aws.api.{S3Client, UploadProgressListener}
 import net.kemitix.s3thorp.core.MD5HashData.{leafHash, rootHash}
-import net.kemitix.s3thorp.domain.Filter.Exclude
-import net.kemitix.s3thorp.domain._
+import net.kemitix.thorp.domain.Filter.Exclude
+import net.kemitix.thorp.domain._
 import org.scalatest.FunSpec
 
 class SyncSuite

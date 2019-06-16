@@ -1,7 +1,7 @@
 package net.kemitix.s3thorp.aws.api
 
-import net.kemitix.s3thorp.aws.api.UploadEvent.{ByteTransferEvent, RequestEvent, TransferEvent}
-import net.kemitix.s3thorp.domain.LocalFile
+import net.kemitix.s3thorp.aws.api.UploadEvent.RequestEvent
+import net.kemitix.thorp.domain.LocalFile
 
 class UploadProgressListener(localFile: LocalFile)
   extends UploadProgressLogging {

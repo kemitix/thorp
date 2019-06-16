@@ -6,7 +6,8 @@ import java.nio.file.Path
 import cats.Monad
 import cats.implicits._
 import net.kemitix.s3thorp.core.KeyGenerator.generateKey
-import net.kemitix.s3thorp.domain.{Config, Filter, LocalFile, Logger, MD5Hash}
+import net.kemitix.thorp.domain
+import net.kemitix.thorp.domain._
 
 object LocalFileStream {
 
@@ -32,7 +33,7 @@ object LocalFileStream {
         file match {
           case f if f.isDirectory => loop(file)
           case _ => for(hash <- md5HashGenerator(file))
-            yield Stream(LocalFile(file, c.source, hash, generateKey(c.source, c.prefix)))
+            yield Stream(domain.LocalFile(file, c.source, hash, generateKey(c.source, c.prefix)))
         }
 
       def recurse(fs: Stream[File]): M[Stream[LocalFile]] =

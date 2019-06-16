@@ -5,7 +5,7 @@ import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.transfer.TransferManager
 import net.kemitix.s3thorp.aws.api.S3Action.{CopyS3Action, DeleteS3Action}
 import net.kemitix.s3thorp.aws.api.{S3Action, S3Client, UploadProgressListener}
-import net.kemitix.s3thorp.domain._
+import net.kemitix.thorp.domain._
 
 class ThorpS3Client[M[_]: Monad](amazonS3Client: => AmazonS3,
                     amazonS3TransferManager: => TransferManager)

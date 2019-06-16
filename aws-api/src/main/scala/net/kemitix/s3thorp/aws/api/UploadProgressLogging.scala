@@ -1,9 +1,9 @@
 package net.kemitix.s3thorp.aws.api
 
-import net.kemitix.s3thorp.aws.api.UploadEvent.{ByteTransferEvent, RequestEvent, TransferEvent}
-import net.kemitix.s3thorp.domain.Terminal.{clearLine, returnToPreviousLine}
-import net.kemitix.s3thorp.domain.{LocalFile, Terminal}
-import net.kemitix.s3thorp.domain.SizeTranslation.sizeInEnglish
+import net.kemitix.s3thorp.aws.api.UploadEvent.RequestEvent
+import net.kemitix.thorp.domain.SizeTranslation.sizeInEnglish
+import net.kemitix.thorp.domain.Terminal.{clearLine, returnToPreviousLine}
+import net.kemitix.thorp.domain.{LocalFile, Terminal}
 
 import scala.io.AnsiColor._
 

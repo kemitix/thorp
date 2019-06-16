@@ -5,7 +5,7 @@ import java.security.MessageDigest
 
 import cats.Monad
 import cats.implicits._
-import net.kemitix.s3thorp.domain.{Logger, MD5Hash}
+import net.kemitix.thorp.domain.{Logger, MD5Hash}
 
 import scala.collection.immutable.NumericRange
 

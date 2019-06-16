@@ -1,7 +1,7 @@
 package net.kemitix.s3thorp.aws.lib
 
 import com.amazonaws.services.s3.model.S3ObjectSummary
-import net.kemitix.s3thorp.domain.{HashModified, LastModified, MD5Hash, RemoteKey}
+import net.kemitix.thorp.domain.{HashModified, LastModified, MD5Hash, RemoteKey}
 
 object S3ObjectsByKey {
 

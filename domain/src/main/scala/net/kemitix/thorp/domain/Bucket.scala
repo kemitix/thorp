@@ -1,3 +1,3 @@
-package net.kemitix.s3thorp.domain
+package net.kemitix.thorp.domain
 
 final case class Bucket(name: String)

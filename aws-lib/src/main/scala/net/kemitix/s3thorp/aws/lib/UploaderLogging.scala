@@ -1,9 +1,9 @@
 package net.kemitix.s3thorp.aws.lib
 
 import cats.Monad
-import net.kemitix.s3thorp.domain.Terminal.clearLine
-import net.kemitix.s3thorp.domain.SizeTranslation.sizeInEnglish
-import net.kemitix.s3thorp.domain.{LocalFile, Logger}
+import net.kemitix.thorp.domain.SizeTranslation.sizeInEnglish
+import net.kemitix.thorp.domain.Terminal.clearLine
+import net.kemitix.thorp.domain.{LocalFile, Logger}
 
 object UploaderLogging {
 

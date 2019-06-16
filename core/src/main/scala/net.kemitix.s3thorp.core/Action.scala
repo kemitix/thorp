@@ -1,6 +1,6 @@
 package net.kemitix.s3thorp.core
 
-import net.kemitix.s3thorp.domain.{Bucket, LocalFile, MD5Hash, RemoteKey}
+import net.kemitix.thorp.domain.{Bucket, LocalFile, MD5Hash, RemoteKey}
 
 sealed trait Action {
   def bucket: Bucket

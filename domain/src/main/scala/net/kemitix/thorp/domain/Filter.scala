@@ -1,4 +1,4 @@
-package net.kemitix.s3thorp.domain
+package net.kemitix.thorp.domain
 
 import java.nio.file.Path
 import java.util.regex.Pattern

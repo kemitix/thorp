@@ -1,6 +1,6 @@
 package net.kemitix.s3thorp.core
 
-import net.kemitix.s3thorp.domain.MD5Hash
+import net.kemitix.thorp.domain.MD5Hash
 
 object MD5HashData {
 
