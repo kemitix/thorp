@@ -1,4 +1,4 @@
-package net.kemitix.s3thorp.cli
+package net.kemitix.thorp.cli
 
 import java.nio.file.Paths
 

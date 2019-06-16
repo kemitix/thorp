@@ -1,4 +1,4 @@
-package net.kemitix.s3thorp.cli
+package net.kemitix.thorp.cli
 
 import net.kemitix.s3thorp.core.Resource
 import net.kemitix.s3thorp.domain.{Bucket, Config}

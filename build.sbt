@@ -58,7 +58,7 @@ val catsEffectsSettings = Seq(
 
 lazy val cli = (project in file("cli"))
   .settings(commonSettings)
-  .settings(mainClass in assembly := Some("net.kemitix.s3thorp.cli.Main"))
+  .settings(mainClass in assembly := Some("net.kemitix.thorp.cli.Main"))
   .settings(applicationSettings)
   .settings(catsEffectsSettings)
   .aggregate(`aws-lib`, core, `aws-api`, domain)

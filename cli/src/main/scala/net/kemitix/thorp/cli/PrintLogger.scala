@@ -1,4 +1,4 @@
-package net.kemitix.s3thorp.cli
+package net.kemitix.thorp.cli
 
 import cats.Monad
 import net.kemitix.s3thorp.domain.Logger
