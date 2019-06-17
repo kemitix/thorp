@@ -10,7 +10,7 @@ import com.amazonaws.services.s3.transfer.{TransferManager, Upload}
 import net.kemitix.s3thorp.aws.api.S3Action.UploadS3Action
 import net.kemitix.s3thorp.aws.api.{S3Client, UploadProgressListener}
 import net.kemitix.s3thorp.aws.lib.MD5HashData.rootHash
-import net.kemitix.s3thorp.core.{KeyGenerator, Resource, S3MetaDataEnricher}
+import net.kemitix.thorp.core.{KeyGenerator, Resource, S3MetaDataEnricher}
 import net.kemitix.thorp.domain._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.FunSpec

@@ -1,6 +1,6 @@
-package net.kemitix.s3thorp.core
+package net.kemitix.thorp.core
 
-import net.kemitix.s3thorp.core.Action.{DoNothing, ToCopy, ToUpload}
+import net.kemitix.thorp.core.Action.{DoNothing, ToCopy, ToUpload}
 import net.kemitix.thorp.domain._
 
 object ActionGenerator {

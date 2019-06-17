@@ -1,14 +1,14 @@
-package net.kemitix.s3thorp.core
+package net.kemitix.thorp.core
 
 import cats.Monad
 import cats.implicits._
 import net.kemitix.s3thorp.aws.api.{S3Action, S3Client}
-import net.kemitix.s3thorp.core.Action.ToDelete
-import net.kemitix.s3thorp.core.ActionGenerator.createActions
-import net.kemitix.s3thorp.core.ActionSubmitter.submitAction
-import net.kemitix.s3thorp.core.LocalFileStream.findFiles
-import net.kemitix.s3thorp.core.S3MetaDataEnricher.getMetadata
-import net.kemitix.s3thorp.core.SyncLogging.{logFileScan, logRunFinished, logRunStart}
+import net.kemitix.thorp.core.Action.ToDelete
+import net.kemitix.thorp.core.ActionGenerator.createActions
+import net.kemitix.thorp.core.ActionSubmitter.submitAction
+import net.kemitix.thorp.core.LocalFileStream.findFiles
+import net.kemitix.thorp.core.S3MetaDataEnricher.getMetadata
+import net.kemitix.thorp.core.SyncLogging.{logFileScan, logRunFinished, logRunStart}
 import net.kemitix.thorp.domain._
 
 object Sync {

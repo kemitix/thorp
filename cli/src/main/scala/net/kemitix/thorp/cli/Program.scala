@@ -4,7 +4,7 @@ import cats.Monad
 import cats.effect.ExitCode
 import cats.implicits._
 import net.kemitix.s3thorp.aws.lib.S3ClientBuilder
-import net.kemitix.s3thorp.core.Sync
+import net.kemitix.thorp.core.Sync
 import net.kemitix.thorp.domain.{Config, Logger}
 
 object Program {

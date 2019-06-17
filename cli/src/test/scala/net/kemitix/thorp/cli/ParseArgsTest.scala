@@ -1,6 +1,6 @@
 package net.kemitix.thorp.cli
 
-import net.kemitix.s3thorp.core.Resource
+import net.kemitix.thorp.core.Resource
 import net.kemitix.thorp.domain.Config
 import org.scalatest.FunSpec
 

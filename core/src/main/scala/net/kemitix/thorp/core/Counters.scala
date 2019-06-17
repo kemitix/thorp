@@ -1,4 +1,4 @@
-package net.kemitix.s3thorp.core
+package net.kemitix.thorp.core
 
 final case class Counters(uploaded: Int = 0,
                           deleted: Int = 0,

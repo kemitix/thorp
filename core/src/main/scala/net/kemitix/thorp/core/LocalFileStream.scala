@@ -1,11 +1,11 @@
-package net.kemitix.s3thorp.core
+package net.kemitix.thorp.core
 
 import java.io.File
 import java.nio.file.Path
 
 import cats.Monad
 import cats.implicits._
-import net.kemitix.s3thorp.core.KeyGenerator.generateKey
+import net.kemitix.thorp.core.KeyGenerator.generateKey
 import net.kemitix.thorp.domain
 import net.kemitix.thorp.domain._
 

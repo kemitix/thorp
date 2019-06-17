@@ -1,4 +1,4 @@
-package net.kemitix.s3thorp.core
+package net.kemitix.thorp.core
 
 import java.io.{File, FileNotFoundException}
 

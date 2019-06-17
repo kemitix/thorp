@@ -1,8 +1,8 @@
-package net.kemitix.s3thorp.core
+package net.kemitix.thorp.core
 
 import java.time.Instant
 
-import net.kemitix.s3thorp.core.S3MetaDataEnricher.{getMetadata, getS3Status}
+import net.kemitix.thorp.core.S3MetaDataEnricher.{getMetadata, getS3Status}
 import net.kemitix.thorp.domain._
 import org.scalatest.FunSpec
 

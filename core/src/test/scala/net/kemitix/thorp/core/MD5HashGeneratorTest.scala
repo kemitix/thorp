@@ -1,7 +1,7 @@
-package net.kemitix.s3thorp.core
+package net.kemitix.thorp.core
 
 import cats.Id
-import net.kemitix.s3thorp.core.MD5HashData.rootHash
+import net.kemitix.thorp.core.MD5HashData.rootHash
 import net.kemitix.thorp.domain._
 import org.scalatest.FunSpec
 
