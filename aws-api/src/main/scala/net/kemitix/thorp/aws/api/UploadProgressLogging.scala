@@ -1,6 +1,6 @@
-package net.kemitix.s3thorp.aws.api
+package net.kemitix.thorp.aws.api
 
-import net.kemitix.s3thorp.aws.api.UploadEvent.RequestEvent
+import net.kemitix.thorp.aws.api.UploadEvent.RequestEvent
 import net.kemitix.thorp.domain.SizeTranslation.sizeInEnglish
 import net.kemitix.thorp.domain.Terminal.{clearLine, returnToPreviousLine}
 import net.kemitix.thorp.domain.{LocalFile, Terminal}

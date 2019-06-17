@@ -1,6 +1,6 @@
-package net.kemitix.s3thorp.aws.api
+package net.kemitix.thorp.aws.api
 
-import net.kemitix.s3thorp.aws.api.UploadEvent.RequestEvent
+import net.kemitix.thorp.aws.api.UploadEvent.RequestEvent
 import net.kemitix.thorp.domain.LocalFile
 
 class UploadProgressListener(localFile: LocalFile)

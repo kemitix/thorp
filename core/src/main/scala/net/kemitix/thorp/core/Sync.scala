@@ -2,7 +2,7 @@ package net.kemitix.thorp.core
 
 import cats.Monad
 import cats.implicits._
-import net.kemitix.s3thorp.aws.api.{S3Action, S3Client}
+import net.kemitix.thorp.aws.api.{S3Action, S3Client}
 import net.kemitix.thorp.core.Action.ToDelete
 import net.kemitix.thorp.core.ActionGenerator.createActions
 import net.kemitix.thorp.core.ActionSubmitter.submitAction

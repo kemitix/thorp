@@ -5,8 +5,8 @@ import java.time.Instant
 import cats.Id
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.transfer._
-import net.kemitix.s3thorp.aws.api.S3Action.UploadS3Action
-import net.kemitix.s3thorp.aws.api.UploadProgressListener
+import net.kemitix.thorp.aws.api.S3Action.UploadS3Action
+import net.kemitix.thorp.aws.api.UploadProgressListener
 import net.kemitix.thorp.core.KeyGenerator.generateKey
 import net.kemitix.thorp.core.Resource
 import net.kemitix.thorp.domain._

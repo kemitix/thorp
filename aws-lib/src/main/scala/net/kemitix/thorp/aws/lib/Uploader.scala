@@ -6,9 +6,9 @@ import com.amazonaws.event.{ProgressEvent, ProgressEventType, ProgressListener}
 import com.amazonaws.services.s3.model.PutObjectRequest
 import com.amazonaws.services.s3.transfer.model.UploadResult
 import com.amazonaws.services.s3.transfer.{TransferManager => AmazonTransferManager}
-import net.kemitix.s3thorp.aws.api.S3Action.{ErroredS3Action, UploadS3Action}
-import net.kemitix.s3thorp.aws.api.UploadEvent.{ByteTransferEvent, RequestEvent, TransferEvent}
-import net.kemitix.s3thorp.aws.api.{S3Action, UploadProgressListener}
+import net.kemitix.thorp.aws.api.S3Action.{ErroredS3Action, UploadS3Action}
+import net.kemitix.thorp.aws.api.UploadEvent.{ByteTransferEvent, RequestEvent, TransferEvent}
+import net.kemitix.thorp.aws.api.{S3Action, UploadProgressListener}
 import net.kemitix.thorp.aws.lib.UploaderLogging.{logMultiPartUploadFinished, logMultiPartUploadStart}
 import net.kemitix.thorp.domain._
 

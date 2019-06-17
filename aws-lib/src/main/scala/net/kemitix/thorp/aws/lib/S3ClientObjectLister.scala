@@ -5,6 +5,8 @@ import cats.implicits._
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.{ListObjectsV2Request, S3ObjectSummary}
 import net.kemitix.thorp.aws.lib.S3ClientLogging.{logListObjectsFinish, logListObjectsStart}
+import net.kemitix.thorp.aws.lib.S3ObjectsByHash.byHash
+import net.kemitix.thorp.aws.lib.S3ObjectsByKey.byKey
 import net.kemitix.thorp.domain
 import net.kemitix.thorp.domain.{Bucket, Logger, RemoteKey, S3ObjectsData}
 

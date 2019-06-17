@@ -4,7 +4,7 @@ import cats.Monad
 import cats.implicits._
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.DeleteObjectRequest
-import net.kemitix.s3thorp.aws.api.S3Action.DeleteS3Action
+import net.kemitix.thorp.aws.api.S3Action.DeleteS3Action
 import net.kemitix.thorp.aws.lib.S3ClientLogging.{logDeleteFinish, logDeleteStart}
 import net.kemitix.thorp.domain.{Bucket, Logger, RemoteKey}
 
