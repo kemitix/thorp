@@ -1,4 +1,4 @@
-package net.kemitix.s3thorp.aws.lib
+package net.kemitix.thorp.aws.lib
 
 import cats.Monad
 import cats.implicits._
@@ -9,7 +9,7 @@ import com.amazonaws.services.s3.transfer.{TransferManager => AmazonTransferMana
 import net.kemitix.s3thorp.aws.api.S3Action.{ErroredS3Action, UploadS3Action}
 import net.kemitix.s3thorp.aws.api.UploadEvent.{ByteTransferEvent, RequestEvent, TransferEvent}
 import net.kemitix.s3thorp.aws.api.{S3Action, UploadProgressListener}
-import net.kemitix.s3thorp.aws.lib.UploaderLogging.{logMultiPartUploadFinished, logMultiPartUploadStart}
+import net.kemitix.thorp.aws.lib.UploaderLogging.{logMultiPartUploadFinished, logMultiPartUploadStart}
 import net.kemitix.thorp.domain._
 
 import scala.util.Try

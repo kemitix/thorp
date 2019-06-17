@@ -1,11 +1,11 @@
-package net.kemitix.s3thorp.aws.lib
+package net.kemitix.thorp.aws.lib
 
 import cats.Monad
 import cats.implicits._
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.CopyObjectRequest
 import net.kemitix.s3thorp.aws.api.S3Action.CopyS3Action
-import net.kemitix.s3thorp.aws.lib.S3ClientLogging.{logCopyFinish, logCopyStart}
+import net.kemitix.thorp.aws.lib.S3ClientLogging.{logCopyFinish, logCopyStart}
 import net.kemitix.thorp.domain.{Bucket, Logger, MD5Hash, RemoteKey}
 
 class S3ClientCopier[M[_]: Monad](amazonS3: AmazonS3) {

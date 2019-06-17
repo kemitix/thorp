@@ -3,7 +3,7 @@ package net.kemitix.thorp.cli
 import cats.Monad
 import cats.effect.ExitCode
 import cats.implicits._
-import net.kemitix.s3thorp.aws.lib.S3ClientBuilder
+import net.kemitix.thorp.aws.lib.S3ClientBuilder
 import net.kemitix.thorp.core.Sync
 import net.kemitix.thorp.domain.{Config, Logger}
 

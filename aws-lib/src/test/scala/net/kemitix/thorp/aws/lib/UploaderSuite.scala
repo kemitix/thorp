@@ -1,4 +1,4 @@
-package net.kemitix.s3thorp.aws.lib
+package net.kemitix.thorp.aws.lib
 
 import java.time.Instant
 

@@ -1,4 +1,4 @@
-package net.kemitix.s3thorp.aws.lib
+package net.kemitix.thorp.aws.lib
 
 import cats.Monad
 import com.amazonaws.services.s3.transfer.{TransferManager, TransferManagerBuilder}

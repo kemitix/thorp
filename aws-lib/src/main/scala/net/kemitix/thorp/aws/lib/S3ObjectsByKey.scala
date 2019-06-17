@@ -1,4 +1,4 @@
-package net.kemitix.s3thorp.aws.lib
+package net.kemitix.thorp.aws.lib
 
 import com.amazonaws.services.s3.model.S3ObjectSummary
 import net.kemitix.thorp.domain.{HashModified, LastModified, MD5Hash, RemoteKey}
