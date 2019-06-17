@@ -13,8 +13,8 @@ object ParseArgs {
     val parserBuilder = OParser.builder[Config]
     import parserBuilder._
     OParser.sequence(
-      programName("s3thorp"),
-      head("s3thorp"),
+      programName("thorp"),
+      head("thorp"),
       opt[String]('s', "source")
         .action((str, c) => c.copy(source = Paths.get(str).toFile))
         .validate(s => if (new File(s).isDirectory) Right(()) else Left("Source is not a directory"))
