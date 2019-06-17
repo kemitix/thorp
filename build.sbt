@@ -6,7 +6,7 @@ val commonSettings = Seq(
 )
 
 val applicationSettings = Seq(
-  name := "s3thorp",
+  name := "thorp",
 )
 val testDependencies = Seq(
   libraryDependencies ++= Seq(
@@ -58,7 +58,7 @@ val catsEffectsSettings = Seq(
 
 lazy val cli = (project in file("cli"))
   .settings(commonSettings)
-  .settings(mainClass in assembly := Some("net.kemitix.s3thorp.cli.Main"))
+  .settings(mainClass in assembly := Some("net.kemitix.thorp.cli.Main"))
   .settings(applicationSettings)
   .settings(catsEffectsSettings)
   .aggregate(`aws-lib`, core, `aws-api`, domain)

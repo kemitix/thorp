@@ -1,8 +1,8 @@
-* s3thorp
+* thorp
 
 Synchronisation of files with S3 using the hash of the file contents.
 
-[[https://www.codacy.com/app/kemitix/s3thorp][file:https://img.shields.io/codacy/grade/14ea6ad0825249c994a27a82d3485180.svg?style=for-the-badge]]
+[[https://www.codacy.com/app/kemitix/thorp][file:https://img.shields.io/codacy/grade/14ea6ad0825249c994a27a82d3485180.svg?style=for-the-badge]]
 
 Originally based on Alex Kudlick's [[https://github.com/akud/aws-s3-sync-by-hash][aws-s3-sync-by-hash]].
 
@@ -13,8 +13,8 @@ hash of the file contents.
 * Usage
 
   #+begin_example
-    s3thorp
-    Usage: s3thorp [options]
+    thorp
+    Usage: thorp [options]
 
       -s, --source <value>  Source directory to sync to S3
       -b, --bucket <value>  S3 bucket name
@@ -46,8 +46,8 @@ When considering a local file, the following table governs what should happen:
 To build as an executable jar, perform `sbt assembly`
 
 This will create the file
-`cli/target/scala-2.12/s3thorp-assembly-$VERSION.jar` (where $VERSION
+`cli/target/scala-2.12/thorp-assembly-$VERSION.jar` (where $VERSION
 is substituted)
 
-Copy and rename this file as `s3thorp.jar` into the same directory as
-the `bin/s3throp` shell script.
+Copy and rename this file as `thorp.jar` into the same directory as
+the `bin/throp` shell script.
