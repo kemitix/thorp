@@ -13,11 +13,11 @@ import net.kemitix.thorp.domain._
 
 object Sync {
 
-  def run[M[_]: Monad](config: Config,
+  def run[M[_]: Monad](cliConfig: Config,
                        s3Client: S3Client[M])
                       (implicit logger: Logger[M]): M[Unit] = {
 
-    implicit val c: Config = config
+    implicit val c: Config = cliConfig
 
     def metaData(s3Data: S3ObjectsData, sFiles: Stream[LocalFile]) =
       Monad[M].pure(sFiles.map(file => getMetadata(file, s3Data)))
