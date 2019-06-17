@@ -3,6 +3,7 @@ package net.kemitix.s3thorp.domain
 import java.time.Instant
 import java.time.temporal.ChronoField
 
+import net.kemitix.thorp.domain.LastModified
 import org.scalatest.FunSpec
 
 class LastModifiedTest extends FunSpec {
