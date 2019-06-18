@@ -11,13 +11,31 @@ import net.kemitix.thorp.core.S3MetaDataEnricher.getMetadata
 import net.kemitix.thorp.core.SyncLogging.{logFileScan, logRunFinished, logRunStart}
 import net.kemitix.thorp.domain._
 
-object Sync {
+trait Sync {
+
+  def errorMessages(errors: List[ConfigValidation]): List[String] = {
+    for {
+      errorMessages <- errors.map(cv => cv.errorMessage)
+    } yield errorMessages
+  }
+
+  def apply[M[_]: Monad](s3Client: S3Client[M])
+                        (configOptions: Seq[ConfigOption])
+                        (implicit defaultLogger: Logger[M]): M[Either[List[String], Unit]] =
+    ConfigurationBuilder(configOptions) match {
+      case Left(errors) => Monad[M].pure(Left(errorMessages(errors.toList)))
+      case Right(config) =>
+        for {
+          _ <- Sync.run[M](config, s3Client, defaultLogger.withDebug(config.debug))
+        } yield Right(())
+    }
 
   def run[M[_]: Monad](cliConfig: Config,
-                       s3Client: S3Client[M])
-                      (implicit logger: Logger[M]): M[Unit] = {
+                       s3Client: S3Client[M],
+                       logger: Logger[M]): M[Unit] = {
 
     implicit val c: Config = cliConfig
+    implicit val l: Logger[M] = logger
 
     def metaData(s3Data: S3ObjectsData, sFiles: Stream[LocalFile]) =
       Monad[M].pure(sFiles.map(file => getMetadata(file, s3Data)))
@@ -56,5 +74,6 @@ object Sync {
       _ <- logRunFinished[M](copyUploadActions ++ deleteActions)
     } yield ()
   }
-
 }
+
+object Sync extends Sync
