@@ -23,7 +23,6 @@ object Program {
       case Right(config) =>
         implicit val logger: Logger[M] = new PrintLogger[M](config.debug)
         for {
-          _ <- logger.info("Thorp - hashed sync for cloud storage")
           _ <- Sync.run[M](config, S3ClientBuilder.defaultClient)
         } yield ExitCode.Success
     }
