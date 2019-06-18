@@ -8,12 +8,9 @@ import net.kemitix.thorp.domain.Config
 
 object Main extends IOApp {
 
-  val defaultConfig: Config =
-    Config(source = Paths.get(".").toFile)
-
   override def run(args: List[String]): IO[ExitCode] = {
     val exitCaseLogger = new PrintLogger[IO](false)
-    ParseArgs(args, defaultConfig)
+    ParseArgs(args)
       .map(Program[IO])
       .getOrElse(IO(ExitCode.Error))
       .guaranteeCase {
