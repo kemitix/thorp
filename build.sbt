@@ -56,6 +56,9 @@ val catsEffectsSettings = Seq(
 
 // cli -> thorp-lib -> aws-lib -> core -> aws-api -> domain
 
+lazy val root = (project in file("."))
+  .settings(commonSettings)
+
 lazy val cli = (project in file("cli"))
   .settings(commonSettings)
   .settings(mainClass in assembly := Some("net.kemitix.thorp.cli.Main"))
