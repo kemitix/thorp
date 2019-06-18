@@ -15,4 +15,6 @@ class PrintLogger[M[_]: Monad](isDebug: Boolean = false) extends Logger[M] {
 
   override def error(message: String): M[Unit] = Monad[M].pure(println(s"[ ERROR] $message"))
 
+  override def withDebug(debug: Boolean): Logger[M] = if (isDebug == debug) this else new PrintLogger[M](debug)
+
 }

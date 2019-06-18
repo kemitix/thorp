@@ -13,4 +13,6 @@ class DummyLogger[M[_]: Monad] extends Logger[M] {
 
   override def error(message: String): M[Unit] = Monad[M].unit
 
+  override def withDebug(debug: Boolean): Logger[M] = this
+
 }
