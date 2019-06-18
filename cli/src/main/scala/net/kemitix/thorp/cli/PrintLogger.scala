@@ -3,7 +3,7 @@ package net.kemitix.thorp.cli
 import cats.Monad
 import net.kemitix.thorp.domain.Logger
 
-class PrintLogger[M[_]: Monad](isDebug: Boolean) extends Logger[M] {
+class PrintLogger[M[_]: Monad](isDebug: Boolean = false) extends Logger[M] {
 
   override def debug(message: => String): M[Unit] =
     if (isDebug) Monad[M].pure(println(s"[ DEBUG] $message"))
