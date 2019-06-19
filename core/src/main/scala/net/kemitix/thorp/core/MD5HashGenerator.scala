@@ -3,21 +3,20 @@ package net.kemitix.thorp.core
 import java.io.{File, FileInputStream}
 import java.security.MessageDigest
 
-import cats.Monad
-import cats.implicits._
+import cats.effect.IO
 import net.kemitix.thorp.domain.{Logger, MD5Hash}
 
 import scala.collection.immutable.NumericRange
 
 object MD5HashGenerator {
 
-  def md5File[M[_]: Monad](file: File)
-                          (implicit logger: Logger[M]): M[MD5Hash] = {
+  def md5File(file: File)
+             (implicit logger: Logger): IO[MD5Hash] = {
 
     val maxBufferSize = 8048
     val defaultBuffer = new Array[Byte](maxBufferSize)
-    def openFile = Monad[M].pure(new FileInputStream(file))
-    def closeFile = {fis: FileInputStream => Monad[M].pure(fis.close())}
+    def openFile = IO.pure(new FileInputStream(file))
+    def closeFile = {fis: FileInputStream => IO(fis.close())}
 
     def nextChunkSize(currentOffset: Long) = {
       // a value between 1 and maxBufferSize
@@ -36,7 +35,7 @@ object MD5HashGenerator {
     }
 
     def digestFile(fis: FileInputStream) =
-      Monad[M].pure {
+      IO {
         val md5 = MessageDigest getInstance "MD5"
         NumericRange(0, file.length, maxBufferSize)
           .foreach { currentOffset => {
@@ -46,7 +45,7 @@ object MD5HashGenerator {
         (md5.digest map ("%02x" format _)).mkString
       }
 
-    def readFile: M[String] =
+    def readFile: IO[String] =
       for {
         fis <- openFile
         md5 <- digestFile(fis)

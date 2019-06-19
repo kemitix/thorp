@@ -1,6 +1,5 @@
 package net.kemitix.thorp.cli
 
-import java.io.File
 import java.nio.file.Paths
 
 import net.kemitix.thorp.core.ConfigOption

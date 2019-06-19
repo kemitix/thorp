@@ -3,7 +3,7 @@ package net.kemitix.thorp.core
 import java.io.File
 import java.time.Instant
 
-import cats.Id
+import cats.effect.IO
 import net.kemitix.thorp.aws.api.S3Action.{CopyS3Action, DeleteS3Action, UploadS3Action}
 import net.kemitix.thorp.aws.api.{S3Client, UploadProgressListener}
 import net.kemitix.thorp.core.MD5HashData.{leafHash, rootHash}
@@ -17,7 +17,7 @@ class SyncSuite
   private val source = Resource(this, "upload")
   private val prefix = RemoteKey("prefix")
   val config = Config(Bucket("bucket"), prefix, source = source)
-  implicit private val logger: Logger[Id] = new DummyLogger[Id]
+  implicit private val logger: Logger = new DummyLogger
   private val lastModified = LastModified(Instant.now)
 
   def putObjectRequest(bucket: Bucket, remoteKey: RemoteKey, localFile: LocalFile): (String, String, File) =
@@ -32,7 +32,7 @@ class SyncSuite
       val s3Client = new RecordingClient(testBucket, S3ObjectsData(
         byHash = Map(),
         byKey = Map()))
-      Sync.run(config, s3Client)
+      Sync.run(config, s3Client, logger)
       it("uploads all files") {
         val expectedUploads = Map(
           "subdir/leaf-file" -> leafRemoteKey,
@@ -58,7 +58,7 @@ class SyncSuite
           RemoteKey("prefix/root-file") -> HashModified(rootHash, lastModified),
           RemoteKey("prefix/subdir/leaf-file") -> HashModified(leafHash, lastModified)))
       val s3Client = new RecordingClient(testBucket, s3ObjectsData)
-      Sync.run(config, s3Client)
+      Sync.run(config, s3Client, logger)
       it("uploads nothing") {
         val expectedUploads = Map()
         assertResult(expectedUploads)(s3Client.uploadsRecord)
@@ -82,7 +82,7 @@ class SyncSuite
           RemoteKey("prefix/root-file-old") -> HashModified(rootHash, lastModified),
           RemoteKey("prefix/subdir/leaf-file") -> HashModified(leafHash, lastModified)))
       val s3Client = new RecordingClient(testBucket, s3ObjectsData)
-      Sync.run(config, s3Client)
+      Sync.run(config, s3Client, logger)
       it("uploads nothing") {
         val expectedUploads = Map()
         assertResult(expectedUploads)(s3Client.uploadsRecord)
@@ -110,7 +110,7 @@ class SyncSuite
         byKey = Map(
           deletedKey -> HashModified(deletedHash, lastModified)))
       val s3Client = new RecordingClient(testBucket, s3ObjectsData)
-      Sync.run(config, s3Client)
+      Sync.run(config, s3Client, logger)
       it("deleted key") {
         val expectedDeletions = Set(deletedKey)
         assertResult(expectedDeletions)(s3Client.deletionsRecord)
@@ -120,7 +120,7 @@ class SyncSuite
       val config: Config = Config(Bucket("bucket"), prefix, source = source, filters = List(Exclude("leaf")))
       val s3ObjectsData = S3ObjectsData(Map(), Map())
       val s3Client = new RecordingClient(testBucket, s3ObjectsData)
-      Sync.run(config, s3Client)
+      Sync.run(config, s3Client, logger)
       it("is not uploaded") {
         val expectedUploads = Map(
           "root-file" -> rootRemoteKey
@@ -132,7 +132,7 @@ class SyncSuite
 
   class RecordingClient(testBucket: Bucket,
                         s3ObjectsData: S3ObjectsData)
-    extends S3Client[Id] {
+    extends S3Client {
 
     var uploadsRecord: Map[String, RemoteKey] = Map()
     var copiesRecord: Map[RemoteKey, RemoteKey] = Map()
@@ -140,8 +140,8 @@ class SyncSuite
 
     override def listObjects(bucket: Bucket,
                              prefix: RemoteKey)
-                            (implicit logger: Logger[Id]): S3ObjectsData =
-      s3ObjectsData
+                            (implicit logger: Logger): IO[S3ObjectsData] =
+      IO.pure(s3ObjectsData)
 
     override def upload(localFile: LocalFile,
                         bucket: Bucket,
@@ -149,28 +149,28 @@ class SyncSuite
                         multiPartThreshold: Long,
                         tryCount: Int,
                         maxRetries: Int)
-                       (implicit logger: Logger[Id]): UploadS3Action = {
+                       (implicit logger: Logger): IO[UploadS3Action] = {
       if (bucket == testBucket)
         uploadsRecord += (localFile.relative.toString -> localFile.remoteKey)
-      UploadS3Action(localFile.remoteKey, MD5Hash("some hash value"))
+      IO.pure(UploadS3Action(localFile.remoteKey, MD5Hash("some hash value")))
     }
 
     override def copy(bucket: Bucket,
                       sourceKey: RemoteKey,
                       hash: MD5Hash,
                       targetKey: RemoteKey
-                     )(implicit logger: Logger[Id]): CopyS3Action = {
+                     )(implicit logger: Logger): IO[CopyS3Action] = {
       if (bucket == testBucket)
         copiesRecord += (sourceKey -> targetKey)
-      CopyS3Action(targetKey)
+      IO.pure(CopyS3Action(targetKey))
     }
 
     override def delete(bucket: Bucket,
                         remoteKey: RemoteKey
-                       )(implicit logger: Logger[Id]): DeleteS3Action = {
+                       )(implicit logger: Logger): IO[DeleteS3Action] = {
       if (bucket == testBucket)
         deletionsRecord += remoteKey
-      DeleteS3Action(remoteKey)
+      IO.pure(DeleteS3Action(remoteKey))
     }
   }
 }

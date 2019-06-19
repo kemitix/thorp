@@ -1,15 +1,17 @@
 package net.kemitix.thorp.domain
 
-trait Logger[M[_]] {
+import cats.effect.IO
+
+trait Logger {
 
   // returns an instance of Logger with debug set as indicated
   // where the current Logger already matches this state, then
   // it returns itself, unmodified
-  def withDebug(debug: Boolean): Logger[M]
+  def withDebug(debug: Boolean): Logger
 
-  def debug(message: => String): M[Unit]
-  def info(message: => String): M[Unit]
-  def warn(message: String): M[Unit]
-  def error(message: String): M[Unit]
+  def debug(message: => String): IO[Unit]
+  def info(message: => String): IO[Unit]
+  def warn(message: String): IO[Unit]
+  def error(message: String): IO[Unit]
 
 }

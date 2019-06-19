@@ -1,7 +1,6 @@
 package net.kemitix.thorp.core
 
-import cats.Monad
-import cats.implicits._
+import cats.effect.IO
 import net.kemitix.thorp.aws.api.S3Action
 import net.kemitix.thorp.aws.api.S3Action.{CopyS3Action, DeleteS3Action, ErroredS3Action, UploadS3Action}
 import net.kemitix.thorp.domain.{Config, Logger}
@@ -9,17 +8,17 @@ import net.kemitix.thorp.domain.{Config, Logger}
 // Logging for the Sync class
 object SyncLogging {
 
-  def logRunStart[M[_]: Monad](implicit c: Config,
-                               logger: Logger[M]): M[Unit] =
+  def logRunStart(implicit c: Config,
+                  logger: Logger): IO[Unit] =
     logger.info(s"Bucket: ${c.bucket.name}, Prefix: ${c.prefix.key}, Source: ${c.source}, ")
 
-  def logFileScan[M[_]: Monad](implicit c: Config,
-                               logger: Logger[M]): M[Unit] =
+  def logFileScan(implicit c: Config,
+                  logger: Logger): IO[Unit] =
     logger.info(s"Scanning local files: ${c.source}...")
 
-  def logRunFinished[M[_]: Monad](actions: Stream[S3Action])
-                                 (implicit c: Config,
-                                  logger: Logger[M]): M[Unit] = {
+  def logRunFinished(actions: Stream[S3Action])
+                    (implicit c: Config,
+                     logger: Logger): IO[Unit] = {
     val counters = actions.foldLeft(Counters())(countActivities)
     for {
       _ <- logger.info(s"Uploaded ${counters.uploaded} files")

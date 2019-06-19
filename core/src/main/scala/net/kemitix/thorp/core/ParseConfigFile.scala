@@ -4,7 +4,7 @@ import java.nio.file.{Files, Path, Paths}
 import java.util.regex.Pattern
 
 import cats.effect.IO
-import net.kemitix.thorp.core.ConfigOption.{Bucket, Debug, Exclude, Include, Prefix, Source}
+import net.kemitix.thorp.core.ConfigOption._
 
 import scala.collection.JavaConverters._
 

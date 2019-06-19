@@ -1,13 +1,14 @@
 package net.kemitix.thorp.aws.api
 
+import cats.effect.IO
 import net.kemitix.thorp.aws.api.S3Action.{CopyS3Action, DeleteS3Action}
 import net.kemitix.thorp.domain._
 
-trait S3Client[M[_]] {
+trait S3Client {
 
   def listObjects(bucket: Bucket,
                   prefix: RemoteKey
-                 )(implicit logger: Logger[M]): M[S3ObjectsData]
+                 )(implicit logger: Logger): IO[S3ObjectsData]
 
   def upload(localFile: LocalFile,
              bucket: Bucket,
@@ -15,16 +16,16 @@ trait S3Client[M[_]] {
              multiPartThreshold: Long,
              tryCount: Int,
              maxRetries: Int)
-            (implicit logger: Logger[M]): M[S3Action]
+            (implicit logger: Logger): IO[S3Action]
 
   def copy(bucket: Bucket,
            sourceKey: RemoteKey,
            hash: MD5Hash,
            targetKey: RemoteKey
-          )(implicit logger: Logger[M]): M[CopyS3Action]
+          )(implicit logger: Logger): IO[CopyS3Action]
 
   def delete(bucket: Bucket,
              remoteKey: RemoteKey
-            )(implicit logger: Logger[M]): M[DeleteS3Action]
+            )(implicit logger: Logger): IO[DeleteS3Action]
 
 }

@@ -4,7 +4,8 @@ import java.io.File
 import java.nio.file.Paths
 
 import cats.data.NonEmptyChain
-import net.kemitix.thorp.core.ConfigValidator._
+import cats.effect.IO
+import net.kemitix.thorp.core.ConfigValidator.validateConfig
 import net.kemitix.thorp.domain.Config
 
 /**
@@ -17,26 +18,29 @@ trait ConfigurationBuilder {
 
   private val defaultConfig: Config = Config(source = pwdFile)
 
-  def apply(priorityOptions: Seq[ConfigOption]): Either[NonEmptyChain[ConfigValidation], Config] =
-    validateConfig(buildConfig(collectConfigOptions(priorityOptions))).toEither
+  def apply(priorityOptions: Seq[ConfigOption]): IO[Either[NonEmptyChain[ConfigValidation], Config]] = {
+    val source = findSource(priorityOptions)
+    for {
+      options <- sourceOptions(source)
+      collected = priorityOptions ++ options
+      config = buildConfig(collected)
+    } yield validateConfig(config).toEither
+  }
 
-  private def buildConfig(configOptions: Seq[ConfigOption]) =
+  private def findSource(priorityOptions: Seq[ConfigOption]): File =
+    priorityOptions.foldRight(pwdFile)((co, f) => co match {
+      case ConfigOption.Source(source) => source.toFile
+      case _ => f
+    })
+
+  private def sourceOptions(source: File): IO[Seq[ConfigOption]] =
+    readFile(source, ".thorp.conf")
+
+  private def readFile(source: File, filename: String): IO[Seq[ConfigOption]] =
+    ParseConfigFile(source.toPath.resolve(filename))
+
+  private def buildConfig(configOptions: Seq[ConfigOption]): Config =
     configOptions.foldRight(defaultConfig)((co, c) => co.update(c))
-
-  private def collectConfigOptions(priorityOptions: Seq[ConfigOption]) =
-    priorityOptions ++ sourceDirConfigOptions(findSource(priorityOptions))
-
-  def findSource(priorityOptions: Seq[ConfigOption]): File =
-    (priorityOptions flatMap {
-      case ConfigOption.Source(source) => Option(source.toFile)
-      case _ => None
-    }).headOption.getOrElse(pwdFile)
-
-  def sourceDirConfigOptions(source: File): Seq[ConfigOption] =
-    readOptionsFromFile(source, ".thorp.yaml")
-
-  def readOptionsFromFile(source: File, filename: String): Seq[ConfigOption] =
-    ParseConfigFile(source.toPath.resolve(filename).toFile)
 }
 
 object ConfigurationBuilder extends ConfigurationBuilder

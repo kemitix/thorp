@@ -2,7 +2,6 @@ package net.kemitix.thorp.aws.lib
 
 import java.time.Instant
 
-import cats.Id
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.transfer._
 import net.kemitix.thorp.aws.api.S3Action.UploadS3Action
@@ -20,7 +19,7 @@ class UploaderSuite
   private val source = Resource(this, ".")
   private val prefix = RemoteKey("prefix")
   implicit private val config: Config = Config(Bucket("bucket"), prefix, source = source)
-  implicit private val implLogger: Logger[Id] = new DummyLogger[Id]
+  implicit private val implLogger: Logger = new DummyLogger
   private val fileToKey = generateKey(config.source, config.prefix) _
   val lastModified = LastModified(Instant.now())
 

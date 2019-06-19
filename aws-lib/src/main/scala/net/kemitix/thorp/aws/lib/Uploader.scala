@@ -1,7 +1,6 @@
 package net.kemitix.thorp.aws.lib
 
-import cats.Monad
-import cats.implicits._
+import cats.effect.IO
 import com.amazonaws.event.{ProgressEvent, ProgressEventType, ProgressListener}
 import com.amazonaws.services.s3.model.PutObjectRequest
 import com.amazonaws.services.s3.transfer.model.UploadResult
@@ -14,7 +13,7 @@ import net.kemitix.thorp.domain._
 
 import scala.util.Try
 
-class Uploader[M[_]: Monad](transferManager: => AmazonTransferManager) {
+class Uploader(transferManager: => AmazonTransferManager) {
 
   def accepts(localFile: LocalFile)
              (implicit multiPartThreshold: Long): Boolean =
@@ -26,11 +25,11 @@ class Uploader[M[_]: Monad](transferManager: => AmazonTransferManager) {
              multiPartThreshold: Long,
              tryCount: Int,
              maxRetries: Int)
-            (implicit logger: Logger[M]): M[S3Action] =
+            (implicit logger: Logger): IO[S3Action] =
     for {
-      _ <- logMultiPartUploadStart[M](localFile, tryCount)
+      _ <- logMultiPartUploadStart(localFile, tryCount)
       upload <- transfer(localFile, bucket, uploadProgressListener)
-      _ <- logMultiPartUploadFinished[M](localFile)
+      _ <- logMultiPartUploadFinished(localFile)
     } yield upload match {
       case Right(r) => UploadS3Action(RemoteKey(r.getKey), MD5Hash(r.getETag))
       case Left(e) => ErroredS3Action(localFile.remoteKey, e)
@@ -39,10 +38,10 @@ class Uploader[M[_]: Monad](transferManager: => AmazonTransferManager) {
   private def transfer(localFile: LocalFile,
                        bucket: Bucket,
                        uploadProgressListener: UploadProgressListener,
-                      ): M[Either[Throwable, UploadResult]] = {
+                      ): IO[Either[Throwable, UploadResult]] = {
     val listener: ProgressListener = progressListener(uploadProgressListener)
     val putObjectRequest = request(localFile, bucket, listener)
-    Monad[M].pure {
+    IO {
       Try(transferManager.upload(putObjectRequest))
         .map(_.waitForUploadResult)
         .toEither
