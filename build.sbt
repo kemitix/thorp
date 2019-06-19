@@ -84,6 +84,7 @@ lazy val `aws-lib` = (project in file("aws-lib"))
 lazy val core = (project in file("core"))
   .settings(commonSettings)
   .settings(assemblyJarName in assembly := "core.jar")
+  .settings(catsEffectsSettings)
   .settings(testDependencies)
   .dependsOn(`aws-api`)
 
