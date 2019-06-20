@@ -16,17 +16,21 @@ trait UploadProgressLogging {
                       bytesTransferred: Long): Unit = {
     val remoteKey = localFile.remoteKey.key
     val fileLength = localFile.file.length
-    val consoleWidth = Terminal.width - 2
-    val done = ((bytesTransferred.toDouble / fileLength.toDouble) * consoleWidth).toInt
-    if (done < oneHundredPercent) {
-      val head = s"$GREEN_B$GREEN#$RESET" * done
-      val tail = " " * (consoleWidth - done)
-      val bar = s"[$head$tail]"
+    if (bytesTransferred < fileLength) {
+      val bar = progressBar(bytesTransferred, fileLength.toDouble, Terminal.width)
       val transferred = sizeInEnglish(bytesTransferred)
       val fileSize = sizeInEnglish(fileLength)
-      print(s"${eraseLine}Uploading $transferred of $fileSize : $remoteKey\n$bar${cursorPrevLine()}")
+      print(s"${eraseLine}Uploading $transferred of $fileSize : $remoteKey\n$bar${cursorUp()}\r")
     } else
       print(eraseLine)
+  }
+
+  def progressBar(pos: Double, max: Double, width: Int): String = {
+    val barWidth = width - 2
+    val done = ((pos / max) * barWidth).toInt
+    val head = s"$GREEN_B$GREEN#$RESET" * done
+    val tail = " " * (barWidth - done)
+    s"[$head$tail]"
   }
 
 }
