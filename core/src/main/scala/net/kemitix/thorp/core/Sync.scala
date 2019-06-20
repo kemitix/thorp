@@ -9,6 +9,7 @@ import net.kemitix.thorp.core.ActionSubmitter.submitAction
 import net.kemitix.thorp.core.LocalFileStream.findFiles
 import net.kemitix.thorp.core.S3MetaDataEnricher.getMetadata
 import net.kemitix.thorp.core.SyncLogging.{logFileScan, logRunFinished, logRunStart}
+import net.kemitix.thorp.core.ConfigurationBuilder.buildConfig
 import net.kemitix.thorp.domain._
 
 trait Sync {
@@ -22,7 +23,7 @@ trait Sync {
   def apply(s3Client: S3Client)
            (configOptions: Seq[ConfigOption])
            (implicit defaultLogger: Logger): IO[Either[List[String], Unit]] =
-    ConfigurationBuilder(configOptions).flatMap {
+    buildConfig(configOptions).flatMap {
       case Left(errors) => IO.pure(Left(errorMessages(errors.toList)))
       case Right(config) =>
         for {

@@ -18,12 +18,12 @@ trait ConfigurationBuilder {
 
   private val defaultConfig: Config = Config(source = pwdFile)
 
-  def apply(priorityOptions: Seq[ConfigOption]): IO[Either[NonEmptyChain[ConfigValidation], Config]] = {
+  def buildConfig(priorityOptions: Seq[ConfigOption]): IO[Either[NonEmptyChain[ConfigValidation], Config]] = {
     val source = findSource(priorityOptions)
     for {
       options <- sourceOptions(source)
       collected = priorityOptions ++ options
-      config = buildConfig(collected)
+      config = collateOptions(collected)
     } yield validateConfig(config).toEither
   }
 
@@ -39,7 +39,7 @@ trait ConfigurationBuilder {
   private def readFile(source: File, filename: String): IO[Seq[ConfigOption]] =
     ParseConfigFile(source.toPath.resolve(filename))
 
-  private def buildConfig(configOptions: Seq[ConfigOption]): Config =
+  private def collateOptions(configOptions: Seq[ConfigOption]): Config =
     configOptions.foldRight(defaultConfig)((co, c) => co.update(c))
 }
 
