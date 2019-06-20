@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [[https://keepachangelog.com/en/1.0.0/][Keep a Changelog]], and this project adheres to
 [[https://semver.org/spec/v2.0.0.html][Semantic Versioning]].
 
+* [0.5.0] - ????-??-??
+
+** Added
+
+   - Add ~thorp-lib~ module (#66)
+   - Enable running outside of sbt (#55)
+   - ~-d~, ~--debug~ flag for log messages (#60)
+   - Read config from ~.thorp.conf~ in source directory (#71)
+   - Read config from ~$HOME/.config/thorp.conf~ and ~/etc/thorp.conf~
+     (#73)
+
+** Changed
+
+   - Rename project as 'thorp' (#75)
+   - Suppress Transfer event messages (#64)
+   - Better error message when source not found (#51)
+   - Reduced logging (#59)
+
+** Fixed
+
+   - Error when calculating md5 hash for large files (#56)
+
+** Removed
+
+   - ~-v~ verbosity flag (#63)
+
+** Dependencies
+
+   - Upgrade ~aws-java-sdk-s3~ from ~1.11.569~ to ~1.11.570~ (#57)
+
 * [0.4.0] - 2019-06-11
 
 ** Added

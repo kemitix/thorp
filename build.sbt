@@ -1,7 +1,12 @@
+val commonSettings = Seq(
+  version := "DEV-SNAPSHOT",
+  organization := "net.kemitix",
+  scalaVersion := "2.12.8",
+  test in assembly := {}
+)
+
 val applicationSettings = Seq(
-  name := "s3thorp",
-  version := "0.1",
-  scalaVersion := "2.12.8"
+  name := "thorp",
 )
 val testDependencies = Seq(
   libraryDependencies ++= Seq(
@@ -16,7 +21,7 @@ val commandLineParsing = Seq(
 )
 val awsSdkDependencies = Seq(
   libraryDependencies ++= Seq(
-    "com.amazonaws" % "aws-java-sdk-s3" % "1.11.569",
+    "com.amazonaws" % "aws-java-sdk-s3" % "1.11.573",
     // override the versions AWS uses, which is they do to preserve Java 6 compatibility
     "com.fasterxml.jackson.core" % "jackson-databind" % "2.9.9",
     "com.fasterxml.jackson.dataformat" % "jackson-dataformat-cbor" % "2.9.9"
@@ -36,26 +41,45 @@ val catsEffectsSettings = Seq(
     "-Ypartial-unification")
 )
 
-// cli -> aws-lib -> core -> aws-api -> domain
+// cli -> thorp-lib -> aws-lib -> core -> aws-api -> domain
+
+lazy val root = (project in file("."))
+  .settings(commonSettings)
 
 lazy val cli = (project in file("cli"))
+  .settings(commonSettings)
+  .settings(mainClass in assembly := Some("net.kemitix.thorp.cli.Main"))
   .settings(applicationSettings)
-  .aggregate(`aws-lib`, core, `aws-api`, domain)
+  .aggregate(`thorp-lib`, `aws-lib`, core, `aws-api`, domain)
   .settings(commandLineParsing)
+  .settings(testDependencies)
+  .dependsOn(`thorp-lib`)
+
+lazy val `thorp-lib` = (project in file("thorp-lib"))
+  .settings(commonSettings)
+  .settings(assemblyJarName in assembly := "thorp-lib.jar")
   .dependsOn(`aws-lib`)
 
 lazy val `aws-lib` = (project in file("aws-lib"))
+  .settings(commonSettings)
+  .settings(assemblyJarName in assembly := "aws-lib.jar")
   .settings(awsSdkDependencies)
   .settings(testDependencies)
   .dependsOn(core)
 
 lazy val core = (project in file("core"))
+  .settings(commonSettings)
+  .settings(assemblyJarName in assembly := "core.jar")
   .settings(testDependencies)
   .dependsOn(`aws-api`)
 
 lazy val `aws-api` = (project in file("aws-api"))
-  .settings(catsEffectsSettings)
+  .settings(commonSettings)
+  .settings(assemblyJarName in assembly := "aws-api.jar")
   .dependsOn(domain)
 
 lazy val domain = (project in file("domain"))
+  .settings(commonSettings)
+  .settings(assemblyJarName in assembly := "domain.jar")
+  .settings(catsEffectsSettings)
   .settings(testDependencies)

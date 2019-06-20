@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+THORP_HOME=`dirname $0`
+eval `resize`
+java -jar $THORP_HOME/thorp.jar $*
