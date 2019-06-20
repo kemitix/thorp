@@ -1,5 +1,7 @@
 package net.kemitix.thorp.domain
 
+import scala.io.AnsiColor._
+
 object Terminal {
 
   private val esc = "\u001B"
@@ -133,6 +135,14 @@ object Terminal {
       .map(_.toInt)
       .map(Math.max(_, 10))
       .getOrElse(80)
+  }
+
+  def progressBar(pos: Double, max: Double, width: Int): String = {
+    val barWidth = width - 2
+    val done = ((pos / max) * barWidth).toInt
+    val head = s"$GREEN_B$GREEN#$RESET" * done
+    val tail = " " * (barWidth - done)
+    s"[$head$tail]"
   }
 
 }
