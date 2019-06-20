@@ -137,11 +137,28 @@ object Terminal {
       .getOrElse(80)
   }
 
+  val subBars = Map(
+    0 -> " ",
+    1 -> "▏",
+    2 -> "▎",
+    3 -> "▍",
+    4 -> "▌",
+    5 -> "▋",
+    6 -> "▊",
+    7 -> "▉")
+
   def progressBar(pos: Double, max: Double, width: Int): String = {
     val barWidth = width - 2
-    val done = ((pos / max) * barWidth).toInt
-    val head = s"$GREEN_B$GREEN#$RESET" * done
-    val tail = " " * (barWidth - done)
+    val phases = subBars.values.size
+    val pxWidth = barWidth * phases
+    val ratio = pos / max
+    val pxDone = pxWidth * ratio
+    val fullHeadSize: Int = (pxDone / phases).toInt
+    val part = (pxDone % phases).toInt
+    val partial = if (part != 0) subBars.getOrElse(part, "") else ""
+    val head = ("█" * fullHeadSize) + partial
+    val tailSize = barWidth - head.length
+    val tail = " " * tailSize
     s"[$head$tail]"
   }
 
