@@ -7,8 +7,6 @@ import net.kemitix.thorp.domain.{LocalFile, Terminal}
 
 trait UploadProgressLogging {
 
-  private val oneHundredPercent = 100
-
   def logRequestCycle(localFile: LocalFile,
                       event: RequestEvent,
                       bytesTransferred: Long): Unit = {
