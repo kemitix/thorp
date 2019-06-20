@@ -11,16 +11,17 @@ trait ParseConfigFile {
   def parseFile(filename: Path): IO[Seq[ConfigOption]] =
     readFile(filename).map(ParseConfigLines.parseLines)
 
-  private def readFile(filename: Path) =
-    IO {
-      if (Files.exists(filename)) {
-        val lines = Files.lines(filename)
-        val scala = lines.iterator.asScala.toList
-        lines.close()
-        scala
-      } else
-        List()
-    }
+  private def readFile(filename: Path) = {
+    if (Files.exists(filename)) readFileThatExists(filename)
+    else IO.pure(List())
+  }
+
+  private def readFileThatExists(filename: Path) =
+    for {
+      lines <- IO(Files.lines(filename))
+      list = lines.iterator.asScala.toList
+      _ <- IO(lines.close())
+    } yield list
 
 }
 
