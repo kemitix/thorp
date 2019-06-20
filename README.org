@@ -24,7 +24,27 @@ hash of the file contents.
       -d, --debug           Enable debug logging
   #+end_example
 
+If you don't provide a ~source~ the current diretory will be used.
+
 The ~--include~ and ~--exclude~ parameters can be used more than once.
+
+* Configuration
+
+  Configuration will be read from these files:
+
+  - Global: ~/etc/thorp.conf~
+  - User: ~~/.config/thorp.conf~
+  - Source: ~${source}/.thorp.conf~
+
+Command line arguments override those in Source, which override those
+in User, which override those Global, which override any built-in
+config.
+
+Built-in config consists of using the current working directory as the
+~source~.
+
+Note, that ~include~ and ~exclude~ are cumulative across all
+configuration files.
 
 * Behaviour
 
