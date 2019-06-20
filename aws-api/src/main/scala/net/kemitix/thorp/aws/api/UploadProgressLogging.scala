@@ -2,7 +2,7 @@ package net.kemitix.thorp.aws.api
 
 import net.kemitix.thorp.aws.api.UploadEvent.RequestEvent
 import net.kemitix.thorp.domain.SizeTranslation.sizeInEnglish
-import net.kemitix.thorp.domain.Terminal.{clearLine, returnToPreviousLine}
+import net.kemitix.thorp.domain.Terminal._
 import net.kemitix.thorp.domain.{LocalFile, Terminal}
 
 import scala.io.AnsiColor._
@@ -12,8 +12,8 @@ trait UploadProgressLogging {
   private val oneHundredPercent = 100
 
   def logRequestCycle(localFile: LocalFile,
-                                   event: RequestEvent,
-                                   bytesTransferred: Long): Unit = {
+                      event: RequestEvent,
+                      bytesTransferred: Long): Unit = {
     val remoteKey = localFile.remoteKey.key
     val fileLength = localFile.file.length
     val consoleWidth = Terminal.width - 2
@@ -24,9 +24,9 @@ trait UploadProgressLogging {
       val bar = s"[$head$tail]"
       val transferred = sizeInEnglish(bytesTransferred)
       val fileSize = sizeInEnglish(fileLength)
-      print(s"${clearLine}Uploading $transferred of $fileSize : $remoteKey\n$bar$returnToPreviousLine")
+      print(s"${eraseLine}Uploading $transferred of $fileSize : $remoteKey\n$bar${cursorPrevLine()}")
     } else
-      print(clearLine)
+      print(eraseLine)
   }
 
 }
