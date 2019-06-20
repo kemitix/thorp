@@ -2,7 +2,6 @@ package net.kemitix.thorp.aws.lib
 
 import java.time.Instant
 
-import cats.Id
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.PutObjectRequest
 import com.amazonaws.services.s3.transfer.model.UploadResult
@@ -23,7 +22,7 @@ class S3ClientSuite
 
   private val prefix = RemoteKey("prefix")
   implicit private val config: Config = Config(Bucket("bucket"), prefix, source = source)
-  implicit private val implLogger: Logger[Id] = new DummyLogger[Id]
+  implicit private val implLogger: Logger = new DummyLogger
   private val fileToKey = KeyGenerator.generateKey(config.source, config.prefix) _
 
   describe("getS3Status") {
@@ -43,7 +42,7 @@ class S3ClientSuite
         keyotherkey.remoteKey -> HashModified(hash, lastModified),
         keydiffhash.remoteKey -> HashModified(diffhash, lastModified)))
 
-    def invoke(self: S3Client[Id], localFile: LocalFile) = {
+    def invoke(self: S3Client, localFile: LocalFile) = {
       S3MetaDataEnricher.getS3Status(localFile, s3ObjectsData)
     }
 

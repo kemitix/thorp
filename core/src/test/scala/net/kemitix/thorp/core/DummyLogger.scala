@@ -1,16 +1,18 @@
 package net.kemitix.thorp.core
 
-import cats.Monad
+import cats.effect.IO
 import net.kemitix.thorp.domain.Logger
 
-class DummyLogger[M[_]: Monad] extends Logger[M] {
+class DummyLogger extends Logger {
 
-  override def debug(message: => String): M[Unit] = Monad[M].unit
+  override def debug(message: => String): IO[Unit] = IO.unit
 
-  override def info(message: =>String): M[Unit] = Monad[M].unit
+  override def info(message: =>String): IO[Unit] = IO.unit
 
-  override def warn(message: String): M[Unit] = Monad[M].unit
+  override def warn(message: String): IO[Unit] = IO.unit
 
-  override def error(message: String): M[Unit] = Monad[M].unit
+  override def error(message: String): IO[Unit] = IO.unit
+
+  override def withDebug(debug: Boolean): Logger = this
 
 }

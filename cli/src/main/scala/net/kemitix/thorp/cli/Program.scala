@@ -1,20 +1,24 @@
 package net.kemitix.thorp.cli
 
-import cats.Monad
-import cats.effect.ExitCode
-import cats.implicits._
+import cats.effect.{ExitCode, IO}
 import net.kemitix.thorp.aws.lib.S3ClientBuilder
-import net.kemitix.thorp.core.Sync
-import net.kemitix.thorp.domain.{Config, Logger}
+import net.kemitix.thorp.core.{ConfigOption, Sync}
+import net.kemitix.thorp.domain.Logger
 
-object Program {
+trait Program {
 
-  def apply[M[_]: Monad](config: Config): M[ExitCode] = {
-    implicit val logger: Logger[M] = new PrintLogger[M](config.debug)
-    for {
-      _ <- logger.info("Thorp - hashed sync for cloud storage")
-      _ <- Sync.run[M](config, S3ClientBuilder.defaultClient)
-    } yield ExitCode.Success
+  def apply(configOptions: Seq[ConfigOption]): IO[ExitCode] = {
+    implicit val logger: Logger = new PrintLogger()
+    Sync(S3ClientBuilder.defaultClient)(configOptions) flatMap {
+      case Left(errors) =>
+        for {
+          _ <- logger.error(s"There were errors:")
+          _ <- IO.pure(errors.map(error => logger.error(s" - $error")))
+        } yield ExitCode.Error
+      case Right(_) => IO.pure(ExitCode.Success)
+    }
   }
 
 }
+
+object Program extends Program

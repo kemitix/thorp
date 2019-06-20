@@ -1,31 +1,31 @@
 package net.kemitix.thorp.aws.lib
 
-import cats.Monad
+import cats.effect.IO
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.transfer.TransferManager
 import net.kemitix.thorp.aws.api.S3Action.{CopyS3Action, DeleteS3Action}
 import net.kemitix.thorp.aws.api.{S3Action, S3Client, UploadProgressListener}
 import net.kemitix.thorp.domain._
 
-class ThorpS3Client[M[_]: Monad](amazonS3Client: => AmazonS3,
+class ThorpS3Client(amazonS3Client: => AmazonS3,
                     amazonS3TransferManager: => TransferManager)
-  extends S3Client[M] {
+  extends S3Client {
 
-  lazy val objectLister = new S3ClientObjectLister[M](amazonS3Client)
-  lazy val copier = new S3ClientCopier[M](amazonS3Client)
-  lazy val uploader = new Uploader[M](amazonS3TransferManager)
-  lazy val deleter = new S3ClientDeleter[M](amazonS3Client)
+  lazy val objectLister = new S3ClientObjectLister(amazonS3Client)
+  lazy val copier = new S3ClientCopier(amazonS3Client)
+  lazy val uploader = new Uploader(amazonS3TransferManager)
+  lazy val deleter = new S3ClientDeleter(amazonS3Client)
 
   override def listObjects(bucket: Bucket,
                            prefix: RemoteKey)
-                          (implicit logger: Logger[M]): M[S3ObjectsData] =
+                          (implicit logger: Logger): IO[S3ObjectsData] =
     objectLister.listObjects(bucket, prefix)
 
   override def copy(bucket: Bucket,
                     sourceKey: RemoteKey,
                     hash: MD5Hash,
                     targetKey: RemoteKey)
-                   (implicit logger: Logger[M]): M[CopyS3Action] =
+                   (implicit logger: Logger): IO[CopyS3Action] =
     copier.copy(bucket, sourceKey,hash, targetKey)
 
   override def upload(localFile: LocalFile,
@@ -34,12 +34,12 @@ class ThorpS3Client[M[_]: Monad](amazonS3Client: => AmazonS3,
                       multiPartThreshold: Long,
                       tryCount: Int,
                       maxRetries: Int)
-                     (implicit logger: Logger[M]): M[S3Action] =
+                     (implicit logger: Logger): IO[S3Action] =
     uploader.upload(localFile, bucket, progressListener, multiPartThreshold, 1, maxRetries)
 
   override def delete(bucket: Bucket,
                       remoteKey: RemoteKey)
-                     (implicit logger: Logger[M]): M[DeleteS3Action] =
+                     (implicit logger: Logger): IO[DeleteS3Action] =
     deleter.delete(bucket, remoteKey)
 
 }

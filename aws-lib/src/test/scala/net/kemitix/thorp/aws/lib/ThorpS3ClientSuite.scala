@@ -4,7 +4,6 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.Date
 
-import cats.Id
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.{ListObjectsV2Request, ListObjectsV2Result, S3ObjectSummary}
 import com.amazonaws.services.s3.transfer.TransferManager
@@ -21,7 +20,7 @@ class ThorpS3ClientSuite
     val source = Resource(this, "upload")
     val prefix = RemoteKey("prefix")
     implicit val config: Config = Config(Bucket("bucket"), prefix, source = source)
-    implicit val implLogger: Logger[Id] = new DummyLogger[Id]
+    implicit val implLogger: Logger = new DummyLogger
 
     val lm = LastModified(Instant.now.truncatedTo(ChronoUnit.MILLIS))
 
@@ -48,7 +47,7 @@ class ThorpS3ClientSuite
 
     val amazonS3 = stub[AmazonS3]
     val amazonS3TransferManager = stub[TransferManager]
-    val s3Client = new ThorpS3Client[Id](amazonS3, amazonS3TransferManager)
+    val s3Client = new ThorpS3Client(amazonS3, amazonS3TransferManager)
 
     val myFakeResponse = new ListObjectsV2Result()
     val summaries = myFakeResponse.getObjectSummaries
@@ -66,7 +65,7 @@ class ThorpS3ClientSuite
           k1a -> HashModified(h1, lm),
           k1b -> HashModified(h1, lm),
           k2 -> HashModified(h2, lm)))
-      val result = s3Client.listObjects(Bucket("bucket"), RemoteKey("prefix"))
+      val result = s3Client.listObjects(Bucket("bucket"), RemoteKey("prefix")).unsafeRunSync
       assertResult(expected.byHash.keys)(result.byHash.keys)
       assertResult(expected.byKey.keys)(result.byKey.keys)
       assertResult(expected)(result)

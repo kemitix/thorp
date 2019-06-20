@@ -1,36 +1,55 @@
 package net.kemitix.thorp.core
 
-import cats.Monad
+import cats.effect.IO
 import cats.implicits._
 import net.kemitix.thorp.aws.api.{S3Action, S3Client}
 import net.kemitix.thorp.core.Action.ToDelete
 import net.kemitix.thorp.core.ActionGenerator.createActions
 import net.kemitix.thorp.core.ActionSubmitter.submitAction
+import net.kemitix.thorp.core.ConfigurationBuilder.buildConfig
 import net.kemitix.thorp.core.LocalFileStream.findFiles
 import net.kemitix.thorp.core.S3MetaDataEnricher.getMetadata
 import net.kemitix.thorp.core.SyncLogging.{logFileScan, logRunFinished, logRunStart}
 import net.kemitix.thorp.domain._
 
-object Sync {
+trait Sync {
 
-  def run[M[_]: Monad](config: Config,
-                       s3Client: S3Client[M])
-                      (implicit logger: Logger[M]): M[Unit] = {
+  def errorMessages(errors: List[ConfigValidation]): List[String] = {
+    for {
+      errorMessages <- errors.map(cv => cv.errorMessage)
+    } yield errorMessages
+  }
 
-    implicit val c: Config = config
+  def apply(s3Client: S3Client)
+           (configOptions: Seq[ConfigOption])
+           (implicit defaultLogger: Logger): IO[Either[List[String], Unit]] =
+    buildConfig(configOptions).flatMap {
+      case Left(errors) => IO.pure(Left(errorMessages(errors.toList)))
+      case Right(config) =>
+        for {
+          _ <- run(config, s3Client, defaultLogger.withDebug(config.debug))
+        } yield Right(())
+    }
+
+  private def run(cliConfig: Config,
+                  s3Client: S3Client,
+                  logger: Logger): IO[Unit] = {
+
+    implicit val c: Config = cliConfig
+    implicit val l: Logger = logger
 
     def metaData(s3Data: S3ObjectsData, sFiles: Stream[LocalFile]) =
-      Monad[M].pure(sFiles.map(file => getMetadata(file, s3Data)))
+      IO.pure(sFiles.map(file => getMetadata(file, s3Data)))
 
     def actions(sData: Stream[S3MetaData]) =
-      Monad[M].pure(sData.flatMap(s3MetaData => createActions(s3MetaData)))
+      IO.pure(sData.flatMap(s3MetaData => createActions(s3MetaData)))
 
     def submit(sActions: Stream[Action]) =
-      Monad[M].pure(sActions.flatMap(action => submitAction[M](s3Client, action)))
+      IO(sActions.flatMap(action => submitAction(s3Client, action)))
 
-    def copyUploadActions(s3Data: S3ObjectsData): M[Stream[S3Action]] =
+    def copyUploadActions(s3Data: S3ObjectsData): IO[Stream[S3Action]] =
       (for {
-        files <- findFiles(c.source, MD5HashGenerator.md5File[M](_))
+        files <- findFiles(c.source, MD5HashGenerator.md5File(_))
         metaData <- metaData(s3Data, files)
         actions <- actions(metaData)
         s3Actions <- submit(actions)
@@ -38,23 +57,24 @@ object Sync {
         .flatten
         .map(streamS3Actions => streamS3Actions.sorted)
 
-    def deleteActions(s3ObjectsData: S3ObjectsData): M[Stream[S3Action]] =
+    def deleteActions(s3ObjectsData: S3ObjectsData): IO[Stream[S3Action]] =
       (for {
         key <- s3ObjectsData.byKey.keys
         if key.isMissingLocally(c.source, c.prefix)
-        ioDelAction <- submitAction[M](s3Client, ToDelete(c.bucket, key))
+        ioDelAction <- submitAction(s3Client, ToDelete(c.bucket, key))
       } yield ioDelAction)
         .toStream
         .sequence
 
     for {
-      _ <- logRunStart[M]
+      _ <- logRunStart
       s3data <- s3Client.listObjects(c.bucket, c.prefix)
-      _ <- logFileScan[M]
+      _ <- logFileScan
       copyUploadActions <- copyUploadActions(s3data)
       deleteActions <- deleteActions(s3data)
-      _ <- logRunFinished[M](copyUploadActions ++ deleteActions)
+      _ <- logRunFinished(copyUploadActions ++ deleteActions)
     } yield ()
   }
-
 }
+
+object Sync extends Sync
