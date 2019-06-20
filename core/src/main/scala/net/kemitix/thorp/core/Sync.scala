@@ -6,10 +6,10 @@ import net.kemitix.thorp.aws.api.{S3Action, S3Client}
 import net.kemitix.thorp.core.Action.ToDelete
 import net.kemitix.thorp.core.ActionGenerator.createActions
 import net.kemitix.thorp.core.ActionSubmitter.submitAction
+import net.kemitix.thorp.core.ConfigurationBuilder.buildConfig
 import net.kemitix.thorp.core.LocalFileStream.findFiles
 import net.kemitix.thorp.core.S3MetaDataEnricher.getMetadata
 import net.kemitix.thorp.core.SyncLogging.{logFileScan, logRunFinished, logRunStart}
-import net.kemitix.thorp.core.ConfigurationBuilder.buildConfig
 import net.kemitix.thorp.domain._
 
 trait Sync {
@@ -27,13 +27,13 @@ trait Sync {
       case Left(errors) => IO.pure(Left(errorMessages(errors.toList)))
       case Right(config) =>
         for {
-          _ <- Sync.run(config, s3Client, defaultLogger.withDebug(config.debug))
+          _ <- run(config, s3Client, defaultLogger.withDebug(config.debug))
         } yield Right(())
     }
 
-  def run(cliConfig: Config,
-          s3Client: S3Client,
-          logger: Logger): IO[Unit] = {
+  private def run(cliConfig: Config,
+                  s3Client: S3Client,
+                  logger: Logger): IO[Unit] = {
 
     implicit val c: Config = cliConfig
     implicit val l: Logger = logger
