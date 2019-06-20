@@ -7,7 +7,7 @@ import net.kemitix.thorp.core.ConfigOption.{Bucket, Debug, Exclude, Include, Pre
 
 trait ParseConfigLines {
 
-  def apply(lines: List[String]): List[ConfigOption] =
+  def parseLines(lines: List[String]): List[ConfigOption] =
     lines.flatMap(parseLine)
 
   private val pattern = "^\\s*(?<key>\\S*)\\s*=\\s*(?<value>\\S*)\\s*$"
@@ -15,7 +15,7 @@ trait ParseConfigLines {
 
   private def parseLine(str: String) =
     format.matcher(str) match {
-      case m if m.matches => parse(m.group("key"), m.group("value"))
+      case m if m.matches => parseKeyValue(m.group("key"), m.group("value"))
       case _ =>None
     }
 
@@ -27,7 +27,7 @@ trait ParseConfigLines {
       case _ => false
     }
 
-  private def parse(key: String, value: String): Option[ConfigOption] =
+  private def parseKeyValue(key: String, value: String): Option[ConfigOption] =
     key.toLowerCase match {
       case "source" => Some(Source(Paths.get(value)))
       case "bucket" => Some(Bucket(value))

@@ -8,8 +8,8 @@ import scala.collection.JavaConverters._
 
 trait ParseConfigFile {
 
-  def apply(filename: Path): IO[Seq[ConfigOption]] =
-    readFile(filename).map(ParseConfigLines(_))
+  def parseFile(filename: Path): IO[Seq[ConfigOption]] =
+    readFile(filename).map(ParseConfigLines.parseLines)
 
   private def readFile(filename: Path) =
     IO {

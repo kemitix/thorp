@@ -7,6 +7,7 @@ import cats.data.NonEmptyChain
 import cats.effect.IO
 import net.kemitix.thorp.core.ConfigValidator.validateConfig
 import net.kemitix.thorp.domain.Config
+import net.kemitix.thorp.core.ParseConfigFile.parseFile
 
 /**
   * Builds a configuration from settings in a file within the
@@ -37,7 +38,7 @@ trait ConfigurationBuilder {
     readFile(source, ".thorp.conf")
 
   private def readFile(source: File, filename: String): IO[Seq[ConfigOption]] =
-    ParseConfigFile(source.toPath.resolve(filename))
+    parseFile(source.toPath.resolve(filename))
 
   private def collateOptions(configOptions: Seq[ConfigOption]): Config =
     configOptions.foldRight(defaultConfig)((co, c) => co.update(c))
