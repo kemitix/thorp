@@ -9,15 +9,31 @@ The format is based on [[https://keepachangelog.com/en/1.0.0/][Keep a Changelog]
 
 ** Added
 
-   - ~-d~, ~--debug~ flag for log messages
+   - Add ~thorp-lib~ module (#66)
+   - Enable running outside of sbt (#55)
+   - ~-d~, ~--debug~ flag for log messages (#60)
+   - Read config from ~.thorp.conf~ in source directory (#71)
+   - Read config from ~$HOME/.config/thorp.conf~ and ~/etc/thorp.conf~
+     (#73)
 
 ** Changed
 
-   - Suppress Transfer event messages
+   - Rename project as 'thorp' (#75)
+   - Suppress Transfer event messages (#64)
+   - Better error message when source not found (#51)
+   - Reduced logging (#59)
+
+** Fixed
+
+   - Error when calculating md5 hash for large files (#56)
 
 ** Removed
 
-   - ~-v~ verbosity flag
+   - ~-v~ verbosity flag (#63)
+
+** Dependencies
+
+   - Upgrade ~aws-java-sdk-s3~ from ~1.11.569~ to ~1.11.570~ (#57)
 
 * [0.4.0] - 2019-06-11
 
