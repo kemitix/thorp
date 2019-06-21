@@ -2,9 +2,8 @@ package net.kemitix.thorp.core
 
 import cats.effect.IO
 import cats.implicits._
-import net.kemitix.thorp.domain.{Config, Logger}
-import net.kemitix.thorp.storage.api.StorageQueueEvent
-import net.kemitix.thorp.storage.api.StorageQueueEvent.{CopyQueueEvent, DeleteQueueEvent, ErrorQueueEvent, UploadQueueEvent}
+import net.kemitix.thorp.domain.{Config, Logger, StorageQueueEvent}
+import net.kemitix.thorp.domain.StorageQueueEvent.{CopyQueueEvent, DeleteQueueEvent, ErrorQueueEvent, UploadQueueEvent}
 
 // Logging for the Sync class
 trait SyncLogging {

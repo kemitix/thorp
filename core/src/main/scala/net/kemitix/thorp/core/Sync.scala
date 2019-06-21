@@ -10,7 +10,7 @@ import net.kemitix.thorp.core.LocalFileStream.findFiles
 import net.kemitix.thorp.core.S3MetaDataEnricher.getMetadata
 import net.kemitix.thorp.core.SyncLogging.{logFileScan, logRunFinished, logRunStart}
 import net.kemitix.thorp.domain._
-import net.kemitix.thorp.storage.api.{StorageQueueEvent, StorageService}
+import net.kemitix.thorp.storage.api.StorageService
 
 trait Sync {
 

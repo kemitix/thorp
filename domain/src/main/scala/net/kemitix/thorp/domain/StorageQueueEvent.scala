@@ -1,6 +1,4 @@
-package net.kemitix.thorp.storage.api
-
-import net.kemitix.thorp.domain.{MD5Hash, RemoteKey}
+package net.kemitix.thorp.domain
 
 sealed trait StorageQueueEvent {
 

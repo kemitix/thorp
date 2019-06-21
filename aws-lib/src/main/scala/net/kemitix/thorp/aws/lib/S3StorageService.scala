@@ -4,7 +4,7 @@ import cats.effect.IO
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.transfer.TransferManager
 import net.kemitix.thorp.domain._
-import net.kemitix.thorp.storage.api.{StorageQueueEvent, StorageService}
+import net.kemitix.thorp.storage.api.StorageService
 
 class S3StorageService(amazonS3Client: => AmazonS3,
                        amazonS3TransferManager: => TransferManager)
