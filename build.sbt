@@ -43,7 +43,7 @@ val catsEffectsSettings = Seq(
 
 // cli -> thorp-lib -> aws-lib -> core -> storage-api -> domain
 
-lazy val root = (project in file("."))
+lazy val thorp = (project in file("."))
   .settings(commonSettings)
 
 lazy val cli = (project in file("cli"))
