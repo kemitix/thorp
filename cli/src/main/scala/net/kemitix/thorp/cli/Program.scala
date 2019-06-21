@@ -1,7 +1,7 @@
 package net.kemitix.thorp.cli
 
 import cats.effect.{ExitCode, IO}
-import net.kemitix.thorp.aws.lib.S3StorageService
+import net.kemitix.thorp.aws.lib.S3StorageServiceBuilder
 import net.kemitix.thorp.core.{ConfigOption, Sync}
 import net.kemitix.thorp.domain.Logger
 
@@ -9,7 +9,7 @@ trait Program {
 
   def apply(configOptions: Seq[ConfigOption]): IO[ExitCode] = {
     implicit val logger: Logger = new PrintLogger()
-    Sync(S3StorageService.defaultStorageService)(configOptions) flatMap {
+    Sync(S3StorageServiceBuilder.defaultStorageService)(configOptions) flatMap {
       case Left(errors) =>
         for {
           _ <- logger.error(s"There were errors:")

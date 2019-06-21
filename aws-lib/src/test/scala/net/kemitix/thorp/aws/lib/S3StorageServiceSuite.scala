@@ -12,7 +12,7 @@ import net.kemitix.thorp.domain._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.FunSpec
 
-class ThorpStorageServiceSuite
+class S3StorageServiceSuite
   extends FunSpec
     with MockFactory {
 
@@ -47,7 +47,7 @@ class ThorpStorageServiceSuite
 
     val amazonS3 = stub[AmazonS3]
     val amazonS3TransferManager = stub[TransferManager]
-    val storageService = new ThorpStorageService(amazonS3, amazonS3TransferManager)
+    val storageService = new S3StorageService(amazonS3, amazonS3TransferManager)
 
     val myFakeResponse = new ListObjectsV2Result()
     val summaries = myFakeResponse.getObjectSummaries
