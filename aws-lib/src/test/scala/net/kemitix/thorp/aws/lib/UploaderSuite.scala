@@ -39,7 +39,7 @@ class UploaderSuite
       val uploader = new Uploader(amazonS3TransferManager)
       it("should upload") {
         val expected = UploadS3Action(returnedKey, returnedHash)
-        val result = uploader.upload(bigFile, config.bucket, progressListener, config.multiPartThreshold, 1, config.maxRetries)
+        val result = uploader.upload(bigFile, config.bucket, progressListener, 1)
         assertResult(expected)(result)
       }
     }

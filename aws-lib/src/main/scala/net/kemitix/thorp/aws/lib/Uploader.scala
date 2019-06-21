@@ -18,9 +18,7 @@ class Uploader(transferManager: => AmazonTransferManager) {
   def upload(localFile: LocalFile,
              bucket: Bucket,
              uploadProgressListener: UploadProgressListener,
-             multiPartThreshold: Long,
-             tryCount: Int,
-             maxRetries: Int)
+             tryCount: Int)
             (implicit logger: Logger): IO[S3Action] =
     for {
       _ <- logMultiPartUploadStart(localFile, tryCount)

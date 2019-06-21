@@ -154,9 +154,7 @@ class SyncSuite
     override def upload(localFile: LocalFile,
                         bucket: Bucket,
                         progressListener: UploadProgressListener,
-                        multiPartThreshold: Long,
-                        tryCount: Int,
-                        maxRetries: Int)
+                        tryCount: Int)
                        (implicit logger: Logger): IO[UploadS3Action] = {
       if (bucket == testBucket)
         uploadsRecord += (localFile.relative.toString -> localFile.remoteKey)
