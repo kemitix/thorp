@@ -5,7 +5,7 @@ import net.kemitix.thorp.domain.Terminal._
 import net.kemitix.thorp.domain.{LocalFile, Terminal}
 import net.kemitix.thorp.storage.api.UploadEvent.RequestEvent
 
-trait UploadProgressLogging {
+trait UploadEventLogger {
 
   def logRequestCycle(localFile: LocalFile,
                       event: RequestEvent,
@@ -22,3 +22,5 @@ trait UploadProgressLogging {
   }
 
 }
+
+object UploadEventLogger extends UploadEventLogger
