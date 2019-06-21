@@ -5,7 +5,7 @@ import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.transfer.TransferManager
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.S3Action.{CopyS3Action, DeleteS3Action}
-import net.kemitix.thorp.storage.api.{S3Action, StorageService, UploadProgressListener}
+import net.kemitix.thorp.storage.api.{S3Action, StorageService, UploadEventListener}
 
 class ThorpStorageService(amazonS3Client: => AmazonS3,
                           amazonS3TransferManager: => TransferManager)
@@ -30,10 +30,10 @@ class ThorpStorageService(amazonS3Client: => AmazonS3,
 
   override def upload(localFile: LocalFile,
                       bucket: Bucket,
-                      progressListener: UploadProgressListener,
+                      uploadEventListener: UploadEventListener,
                       tryCount: Int)
                      (implicit logger: Logger): IO[S3Action] =
-    uploader.upload(localFile, bucket, progressListener, 1)
+    uploader.upload(localFile, bucket, uploadEventListener, 1)
 
   override def delete(bucket: Bucket,
                       remoteKey: RemoteKey)

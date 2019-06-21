@@ -12,7 +12,7 @@ trait StorageService {
 
   def upload(localFile: LocalFile,
              bucket: Bucket,
-             uploadProgressListener: UploadProgressListener,
+             uploadEventListener: UploadEventListener,
              tryCount: Int)
             (implicit logger: Logger): IO[S3Action]
 

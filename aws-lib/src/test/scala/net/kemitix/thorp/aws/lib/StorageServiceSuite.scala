@@ -10,7 +10,7 @@ import net.kemitix.thorp.aws.lib.MD5HashData.rootHash
 import net.kemitix.thorp.core.{KeyGenerator, Resource, S3MetaDataEnricher}
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.S3Action.UploadS3Action
-import net.kemitix.thorp.storage.api.{StorageService, UploadProgressListener}
+import net.kemitix.thorp.storage.api.{StorageService, UploadEventListener}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.FunSpec
 
@@ -93,7 +93,7 @@ class StorageServiceSuite
         LocalFile.resolve("root-file", rootHash, source, KeyGenerator.generateKey(source, prefix))
       val bucket = Bucket("a-bucket")
       val remoteKey = RemoteKey("prefix/root-file")
-      val progressListener = new UploadProgressListener(localFile)
+      val uploadEventListener = new UploadEventListener(localFile)
 
       val upload = stub[Upload]
       (amazonS3TransferManager upload (_: PutObjectRequest)).when(*).returns(upload)
@@ -106,7 +106,7 @@ class StorageServiceSuite
         pending
         //FIXME: works okay on its own, but fails when run with others
         val expected = UploadS3Action(remoteKey, rootHash)
-        val result = storageService.upload(localFile, bucket, progressListener, 1)
+        val result = storageService.upload(localFile, bucket, uploadEventListener, 1)
         assertResult(expected)(result)
       }
     }

@@ -8,7 +8,7 @@ import net.kemitix.thorp.core.KeyGenerator.generateKey
 import net.kemitix.thorp.core.Resource
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.S3Action.UploadS3Action
-import net.kemitix.thorp.storage.api.UploadProgressListener
+import net.kemitix.thorp.storage.api.UploadEventListener
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.FunSpec
 
@@ -33,13 +33,13 @@ class UploaderSuite
       val returnedKey = RemoteKey("returned-key")
       val returnedHash = MD5Hash("returned-hash")
       val bigFile = LocalFile.resolve("small-file", MD5Hash("the-hash"), source, fileToKey)
-      val progressListener = new UploadProgressListener(bigFile)
+      val uploadEventListener = new UploadEventListener(bigFile)
       val amazonS3 = mock[AmazonS3]
       val amazonS3TransferManager = TransferManagerBuilder.standard().withS3Client(amazonS3).build
       val uploader = new Uploader(amazonS3TransferManager)
       it("should upload") {
         val expected = UploadS3Action(returnedKey, returnedHash)
-        val result = uploader.upload(bigFile, config.bucket, progressListener, 1)
+        val result = uploader.upload(bigFile, config.bucket, uploadEventListener, 1)
         assertResult(expected)(result)
       }
     }

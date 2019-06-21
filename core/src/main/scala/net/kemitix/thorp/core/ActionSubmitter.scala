@@ -4,7 +4,7 @@ import cats.effect.IO
 import net.kemitix.thorp.core.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.domain.{Config, Logger}
 import net.kemitix.thorp.storage.api.S3Action.DoNothingS3Action
-import net.kemitix.thorp.storage.api.{S3Action, StorageService, UploadProgressListener}
+import net.kemitix.thorp.storage.api.{S3Action, StorageService, UploadEventListener}
 
 object ActionSubmitter {
 
@@ -17,8 +17,8 @@ object ActionSubmitter {
         case ToUpload(bucket, localFile) =>
           for {
             _ <- logger.info(s"    Upload: ${localFile.relative}")
-            progressListener = new UploadProgressListener(localFile)
-            action <- storageService.upload(localFile, bucket, progressListener, 1)
+            uploadEventListener = new UploadEventListener(localFile)
+            action <- storageService.upload(localFile, bucket, uploadEventListener, 1)
           } yield action
         case ToCopy(bucket, sourceKey, hash, targetKey) =>
           for {

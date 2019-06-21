@@ -7,7 +7,7 @@ import cats.effect.IO
 import net.kemitix.thorp.core.MD5HashData.{leafHash, rootHash}
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.S3Action.{CopyS3Action, DeleteS3Action, UploadS3Action}
-import net.kemitix.thorp.storage.api.{StorageService, UploadProgressListener}
+import net.kemitix.thorp.storage.api.{StorageService, UploadEventListener}
 import org.scalatest.FunSpec
 
 class SyncSuite
@@ -160,7 +160,7 @@ class SyncSuite
 
     override def upload(localFile: LocalFile,
                         bucket: Bucket,
-                        progressListener: UploadProgressListener,
+                        uploadEventListener: UploadEventListener,
                         tryCount: Int)
                        (implicit logger: Logger): IO[UploadS3Action] = {
       if (bucket == testBucket)
