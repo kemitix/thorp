@@ -24,12 +24,17 @@ trait Sync {
            (configOptions: Seq[ConfigOption])
            (implicit defaultLogger: Logger): IO[Either[List[String], Unit]] =
     buildConfig(configOptions).flatMap {
+      case Right(config) => runWithValidConfig(s3Client, defaultLogger, config)
       case Left(errors) => IO.pure(Left(errorMessages(errors.toList)))
-      case Right(config) =>
-        for {
-          _ <- run(config, s3Client, defaultLogger.withDebug(config.debug))
-        } yield Right(())
     }
+
+  private def runWithValidConfig(s3Client: S3Client,
+                                 defaultLogger: Logger,
+                                 config: Config) = {
+    for {
+      _ <- run(config, s3Client, defaultLogger.withDebug(config.debug))
+    } yield Right(())
+  }
 
   private def run(cliConfig: Config,
                   s3Client: S3Client,
