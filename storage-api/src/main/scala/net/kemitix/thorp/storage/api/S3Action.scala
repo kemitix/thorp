@@ -21,9 +21,8 @@ object S3Action {
     override val order: Int = 1
   }
 
-  final case class UploadS3Action(
-                                   remoteKey: RemoteKey,
-                                   md5Hash: MD5Hash) extends S3Action {
+  final case class UploadS3Action(remoteKey: RemoteKey,
+                                  md5Hash: MD5Hash) extends S3Action {
     override val order: Int = 2
   }
 

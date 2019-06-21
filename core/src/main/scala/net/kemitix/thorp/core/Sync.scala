@@ -10,7 +10,7 @@ import net.kemitix.thorp.core.LocalFileStream.findFiles
 import net.kemitix.thorp.core.S3MetaDataEnricher.getMetadata
 import net.kemitix.thorp.core.SyncLogging.{logFileScan, logRunFinished, logRunStart}
 import net.kemitix.thorp.domain._
-import net.kemitix.thorp.storage.api.{S3Action, S3Client}
+import net.kemitix.thorp.storage.api.{S3Action, StorageService}
 
 trait Sync {
 
@@ -20,24 +20,24 @@ trait Sync {
     } yield errorMessages
   }
 
-  def apply(s3Client: S3Client)
+  def apply(storageService: StorageService)
            (configOptions: Seq[ConfigOption])
            (implicit defaultLogger: Logger): IO[Either[List[String], Unit]] =
     buildConfig(configOptions).flatMap {
-      case Right(config) => runWithValidConfig(s3Client, defaultLogger, config)
+      case Right(config) => runWithValidConfig(storageService, defaultLogger, config)
       case Left(errors) => IO.pure(Left(errorMessages(errors.toList)))
     }
 
-  private def runWithValidConfig(s3Client: S3Client,
+  private def runWithValidConfig(storageService: StorageService,
                                  defaultLogger: Logger,
                                  config: Config) = {
     for {
-      _ <- run(config, s3Client, defaultLogger.withDebug(config.debug))
+      _ <- run(config, storageService, defaultLogger.withDebug(config.debug))
     } yield Right(())
   }
 
   private def run(cliConfig: Config,
-                  s3Client: S3Client,
+                  storageService: StorageService,
                   logger: Logger): IO[Unit] = {
 
     implicit val c: Config = cliConfig
@@ -50,7 +50,7 @@ trait Sync {
       IO.pure(sData.flatMap(s3MetaData => createActions(s3MetaData)))
 
     def submit(sActions: Stream[Action]) =
-      IO(sActions.flatMap(action => submitAction(s3Client, action)))
+      IO(sActions.flatMap(action => submitAction(storageService, action)))
 
     def copyUploadActions(s3Data: S3ObjectsData): IO[Stream[S3Action]] =
       (for {
@@ -66,14 +66,14 @@ trait Sync {
       (for {
         key <- s3ObjectsData.byKey.keys
         if key.isMissingLocally(c.source, c.prefix)
-        ioDelAction <- submitAction(s3Client, ToDelete(c.bucket, key))
+        ioDelAction <- submitAction(storageService, ToDelete(c.bucket, key))
       } yield ioDelAction)
         .toStream
         .sequence
 
     for {
       _ <- logRunStart
-      s3data <- s3Client.listObjects(c.bucket, c.prefix)
+      s3data <- storageService.listObjects(c.bucket, c.prefix)
       _ <- logFileScan
       copyUploadActions <- copyUploadActions(s3data)
       deleteActions <- deleteActions(s3data)

@@ -10,11 +10,11 @@ import net.kemitix.thorp.aws.lib.MD5HashData.rootHash
 import net.kemitix.thorp.core.{KeyGenerator, Resource, S3MetaDataEnricher}
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.S3Action.UploadS3Action
-import net.kemitix.thorp.storage.api.{S3Client, UploadProgressListener}
+import net.kemitix.thorp.storage.api.{StorageService, UploadProgressListener}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.FunSpec
 
-class S3ClientSuite
+class StorageServiceSuite
   extends FunSpec
     with MockFactory {
 
@@ -42,40 +42,40 @@ class S3ClientSuite
         keyotherkey.remoteKey -> HashModified(hash, lastModified),
         keydiffhash.remoteKey -> HashModified(diffhash, lastModified)))
 
-    def invoke(self: S3Client, localFile: LocalFile) = {
+    def invoke(self: StorageService, localFile: LocalFile) = {
       S3MetaDataEnricher.getS3Status(localFile, s3ObjectsData)
     }
 
     describe("when remote key exists") {
-      val s3Client = S3ClientBuilder.defaultClient
+      val storageService = S3StorageService.defaultStorageService
       it("should return (Some, Set.nonEmpty)") {
         assertResult(
           (Some(HashModified(hash, lastModified)),
             Set(
               KeyModified(key, lastModified),
               KeyModified(keyotherkey.remoteKey, lastModified)))
-        )(invoke(s3Client, localFile))
+        )(invoke(storageService, localFile))
       }
     }
 
     describe("when remote key does not exist and no others matches hash") {
-      val s3Client = S3ClientBuilder.defaultClient
+      val storageService = S3StorageService.defaultStorageService
       it("should return (None, Set.empty)") {
         val localFile = LocalFile.resolve("missing-file", MD5Hash("unique"), source, fileToKey)
         assertResult(
           (None,
             Set.empty)
-        )(invoke(s3Client, localFile))
+        )(invoke(storageService, localFile))
       }
     }
 
     describe("when remote key exists and no others match hash") {
-      val s3Client = S3ClientBuilder.defaultClient
+      val storageService = S3StorageService.defaultStorageService
       it("should return (None, Set.nonEmpty)") {
         assertResult(
           (Some(HashModified(diffhash, lastModified)),
             Set(KeyModified(keydiffhash.remoteKey, lastModified)))
-        )(invoke(s3Client, keydiffhash))
+        )(invoke(storageService, keydiffhash))
       }
     }
 
@@ -86,7 +86,7 @@ class S3ClientSuite
     describe("when uploading a file") {
       val amazonS3 = stub[AmazonS3]
       val amazonS3TransferManager = stub[TransferManager]
-      val s3Client = new ThorpS3Client(amazonS3, amazonS3TransferManager)
+      val storageService = new ThorpStorageService(amazonS3, amazonS3TransferManager)
 
       val prefix = RemoteKey("prefix")
       val localFile =
@@ -106,7 +106,7 @@ class S3ClientSuite
         pending
         //FIXME: works okay on its own, but fails when run with others
         val expected = UploadS3Action(remoteKey, rootHash)
-        val result = s3Client.upload(localFile, bucket, progressListener, 1)
+        val result = storageService.upload(localFile, bucket, progressListener, 1)
         assertResult(expected)(result)
       }
     }

@@ -5,11 +5,11 @@ import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.transfer.TransferManager
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.S3Action.{CopyS3Action, DeleteS3Action}
-import net.kemitix.thorp.storage.api.{S3Action, S3Client, UploadProgressListener}
+import net.kemitix.thorp.storage.api.{S3Action, StorageService, UploadProgressListener}
 
-class ThorpS3Client(amazonS3Client: => AmazonS3,
-                    amazonS3TransferManager: => TransferManager)
-  extends S3Client {
+class ThorpStorageService(amazonS3Client: => AmazonS3,
+                          amazonS3TransferManager: => TransferManager)
+  extends StorageService {
 
   lazy val objectLister = new S3ClientObjectLister(amazonS3Client)
   lazy val copier = new S3ClientCopier(amazonS3Client)

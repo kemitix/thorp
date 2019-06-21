@@ -4,7 +4,7 @@ import cats.effect.IO
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.S3Action.{CopyS3Action, DeleteS3Action}
 
-trait S3Client {
+trait StorageService {
 
   def listObjects(bucket: Bucket,
                   prefix: RemoteKey
