@@ -1,17 +1,17 @@
 package net.kemitix.thorp.core
 
 import net.kemitix.thorp.domain.{MD5Hash, RemoteKey}
-import net.kemitix.thorp.storage.api.S3Action.{CopyS3Action, DeleteS3Action, UploadS3Action}
+import net.kemitix.thorp.storage.api.StorageQueueEvent.{CopyQueueEvent, DeleteQueueEvent, UploadQueueEvent}
 import org.scalatest.FunSpec
 
-class S3ActionSuite extends FunSpec {
+class StorageQueueEventSuite extends FunSpec {
 
   describe("Ordering of types") {
     val remoteKey = RemoteKey("remote-key")
     val md5Hash = MD5Hash("md5hash")
-    val copy = CopyS3Action(remoteKey)
-    val upload = UploadS3Action(remoteKey, md5Hash)
-    val delete = DeleteS3Action(remoteKey)
+    val copy = CopyQueueEvent(remoteKey)
+    val upload = UploadQueueEvent(remoteKey, md5Hash)
+    val delete = DeleteQueueEvent(remoteKey)
     val unsorted = List(delete, copy, upload)
     it("should sort as copy < upload < delete ") {
       val result = unsorted.sorted

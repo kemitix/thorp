@@ -10,7 +10,7 @@ import net.kemitix.thorp.core.LocalFileStream.findFiles
 import net.kemitix.thorp.core.S3MetaDataEnricher.getMetadata
 import net.kemitix.thorp.core.SyncLogging.{logFileScan, logRunFinished, logRunStart}
 import net.kemitix.thorp.domain._
-import net.kemitix.thorp.storage.api.{S3Action, StorageService}
+import net.kemitix.thorp.storage.api.{StorageQueueEvent, StorageService}
 
 trait Sync {
 
@@ -52,7 +52,7 @@ trait Sync {
     def submit(sActions: Stream[Action]) =
       IO(sActions.flatMap(action => submitAction(storageService, action)))
 
-    def copyUploadActions(s3Data: S3ObjectsData): IO[Stream[S3Action]] =
+    def copyUploadActions(s3Data: S3ObjectsData): IO[Stream[StorageQueueEvent]] =
       (for {
         files <- findFiles(c.source, MD5HashGenerator.md5File(_))
         metaData <- metaData(s3Data, files)
@@ -62,7 +62,7 @@ trait Sync {
         .flatten
         .map(streamS3Actions => streamS3Actions.sorted)
 
-    def deleteActions(s3ObjectsData: S3ObjectsData): IO[Stream[S3Action]] =
+    def deleteActions(s3ObjectsData: S3ObjectsData): IO[Stream[StorageQueueEvent]] =
       (for {
         key <- s3ObjectsData.byKey.keys
         if key.isMissingLocally(c.source, c.prefix)

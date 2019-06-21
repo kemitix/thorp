@@ -3,35 +3,37 @@ package net.kemitix.thorp.core
 import cats.effect.IO
 import net.kemitix.thorp.core.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.domain.{Config, Logger}
-import net.kemitix.thorp.storage.api.S3Action.DoNothingS3Action
-import net.kemitix.thorp.storage.api.{S3Action, StorageService, UploadEventListener}
+import net.kemitix.thorp.storage.api.StorageQueueEvent.DoNothingQueueEvent
+import net.kemitix.thorp.storage.api.{StorageQueueEvent, StorageService, UploadEventListener}
 
-object ActionSubmitter {
+trait ActionSubmitter {
 
   def submitAction(storageService: StorageService,
                    action: Action)
                   (implicit c: Config,
-                   logger: Logger): Stream[IO[S3Action]] = {
+                   logger: Logger): Stream[IO[StorageQueueEvent]] = {
     Stream(
       action match {
         case ToUpload(bucket, localFile) =>
           for {
             _ <- logger.info(s"    Upload: ${localFile.relative}")
             uploadEventListener = new UploadEventListener(localFile)
-            action <- storageService.upload(localFile, bucket, uploadEventListener, 1)
-          } yield action
+            event <- storageService.upload(localFile, bucket, uploadEventListener, 1)
+          } yield event
         case ToCopy(bucket, sourceKey, hash, targetKey) =>
           for {
             _ <- logger.info(s"      Copy: ${sourceKey.key} => ${targetKey.key}")
-            action <- storageService.copy(bucket, sourceKey, hash, targetKey)
-          } yield action
+            event <- storageService.copy(bucket, sourceKey, hash, targetKey)
+          } yield event
         case ToDelete(bucket, remoteKey) =>
           for {
             _ <- logger.info(s"    Delete: ${remoteKey.key}")
-            action <- storageService.delete(bucket, remoteKey)
-          } yield action
-        case DoNothing(bucket, remoteKey) =>
-          IO.pure(DoNothingS3Action(remoteKey))
+            event <- storageService.delete(bucket, remoteKey)
+          } yield event
+        case DoNothing(_, remoteKey) =>
+          IO.pure(DoNothingQueueEvent(remoteKey))
       })
   }
 }
+
+object ActionSubmitter extends ActionSubmitter

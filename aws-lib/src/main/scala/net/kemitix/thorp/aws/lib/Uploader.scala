@@ -7,9 +7,9 @@ import com.amazonaws.services.s3.transfer.model.UploadResult
 import com.amazonaws.services.s3.transfer.{TransferManager => AmazonTransferManager}
 import net.kemitix.thorp.aws.lib.UploaderLogging.{logMultiPartUploadFinished, logMultiPartUploadStart}
 import net.kemitix.thorp.domain._
-import net.kemitix.thorp.storage.api.S3Action.{ErroredS3Action, UploadS3Action}
+import net.kemitix.thorp.storage.api.StorageQueueEvent.{ErrorQueueEvent, UploadQueueEvent}
 import net.kemitix.thorp.storage.api.UploadEvent.{ByteTransferEvent, RequestEvent, TransferEvent}
-import net.kemitix.thorp.storage.api.{S3Action, UploadEventListener}
+import net.kemitix.thorp.storage.api.{StorageQueueEvent, UploadEventListener}
 
 import scala.util.Try
 
@@ -19,13 +19,13 @@ class Uploader(transferManager: => AmazonTransferManager) {
              bucket: Bucket,
              uploadEventListener: UploadEventListener,
              tryCount: Int)
-            (implicit logger: Logger): IO[S3Action] =
+            (implicit logger: Logger): IO[StorageQueueEvent] =
     for {
       _ <- logMultiPartUploadStart(localFile, tryCount)
       upload <- transfer(localFile, bucket, uploadEventListener)
       action = upload match {
-        case Right(r) => UploadS3Action(RemoteKey(r.getKey), MD5Hash(r.getETag))
-        case Left(e) => ErroredS3Action(localFile.remoteKey, e)
+        case Right(r) => UploadQueueEvent(RemoteKey(r.getKey), MD5Hash(r.getETag))
+        case Left(e) => ErrorQueueEvent(localFile.remoteKey, e)
       }
       _ <- logMultiPartUploadFinished(localFile)
     } yield action

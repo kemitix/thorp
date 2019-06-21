@@ -6,7 +6,7 @@ import java.time.Instant
 import cats.effect.IO
 import net.kemitix.thorp.core.MD5HashData.{leafHash, rootHash}
 import net.kemitix.thorp.domain._
-import net.kemitix.thorp.storage.api.S3Action.{CopyS3Action, DeleteS3Action, UploadS3Action}
+import net.kemitix.thorp.storage.api.StorageQueueEvent.{CopyQueueEvent, DeleteQueueEvent, UploadQueueEvent}
 import net.kemitix.thorp.storage.api.{StorageService, UploadEventListener}
 import org.scalatest.FunSpec
 
@@ -162,28 +162,28 @@ class SyncSuite
                         bucket: Bucket,
                         uploadEventListener: UploadEventListener,
                         tryCount: Int)
-                       (implicit logger: Logger): IO[UploadS3Action] = {
+                       (implicit logger: Logger): IO[UploadQueueEvent] = {
       if (bucket == testBucket)
         uploadsRecord += (localFile.relative.toString -> localFile.remoteKey)
-      IO.pure(UploadS3Action(localFile.remoteKey, localFile.hash))
+      IO.pure(UploadQueueEvent(localFile.remoteKey, localFile.hash))
     }
 
     override def copy(bucket: Bucket,
                       sourceKey: RemoteKey,
                       hash: MD5Hash,
                       targetKey: RemoteKey
-                     )(implicit logger: Logger): IO[CopyS3Action] = {
+                     )(implicit logger: Logger): IO[CopyQueueEvent] = {
       if (bucket == testBucket)
         copiesRecord += (sourceKey -> targetKey)
-      IO.pure(CopyS3Action(targetKey))
+      IO.pure(CopyQueueEvent(targetKey))
     }
 
     override def delete(bucket: Bucket,
                         remoteKey: RemoteKey
-                       )(implicit logger: Logger): IO[DeleteS3Action] = {
+                       )(implicit logger: Logger): IO[DeleteQueueEvent] = {
       if (bucket == testBucket)
         deletionsRecord += remoteKey
-      IO.pure(DeleteS3Action(remoteKey))
+      IO.pure(DeleteQueueEvent(remoteKey))
     }
   }
 }
