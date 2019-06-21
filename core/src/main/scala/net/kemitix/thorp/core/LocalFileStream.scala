@@ -20,10 +20,7 @@ object LocalFileStream {
     def loop(file: File): IO[Stream[LocalFile]] = {
 
       def dirPaths(file: File): IO[Stream[File]] =
-        IO.pure {
-          Option(file.listFiles)
-            .getOrElse(throw new IllegalArgumentException(s"Directory not found $file"))
-        }
+        IO(listFiles(file))
           .map(fs =>
             Stream(fs: _*)
               .filter(f => filters(f.toPath)))
@@ -49,5 +46,11 @@ object LocalFileStream {
     }
 
     loop(file)
+  }
+
+  //TODO: Change this to return an Either[IllegalArgumentException, Array[File]]
+  private def listFiles(file: File) = {
+    Option(file.listFiles)
+      .getOrElse(throw new IllegalArgumentException(s"Directory not found $file"))
   }
 }
