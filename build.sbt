@@ -41,7 +41,7 @@ val catsEffectsSettings = Seq(
     "-Ypartial-unification")
 )
 
-// cli -> thorp-lib -> aws-lib -> core -> aws-api -> domain
+// cli -> thorp-lib -> aws-lib -> core -> storage-api -> domain
 
 lazy val root = (project in file("."))
   .settings(commonSettings)
@@ -50,7 +50,7 @@ lazy val cli = (project in file("cli"))
   .settings(commonSettings)
   .settings(mainClass in assembly := Some("net.kemitix.thorp.cli.Main"))
   .settings(applicationSettings)
-  .aggregate(`thorp-lib`, `aws-lib`, core, `aws-api`, domain)
+  .aggregate(`thorp-lib`, `aws-lib`, core, `storage-api`, domain)
   .settings(commandLineParsing)
   .settings(testDependencies)
   .dependsOn(`thorp-lib`)
@@ -71,11 +71,11 @@ lazy val core = (project in file("core"))
   .settings(commonSettings)
   .settings(assemblyJarName in assembly := "core.jar")
   .settings(testDependencies)
-  .dependsOn(`aws-api`)
+  .dependsOn(`storage-api`)
 
-lazy val `aws-api` = (project in file("aws-api"))
+lazy val `storage-api` = (project in file("storage-api"))
   .settings(commonSettings)
-  .settings(assemblyJarName in assembly := "aws-api.jar")
+  .settings(assemblyJarName in assembly := "storage-api.jar")
   .dependsOn(domain)
 
 lazy val domain = (project in file("domain"))
