@@ -19,7 +19,9 @@ class SyncSuite
   private val configOptions = List(
     ConfigOption.Source(source.toPath),
     ConfigOption.Bucket("bucket"),
-    ConfigOption.Prefix("prefix")
+    ConfigOption.Prefix("prefix"),
+    ConfigOption.IgnoreGlobalOptions,
+    ConfigOption.IgnoreUserOptions
   )
   implicit private val logger: Logger = new DummyLogger
   private val lastModified = LastModified(Instant.now)
