@@ -15,10 +15,6 @@ import scala.util.Try
 
 class Uploader(transferManager: => AmazonTransferManager) {
 
-  def accepts(localFile: LocalFile)
-             (implicit multiPartThreshold: Long): Boolean =
-    localFile.file.length >= multiPartThreshold
-
   def upload(localFile: LocalFile,
              bucket: Bucket,
              uploadProgressListener: UploadProgressListener,
