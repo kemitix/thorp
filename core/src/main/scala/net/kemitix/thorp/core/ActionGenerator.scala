@@ -11,7 +11,7 @@ object ActionGenerator {
 
       // #1 local exists, remote exists, remote matches - do nothing
       case S3MetaData(localFile, _, Some(RemoteMetaData(remoteKey, remoteHash, _)))
-        if localFile.hash == remoteHash
+        if localFile.matches(remoteHash)
       => doNothing(c.bucket, remoteKey)
 
       // #2 local exists, remote is missing, other matches - copy
@@ -26,7 +26,7 @@ object ActionGenerator {
 
       // #4 local exists, remote exists, remote no match, other matches - copy
       case S3MetaData(localFile, otherMatches, Some(RemoteMetaData(_, remoteHash, _)))
-        if localFile.hash != remoteHash &&
+        if !localFile.matches(remoteHash) &&
           otherMatches.nonEmpty
       => copyFile(c.bucket, localFile, otherMatches)
 

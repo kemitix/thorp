@@ -24,28 +24,6 @@ class UploaderSuite
   val lastModified = LastModified(Instant.now())
 
   describe("S3ClientMultiPartTransferManagerSuite") {
-    describe("accepts") {
-      val transferManager = stub[TransferManager]
-      val uploader = new Uploader(transferManager)
-      describe("small-file") {
-        val smallFile = LocalFile.resolve("small-file", MD5Hash("the-hash"), source, fileToKey)
-        it("should be a small-file") {
-          assert(smallFile.file.length < 5 * 1024 * 1024)
-        }
-        it("should not accept small-file") {
-          assertResult(false)(uploader.accepts(smallFile)(config.multiPartThreshold))
-        }
-      }
-      describe("big-file") {
-        val bigFile = LocalFile.resolve("big-file", MD5Hash("the-hash"), source, fileToKey)
-        it("should be a big-file") {
-          assert(bigFile.file.length > 5 * 1024 * 1024)
-        }
-        it("should accept big-file") {
-          assertResult(true)(uploader.accepts(bigFile)(config.multiPartThreshold))
-        }
-      }
-    }
     describe("upload") {
       pending
       // how much of this test is testing the amazonTransferManager
@@ -61,7 +39,7 @@ class UploaderSuite
       val uploader = new Uploader(amazonS3TransferManager)
       it("should upload") {
         val expected = UploadS3Action(returnedKey, returnedHash)
-        val result = uploader.upload(bigFile, config.bucket, progressListener, config.multiPartThreshold, 1, config.maxRetries)
+        val result = uploader.upload(bigFile, config.bucket, progressListener, 1)
         assertResult(expected)(result)
       }
     }

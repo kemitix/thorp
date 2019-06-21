@@ -23,8 +23,8 @@ trait ConfigurationBuilder {
     val source = findSource(priorityOptions)
     for {
       sourceOptions <- sourceOptions(source)
-      userOptions <- userOptions()
-      globalOptions <- globalOptions()
+      userOptions <- userOptions(priorityOptions ++ sourceOptions)
+      globalOptions <- globalOptions(priorityOptions ++ sourceOptions ++ userOptions)
       collected = priorityOptions ++ sourceOptions ++ userOptions ++ globalOptions
       config = collateOptions(collected)
     } yield validateConfig(config).toEither
@@ -39,11 +39,13 @@ trait ConfigurationBuilder {
   private def sourceOptions(source: File): IO[Seq[ConfigOption]] =
     readFile(source, ".thorp.conf")
 
-  private def userOptions(): IO[Seq[ConfigOption]] =
-    readFile(userHome, ".config/thorp.conf")
+  private def userOptions(higherPriorityOptions: Seq[ConfigOption]): IO[Seq[ConfigOption]] =
+    if (ConfigQuery.ignoreUserOptions(higherPriorityOptions)) IO(List())
+    else readFile(userHome, ".config/thorp.conf")
 
-  private def globalOptions(): IO[Seq[ConfigOption]] =
-    parseFile(Paths.get("/etc/thorp.conf"))
+  private def globalOptions(higherPriorityOptions: Seq[ConfigOption]): IO[Seq[ConfigOption]] =
+    if (ConfigQuery.ignoreGlobalOptions(higherPriorityOptions)) IO(List())
+    else parseFile(Paths.get("/etc/thorp.conf"))
 
   private def userHome = new File(System.getProperty("user.home"))
 

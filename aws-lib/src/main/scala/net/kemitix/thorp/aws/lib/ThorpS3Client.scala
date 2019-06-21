@@ -31,11 +31,9 @@ class ThorpS3Client(amazonS3Client: => AmazonS3,
   override def upload(localFile: LocalFile,
                       bucket: Bucket,
                       progressListener: UploadProgressListener,
-                      multiPartThreshold: Long,
-                      tryCount: Int,
-                      maxRetries: Int)
+                      tryCount: Int)
                      (implicit logger: Logger): IO[S3Action] =
-    uploader.upload(localFile, bucket, progressListener, multiPartThreshold, 1, maxRetries)
+    uploader.upload(localFile, bucket, progressListener, 1)
 
   override def delete(bucket: Bucket,
                       remoteKey: RemoteKey)

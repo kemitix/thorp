@@ -42,20 +42,20 @@ object MD5HashGenerator {
               val buffer = readToBuffer(fis, currentOffset)
               md5 update buffer
             }}
-        (md5.digest map ("%02x" format _)).mkString
+        md5.digest
       }
 
-    def readFile: IO[String] =
+    def readFile =
       for {
         fis <- openFile
-        md5 <- digestFile(fis)
+        digest <- digestFile(fis)
         _ <- closeFile(fis)
-      } yield md5
+      } yield digest
 
     for {
       _ <- logger.debug(s"md5:reading:size ${file.length}:$file")
-      md5 <- readFile
-      hash = MD5Hash(md5)
+      digest <- readFile
+      hash = MD5Hash.fromDigest(digest)
       _ <- logger.debug(s"md5:generated:${hash.hash}:$file")
     } yield hash
   }

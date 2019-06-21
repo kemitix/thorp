@@ -15,6 +15,8 @@ final case class LocalFile(file: File, source: File, hash: MD5Hash, keyGenerator
   // the path of the file within the source
   def relative: Path = source.toPath.relativize(file.toPath)
 
+  def matches(other: MD5Hash): Boolean = hash.hash == other.hash
+
 }
 
 object LocalFile {

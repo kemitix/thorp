@@ -106,7 +106,7 @@ class S3ClientSuite
         pending
         //FIXME: works okay on its own, but fails when run with others
         val expected = UploadS3Action(remoteKey, rootHash)
-        val result = s3Client.upload(localFile, bucket, progressListener, config.multiPartThreshold, 1, config.maxRetries)
+        val result = s3Client.upload(localFile, bucket, progressListener, 1)
         assertResult(expected)(result)
       }
     }

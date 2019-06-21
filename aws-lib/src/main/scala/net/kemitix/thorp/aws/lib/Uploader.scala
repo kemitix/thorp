@@ -2,7 +2,7 @@ package net.kemitix.thorp.aws.lib
 
 import cats.effect.IO
 import com.amazonaws.event.{ProgressEvent, ProgressEventType, ProgressListener}
-import com.amazonaws.services.s3.model.PutObjectRequest
+import com.amazonaws.services.s3.model.{ObjectMetadata, PutObjectRequest}
 import com.amazonaws.services.s3.transfer.model.UploadResult
 import com.amazonaws.services.s3.transfer.{TransferManager => AmazonTransferManager}
 import net.kemitix.thorp.aws.api.S3Action.{ErroredS3Action, UploadS3Action}
@@ -15,25 +15,20 @@ import scala.util.Try
 
 class Uploader(transferManager: => AmazonTransferManager) {
 
-  def accepts(localFile: LocalFile)
-             (implicit multiPartThreshold: Long): Boolean =
-    localFile.file.length >= multiPartThreshold
-
   def upload(localFile: LocalFile,
              bucket: Bucket,
              uploadProgressListener: UploadProgressListener,
-             multiPartThreshold: Long,
-             tryCount: Int,
-             maxRetries: Int)
+             tryCount: Int)
             (implicit logger: Logger): IO[S3Action] =
     for {
       _ <- logMultiPartUploadStart(localFile, tryCount)
       upload <- transfer(localFile, bucket, uploadProgressListener)
+      action = upload match {
+        case Right(r) => UploadS3Action(RemoteKey(r.getKey), MD5Hash(r.getETag))
+        case Left(e) => ErroredS3Action(localFile.remoteKey, e)
+      }
       _ <- logMultiPartUploadFinished(localFile)
-    } yield upload match {
-      case Right(r) => UploadS3Action(RemoteKey(r.getKey), MD5Hash(r.getETag))
-      case Left(e) => ErroredS3Action(localFile.remoteKey, e)
-    }
+    } yield action
 
   private def transfer(localFile: LocalFile,
                        bucket: Bucket,
@@ -48,9 +43,13 @@ class Uploader(transferManager: => AmazonTransferManager) {
     }
   }
 
-  private def request(localFile: LocalFile, bucket: Bucket, listener: ProgressListener): PutObjectRequest =
+  private def request(localFile: LocalFile, bucket: Bucket, listener: ProgressListener): PutObjectRequest = {
+    val metadata = new ObjectMetadata()
+    localFile.hash.hash64.foreach(metadata.setContentMD5)
     new PutObjectRequest(bucket.name, localFile.remoteKey.key, localFile.file)
+      .withMetadata(metadata)
       .withGeneralProgressListener(listener)
+  }
 
   private def progressListener(uploadProgressListener: UploadProgressListener) =
     new ProgressListener {
