@@ -163,7 +163,7 @@ class SyncSuite
                        (implicit logger: Logger): IO[UploadS3Action] = {
       if (bucket == testBucket)
         uploadsRecord += (localFile.relative.toString -> localFile.remoteKey)
-      IO.pure(UploadS3Action(localFile.remoteKey, MD5Hash("some hash value")))
+      IO.pure(UploadS3Action(localFile.remoteKey, localFile.hash))
     }
 
     override def copy(bucket: Bucket,
