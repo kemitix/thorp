@@ -25,11 +25,12 @@ class Uploader(transferManager: => AmazonTransferManager) {
     for {
       _ <- logMultiPartUploadStart(localFile, tryCount)
       upload <- transfer(localFile, bucket, uploadProgressListener)
+      action = upload match {
+        case Right(r) => UploadS3Action(RemoteKey(r.getKey), MD5Hash(r.getETag))
+        case Left(e) => ErroredS3Action(localFile.remoteKey, e)
+      }
       _ <- logMultiPartUploadFinished(localFile)
-    } yield upload match {
-      case Right(r) => UploadS3Action(RemoteKey(r.getKey), MD5Hash(r.getETag))
-      case Left(e) => ErroredS3Action(localFile.remoteKey, e)
-    }
+    } yield action
 
   private def transfer(localFile: LocalFile,
                        bucket: Bucket,
