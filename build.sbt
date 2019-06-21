@@ -1,5 +1,5 @@
 val commonSettings = Seq(
-  version := "DEV-SNAPSHOT",
+  version := "0.5.0",
   organization := "net.kemitix",
   scalaVersion := "2.12.8",
   test in assembly := {}
