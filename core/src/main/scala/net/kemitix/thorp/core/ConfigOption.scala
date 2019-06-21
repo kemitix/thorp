@@ -28,4 +28,11 @@ object ConfigOption {
   case class Debug() extends ConfigOption {
     override def update(config: Config): Config = config.copy(debug = true)
   }
+  case object IgnoreUserOptions extends ConfigOption {
+    override def update(config: Config): Config = config
+  }
+  case object IgnoreGlobalOptions extends ConfigOption {
+    override def update(config: Config): Config = config
+  }
+
 }

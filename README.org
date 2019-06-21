@@ -22,6 +22,8 @@ hash of the file contents.
       -i, --include <value> Include matching paths
       -x, --exclude <value> Exclude matching paths
       -d, --debug           Enable debug logging
+      --no-global           Ignore global configuration
+      --no-user             Ignore user configuration
   #+end_example
 
 If you don't provide a ~source~ the current diretory will be used.
@@ -33,7 +35,7 @@ The ~--include~ and ~--exclude~ parameters can be used more than once.
   Configuration will be read from these files:
 
   - Global: ~/etc/thorp.conf~
-  - User: ~~/.config/thorp.conf~
+  - User: ~ ~/.config/thorp.conf~
   - Source: ~${source}/.thorp.conf~
 
 Command line arguments override those in Source, which override those

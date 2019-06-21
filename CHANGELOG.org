@@ -15,6 +15,7 @@ The format is based on [[https://keepachangelog.com/en/1.0.0/][Keep a Changelog]
    - Read config from ~.thorp.conf~ in source directory (#71)
    - Read config from ~$HOME/.config/thorp.conf~ and ~/etc/thorp.conf~
      (#73)
+   - Add ~--no-global~ and ~--no-user~ options (#50)
 
 ** Changed
 

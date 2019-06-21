@@ -32,7 +32,13 @@ object ParseArgs {
         .text("Exclude matching paths"),
       opt[Unit]('d', "debug")
         .action((_, cos) => ConfigOption.Debug() :: cos)
-        .text("Enable debug logging")
+        .text("Enable debug logging"),
+      opt[Unit]("no-global")
+        .action((_, cos) => ConfigOption.IgnoreGlobalOptions :: cos)
+        .text("Ignore global configuration"),
+      opt[Unit]("no-user")
+        .action((_, cos) => ConfigOption.IgnoreUserOptions :: cos)
+        .text("Ignore user configuration")
     )
   }
 
