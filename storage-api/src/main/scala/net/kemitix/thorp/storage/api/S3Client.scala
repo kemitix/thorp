@@ -1,8 +1,8 @@
-package net.kemitix.thorp.aws.api
+package net.kemitix.thorp.storage.api
 
 import cats.effect.IO
-import net.kemitix.thorp.aws.api.S3Action.{CopyS3Action, DeleteS3Action}
 import net.kemitix.thorp.domain._
+import net.kemitix.thorp.storage.api.S3Action.{CopyS3Action, DeleteS3Action}
 
 trait S3Client {
 

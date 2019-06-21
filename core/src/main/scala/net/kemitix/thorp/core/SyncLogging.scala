@@ -2,9 +2,9 @@ package net.kemitix.thorp.core
 
 import cats.effect.IO
 import cats.implicits._
-import net.kemitix.thorp.aws.api.S3Action
-import net.kemitix.thorp.aws.api.S3Action.{CopyS3Action, DeleteS3Action, ErroredS3Action, UploadS3Action}
 import net.kemitix.thorp.domain.{Config, Logger}
+import net.kemitix.thorp.storage.api.S3Action
+import net.kemitix.thorp.storage.api.S3Action.{CopyS3Action, DeleteS3Action, ErroredS3Action, UploadS3Action}
 
 // Logging for the Sync class
 object SyncLogging {

@@ -3,7 +3,7 @@ package net.kemitix.thorp.core
 import java.nio.file.Paths
 import java.util.regex.Pattern
 
-import net.kemitix.thorp.core.ConfigOption.{Bucket, Debug, Exclude, Include, Prefix, Source}
+import net.kemitix.thorp.core.ConfigOption._
 
 trait ParseConfigLines {
 

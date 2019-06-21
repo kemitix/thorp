@@ -1,7 +1,5 @@
 package net.kemitix.thorp.domain
 
-import scala.io.AnsiColor._
-
 import org.scalatest.FunSpec
 
 class TerminalTest extends FunSpec {

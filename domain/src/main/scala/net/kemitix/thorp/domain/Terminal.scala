@@ -1,7 +1,5 @@
 package net.kemitix.thorp.domain
 
-import scala.io.AnsiColor._
-
 object Terminal {
 
   private val esc = "\u001B"

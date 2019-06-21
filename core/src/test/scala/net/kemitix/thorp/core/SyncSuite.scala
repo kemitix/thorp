@@ -4,11 +4,10 @@ import java.io.File
 import java.time.Instant
 
 import cats.effect.IO
-import net.kemitix.thorp.aws.api.S3Action.{CopyS3Action, DeleteS3Action, UploadS3Action}
-import net.kemitix.thorp.aws.api.{S3Client, UploadProgressListener}
 import net.kemitix.thorp.core.MD5HashData.{leafHash, rootHash}
-import net.kemitix.thorp.domain.Filter.Exclude
 import net.kemitix.thorp.domain._
+import net.kemitix.thorp.storage.api.S3Action.{CopyS3Action, DeleteS3Action, UploadS3Action}
+import net.kemitix.thorp.storage.api.{S3Client, UploadProgressListener}
 import org.scalatest.FunSpec
 
 class SyncSuite

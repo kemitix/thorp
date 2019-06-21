@@ -2,7 +2,7 @@ package net.kemitix.thorp.aws.lib
 
 import com.amazonaws.services.s3.transfer.{TransferManager, TransferManagerBuilder}
 import com.amazonaws.services.s3.{AmazonS3, AmazonS3ClientBuilder}
-import net.kemitix.thorp.aws.api.S3Client
+import net.kemitix.thorp.storage.api.S3Client
 
 object S3ClientBuilder {
 

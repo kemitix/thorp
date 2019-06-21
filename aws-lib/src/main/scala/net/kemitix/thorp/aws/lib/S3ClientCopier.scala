@@ -3,9 +3,9 @@ package net.kemitix.thorp.aws.lib
 import cats.effect.IO
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.CopyObjectRequest
-import net.kemitix.thorp.aws.api.S3Action.CopyS3Action
 import net.kemitix.thorp.aws.lib.S3ClientLogging.{logCopyFinish, logCopyStart}
 import net.kemitix.thorp.domain.{Bucket, Logger, MD5Hash, RemoteKey}
+import net.kemitix.thorp.storage.api.S3Action.CopyS3Action
 
 class S3ClientCopier(amazonS3: AmazonS3) {
 

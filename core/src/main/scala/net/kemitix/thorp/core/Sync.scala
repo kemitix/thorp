@@ -2,7 +2,6 @@ package net.kemitix.thorp.core
 
 import cats.effect.IO
 import cats.implicits._
-import net.kemitix.thorp.aws.api.{S3Action, S3Client}
 import net.kemitix.thorp.core.Action.ToDelete
 import net.kemitix.thorp.core.ActionGenerator.createActions
 import net.kemitix.thorp.core.ActionSubmitter.submitAction
@@ -11,6 +10,7 @@ import net.kemitix.thorp.core.LocalFileStream.findFiles
 import net.kemitix.thorp.core.S3MetaDataEnricher.getMetadata
 import net.kemitix.thorp.core.SyncLogging.{logFileScan, logRunFinished, logRunStart}
 import net.kemitix.thorp.domain._
+import net.kemitix.thorp.storage.api.{S3Action, S3Client}
 
 trait Sync {
 

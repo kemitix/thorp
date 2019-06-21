@@ -4,11 +4,11 @@ import java.time.Instant
 
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.transfer._
-import net.kemitix.thorp.aws.api.S3Action.UploadS3Action
-import net.kemitix.thorp.aws.api.UploadProgressListener
 import net.kemitix.thorp.core.KeyGenerator.generateKey
 import net.kemitix.thorp.core.Resource
 import net.kemitix.thorp.domain._
+import net.kemitix.thorp.storage.api.S3Action.UploadS3Action
+import net.kemitix.thorp.storage.api.UploadProgressListener
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.FunSpec
 

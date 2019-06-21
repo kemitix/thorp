@@ -1,7 +1,7 @@
-package net.kemitix.thorp.aws.api
+package net.kemitix.thorp.storage.api
 
-import net.kemitix.thorp.aws.api.UploadEvent.RequestEvent
 import net.kemitix.thorp.domain.LocalFile
+import net.kemitix.thorp.storage.api.UploadEvent.RequestEvent
 
 class UploadProgressListener(localFile: LocalFile)
   extends UploadProgressLogging {

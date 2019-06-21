@@ -3,9 +3,9 @@ package net.kemitix.thorp.aws.lib
 import cats.effect.IO
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.transfer.TransferManager
-import net.kemitix.thorp.aws.api.S3Action.{CopyS3Action, DeleteS3Action}
-import net.kemitix.thorp.aws.api.{S3Action, S3Client, UploadProgressListener}
 import net.kemitix.thorp.domain._
+import net.kemitix.thorp.storage.api.S3Action.{CopyS3Action, DeleteS3Action}
+import net.kemitix.thorp.storage.api.{S3Action, S3Client, UploadProgressListener}
 
 class ThorpS3Client(amazonS3Client: => AmazonS3,
                     amazonS3TransferManager: => TransferManager)

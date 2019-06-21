@@ -1,9 +1,9 @@
-package net.kemitix.thorp.aws.api
+package net.kemitix.thorp.storage.api
 
-import net.kemitix.thorp.aws.api.UploadEvent.RequestEvent
 import net.kemitix.thorp.domain.SizeTranslation.sizeInEnglish
 import net.kemitix.thorp.domain.Terminal._
 import net.kemitix.thorp.domain.{LocalFile, Terminal}
+import net.kemitix.thorp.storage.api.UploadEvent.RequestEvent
 
 trait UploadProgressLogging {
 

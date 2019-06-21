@@ -1,10 +1,10 @@
 package net.kemitix.thorp.core
 
 import cats.effect.IO
-import net.kemitix.thorp.aws.api.S3Action.DoNothingS3Action
-import net.kemitix.thorp.aws.api.{S3Action, S3Client, UploadProgressListener}
 import net.kemitix.thorp.core.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.domain.{Config, Logger}
+import net.kemitix.thorp.storage.api.S3Action.DoNothingS3Action
+import net.kemitix.thorp.storage.api.{S3Action, S3Client, UploadProgressListener}
 
 object ActionSubmitter {
 
