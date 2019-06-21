@@ -1,4 +1,4 @@
-package net.kemitix.thorp.aws.lib
+package net.kemitix.thorp.storage.aws
 
 import cats.effect.IO
 import net.kemitix.thorp.domain.{Bucket, Logger, RemoteKey}

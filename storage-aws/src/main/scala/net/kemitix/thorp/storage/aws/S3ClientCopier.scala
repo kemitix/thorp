@@ -1,11 +1,11 @@
-package net.kemitix.thorp.aws.lib
+package net.kemitix.thorp.storage.aws
 
 import cats.effect.IO
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.CopyObjectRequest
-import net.kemitix.thorp.aws.lib.S3ClientLogging.{logCopyFinish, logCopyStart}
-import net.kemitix.thorp.domain.{Bucket, Logger, MD5Hash, RemoteKey, StorageQueueEvent}
 import net.kemitix.thorp.domain.StorageQueueEvent.CopyQueueEvent
+import net.kemitix.thorp.domain._
+import net.kemitix.thorp.storage.aws.S3ClientLogging.{logCopyStart, logCopyFinish}
 
 class S3ClientCopier(amazonS3: AmazonS3) {
 

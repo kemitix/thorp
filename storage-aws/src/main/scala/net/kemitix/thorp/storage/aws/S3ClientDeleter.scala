@@ -1,11 +1,11 @@
-package net.kemitix.thorp.aws.lib
+package net.kemitix.thorp.storage.aws
 
 import cats.effect.IO
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.DeleteObjectRequest
-import net.kemitix.thorp.aws.lib.S3ClientLogging.{logDeleteFinish, logDeleteStart}
-import net.kemitix.thorp.domain.{Bucket, Logger, RemoteKey}
 import net.kemitix.thorp.domain.StorageQueueEvent.DeleteQueueEvent
+import net.kemitix.thorp.domain.{Bucket, Logger, RemoteKey}
+import net.kemitix.thorp.storage.aws.S3ClientLogging.{logDeleteStart, logDeleteFinish}
 
 class S3ClientDeleter(amazonS3: AmazonS3) {
 

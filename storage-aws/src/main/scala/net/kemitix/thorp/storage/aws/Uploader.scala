@@ -1,14 +1,14 @@
-package net.kemitix.thorp.aws.lib
+package net.kemitix.thorp.storage.aws
 
 import cats.effect.IO
 import com.amazonaws.event.{ProgressEvent, ProgressEventType, ProgressListener}
 import com.amazonaws.services.s3.model.{ObjectMetadata, PutObjectRequest}
 import com.amazonaws.services.s3.transfer.model.UploadResult
 import com.amazonaws.services.s3.transfer.{TransferManager => AmazonTransferManager}
-import net.kemitix.thorp.aws.lib.UploaderLogging.{logMultiPartUploadFinished, logMultiPartUploadStart}
-import net.kemitix.thorp.domain.{StorageQueueEvent, _}
 import net.kemitix.thorp.domain.StorageQueueEvent.{ErrorQueueEvent, UploadQueueEvent}
 import net.kemitix.thorp.domain.UploadEvent.{ByteTransferEvent, RequestEvent, TransferEvent}
+import net.kemitix.thorp.domain.{StorageQueueEvent, _}
+import net.kemitix.thorp.storage.aws.UploaderLogging.{logMultiPartUploadStart, logMultiPartUploadFinished}
 
 import scala.util.Try
 
