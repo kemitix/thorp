@@ -7,7 +7,7 @@ import cats.effect.IO
 import net.kemitix.thorp.core.MD5HashData.{leafHash, rootHash}
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.StorageQueueEvent.{CopyQueueEvent, DeleteQueueEvent, UploadQueueEvent}
-import net.kemitix.thorp.storage.api.{StorageService, UploadEventListener}
+import net.kemitix.thorp.storage.api.StorageService
 import org.scalatest.FunSpec
 
 class SyncSuite

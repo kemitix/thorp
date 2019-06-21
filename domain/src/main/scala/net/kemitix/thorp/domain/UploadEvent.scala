@@ -1,4 +1,4 @@
-package net.kemitix.thorp.storage.api
+package net.kemitix.thorp.domain
 
 sealed trait UploadEvent {
   def name: String

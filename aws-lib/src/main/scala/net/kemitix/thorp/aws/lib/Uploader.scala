@@ -8,8 +8,8 @@ import com.amazonaws.services.s3.transfer.{TransferManager => AmazonTransferMana
 import net.kemitix.thorp.aws.lib.UploaderLogging.{logMultiPartUploadFinished, logMultiPartUploadStart}
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.StorageQueueEvent.{ErrorQueueEvent, UploadQueueEvent}
-import net.kemitix.thorp.storage.api.UploadEvent.{ByteTransferEvent, RequestEvent, TransferEvent}
-import net.kemitix.thorp.storage.api.{StorageQueueEvent, UploadEventListener}
+import net.kemitix.thorp.domain.UploadEvent.{ByteTransferEvent, RequestEvent, TransferEvent}
+import net.kemitix.thorp.storage.api.StorageQueueEvent
 
 import scala.util.Try
 

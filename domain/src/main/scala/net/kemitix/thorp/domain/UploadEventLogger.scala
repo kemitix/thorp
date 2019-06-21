@@ -1,9 +1,8 @@
-package net.kemitix.thorp.storage.api
+package net.kemitix.thorp.domain
 
 import net.kemitix.thorp.domain.SizeTranslation.sizeInEnglish
 import net.kemitix.thorp.domain.Terminal._
-import net.kemitix.thorp.domain.{LocalFile, Terminal}
-import net.kemitix.thorp.storage.api.UploadEvent.RequestEvent
+import net.kemitix.thorp.domain.UploadEvent.RequestEvent
 
 trait UploadEventLogger {
 

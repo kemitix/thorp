@@ -1,8 +1,7 @@
-package net.kemitix.thorp.storage.api
+package net.kemitix.thorp.domain
 
-import net.kemitix.thorp.domain.LocalFile
-import net.kemitix.thorp.storage.api.UploadEvent.RequestEvent
-import net.kemitix.thorp.storage.api.UploadEventLogger.logRequestCycle
+import net.kemitix.thorp.domain.UploadEvent.RequestEvent
+import net.kemitix.thorp.domain.UploadEventLogger.logRequestCycle
 
 class UploadEventListener(localFile: LocalFile) {
 
