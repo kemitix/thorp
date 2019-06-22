@@ -2,12 +2,11 @@ package net.kemitix.thorp.core
 
 import cats.effect.IO
 import cats.implicits._
-import net.kemitix.thorp.aws.api.S3Action
-import net.kemitix.thorp.aws.api.S3Action.{CopyS3Action, DeleteS3Action, ErroredS3Action, UploadS3Action}
-import net.kemitix.thorp.domain.{Config, Logger}
+import net.kemitix.thorp.domain.{Config, Logger, StorageQueueEvent}
+import net.kemitix.thorp.domain.StorageQueueEvent.{CopyQueueEvent, DeleteQueueEvent, ErrorQueueEvent, UploadQueueEvent}
 
 // Logging for the Sync class
-object SyncLogging {
+trait SyncLogging {
 
   def logRunStart(implicit c: Config,
                   logger: Logger): IO[Unit] =
@@ -17,16 +16,16 @@ object SyncLogging {
                   logger: Logger): IO[Unit] =
     logger.info(s"Scanning local files: ${c.source}...")
 
-  def logErrors(actions: Stream[S3Action])
+  def logErrors(actions: Stream[StorageQueueEvent])
                (implicit logger: Logger): IO[Unit] =
     for {
       _ <- actions.map {
-        case ErroredS3Action(k, e) => logger.warn(s"${k.key}: ${e.getMessage}")
+        case ErrorQueueEvent(k, e) => logger.warn(s"${k.key}: ${e.getMessage}")
         case _ => IO.unit
       }.sequence
     } yield ()
 
-  def logRunFinished(actions: Stream[S3Action])
+  def logRunFinished(actions: Stream[StorageQueueEvent])
                     (implicit c: Config,
                      logger: Logger): IO[Unit] = {
     val counters = actions.foldLeft(Counters())(countActivities)
@@ -40,19 +39,21 @@ object SyncLogging {
   }
 
   private def countActivities(implicit c: Config,
-                              logger: Logger): (Counters, S3Action) => Counters =
-    (counters: Counters, s3Action: S3Action) => {
+                              logger: Logger): (Counters, StorageQueueEvent) => Counters =
+    (counters: Counters, s3Action: StorageQueueEvent) => {
       s3Action match {
-        case _: UploadS3Action =>
+        case _: UploadQueueEvent =>
           counters.copy(uploaded = counters.uploaded + 1)
-        case _: CopyS3Action =>
+        case _: CopyQueueEvent =>
           counters.copy(copied = counters.copied + 1)
-        case _: DeleteS3Action =>
+        case _: DeleteQueueEvent =>
           counters.copy(deleted = counters.deleted + 1)
-        case ErroredS3Action(k, e) =>
+        case ErrorQueueEvent(k, e) =>
             counters.copy(errors = counters.errors + 1)
         case _ => counters
       }
     }
 
 }
+
+object SyncLogging extends SyncLogging
