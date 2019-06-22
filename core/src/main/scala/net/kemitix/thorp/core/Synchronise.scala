@@ -20,7 +20,7 @@ trait Synchronise {
     gatherMetadata(storageService, logger, config)
       .map { md => 
         val (rd, ld) = md
-        val actions1 = actionsForLocalFiles(config, ld)
+        val actions1 = actionsForLocalFiles(config, ld, rd)
         val actions2 = actionsForRemoteKeys(config, rd)
         Right(actions1 ++ actions2)
       }
@@ -36,8 +36,8 @@ trait Synchronise {
   private def actionsForRemoteKeys(config: Config, remoteData: S3ObjectsData) =
     remoteData.byKey.keys.foldLeft(Stream[Action]())((acc, rk) => createActionFromRemoteKey(config, rk) #:: acc)
 
-  private def actionsForLocalFiles(config: Config, localData: Stream[LocalFile]) =
-    localData.foldLeft(Stream[Action]())((acc, lf) => createActionFromLocalFile(config, lf) #:: acc)
+  private def actionsForLocalFiles(config: Config, localData: Stream[LocalFile], remoteData: S3ObjectsData) =
+    localData.foldLeft(Stream[Action]())((acc, lf) => createActionFromLocalFile(config, lf, remoteData) ++ acc)
 
   private def findLocalFiles(implicit config: Config, l: Logger) =
     LocalFileStream.findFiles(config.source, MD5HashGenerator.md5File(_))
@@ -46,10 +46,11 @@ trait Synchronise {
     storageService.listObjects(config.bucket, config.prefix)(logger)
 
   private def createActionFromRemoteKey(c: Config, rk: RemoteKey) =
-    DoNothing(c.bucket, rk)
+    if (rk.isMissingLocally(c.source, c.prefix)) Action.ToDelete(c.bucket, rk)
+    else DoNothing(c.bucket, rk)
 
-  private def createActionFromLocalFile(c: Config, lf: LocalFile) =
-    DoNothing(c.bucket, lf.remoteKey)
+  private def createActionFromLocalFile(c: Config, lf: LocalFile, remoteData: S3ObjectsData) =
+    ActionGenerator.createActions(S3MetaDataEnricher.getMetadata(lf, remoteData)(c))(c)
 
   def apply(storageService: StorageService,
             configOptions: Seq[ConfigOption])
