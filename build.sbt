@@ -45,7 +45,8 @@ val catsEffectsSettings = Seq(
 
 lazy val thorp = (project in file("."))
   .settings(commonSettings)
-
+  .dependsOn(cli)
+ 
 lazy val cli = (project in file("cli"))
   .settings(commonSettings)
   .settings(mainClass in assembly := Some("net.kemitix.thorp.cli.Main"))
