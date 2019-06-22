@@ -3,7 +3,7 @@ package net.kemitix.thorp.core
 import cats.effect.IO
 import cats.implicits._
 import net.kemitix.thorp.core.Action.DoNothing
-import net.kemitix.thorp.domain.{Config, LocalFile, Logger, RemoteKey}
+import net.kemitix.thorp.domain.{Config, LocalFile, Logger, RemoteKey, S3ObjectsData}
 import net.kemitix.thorp.storage.api.StorageService
 
 trait Synchronise {
@@ -24,16 +24,32 @@ trait Synchronise {
       complete <- for {
         scanRemoteKeys <- for {
           scanLocalFiles <- for {
-            s3ObjectsData <- storageService.listObjects(config.bucket, config.prefix)(logger)
-            scanLocalFiles <- LocalFileStream.findFiles(config.source, MD5HashGenerator.md5File(_))
-          } yield AppState.Initial().toConfigured(config).toScanLocalFiles(s3ObjectsData, scanLocalFiles)
-          actions = scanLocalFiles.localData
-            .foldLeft(Stream[Action]())((acc, lf) => createActionFromLocalFile(config, lf) #:: acc)
-        } yield scanLocalFiles.toScanRemoteKeys(actions)
-        actions = scanRemoteKeys.remoteData
-          .foldLeft(Stream[Action]())((acc, rk) => createActionFromRemoteKey(config, rk) #:: acc)
-      } yield scanRemoteKeys.toCompleted(actions)
+            remoteData <- fetchRemoteData(storageService, logger, config)
+            localFiles <- findLocalFiles
+          } yield gatherMetadata(config, remoteData, localFiles)
+        } yield actionsForLocalFiles(config, scanLocalFiles)
+      } yield allActions(config, scanRemoteKeys)
     } yield Right(complete.actions)
+  }
+
+  private def allActions(config: Config, scanRemoteKeys: AppState.ScanRemoteKeys) = {
+    scanRemoteKeys.toCompleted(scanRemoteKeys.remoteData.foldLeft(scanRemoteKeys.actionsFromLocalFiles)((acc, rk) => createActionFromRemoteKey(config, rk) #:: acc))
+  }
+
+  private def actionsForLocalFiles(config: Config, scanLocalFiles: AppState.ScanLocalFiles) = {
+    scanLocalFiles.toScanRemoteKeys(scanLocalFiles.localData.foldLeft(Stream[Action]())((acc, lf) => createActionFromLocalFile(config, lf) #:: acc))
+  }
+
+  private def gatherMetadata(config: Config, remoteData: S3ObjectsData, localFiles: Stream[LocalFile]) = {
+    AppState.Initial().toConfigured(config).toScanLocalFiles(remoteData, localFiles)
+  }
+
+  private def findLocalFiles(implicit config: Config, l: Logger) = {
+    LocalFileStream.findFiles(config.source, MD5HashGenerator.md5File(_))
+  }
+
+  private def fetchRemoteData(storageService: StorageService, logger: Logger, config: Config) = {
+    storageService.listObjects(config.bucket, config.prefix)(logger)
   }
 
   private def createActionFromRemoteKey(c: Config, rk: RemoteKey) = {
