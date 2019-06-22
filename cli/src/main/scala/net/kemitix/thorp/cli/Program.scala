@@ -7,9 +7,9 @@ import net.kemitix.thorp.storage.aws.S3StorageServiceBuilder.defaultStorageServi
 
 trait Program {
 
-  def apply(configOptions: Seq[ConfigOption]): IO[ExitCode] = {
+  def apply(cliOptions: Seq[ConfigOption]): IO[ExitCode] = {
     implicit val logger: Logger = new PrintLogger()
-    Sync(defaultStorageService)(configOptions) flatMap {
+    Sync(defaultStorageService)(cliOptions) flatMap {
       case Left(errors) =>
         for {
           _ <- logger.error(s"There were errors:")
