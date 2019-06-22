@@ -10,6 +10,7 @@ The format is based on [[https://keepachangelog.com/en/1.0.0/][Keep a Changelog]
 ** Added
 
    - Abstraction layer encapsulating S3 as Storage (#76)
+   - Multiple copies of file are only uploaded once (#74)
 
 * [0.5.0] - 2019-06-21
 
