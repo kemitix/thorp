@@ -20,21 +20,30 @@ trait Synchronise {
     implicit val l: Logger = logger
     implicit val c: Config = config
 
-    storageService.listObjects(config.bucket, config.prefix)(logger)
-      .flatMap { s3ObjectsData =>
-        LocalFileStream.findFiles(config.source, MD5HashGenerator.md5File(_))
-          .map { streamLocalFiles =>
-            AppState.Initial().toConfigured(config).toScanLocalFiles(s3ObjectsData, streamLocalFiles)
-          }
-      }.map { scanLocalFiles =>
-      scanLocalFiles.toScanRemoteKeys(
-        scanLocalFiles.localData
-          .foldLeft(Stream[Action]())((acc, lf) => createActionFromLocalFile(c, lf) #:: acc))
-    }.map { scanRemoteKeys =>
-      scanRemoteKeys.toCompleted(
-        scanRemoteKeys.remoteData
-          .foldLeft(Stream[Action]())((acc, rk) => createActionFromRemoteKey(c, rk) #:: acc))
-    }.map(c => Right(c.actions))
+    val ioScanLocalFiles = for {
+      s3ObjectsData <- storageService.listObjects(config.bucket, config.prefix)(logger)
+      slf <- LocalFileStream.findFiles(config.source, MD5HashGenerator.md5File(_))
+    } yield AppState.Initial().toConfigured(config).toScanLocalFiles(s3ObjectsData, slf)
+
+    val ioScanRemoteKeys = for {
+      scanLocalFiles <- ioScanLocalFiles
+      actions = scanLocalFiles.localData
+        .foldLeft(Stream[Action]())((acc, lf) => createActionFromLocalFile(c, lf) #:: acc)
+      scanRemoteKeys = scanLocalFiles.toScanRemoteKeys(actions)
+    } yield scanRemoteKeys
+
+    val ioCompleted = for {
+      scanRemoteKeys <- ioScanRemoteKeys
+      actions = scanRemoteKeys.remoteData
+        .foldLeft(Stream[Action]())((acc, rk) => createActionFromRemoteKey(c, rk) #:: acc)
+      completed = scanRemoteKeys.toCompleted(actions)
+    } yield completed
+
+    for {
+      complete <- ioCompleted
+    } yield Right(complete.actions)
+
+
   }
 
   private def createActionFromRemoteKey(c: Config, rk: RemoteKey) = {
