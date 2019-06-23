@@ -1,16 +1,19 @@
 package net.kemitix.thorp.core
 
+import java.io.File
+
 import cats.effect.IO
 import cats.implicits._
-import net.kemitix.thorp.domain.{Config, Logger, StorageQueueEvent}
+import net.kemitix.thorp.domain.{Bucket, Config, Logger, RemoteKey, StorageQueueEvent}
 import net.kemitix.thorp.domain.StorageQueueEvent.{CopyQueueEvent, DeleteQueueEvent, ErrorQueueEvent, UploadQueueEvent}
 
-// Logging for the Sync class
 trait SyncLogging {
 
-  def logRunStart(implicit c: Config,
-                  logger: Logger): IO[Unit] =
-    logger.info(s"Bucket: ${c.bucket.name}, Prefix: ${c.prefix.key}, Source: ${c.source}, ")
+  def logRunStart(bucket: Bucket,
+                  prefix: RemoteKey,
+                  source: File)
+                 (implicit logger: Logger): IO[Unit] =
+    logger.info(s"Bucket: ${bucket.name}, Prefix: ${prefix.key}, Source: $source, ")
 
   def logFileScan(implicit c: Config,
                   logger: Logger): IO[Unit] =
