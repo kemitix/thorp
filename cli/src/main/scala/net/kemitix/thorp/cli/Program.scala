@@ -2,7 +2,7 @@ package net.kemitix.thorp.cli
 
 import cats.effect.{ExitCode, IO}
 import cats.implicits._
-import net.kemitix.thorp.core.{Action, ActionSubmitter, ConfigOption, Synchronise}
+import net.kemitix.thorp.core.{Action, ActionSubmitter, ConfigOption, SyncLogging, Synchronise}
 import net.kemitix.thorp.domain.{Logger, StorageQueueEvent}
 import net.kemitix.thorp.storage.aws.S3StorageServiceBuilder.defaultStorageService
 
@@ -18,7 +18,8 @@ trait Program {
         } yield ExitCode.Error
       case Right(actions) =>
         for {
-          _ <- handleActions(actions)
+          events <- handleActions(actions)
+          _ <- SyncLogging.logRunFinished(events)
         } yield ExitCode.Success
     }
   }
