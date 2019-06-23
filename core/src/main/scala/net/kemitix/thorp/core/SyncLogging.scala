@@ -29,8 +29,7 @@ trait SyncLogging {
     } yield ()
 
   def logRunFinished(actions: Stream[StorageQueueEvent])
-                    (implicit c: Config,
-                     logger: Logger): IO[Unit] = {
+                    (implicit logger: Logger): IO[Unit] = {
     val counters = actions.foldLeft(Counters())(countActivities)
     for {
       _ <- logger.info(s"Uploaded ${counters.uploaded} files")
@@ -41,8 +40,7 @@ trait SyncLogging {
     } yield ()
   }
 
-  private def countActivities(implicit c: Config,
-                              logger: Logger): (Counters, StorageQueueEvent) => Counters =
+  private def countActivities: (Counters, StorageQueueEvent) => Counters =
     (counters: Counters, s3Action: StorageQueueEvent) => {
       s3Action match {
         case _: UploadQueueEvent =>
