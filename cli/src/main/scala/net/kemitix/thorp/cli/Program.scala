@@ -2,7 +2,7 @@ package net.kemitix.thorp.cli
 
 import cats.effect.{ExitCode, IO}
 import cats.implicits._
-import net.kemitix.thorp.core.{Action, ActionSubmitter, ConfigOption, SyncLogging, Synchronise}
+import net.kemitix.thorp.core._
 import net.kemitix.thorp.domain.{Logger, StorageQueueEvent}
 import net.kemitix.thorp.storage.aws.S3StorageServiceBuilder.defaultStorageService
 
@@ -18,16 +18,17 @@ trait Program {
         } yield ExitCode.Error
       case Right(actions) =>
         for {
-          events <- handleActions(actions)
+          events <- handleActions(UnversionedMirrorArchive.default(defaultStorageService), actions)
           _ <- SyncLogging.logRunFinished(events)
         } yield ExitCode.Success
     }
   }
 
-  private def handleActions(actions: Stream[Action])
+  private def handleActions(updateArchiver: ThorpArchive,
+                            actions: Stream[Action])
                            (implicit l: Logger): IO[Stream[StorageQueueEvent]] = {
     actions.foldRight(Stream[IO[StorageQueueEvent]]()) {
-      (action, stream) => ActionSubmitter.submitAction(defaultStorageService, action) ++ stream
+      (action, stream) => updateArchiver.update(action) ++ stream
     }.sequence
   }
 }
