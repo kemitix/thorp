@@ -8,6 +8,15 @@ import net.kemitix.thorp.storage.api.StorageService
 
 trait Synchronise {
 
+  def apply(storageService: StorageService,
+            configOptions: Seq[ConfigOption])
+           (implicit logger: Logger): IO[Either[List[String], Stream[Action]]] =
+    ConfigurationBuilder.buildConfig(configOptions)
+      .flatMap {
+        case Left(errors) => IO.pure(Left(errorMessages(errors.toList)))
+        case Right(config) => useValidConfig(storageService, config)
+      }
+
   def errorMessages(errors: List[ConfigValidation]): List[String] = {
     for {
       errorMessages <- errors.map(cv => cv.errorMessage)
@@ -33,33 +42,24 @@ trait Synchronise {
       localData <- findLocalFiles(config, logger)
     } yield (remoteData, localData)
 
-  private def actionsForRemoteKeys(config: Config, remoteData: S3ObjectsData) =
-    remoteData.byKey.keys.foldLeft(Stream[Action]())((acc, rk) => createActionFromRemoteKey(config, rk) #:: acc)
-
   private def actionsForLocalFiles(config: Config, localData: Stream[LocalFile], remoteData: S3ObjectsData) =
     localData.foldLeft(Stream[Action]())((acc, lf) => createActionFromLocalFile(config, lf, remoteData) ++ acc)
 
-  private def findLocalFiles(implicit config: Config, l: Logger) =
-    LocalFileStream.findFiles(config.source, MD5HashGenerator.md5File(_))
+  private def actionsForRemoteKeys(config: Config, remoteData: S3ObjectsData) =
+    remoteData.byKey.keys.foldLeft(Stream[Action]())((acc, rk) => createActionFromRemoteKey(config, rk) #:: acc)
 
   private def fetchRemoteData(storageService: StorageService, logger: Logger, config: Config) =
     storageService.listObjects(config.bucket, config.prefix)(logger)
 
-  private def createActionFromRemoteKey(c: Config, rk: RemoteKey) =
-    if (rk.isMissingLocally(c.source, c.prefix)) Action.ToDelete(c.bucket, rk)
-    else DoNothing(c.bucket, rk)
+  private def findLocalFiles(implicit config: Config, l: Logger) =
+    LocalFileStream.findFiles(config.source, MD5HashGenerator.md5File(_))
 
   private def createActionFromLocalFile(c: Config, lf: LocalFile, remoteData: S3ObjectsData) =
     ActionGenerator.createActions(S3MetaDataEnricher.getMetadata(lf, remoteData)(c))(c)
 
-  def apply(storageService: StorageService,
-            configOptions: Seq[ConfigOption])
-           (implicit logger: Logger): IO[Either[List[String], Stream[Action]]] =
-    ConfigurationBuilder.buildConfig(configOptions)
-      .flatMap {
-        case Right(config) => useValidConfig(storageService, config)
-        case Left(errors) => IO.pure(Left(errorMessages(errors.toList)))
-      }
+  private def createActionFromRemoteKey(c: Config, rk: RemoteKey) =
+    if (rk.isMissingLocally(c.source, c.prefix)) Action.ToDelete(c.bucket, rk)
+    else DoNothing(c.bucket, rk)
 
 }
 
