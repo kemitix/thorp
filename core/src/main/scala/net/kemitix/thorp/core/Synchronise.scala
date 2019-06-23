@@ -1,5 +1,6 @@
 package net.kemitix.thorp.core
 
+import cats.data.NonEmptyChain
 import cats.effect.IO
 import cats.implicits._
 import net.kemitix.thorp.core.Action.DoNothing
@@ -13,15 +14,12 @@ trait Synchronise {
            (implicit logger: Logger): IO[Either[List[String], Stream[Action]]] =
     ConfigurationBuilder.buildConfig(configOptions)
       .flatMap {
-        case Left(errors) => IO.pure(Left(errorMessages(errors.toList)))
+        case Left(errors) => IO.pure(Left(errorMessages(errors)))
         case Right(config) => useValidConfig(storageService, config)
       }
 
-  def errorMessages(errors: List[ConfigValidation]): List[String] = {
-    for {
-      errorMessages <- errors.map(cv => cv.errorMessage)
-    } yield errorMessages
-  }
+  def errorMessages(errors: NonEmptyChain[ConfigValidation]): List[String] =
+    errors.map(cv => cv.errorMessage).toList
 
   def useValidConfig(storageService: StorageService,
                      config: Config)
