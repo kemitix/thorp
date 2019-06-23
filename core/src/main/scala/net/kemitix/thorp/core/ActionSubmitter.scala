@@ -10,8 +10,7 @@ trait ActionSubmitter {
 
   def submitAction(storageService: StorageService,
                    action: Action)
-                  (implicit c: Config,
-                   logger: Logger): Stream[IO[StorageQueueEvent]] = {
+                  (implicit logger: Logger): Stream[IO[StorageQueueEvent]] = {
     Stream(
       action match {
         case ToUpload(bucket, localFile) =>
