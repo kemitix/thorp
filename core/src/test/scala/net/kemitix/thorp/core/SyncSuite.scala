@@ -154,15 +154,13 @@ class SyncSuite
     var deletionsRecord: Set[RemoteKey] = Set()
 
     override def listObjects(bucket: Bucket,
-                             prefix: RemoteKey)
-                            (implicit logger: Logger): IO[S3ObjectsData] =
+                             prefix: RemoteKey): IO[S3ObjectsData] =
       IO.pure(s3ObjectsData)
 
     override def upload(localFile: LocalFile,
                         bucket: Bucket,
                         uploadEventListener: UploadEventListener,
-                        tryCount: Int)
-                       (implicit logger: Logger): IO[UploadQueueEvent] = {
+                        tryCount: Int): IO[UploadQueueEvent] = {
       if (bucket == testBucket)
         uploadsRecord += (localFile.relative.toString -> localFile.remoteKey)
       IO.pure(UploadQueueEvent(localFile.remoteKey, localFile.hash))
@@ -171,16 +169,14 @@ class SyncSuite
     override def copy(bucket: Bucket,
                       sourceKey: RemoteKey,
                       hash: MD5Hash,
-                      targetKey: RemoteKey
-                     )(implicit logger: Logger): IO[CopyQueueEvent] = {
+                      targetKey: RemoteKey): IO[CopyQueueEvent] = {
       if (bucket == testBucket)
         copiesRecord += (sourceKey -> targetKey)
       IO.pure(CopyQueueEvent(targetKey))
     }
 
     override def delete(bucket: Bucket,
-                        remoteKey: RemoteKey
-                       )(implicit logger: Logger): IO[DeleteQueueEvent] = {
+                        remoteKey: RemoteKey): IO[DeleteQueueEvent] = {
       if (bucket == testBucket)
         deletionsRecord += remoteKey
       IO.pure(DeleteQueueEvent(remoteKey))

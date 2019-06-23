@@ -40,7 +40,7 @@ trait Synchronise {
                              logger: Logger,
                              config: Config) =
     for {
-      remoteData <- fetchRemoteData(storageService, logger, config)
+      remoteData <- fetchRemoteData(storageService, config)
       localData <- findLocalFiles(config, logger)
     } yield (remoteData, localData)
 
@@ -50,8 +50,8 @@ trait Synchronise {
   private def actionsForRemoteKeys(config: Config, remoteData: S3ObjectsData) =
     remoteData.byKey.keys.foldLeft(Stream[Action]())((acc, rk) => createActionFromRemoteKey(config, rk) #:: acc)
 
-  private def fetchRemoteData(storageService: StorageService, logger: Logger, config: Config) =
-    storageService.listObjects(config.bucket, config.prefix)(logger)
+  private def fetchRemoteData(storageService: StorageService, config: Config) =
+    storageService.listObjects(config.bucket, config.prefix)
 
   private def findLocalFiles(implicit config: Config, l: Logger) =
     LocalFileStream.findFiles(config.source, MD5HashGenerator.md5File(_))

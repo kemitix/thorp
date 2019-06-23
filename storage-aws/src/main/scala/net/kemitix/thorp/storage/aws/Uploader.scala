@@ -8,7 +8,6 @@ import com.amazonaws.services.s3.transfer.{TransferManager => AmazonTransferMana
 import net.kemitix.thorp.domain.StorageQueueEvent.{ErrorQueueEvent, UploadQueueEvent}
 import net.kemitix.thorp.domain.UploadEvent.{ByteTransferEvent, RequestEvent, TransferEvent}
 import net.kemitix.thorp.domain.{StorageQueueEvent, _}
-import net.kemitix.thorp.storage.aws.UploaderLogging.{logMultiPartUploadStart, logMultiPartUploadFinished}
 
 import scala.util.Try
 
@@ -17,16 +16,13 @@ class Uploader(transferManager: => AmazonTransferManager) {
   def upload(localFile: LocalFile,
              bucket: Bucket,
              uploadEventListener: UploadEventListener,
-             tryCount: Int)
-            (implicit logger: Logger): IO[StorageQueueEvent] =
+             tryCount: Int): IO[StorageQueueEvent] =
     for {
-      _ <- logMultiPartUploadStart(localFile, tryCount)
       upload <- transfer(localFile, bucket, uploadEventListener)
       action = upload match {
         case Right(r) => UploadQueueEvent(RemoteKey(r.getKey), MD5Hash(r.getETag))
         case Left(e) => ErrorQueueEvent(localFile.remoteKey, e)
       }
-      _ <- logMultiPartUploadFinished(localFile)
     } yield action
 
   private def transfer(localFile: LocalFile,
