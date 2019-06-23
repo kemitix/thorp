@@ -15,10 +15,10 @@ trait Synchronise {
   }
 
   def useValidConfig(storageService: StorageService,
-                     logger: Logger,
-                     config: Config): IO[Either[List[String], Stream[Action]]] =
+                     config: Config)
+                    (implicit logger: Logger): IO[Either[List[String], Stream[Action]]] =
     gatherMetadata(storageService, logger, config)
-      .map { md => 
+      .map { md =>
         val (rd, ld) = md
         val actions1 = actionsForLocalFiles(config, ld, rd)
         val actions2 = actionsForRemoteKeys(config, rd)
@@ -57,7 +57,7 @@ trait Synchronise {
            (implicit logger: Logger): IO[Either[List[String], Stream[Action]]] =
     ConfigurationBuilder.buildConfig(configOptions)
       .flatMap {
-        case Right(config) => useValidConfig(storageService, logger, config)
+        case Right(config) => useValidConfig(storageService, config)
         case Left(errors) => IO.pure(Left(errorMessages(errors.toList)))
       }
 
