@@ -23,14 +23,18 @@ trait Synchronise {
 
   def useValidConfig(storageService: StorageService,
                      config: Config)
-                    (implicit logger: Logger): IO[Either[List[String], Stream[Action]]] =
-    gatherMetadata(storageService, logger, config)
-      .map { md =>
-        val (rd, ld) = md
-        val actions1 = actionsForLocalFiles(config, ld, rd)
-        val actions2 = actionsForRemoteKeys(config, rd)
-        Right(actions1 ++ actions2)
-      }
+                    (implicit logger: Logger): IO[Either[List[String], Stream[Action]]] = {
+    for {
+      _ <- SyncLogging.logRunStart(config.bucket, config.prefix, config.source)
+      actions <- gatherMetadata(storageService, logger, config)
+        .map { md =>
+          val (rd, ld) = md
+          val actions1 = actionsForLocalFiles(config, ld, rd)
+          val actions2 = actionsForRemoteKeys(config, rd)
+          Right(actions1 ++ actions2)
+        }
+    } yield actions
+  }
 
   private def gatherMetadata(storageService: StorageService,
                              logger: Logger,
