@@ -24,10 +24,10 @@ trait Program {
     }
   }
 
-  private def handleActions(updateArchiver: ThorpArchive,
+  private def handleActions(archive: ThorpArchive,
                             actions: Stream[Action]): IO[Stream[StorageQueueEvent]] =
     actions.foldRight(Stream[IO[StorageQueueEvent]]()) {
-      (action, stream) => updateArchiver.update(action) ++ stream
+      (action, stream) => archive.update(action) ++ stream
     }.sequence
 }
 
