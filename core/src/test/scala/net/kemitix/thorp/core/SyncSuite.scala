@@ -36,7 +36,7 @@ class SyncSuite
 
     def invokeSubject(storageService: StorageService,
                       configOptions: List[ConfigOption]) = {
-      Sync(storageService)(configOptions).unsafeRunSync
+      Synchronise(storageService, configOptions)
     }
 
     describe("when all files should be uploaded") {
