@@ -29,7 +29,7 @@ object LocalFileStream {
         file match {
           case f if f.isDirectory => loop(file)
           case _ => for(hash <- md5HashGenerator(file))
-            yield Stream(domain.LocalFile(file, c.source, hash, generateKey(c.source, c.prefix)))
+            yield Stream(domain.LocalFile(file, c.source, hash, generateKey(c.source, c.prefix)(file)))
         }
 
       def recurse(fs: Stream[File]): IO[Stream[LocalFile]] =
