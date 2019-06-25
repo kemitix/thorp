@@ -66,7 +66,7 @@ lazy val `storage-aws` = (project in file("storage-aws"))
   .settings(assemblyJarName in assembly := "storage-aws.jar")
   .settings(awsSdkDependencies)
   .settings(testDependencies)
-  .dependsOn(core)
+  .dependsOn(core % "compile->compile;test->test")
 
 lazy val core = (project in file("core"))
   .settings(commonSettings)
