@@ -45,13 +45,12 @@ val catsEffectsSettings = Seq(
 
 lazy val thorp = (project in file("."))
   .settings(commonSettings)
-  .dependsOn(cli)
- 
+  .aggregate(cli, `thorp-lib`, `storage-aws`, core, `storage-api`, domain)
+
 lazy val cli = (project in file("cli"))
   .settings(commonSettings)
   .settings(mainClass in assembly := Some("net.kemitix.thorp.cli.Main"))
   .settings(applicationSettings)
-  .aggregate(`thorp-lib`, `storage-aws`, core, `storage-api`, domain)
   .settings(commandLineParsing)
   .settings(testDependencies)
   .dependsOn(`thorp-lib`)
