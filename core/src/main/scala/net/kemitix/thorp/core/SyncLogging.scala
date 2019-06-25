@@ -1,16 +1,19 @@
 package net.kemitix.thorp.core
 
+import java.io.File
+
 import cats.effect.IO
 import cats.implicits._
-import net.kemitix.thorp.domain.{Config, Logger, StorageQueueEvent}
+import net.kemitix.thorp.domain.{Bucket, Config, Logger, RemoteKey, StorageQueueEvent}
 import net.kemitix.thorp.domain.StorageQueueEvent.{CopyQueueEvent, DeleteQueueEvent, ErrorQueueEvent, UploadQueueEvent}
 
-// Logging for the Sync class
 trait SyncLogging {
 
-  def logRunStart(implicit c: Config,
-                  logger: Logger): IO[Unit] =
-    logger.info(s"Bucket: ${c.bucket.name}, Prefix: ${c.prefix.key}, Source: ${c.source}, ")
+  def logRunStart(bucket: Bucket,
+                  prefix: RemoteKey,
+                  source: File)
+                 (implicit logger: Logger): IO[Unit] =
+    logger.info(s"Bucket: ${bucket.name}, Prefix: ${prefix.key}, Source: $source, ")
 
   def logFileScan(implicit c: Config,
                   logger: Logger): IO[Unit] =
@@ -26,8 +29,7 @@ trait SyncLogging {
     } yield ()
 
   def logRunFinished(actions: Stream[StorageQueueEvent])
-                    (implicit c: Config,
-                     logger: Logger): IO[Unit] = {
+                    (implicit logger: Logger): IO[Unit] = {
     val counters = actions.foldLeft(Counters())(countActivities)
     for {
       _ <- logger.info(s"Uploaded ${counters.uploaded} files")
@@ -38,8 +40,7 @@ trait SyncLogging {
     } yield ()
   }
 
-  private def countActivities(implicit c: Config,
-                              logger: Logger): (Counters, StorageQueueEvent) => Counters =
+  private def countActivities: (Counters, StorageQueueEvent) => Counters =
     (counters: Counters, s3Action: StorageQueueEvent) => {
       s3Action match {
         case _: UploadQueueEvent =>

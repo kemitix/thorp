@@ -1,24 +1,34 @@
 package net.kemitix.thorp.cli
 
 import cats.effect.{ExitCode, IO}
-import net.kemitix.thorp.core.{ConfigOption, Sync}
-import net.kemitix.thorp.domain.Logger
+import cats.implicits._
+import net.kemitix.thorp.core._
+import net.kemitix.thorp.domain.{Logger, StorageQueueEvent}
 import net.kemitix.thorp.storage.aws.S3StorageServiceBuilder.defaultStorageService
 
 trait Program {
 
-  def apply(configOptions: Seq[ConfigOption]): IO[ExitCode] = {
+  def apply(cliOptions: Seq[ConfigOption]): IO[ExitCode] = {
     implicit val logger: Logger = new PrintLogger()
-    Sync(defaultStorageService)(configOptions) flatMap {
+    Synchronise(defaultStorageService, cliOptions).flatMap {
       case Left(errors) =>
         for {
           _ <- logger.error(s"There were errors:")
-          _ <- IO.pure(errors.map(error => logger.error(s" - $error")))
+          _ <- errors.map(error => logger.error(s" - $error")).sequence
         } yield ExitCode.Error
-      case Right(_) => IO.pure(ExitCode.Success)
+      case Right(actions) =>
+        for {
+          events <- handleActions(UnversionedMirrorArchive.default(defaultStorageService), actions)
+          _ <- SyncLogging.logRunFinished(events)
+        } yield ExitCode.Success
     }
   }
 
+  private def handleActions(archive: ThorpArchive,
+                            actions: Stream[Action]): IO[Stream[StorageQueueEvent]] =
+    actions.foldRight(Stream[IO[StorageQueueEvent]]()) {
+      (action, stream) => archive.update(action) ++ stream
+    }.sequence
 }
 
 object Program extends Program

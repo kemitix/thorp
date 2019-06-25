@@ -4,8 +4,7 @@ import cats.effect.IO
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.{ListObjectsV2Request, S3ObjectSummary}
 import net.kemitix.thorp.domain
-import net.kemitix.thorp.domain.{Bucket, Logger, RemoteKey, S3ObjectsData}
-import net.kemitix.thorp.storage.aws.S3ClientLogging.{logListObjectsStart, logListObjectsFinish}
+import net.kemitix.thorp.domain.{Bucket, RemoteKey, S3ObjectsData}
 import net.kemitix.thorp.storage.aws.S3ObjectsByHash.byHash
 import net.kemitix.thorp.storage.aws.S3ObjectsByKey.byKey
 
@@ -14,8 +13,7 @@ import scala.collection.JavaConverters._
 class S3ClientObjectLister(amazonS3: AmazonS3) {
 
   def listObjects(bucket: Bucket,
-                  prefix: RemoteKey)
-                 (implicit logger: Logger): IO[S3ObjectsData] = {
+                  prefix: RemoteKey): IO[S3ObjectsData] = {
 
     type Token = String
     type Batch = (Stream[S3ObjectSummary], Option[Token])
@@ -50,10 +48,7 @@ class S3ClientObjectLister(amazonS3: AmazonS3) {
           } yield summaries ++ rest
 
     for {
-      _ <- logListObjectsStart(bucket, prefix)
-      r = new ListObjectsV2Request().withBucketName(bucket.name).withPrefix(prefix.key)
-      summaries <- fetch(r)
-      _ <- logListObjectsFinish(bucket, prefix)
+      summaries <- fetch(new ListObjectsV2Request().withBucketName(bucket.name).withPrefix(prefix.key))
     } yield domain.S3ObjectsData(byHash(summaries), byKey(summaries))
   }
 
