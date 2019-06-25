@@ -11,7 +11,7 @@ val applicationSettings = Seq(
 val testDependencies = Seq(
   libraryDependencies ++= Seq(
     "org.scalatest" %% "scalatest" % "3.0.8" % Test,
-    "org.scalamock" %% "scalamock" % "4.2.0" % Test
+    "org.scalamock" %% "scalamock" % "4.3.0" % Test
   )
 )
 val commandLineParsing = Seq(
