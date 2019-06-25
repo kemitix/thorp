@@ -21,6 +21,11 @@ trait Synchronise {
   def errorMessages(errors: NonEmptyChain[ConfigValidation]): List[String] =
     errors.map(cv => cv.errorMessage).toList
 
+  def removeDoNothing: Action => Boolean = {
+    case _: DoNothing => false
+    case _ => true
+  }
+
   def useValidConfig(storageService: StorageService,
                      config: Config)
                     (implicit logger: Logger): IO[Either[List[String], Stream[Action]]] = {
@@ -31,7 +36,7 @@ trait Synchronise {
           val (rd, ld) = md
           val actions1 = actionsForLocalFiles(config, ld, rd)
           val actions2 = actionsForRemoteKeys(config, rd)
-          Right(actions1 ++ actions2)
+          Right((actions1 ++ actions2).filter(removeDoNothing))
         }
     } yield actions
   }
