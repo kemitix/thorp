@@ -141,8 +141,8 @@ class SyncSuite
     extends StorageService {
 
     override def listObjects(bucket: Bucket,
-                             prefix: RemoteKey): IO[S3ObjectsData] =
-      IO.pure(s3ObjectsData)
+                             prefix: RemoteKey): IO[Either[String, S3ObjectsData]] =
+      IO.pure(Right(s3ObjectsData))
 
     override def upload(localFile: LocalFile,
                         bucket: Bucket,

@@ -16,7 +16,7 @@ class S3StorageService(amazonS3Client: => AmazonS3,
   lazy val deleter = new S3ClientDeleter(amazonS3Client)
 
   override def listObjects(bucket: Bucket,
-                           prefix: RemoteKey): IO[S3ObjectsData] =
+                           prefix: RemoteKey): IO[Either[String, S3ObjectsData]] =
     objectLister.listObjects(bucket, prefix)
 
   override def copy(bucket: Bucket,

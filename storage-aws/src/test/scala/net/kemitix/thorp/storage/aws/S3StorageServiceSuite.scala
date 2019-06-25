@@ -66,8 +66,9 @@ class S3StorageServiceSuite
           k1b -> HashModified(h1, lm),
           k2 -> HashModified(h2, lm)))
       val result = storageService.listObjects(Bucket("bucket"), RemoteKey("prefix")).unsafeRunSync
-      assertResult(expected.byHash.keys)(result.byHash.keys)
-      assertResult(expected.byKey.keys)(result.byKey.keys)
+      assert(result.isRight)
+      assertResult(expected.byHash.keys)(result.right.get.byHash.keys)
+      assertResult(expected.byKey.keys)(result.right.get.byKey.keys)
       assertResult(expected)(result)
     }
   }

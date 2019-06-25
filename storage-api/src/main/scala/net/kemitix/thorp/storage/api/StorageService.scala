@@ -6,7 +6,7 @@ import net.kemitix.thorp.domain._
 trait StorageService {
 
   def listObjects(bucket: Bucket,
-                  prefix: RemoteKey): IO[S3ObjectsData]
+                  prefix: RemoteKey): IO[Either[String, S3ObjectsData]]
 
   def upload(localFile: LocalFile,
              bucket: Bucket,

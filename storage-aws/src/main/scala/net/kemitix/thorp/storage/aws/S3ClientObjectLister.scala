@@ -13,7 +13,7 @@ import scala.collection.JavaConverters._
 class S3ClientObjectLister(amazonS3: AmazonS3) {
 
   def listObjects(bucket: Bucket,
-                  prefix: RemoteKey): IO[S3ObjectsData] = {
+                  prefix: RemoteKey): IO[Either[String, S3ObjectsData]] = {
 
     type Token = String
     type Batch = (Stream[S3ObjectSummary], Option[Token])
@@ -49,7 +49,7 @@ class S3ClientObjectLister(amazonS3: AmazonS3) {
 
     for {
       summaries <- fetch(new ListObjectsV2Request().withBucketName(bucket.name).withPrefix(prefix.key))
-    } yield domain.S3ObjectsData(byHash(summaries), byKey(summaries))
+    } yield Right(domain.S3ObjectsData(byHash(summaries), byKey(summaries)))
   }
 
 }

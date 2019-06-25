@@ -32,11 +32,15 @@ trait Synchronise {
     for {
       _ <- SyncLogging.logRunStart(config.bucket, config.prefix, config.source)
       actions <- gatherMetadata(storageService, logger, config)
-        .map { md =>
-          val (rd, ld) = md
-          val actions1 = actionsForLocalFiles(config, ld, rd)
-          val actions2 = actionsForRemoteKeys(config, rd)
-          Right((actions1 ++ actions2).filter(removeDoNothing))
+        .map { metaData =>
+          val (remoteDataE, localData) = metaData
+          remoteDataE match {
+            case Right(remoteData) =>
+              val actions1 = actionsForLocalFiles (config, localData, remoteData)
+              val actions2 = actionsForRemoteKeys (config, remoteData)
+              Right ((actions1 ++ actions2).filter (removeDoNothing) )
+            case Left(error) => Left(List(error))
+          }
         }
     } yield actions
   }
