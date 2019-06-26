@@ -47,12 +47,11 @@ class SyncSuite
       byHash = Map(),
       byKey = Map()))
     it("uploads all files") {
-      val expected = Set(
+      val expected = Right(Set(
         ToUpload(testBucket, rootFile),
-        ToUpload(testBucket, leafFile))
+        ToUpload(testBucket, leafFile)))
       val result = invokeSubject(storageService, configOptions)
-      assert(result.isRight)
-      assertResult(expected)(result.right.get.toSet)
+      assertResult(expected)(result.map(_.toSet))
     }
   }
   describe("when no files should be uploaded") {
