@@ -57,18 +57,15 @@ class S3StorageServiceSuite
     (amazonS3 listObjectsV2 (_: ListObjectsV2Request)).when(*).returns(myFakeResponse)
 
     it("should build list of hash lookups, with duplicate objects grouped by hash") {
-      val expected = S3ObjectsData(
+      val expected = Right(S3ObjectsData(
         byHash = Map(
           h1 -> Set(KeyModified(k1a, lm), KeyModified(k1b, lm)),
           h2 -> Set(KeyModified(k2, lm))),
         byKey = Map(
           k1a -> HashModified(h1, lm),
           k1b -> HashModified(h1, lm),
-          k2 -> HashModified(h2, lm)))
-      val result = storageService.listObjects(Bucket("bucket"), RemoteKey("prefix")).unsafeRunSync
-      assert(result.isRight)
-      assertResult(expected.byHash.keys)(result.right.get.byHash.keys)
-      assertResult(expected.byKey.keys)(result.right.get.byKey.keys)
+          k2 -> HashModified(h2, lm))))
+      val result = storageService.listObjects(Bucket("bucket"), RemoteKey("prefix")).value.unsafeRunSync
       assertResult(expected)(result)
     }
   }

@@ -1,6 +1,7 @@
 package net.kemitix.thorp.core
 
 import cats.data.NonEmptyChain
+import cats.data.EitherT
 import cats.effect.IO
 import cats.implicits._
 import net.kemitix.thorp.core.Action.DoNothing
@@ -11,12 +12,10 @@ trait Synchronise {
 
   def apply(storageService: StorageService,
             configOptions: Seq[ConfigOption])
-           (implicit logger: Logger): IO[Either[List[String], Stream[Action]]] =
-    ConfigurationBuilder.buildConfig(configOptions)
-      .flatMap {
-        case Left(errors) => IO.pure(Left(errorMessages(errors)))
-        case Right(config) => useValidConfig(storageService, config)
-      }
+           (implicit logger: Logger): EitherT[IO, List[String], Stream[Action]] =
+    EitherT(ConfigurationBuilder.buildConfig(configOptions))
+      .swap.map(errorMessages).swap
+      .flatMap(config => useValidConfig(storageService, config))
 
   def errorMessages(errors: NonEmptyChain[ConfigValidation]): List[String] =
     errors.map(cv => cv.errorMessage).toList
@@ -28,29 +27,26 @@ trait Synchronise {
 
   def useValidConfig(storageService: StorageService,
                      config: Config)
-                    (implicit logger: Logger): IO[Either[List[String], Stream[Action]]] = {
+                    (implicit logger: Logger): EitherT[IO, List[String], Stream[Action]] = {
     for {
-      _ <- SyncLogging.logRunStart(config.bucket, config.prefix, config.source)
+      _ <- EitherT.liftF(SyncLogging.logRunStart(config.bucket, config.prefix, config.source))
       actions <- gatherMetadata(storageService, logger, config)
-        .map { metaData =>
-          val (remoteDataE, localData) = metaData
-          remoteDataE match {
-            case Right(remoteData) =>
-              val actions1 = actionsForLocalFiles (config, localData, remoteData)
-              val actions2 = actionsForRemoteKeys (config, remoteData)
-              Right ((actions1 ++ actions2).filter (removeDoNothing) )
-            case Left(error) => Left(List(error))
-          }
+        .swap.map(error => List(error)).swap
+        .map {
+          case (remoteData, localData) =>
+            (actionsForLocalFiles(config, localData, remoteData) ++
+              actionsForRemoteKeys(config, remoteData))
+              .filter(removeDoNothing)
         }
     } yield actions
   }
 
   private def gatherMetadata(storageService: StorageService,
                              logger: Logger,
-                             config: Config) =
+                             config: Config): EitherT[IO, String, (S3ObjectsData, Stream[LocalFile])] =
     for {
       remoteData <- fetchRemoteData(storageService, config)
-      localData <- findLocalFiles(config, logger)
+      localData <- EitherT.liftF(findLocalFiles(config, logger))
     } yield (remoteData, localData)
 
   private def actionsForLocalFiles(config: Config, localData: Stream[LocalFile], remoteData: S3ObjectsData) =

@@ -10,17 +10,19 @@ trait Program {
 
   def apply(cliOptions: Seq[ConfigOption]): IO[ExitCode] = {
     implicit val logger: Logger = new PrintLogger()
-    Synchronise(defaultStorageService, cliOptions).flatMap {
-      case Left(errors) =>
-        for {
-          _ <- logger.error(s"There were errors:")
-          _ <- errors.map(error => logger.error(s" - $error")).sequence
-        } yield ExitCode.Error
-      case Right(actions) =>
-        for {
-          events <- handleActions(UnversionedMirrorArchive.default(defaultStorageService), actions)
-          _ <- SyncLogging.logRunFinished(events)
-        } yield ExitCode.Success
+    for {
+      actions <- Synchronise(defaultStorageService, cliOptions).valueOrF(handleErrors)
+      events <- handleActions(UnversionedMirrorArchive.default(defaultStorageService), actions)
+      _ <- SyncLogging.logRunFinished(events)
+    } yield ExitCode.Success
+  }
+
+  private def handleErrors(implicit logger: Logger): List[String] => IO[Stream[Action]] = {
+    errors => {
+      for {
+        _ <- logger.error("There were errors:")
+        _ <- errors.map(error => logger.error(s" - $error")).sequence
+      } yield Stream()
     }
   }
 

@@ -1,12 +1,13 @@
 package net.kemitix.thorp.storage.api
 
+import cats.data.EitherT
 import cats.effect.IO
 import net.kemitix.thorp.domain._
 
 trait StorageService {
 
   def listObjects(bucket: Bucket,
-                  prefix: RemoteKey): IO[Either[String, S3ObjectsData]]
+                  prefix: RemoteKey): EitherT[IO, String, S3ObjectsData]
 
   def upload(localFile: LocalFile,
              bucket: Bucket,

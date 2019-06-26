@@ -3,6 +3,7 @@ package net.kemitix.thorp.core
 import java.io.File
 import java.time.Instant
 
+import cats.data.EitherT
 import cats.effect.IO
 import net.kemitix.thorp.core.Action.{ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.core.MD5HashData.{leafHash, rootHash}
@@ -38,7 +39,7 @@ class SyncSuite
 
   def invokeSubject(storageService: StorageService,
                     configOptions: List[ConfigOption]): Either[List[String], Stream[Action]] = {
-    Synchronise(storageService, configOptions).unsafeRunSync
+    Synchronise(storageService, configOptions).value.unsafeRunSync
   }
 
   describe("when all files should be uploaded") {
@@ -46,12 +47,12 @@ class SyncSuite
       byHash = Map(),
       byKey = Map()))
     it("uploads all files") {
-      val expected = Stream(
+      val expected = Set(
         ToUpload(testBucket, rootFile),
         ToUpload(testBucket, leafFile))
       val result = invokeSubject(storageService, configOptions)
       assert(result.isRight)
-      assertResult(expected)(result.right.get)
+      assertResult(expected)(result.right.get.toSet)
     }
   }
   describe("when no files should be uploaded") {
@@ -141,8 +142,8 @@ class SyncSuite
     extends StorageService {
 
     override def listObjects(bucket: Bucket,
-                             prefix: RemoteKey): IO[Either[String, S3ObjectsData]] =
-      IO.pure(Right(s3ObjectsData))
+                             prefix: RemoteKey): EitherT[IO, String, S3ObjectsData] =
+      EitherT.liftF(IO.pure(s3ObjectsData))
 
     override def upload(localFile: LocalFile,
                         bucket: Bucket,
