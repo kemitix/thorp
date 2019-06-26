@@ -1,7 +1,7 @@
 package net.kemitix.thorp.core
 
-import net.kemitix.thorp.domain.{MD5Hash, RemoteKey}
 import net.kemitix.thorp.domain.StorageQueueEvent.{CopyQueueEvent, DeleteQueueEvent, UploadQueueEvent}
+import net.kemitix.thorp.domain.{MD5Hash, RemoteKey}
 import org.scalatest.FunSpec
 
 class StorageQueueEventSuite extends FunSpec {

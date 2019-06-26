@@ -4,8 +4,8 @@ import java.io.File
 
 import cats.effect.IO
 import cats.implicits._
-import net.kemitix.thorp.domain.{Bucket, Config, Logger, RemoteKey, StorageQueueEvent}
 import net.kemitix.thorp.domain.StorageQueueEvent.{CopyQueueEvent, DeleteQueueEvent, ErrorQueueEvent, UploadQueueEvent}
+import net.kemitix.thorp.domain._
 
 trait SyncLogging {
 
