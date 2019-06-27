@@ -1,5 +1,6 @@
 package net.kemitix.thorp.storage.aws
 
+import cats.data.EitherT
 import cats.effect.IO
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.transfer.TransferManager
@@ -16,7 +17,7 @@ class S3StorageService(amazonS3Client: => AmazonS3,
   lazy val deleter = new S3ClientDeleter(amazonS3Client)
 
   override def listObjects(bucket: Bucket,
-                           prefix: RemoteKey): IO[S3ObjectsData] =
+                           prefix: RemoteKey): EitherT[IO, String, S3ObjectsData] =
     objectLister.listObjects(bucket, prefix)
 
   override def copy(bucket: Bucket,

@@ -6,8 +6,8 @@ import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.transfer._
 import net.kemitix.thorp.core.KeyGenerator.generateKey
 import net.kemitix.thorp.core.Resource
-import net.kemitix.thorp.domain.{UploadEventListener, _}
 import net.kemitix.thorp.domain.StorageQueueEvent.UploadQueueEvent
+import net.kemitix.thorp.domain.{UploadEventListener, _}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.FunSpec
 
