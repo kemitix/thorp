@@ -11,5 +11,8 @@ object MD5HashData {
     val hash = MD5Hash("208386a650bdec61cfcd7bd8dcb6b542")
     val base64 = "IIOGplC97GHPzXvY3La1Qg=="
   }
+  object BigFile {
+    val hash = MD5Hash("b1ab1f7680138e6db7309200584e35d8")
+  }
 
 }
