@@ -22,12 +22,22 @@ object MD5HashGenerator {
     md5.digest
   }
 
-  def md5File(file: File)
-             (implicit logger: Logger): IO[MD5Hash] = {
+  def md5File(file: File)(implicit logger: Logger): IO[MD5Hash] =
+    md5FileChunk(file, 0, file.length)
+
+  def md5FileChunk(file: File,
+                   offset: Int,
+                   size: Long)
+                  (implicit logger: Logger): IO[MD5Hash] = {
 
     val maxBufferSize = 8048
     val defaultBuffer = new Array[Byte](maxBufferSize)
-    def openFile = IO.pure(new FileInputStream(file))
+    def openFile = IO {
+      val stream = new FileInputStream(file)
+      stream skip offset
+      stream
+    }
+
     def closeFile = {fis: FileInputStream => IO(fis.close())}
 
     def nextChunkSize(currentOffset: Long) = {
@@ -49,11 +59,8 @@ object MD5HashGenerator {
     def digestFile(fis: FileInputStream) =
       IO {
         val md5 = MessageDigest getInstance "MD5"
-        NumericRange(0, file.length, maxBufferSize)
-          .foreach { currentOffset => {
-              val buffer = readToBuffer(fis, currentOffset)
-              md5 update buffer
-            }}
+        NumericRange(offset, offset + size, maxBufferSize)
+          .foreach(currentOffset => md5 update readToBuffer(fis, currentOffset))
         md5.digest
       }
 
