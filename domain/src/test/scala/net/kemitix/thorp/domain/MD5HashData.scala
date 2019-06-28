@@ -13,6 +13,16 @@ object MD5HashData {
   }
   object BigFile {
     val hash = MD5Hash("b1ab1f7680138e6db7309200584e35d8")
+    object Part1 {
+      val offset = 0
+      val size = 1048576
+      val hash = MD5Hash("39d4a9c78b9cfddf6d241a201a4ab726")
+    }
+    object Part2 {
+      val offset = 1048576
+      val size = 1048576
+      val hash = MD5Hash("af5876f3a3bc6e66f4ae96bb93d8dae0")
+    }
   }
 
 }
