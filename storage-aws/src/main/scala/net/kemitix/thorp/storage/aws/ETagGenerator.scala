@@ -19,26 +19,18 @@ trait ETagGenerator {
   def configuration: TransferManagerConfiguration = new TransferManagerConfiguration
 
   def eTag(file: File)(implicit l: Logger): IO[String]= {
-    val fileSize = file.length
     val optimumPartSize = TransferManagerUtils.calculateOptimalPartSize(request(file), configuration)
-    val os = offsets(fileSize, optimumPartSize).zipWithIndex
-    val ioListArrayByte = os.map(chunk => {
-      val (_, index) = chunk
-      val ioArrayByte =
+    val numParts = offsets(file.length, optimumPartSize).length
+    offsets(file.length, optimumPartSize)
+      .zipWithIndex
+      .map(chunk => {
+        val (_, index) = chunk
         hashChunk(file, index, optimumPartSize)
           .map(_.digest)
-      ioArrayByte
-    }
-    ).sequence
-    val ioString =
-      ioListArrayByte.map(all =>
-        {
-          val arrayByte = all.foldLeft(Array[Byte]())((acc, ab) => acc ++ ab)
-          val hex = MD5HashGenerator.hex(arrayByte) + "-" + os.length
-          hex
-        }
-          )
-    ioString
+      }).sequence
+      .map(all => {
+        MD5HashGenerator.hex(all.foldLeft(Array[Byte]())((acc, ab) => acc ++ ab)) + "-" + numParts
+      })
   }
 
   def offsets(totalFileSizeBytes: Long, optimalPartSize: Long): List[Long] =
