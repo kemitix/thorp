@@ -10,6 +10,18 @@ import scala.collection.immutable.NumericRange
 
 object MD5HashGenerator {
 
+  def hex(in: Array[Byte]): String = {
+    val md5 = MessageDigest getInstance "MD5"
+    md5 update in
+    (md5.digest map ("%02x" format _)).mkString
+  }
+
+  def digest(in: String): Array[Byte] = {
+    val md5 = MessageDigest getInstance "MD5"
+    md5 update in.getBytes
+    md5.digest
+  }
+
   def md5File(file: File)
              (implicit logger: Logger): IO[MD5Hash] = {
 
