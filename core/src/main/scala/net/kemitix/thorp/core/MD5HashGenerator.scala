@@ -26,7 +26,7 @@ object MD5HashGenerator {
     md5FileChunk(file, 0, file.length)
 
   def md5FileChunk(file: File,
-                   offset: Int,
+                   offset: Long,
                    size: Long)
                   (implicit logger: Logger): IO[MD5Hash] = {
 
