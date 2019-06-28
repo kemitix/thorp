@@ -6,7 +6,7 @@ import java.time.Instant
 import cats.data.EitherT
 import cats.effect.IO
 import net.kemitix.thorp.core.Action.{ToCopy, ToDelete, ToUpload}
-import net.kemitix.thorp.core.MD5HashData.{leafHash, rootHash}
+import net.kemitix.thorp.domain.MD5HashData.{leafHash, rootHash}
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.domain.StorageQueueEvent.{CopyQueueEvent, DeleteQueueEvent, UploadQueueEvent}
 import net.kemitix.thorp.storage.api.StorageService

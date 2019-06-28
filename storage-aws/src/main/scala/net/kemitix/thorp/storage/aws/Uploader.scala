@@ -40,7 +40,7 @@ class Uploader(transferManager: => AmazonTransferManager) {
 
   private def request(localFile: LocalFile, bucket: Bucket, listener: ProgressListener): PutObjectRequest = {
     val metadata = new ObjectMetadata()
-    localFile.hash.hash64.foreach(metadata.setContentMD5)
+    metadata.setContentMD5(localFile.hash.hash64)
     new PutObjectRequest(bucket.name, localFile.remoteKey.key, localFile.file)
       .withMetadata(metadata)
       .withGeneralProgressListener(listener)
