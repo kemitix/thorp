@@ -42,7 +42,7 @@ object MD5HashGenerator {
 
     def nextChunkSize(currentOffset: Long) = {
       // a value between 1 and maxBufferSize
-      val toRead = file.length - currentOffset
+      val toRead = offset + size - currentOffset
       val result = Math.min(maxBufferSize, toRead)
       result.toInt
     }
