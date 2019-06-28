@@ -30,6 +30,7 @@ object MD5HashGenerator {
                    size: Long)
                   (implicit logger: Logger): IO[MD5Hash] = {
 
+    val endOffset = Math.min(offset + size, file.length)
     val maxBufferSize = 8048
     val defaultBuffer = new Array[Byte](maxBufferSize)
     def openFile = IO {
@@ -40,9 +41,8 @@ object MD5HashGenerator {
 
     def closeFile = {fis: FileInputStream => IO(fis.close())}
 
-    def nextChunkSize(currentOffset: Long) = {
-      // a value between 1 and maxBufferSize
-      val toRead = offset + size - currentOffset
+    def nextBufferSize(currentOffset: Long) = {
+      val toRead = endOffset - currentOffset
       val result = Math.min(maxBufferSize, toRead)
       result.toInt
     }
@@ -50,7 +50,7 @@ object MD5HashGenerator {
     def readToBuffer(fis: FileInputStream,
                      currentOffset: Long) = {
       val buffer =
-        if (nextChunkSize(currentOffset) < maxBufferSize) new Array[Byte](nextChunkSize(currentOffset))
+        if (nextBufferSize(currentOffset) < maxBufferSize) new Array[Byte](nextBufferSize(currentOffset))
         else defaultBuffer
       fis read buffer
       buffer
@@ -59,7 +59,7 @@ object MD5HashGenerator {
     def digestFile(fis: FileInputStream) =
       IO {
         val md5 = MessageDigest getInstance "MD5"
-        NumericRange(offset, offset + size, maxBufferSize)
+        NumericRange(offset, endOffset, maxBufferSize)
           .foreach(currentOffset => md5 update readToBuffer(fis, currentOffset))
         md5.digest
       }
