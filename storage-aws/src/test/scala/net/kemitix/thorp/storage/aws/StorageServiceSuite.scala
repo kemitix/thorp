@@ -6,7 +6,7 @@ import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.PutObjectRequest
 import com.amazonaws.services.s3.transfer.model.UploadResult
 import com.amazonaws.services.s3.transfer.{TransferManager, Upload}
-import net.kemitix.thorp.domain.MD5HashData.rootHash
+import net.kemitix.thorp.domain.MD5HashData.Root
 import net.kemitix.thorp.core.{KeyGenerator, Resource, S3MetaDataEnricher}
 import net.kemitix.thorp.domain.StorageQueueEvent.UploadQueueEvent
 import net.kemitix.thorp.domain._
@@ -90,7 +90,7 @@ class StorageServiceSuite
 
       val prefix = RemoteKey("prefix")
       val localFile =
-        LocalFile.resolve("root-file", rootHash, source, KeyGenerator.generateKey(source, prefix))
+        LocalFile.resolve("root-file", Root.hash, source, KeyGenerator.generateKey(source, prefix))
       val bucket = Bucket("a-bucket")
       val remoteKey = RemoteKey("prefix/root-file")
       val uploadEventListener = new UploadEventListener(localFile)
@@ -99,13 +99,13 @@ class StorageServiceSuite
       (amazonS3TransferManager upload (_: PutObjectRequest)).when(*).returns(upload)
       val uploadResult = stub[UploadResult]
       (upload.waitForUploadResult _).when().returns(uploadResult)
-      (uploadResult.getETag _).when().returns(rootHash.hash)
+      (uploadResult.getETag _).when().returns(Root.hash.hash)
       (uploadResult.getKey _).when().returns(remoteKey.key)
 
       it("should return hash of uploaded file") {
         pending
         //FIXME: works okay on its own, but fails when run with others
-        val expected = UploadQueueEvent(remoteKey, rootHash)
+        val expected = UploadQueueEvent(remoteKey, Root.hash)
         val result = storageService.upload(localFile, bucket, uploadEventListener, 1)
         assertResult(expected)(result)
       }

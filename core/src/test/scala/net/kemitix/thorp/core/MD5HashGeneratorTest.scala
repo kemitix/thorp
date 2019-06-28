@@ -1,6 +1,6 @@
 package net.kemitix.thorp.core
 
-import net.kemitix.thorp.domain.MD5HashData.rootHash
+import net.kemitix.thorp.domain.MD5HashData.Root
 import net.kemitix.thorp.domain._
 import org.scalatest.FunSpec
 
@@ -15,7 +15,7 @@ class MD5HashGeneratorTest extends FunSpec {
       val file = Resource(this, "upload/root-file")
       it("should generate the correct hash") {
         val result = MD5HashGenerator.md5File(file).unsafeRunSync
-        assertResult(rootHash)(result)
+        assertResult(Root.hash)(result)
       }
     }
     describe("read a large file (bigger than buffer)") {
