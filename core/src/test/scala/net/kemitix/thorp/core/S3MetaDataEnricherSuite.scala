@@ -15,6 +15,12 @@ class S3MetaDataEnricherSuite
   private val fileToKey = KeyGenerator.generateKey(config.source, config.prefix) _
   val lastModified = LastModified(Instant.now())
 
+  def getMatchesByKey(status: (Option[HashModified], Set[(MD5Hash, KeyModified)])): Option[HashModified] =
+    status._1
+
+  def getMatchesByHash(status: (Option[HashModified], Set[(MD5Hash, KeyModified)])): Set[(MD5Hash, KeyModified)] =
+    status._2
+
   describe("enrich with metadata") {
 
       describe("#1a local exists, remote exists, remote matches, other matches - do nothing") {
@@ -159,7 +165,7 @@ class S3MetaDataEnricherSuite
 
     describe("when remote key exists") {
       it("should return a result for matching key") {
-        val result = invoke(localFile)._1
+        val result = getMatchesByKey(invoke(localFile))
         assert(result.contains(HashModified(hash, lastModified)))
       }
     }
@@ -167,22 +173,22 @@ class S3MetaDataEnricherSuite
     describe("when remote key does not exist and no others matches hash") {
       val localFile = LocalFile.resolve("missing-file", md5HashMap(MD5Hash("unique")), source, fileToKey)
       it("should return no matches by key") {
-        val result = invoke(localFile)._1
+        val result = getMatchesByKey(invoke(localFile))
         assert(result.isEmpty)
       }
       it("should return no matches by hash") {
-        val result = invoke(localFile)._2
+        val result = getMatchesByHash(invoke(localFile))
         assert(result.isEmpty)
       }
     }
 
     describe("when remote key exists and no others match hash") {
       it("should return match by key") {
-        val result = invoke(keyDiffHash)._1
+        val result = getMatchesByKey(invoke(keyDiffHash))
         assert(result.contains(HashModified(diffHash, lastModified)))
       }
       it("should return only itself in match by hash") {
-        val result = invoke(keyDiffHash)._2
+        val result = getMatchesByHash(invoke(keyDiffHash))
         assert(result.equals(Set((diffHash, KeyModified(keyDiffHash.remoteKey,lastModified)))))
       }
     }
