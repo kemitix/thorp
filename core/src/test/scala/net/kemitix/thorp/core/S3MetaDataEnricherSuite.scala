@@ -15,11 +15,15 @@ class S3MetaDataEnricherSuite
   private val fileToKey = KeyGenerator.generateKey(config.source, config.prefix) _
   val lastModified = LastModified(Instant.now())
 
-  def getMatchesByKey(status: (Option[HashModified], Set[(MD5Hash, KeyModified)])): Option[HashModified] =
-    status._1
+  def getMatchesByKey(status: (Option[HashModified], Set[(MD5Hash, KeyModified)])): Option[HashModified] = {
+    val (byKey, _) = status
+    byKey
+  }
 
-  def getMatchesByHash(status: (Option[HashModified], Set[(MD5Hash, KeyModified)])): Set[(MD5Hash, KeyModified)] =
-    status._2
+  def getMatchesByHash(status: (Option[HashModified], Set[(MD5Hash, KeyModified)])): Set[(MD5Hash, KeyModified)] = {
+    val (_, byHash) = status
+    byHash
+  }
 
   describe("enrich with metadata") {
 
