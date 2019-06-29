@@ -41,15 +41,18 @@ class StorageServiceSuite
         keyOtherKey.remoteKey -> HashModified(hash, lastModified),
         keyDiffHash.remoteKey -> HashModified(diffHash, lastModified)))
 
-    def invoke(localFile: LocalFile) = {
+    def invoke(localFile: LocalFile) =
       S3MetaDataEnricher.getS3Status(localFile, s3ObjectsData)
+
+    def getMatchesByKey(status: (Option[HashModified], Set[(MD5Hash, KeyModified)])): Option[HashModified] = {
+      val (byKey, _) = status
+      byKey
     }
 
-    def getMatchesByKey(status: (Option[HashModified], Set[(MD5Hash, KeyModified)])): Option[HashModified] =
-      status._1
-
-    def getMatchesByHash(status: (Option[HashModified], Set[(MD5Hash, KeyModified)])): Set[(MD5Hash, KeyModified)] =
-      status._2
+    def getMatchesByHash(status: (Option[HashModified], Set[(MD5Hash, KeyModified)])): Set[(MD5Hash, KeyModified)] = {
+      val (_, byHash) = status
+      byHash
+    }
 
     describe("when remote key exists, unmodified and other key matches the hash") {
       it("should return the match by key") {

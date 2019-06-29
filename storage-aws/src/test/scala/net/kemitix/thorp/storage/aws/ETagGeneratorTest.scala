@@ -34,11 +34,9 @@ class ETagGeneratorTest extends FunSpec {
         "5bd6e10a99fef100fe7bf5eaa0a42384",
         "8a0c1d0778ac8fcf4ca2010eba4711eb"
       ).zipWithIndex
-      md5Hashes.foreach { set => {
-        val hash = set._1
-        val index = set._2
+      md5Hashes.foreach { case (hash, index) =>
         test(hash, ETagGenerator.hashChunk(bigFile, index, chunkSize)(logger).unsafeRunSync)
-      }}
+      }
     }
   }
 
