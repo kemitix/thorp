@@ -6,6 +6,8 @@ import net.kemitix.thorp.domain._
 
 trait StorageService {
 
+  def shutdown: IO[StorageQueueEvent]
+
   def listObjects(bucket: Bucket,
                   prefix: RemoteKey): EitherT[IO, String, S3ObjectsData]
 

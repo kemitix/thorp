@@ -49,8 +49,8 @@ trait SyncLogging {
           counters.copy(copied = counters.copied + 1)
         case _: DeleteQueueEvent =>
           counters.copy(deleted = counters.deleted + 1)
-        case ErrorQueueEvent(k, e) =>
-            counters.copy(errors = counters.errors + 1)
+        case ErrorQueueEvent(_, _) =>
+          counters.copy(errors = counters.errors + 1)
         case _ => counters
       }
     }

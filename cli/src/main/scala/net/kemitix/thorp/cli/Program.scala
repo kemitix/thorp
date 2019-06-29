@@ -12,8 +12,10 @@ trait Program {
   def apply(cliOptions: Seq[ConfigOption]): IO[ExitCode] = {
     implicit val logger: Logger = new PrintLogger()
     for {
-      actions <- Synchronise(defaultStorageService, defaultHashService, cliOptions).valueOrF(handleErrors)
-      events <- handleActions(UnversionedMirrorArchive.default(defaultStorageService), actions)
+      storageService <- defaultStorageService
+      actions <- Synchronise(storageService, defaultHashService, cliOptions).valueOrF(handleErrors)
+      events <- handleActions(UnversionedMirrorArchive.default(storageService), actions)
+      _ <- storageService.shutdown
       _ <- SyncLogging.logRunFinished(events)
     } yield ExitCode.Success
   }
