@@ -17,8 +17,9 @@ object S3MetaDataEnricher {
                   s3ObjectsData: S3ObjectsData): (Option[HashModified], Set[(MD5Hash, KeyModified)]) = {
     val matchingByKey = s3ObjectsData.byKey.get(localFile.remoteKey)
     val matchingByHash = localFile.hashes.map(hash => {
-      s3ObjectsData.byHash.getOrElse(hash._2, Set())
-        .map(km => (hash._2, km))
+      val md5Hash = hash._2
+      s3ObjectsData.byHash.getOrElse(md5Hash, Set())
+        .map(km => (md5Hash, km))
     }).flatten.toSet
     (matchingByKey, matchingByHash)
   }
