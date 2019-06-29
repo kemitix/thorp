@@ -28,8 +28,7 @@ object LocalFileStream {
       def recurseIntoSubDirectories(file: File)(implicit c: Config): IO[Stream[LocalFile]] =
         file match {
           case f if f.isDirectory => loop(file)
-          case _ => for(hash <- md5HashGenerator(file))
-            yield Stream(domain.LocalFile(file, c.source, hash, generateKey(c.source, c.prefix)(file)))
+          case _ => localFile(md5HashGenerator, file, c)
         }
 
       def recurse(fs: Stream[File]): IO[Stream[LocalFile]] =
@@ -46,6 +45,12 @@ object LocalFileStream {
     }
 
     loop(file)
+  }
+
+  private def localFile(md5HashGenerator: File => IO[MD5Hash], file: File, c: Config) = {
+    for {
+      hash <- md5HashGenerator(file)
+    } yield Stream(domain.LocalFile(file, c.source, hash, generateKey(c.source, c.prefix)(file)))
   }
 
   //TODO: Change this to return an Either[IllegalArgumentException, Array[File]]
