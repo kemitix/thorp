@@ -6,11 +6,10 @@ import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.PutObjectRequest
 import com.amazonaws.services.s3.transfer.model.UploadResult
 import com.amazonaws.services.s3.transfer.{TransferManager, Upload}
-import net.kemitix.thorp.domain.MD5HashData.Root
 import net.kemitix.thorp.core.{KeyGenerator, Resource, S3MetaDataEnricher}
+import net.kemitix.thorp.domain.MD5HashData.Root
 import net.kemitix.thorp.domain.StorageQueueEvent.UploadQueueEvent
 import net.kemitix.thorp.domain._
-import net.kemitix.thorp.storage.api.StorageService
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.FunSpec
 

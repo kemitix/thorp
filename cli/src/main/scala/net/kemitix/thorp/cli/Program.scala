@@ -4,8 +4,8 @@ import cats.effect.{ExitCode, IO}
 import cats.implicits._
 import net.kemitix.thorp.core._
 import net.kemitix.thorp.domain.{Logger, StorageQueueEvent}
-import net.kemitix.thorp.storage.aws.S3StorageServiceBuilder.defaultStorageService
 import net.kemitix.thorp.storage.aws.S3HashService.defaultHashService
+import net.kemitix.thorp.storage.aws.S3StorageServiceBuilder.defaultStorageService
 
 trait Program {
 

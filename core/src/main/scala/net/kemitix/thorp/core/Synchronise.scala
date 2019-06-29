@@ -1,11 +1,10 @@
 package net.kemitix.thorp.core
 
-import cats.data.NonEmptyChain
-import cats.data.EitherT
+import cats.data.{EitherT, NonEmptyChain}
 import cats.effect.IO
 import cats.implicits._
 import net.kemitix.thorp.core.Action.DoNothing
-import net.kemitix.thorp.domain.{Config, LocalFile, Logger, RemoteKey, S3ObjectsData}
+import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.{HashService, StorageService}
 
 trait Synchronise {

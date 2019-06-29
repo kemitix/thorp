@@ -2,8 +2,8 @@ package net.kemitix.thorp.storage.aws
 
 import java.io.File
 
-import cats.implicits._
 import cats.effect.IO
+import cats.implicits._
 import com.amazonaws.services.s3.model.PutObjectRequest
 import com.amazonaws.services.s3.transfer.TransferManagerConfiguration
 import com.amazonaws.services.s3.transfer.internal.TransferManagerUtils

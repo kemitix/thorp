@@ -1,10 +1,6 @@
 package net.kemitix.thorp.storage.aws
 
-import java.io.File
-
-import com.amazonaws.services.s3.model.PutObjectRequest
 import com.amazonaws.services.s3.transfer.TransferManagerConfiguration
-import javax.naming.spi.DirStateFactory.Result
 import net.kemitix.thorp.core.Resource
 import net.kemitix.thorp.domain.MD5Hash
 import org.scalatest.FunSpec
