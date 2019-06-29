@@ -147,20 +147,17 @@ class SyncSuite
     override def upload(localFile: LocalFile,
                         bucket: Bucket,
                         uploadEventListener: UploadEventListener,
-                        tryCount: Int): IO[UploadQueueEvent] = {
+                        tryCount: Int): IO[UploadQueueEvent] =
       IO.pure(UploadQueueEvent(localFile.remoteKey, localFile.hash))
-    }
 
     override def copy(bucket: Bucket,
                       sourceKey: RemoteKey,
                       hash: MD5Hash,
-                      targetKey: RemoteKey): IO[CopyQueueEvent] = {
+                      targetKey: RemoteKey): IO[CopyQueueEvent] =
       IO.pure(CopyQueueEvent(targetKey))
-    }
 
     override def delete(bucket: Bucket,
-                        remoteKey: RemoteKey): IO[DeleteQueueEvent] = {
+                        remoteKey: RemoteKey): IO[DeleteQueueEvent] =
       IO.pure(DeleteQueueEvent(remoteKey))
-    }
   }
 }
