@@ -2,9 +2,6 @@ package net.kemitix.thorp.domain
 
 sealed trait StorageQueueEvent {
 
-  // the remote key that was uploaded, deleted or otherwise updated by the action
-  def remoteKey: RemoteKey
-
   val order: Int
 
 }
@@ -30,6 +27,10 @@ object StorageQueueEvent {
 
   final case class ErrorQueueEvent(remoteKey: RemoteKey, e: Throwable) extends StorageQueueEvent {
     override val order: Int = 10
+  }
+
+  final case class ShutdownQueueEvent() extends StorageQueueEvent {
+    override val order: Int = 99
   }
 
   implicit def ord[A <: StorageQueueEvent]: Ordering[A] = Ordering.by(_.order)

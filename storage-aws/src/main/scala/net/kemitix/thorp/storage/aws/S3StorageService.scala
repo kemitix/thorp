@@ -4,6 +4,7 @@ import cats.data.EitherT
 import cats.effect.IO
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.transfer.TransferManager
+import net.kemitix.thorp.domain.StorageQueueEvent.ShutdownQueueEvent
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.StorageService
 
@@ -35,5 +36,12 @@ class S3StorageService(amazonS3Client: => AmazonS3,
   override def delete(bucket: Bucket,
                       remoteKey: RemoteKey): IO[StorageQueueEvent] =
     deleter.delete(bucket, remoteKey)
+
+  override def shutdown: IO[StorageQueueEvent] =
+    IO {
+      amazonS3TransferManager.shutdownNow(true)
+      amazonS3Client.shutdown()
+      ShutdownQueueEvent()
+    }
 
 }
