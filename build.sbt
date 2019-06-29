@@ -72,6 +72,7 @@ lazy val core = (project in file("core"))
   .settings(assemblyJarName in assembly := "core.jar")
   .settings(testDependencies)
   .dependsOn(`storage-api`)
+  .dependsOn(domain % "compile->compile;test->test")
 
 lazy val `storage-api` = (project in file("storage-api"))
   .settings(commonSettings)

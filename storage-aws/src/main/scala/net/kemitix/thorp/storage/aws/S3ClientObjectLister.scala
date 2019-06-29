@@ -1,8 +1,7 @@
 package net.kemitix.thorp.storage.aws
 
-import cats.effect.IO
 import cats.data.EitherT
-import cats.implicits._
+import cats.effect.IO
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.{ListObjectsV2Request, S3ObjectSummary}
 import net.kemitix.thorp.domain
@@ -11,7 +10,7 @@ import net.kemitix.thorp.storage.aws.S3ObjectsByHash.byHash
 import net.kemitix.thorp.storage.aws.S3ObjectsByKey.byKey
 
 import scala.collection.JavaConverters._
-import scala.util.{Success, Try}
+import scala.util.Try
 
 class S3ClientObjectLister(amazonS3: AmazonS3) {
 

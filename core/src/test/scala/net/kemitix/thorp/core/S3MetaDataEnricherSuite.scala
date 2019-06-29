@@ -15,11 +15,21 @@ class S3MetaDataEnricherSuite
   private val fileToKey = KeyGenerator.generateKey(config.source, config.prefix) _
   val lastModified = LastModified(Instant.now())
 
+  def getMatchesByKey(status: (Option[HashModified], Set[(MD5Hash, KeyModified)])): Option[HashModified] = {
+    val (byKey, _) = status
+    byKey
+  }
+
+  def getMatchesByHash(status: (Option[HashModified], Set[(MD5Hash, KeyModified)])): Set[(MD5Hash, KeyModified)] = {
+    val (_, byHash) = status
+    byHash
+  }
+
   describe("enrich with metadata") {
 
       describe("#1a local exists, remote exists, remote matches, other matches - do nothing") {
         val theHash: MD5Hash = MD5Hash("the-file-hash")
-        val theFile: LocalFile = LocalFile.resolve("the-file", theHash, source, fileToKey)
+        val theFile: LocalFile = LocalFile.resolve("the-file", md5HashMap(theHash), source, fileToKey)
         val theRemoteKey: RemoteKey = theFile.remoteKey
         val s3: S3ObjectsData = S3ObjectsData(
           byHash = Map(theHash -> Set(KeyModified(theRemoteKey, lastModified))),
@@ -36,7 +46,7 @@ class S3MetaDataEnricherSuite
       }
       describe("#1b local exists, remote exists, remote matches, other no matches - do nothing") {
         val theHash: MD5Hash = MD5Hash("the-file-hash")
-        val theFile: LocalFile = LocalFile.resolve("the-file", theHash, source, fileToKey)
+        val theFile: LocalFile = LocalFile.resolve("the-file", md5HashMap(theHash), source, fileToKey)
         val theRemoteKey: RemoteKey = prefix.resolve("the-file")
         val s3: S3ObjectsData = S3ObjectsData(
           byHash = Map(theHash -> Set(KeyModified(theRemoteKey, lastModified))),
@@ -53,7 +63,7 @@ class S3MetaDataEnricherSuite
       }
       describe("#2 local exists, remote is missing, remote no match, other matches - copy") {
         val theHash = MD5Hash("the-hash")
-        val theFile = LocalFile.resolve("the-file", theHash, source, fileToKey)
+        val theFile = LocalFile.resolve("the-file", md5HashMap(theHash), source, fileToKey)
         val otherRemoteKey = RemoteKey("other-key")
         val s3: S3ObjectsData = S3ObjectsData(
           byHash = Map(theHash -> Set(KeyModified(otherRemoteKey, lastModified))),
@@ -70,7 +80,7 @@ class S3MetaDataEnricherSuite
       }
       describe("#3 local exists, remote is missing, remote no match, other no matches - upload") {
         val theHash = MD5Hash("the-hash")
-        val theFile = LocalFile.resolve("the-file", theHash, source, fileToKey)
+        val theFile = LocalFile.resolve("the-file", md5HashMap(theHash), source, fileToKey)
         val s3: S3ObjectsData = S3ObjectsData(
           byHash = Map(),
           byKey = Map()
@@ -85,7 +95,7 @@ class S3MetaDataEnricherSuite
       }
       describe("#4 local exists, remote exists, remote no match, other matches - copy") {
         val theHash = MD5Hash("the-hash")
-        val theFile = LocalFile.resolve("the-file", theHash, source, fileToKey)
+        val theFile = LocalFile.resolve("the-file", md5HashMap(theHash), source, fileToKey)
         val theRemoteKey = theFile.remoteKey
         val oldHash = MD5Hash("old-hash")
         val otherRemoteKey = prefix.resolve("other-key")
@@ -110,7 +120,7 @@ class S3MetaDataEnricherSuite
       }
       describe("#5 local exists, remote exists, remote no match, other no matches - upload") {
         val theHash = MD5Hash("the-hash")
-        val theFile = LocalFile.resolve("the-file", theHash, source, fileToKey)
+        val theFile = LocalFile.resolve("the-file", md5HashMap(theHash), source, fileToKey)
         val theRemoteKey = theFile.remoteKey
         val oldHash = MD5Hash("old-hash")
         val s3: S3ObjectsData = S3ObjectsData(
@@ -132,13 +142,17 @@ class S3MetaDataEnricherSuite
       }
   }
 
+  private def md5HashMap(theHash: MD5Hash) = {
+    Map("md5" -> theHash)
+  }
+
   describe("getS3Status") {
     val hash = MD5Hash("hash")
-    val localFile = LocalFile.resolve("the-file", hash, source, fileToKey)
+    val localFile = LocalFile.resolve("the-file", md5HashMap(hash), source, fileToKey)
     val key = localFile.remoteKey
-    val keyOtherKey = LocalFile.resolve("other-key-same-hash", hash, source, fileToKey)
+    val keyOtherKey = LocalFile.resolve("other-key-same-hash", md5HashMap(hash), source, fileToKey)
     val diffHash = MD5Hash("diff")
-    val keyDiffHash = LocalFile.resolve("other-key-diff-hash", diffHash, source, fileToKey)
+    val keyDiffHash = LocalFile.resolve("other-key-diff-hash", md5HashMap(diffHash), source, fileToKey)
     val lastModified = LastModified(Instant.now)
     val s3ObjectsData: S3ObjectsData = S3ObjectsData(
       byHash = Map(
@@ -154,32 +168,32 @@ class S3MetaDataEnricherSuite
     }
 
     describe("when remote key exists") {
-      it("should return (Some, Set.nonEmpty)") {
-        assertResult(
-          (Some(HashModified(hash, lastModified)),
-            Set(
-              KeyModified(key, lastModified),
-              KeyModified(keyOtherKey.remoteKey, lastModified)))
-        )(invoke(localFile))
+      it("should return a result for matching key") {
+        val result = getMatchesByKey(invoke(localFile))
+        assert(result.contains(HashModified(hash, lastModified)))
       }
     }
 
     describe("when remote key does not exist and no others matches hash") {
-      it("should return (None, Set.empty)") {
-        val localFile = LocalFile.resolve("missing-file", MD5Hash("unique"), source, fileToKey)
-        assertResult(
-          (None,
-            Set.empty)
-        )(invoke(localFile))
+      val localFile = LocalFile.resolve("missing-file", md5HashMap(MD5Hash("unique")), source, fileToKey)
+      it("should return no matches by key") {
+        val result = getMatchesByKey(invoke(localFile))
+        assert(result.isEmpty)
+      }
+      it("should return no matches by hash") {
+        val result = getMatchesByHash(invoke(localFile))
+        assert(result.isEmpty)
       }
     }
 
     describe("when remote key exists and no others match hash") {
-      it("should return (None, Set.nonEmpty)") {
-        assertResult(
-          (Some(HashModified(diffHash, lastModified)),
-            Set(KeyModified(keyDiffHash.remoteKey, lastModified)))
-        )(invoke(keyDiffHash))
+      it("should return match by key") {
+        val result = getMatchesByKey(invoke(keyDiffHash))
+        assert(result.contains(HashModified(diffHash, lastModified)))
+      }
+      it("should return only itself in match by hash") {
+        val result = getMatchesByHash(invoke(keyDiffHash))
+        assert(result.equals(Set((diffHash, KeyModified(keyDiffHash.remoteKey,lastModified)))))
       }
     }
 

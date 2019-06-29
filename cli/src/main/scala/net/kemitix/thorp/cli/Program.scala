@@ -4,6 +4,7 @@ import cats.effect.{ExitCode, IO}
 import cats.implicits._
 import net.kemitix.thorp.core._
 import net.kemitix.thorp.domain.{Logger, StorageQueueEvent}
+import net.kemitix.thorp.storage.aws.S3HashService.defaultHashService
 import net.kemitix.thorp.storage.aws.S3StorageServiceBuilder.defaultStorageService
 
 trait Program {
@@ -11,7 +12,7 @@ trait Program {
   def apply(cliOptions: Seq[ConfigOption]): IO[ExitCode] = {
     implicit val logger: Logger = new PrintLogger()
     for {
-      actions <- Synchronise(defaultStorageService, cliOptions).valueOrF(handleErrors)
+      actions <- Synchronise(defaultStorageService, defaultHashService, cliOptions).valueOrF(handleErrors)
       events <- handleActions(UnversionedMirrorArchive.default(defaultStorageService), actions)
       _ <- SyncLogging.logRunFinished(events)
     } yield ExitCode.Success

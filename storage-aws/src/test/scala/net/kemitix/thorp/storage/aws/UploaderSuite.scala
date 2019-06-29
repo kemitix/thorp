@@ -22,6 +22,11 @@ class UploaderSuite
   private val fileToKey = generateKey(config.source, config.prefix) _
   val lastModified = LastModified(Instant.now())
 
+  def md5HashMap(hash: MD5Hash): Map[String, MD5Hash] =
+    Map(
+      "md5" -> hash
+    )
+
   describe("S3ClientMultiPartTransferManagerSuite") {
     describe("upload") {
       pending
@@ -31,7 +36,7 @@ class UploaderSuite
       // dies when putObject is called
       val returnedKey = RemoteKey("returned-key")
       val returnedHash = MD5Hash("returned-hash")
-      val bigFile = LocalFile.resolve("small-file", MD5Hash("the-hash"), source, fileToKey)
+      val bigFile = LocalFile.resolve("small-file", md5HashMap(MD5Hash("the-hash")), source, fileToKey)
       val uploadEventListener = new UploadEventListener(bigFile)
       val amazonS3 = mock[AmazonS3]
       val amazonS3TransferManager = TransferManagerBuilder.standard().withS3Client(amazonS3).build

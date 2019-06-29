@@ -6,11 +6,10 @@ import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.PutObjectRequest
 import com.amazonaws.services.s3.transfer.model.UploadResult
 import com.amazonaws.services.s3.transfer.{TransferManager, Upload}
-import net.kemitix.thorp.core.MD5HashData.rootHash
 import net.kemitix.thorp.core.{KeyGenerator, Resource, S3MetaDataEnricher}
+import net.kemitix.thorp.domain.MD5HashData.Root
 import net.kemitix.thorp.domain.StorageQueueEvent.UploadQueueEvent
 import net.kemitix.thorp.domain._
-import net.kemitix.thorp.storage.api.StorageService
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.FunSpec
 
@@ -27,58 +26,80 @@ class StorageServiceSuite
 
   describe("getS3Status") {
     val hash = MD5Hash("hash")
-    val localFile = LocalFile.resolve("the-file", hash, source, fileToKey)
+    val localFile = LocalFile.resolve("the-file", md5HashMap(hash), source, fileToKey)
     val key = localFile.remoteKey
-    val keyotherkey = LocalFile.resolve("other-key-same-hash", hash, source, fileToKey)
-    val diffhash = MD5Hash("diff")
-    val keydiffhash = LocalFile.resolve("other-key-diff-hash", diffhash, source, fileToKey)
+    val keyOtherKey = LocalFile.resolve("other-key-same-hash", md5HashMap(hash), source, fileToKey)
+    val diffHash = MD5Hash("diff")
+    val keyDiffHash = LocalFile.resolve("other-key-diff-hash", md5HashMap(diffHash), source, fileToKey)
     val lastModified = LastModified(Instant.now)
     val s3ObjectsData: S3ObjectsData = S3ObjectsData(
       byHash = Map(
-        hash -> Set(KeyModified(key, lastModified), KeyModified(keyotherkey.remoteKey, lastModified)),
-        diffhash -> Set(KeyModified(keydiffhash.remoteKey, lastModified))),
+        hash -> Set(KeyModified(key, lastModified), KeyModified(keyOtherKey.remoteKey, lastModified)),
+        diffHash -> Set(KeyModified(keyDiffHash.remoteKey, lastModified))),
       byKey = Map(
         key -> HashModified(hash, lastModified),
-        keyotherkey.remoteKey -> HashModified(hash, lastModified),
-        keydiffhash.remoteKey -> HashModified(diffhash, lastModified)))
+        keyOtherKey.remoteKey -> HashModified(hash, lastModified),
+        keyDiffHash.remoteKey -> HashModified(diffHash, lastModified)))
 
-    def invoke(self: StorageService, localFile: LocalFile) = {
+    def invoke(localFile: LocalFile) =
       S3MetaDataEnricher.getS3Status(localFile, s3ObjectsData)
+
+    def getMatchesByKey(status: (Option[HashModified], Set[(MD5Hash, KeyModified)])): Option[HashModified] = {
+      val (byKey, _) = status
+      byKey
     }
 
-    describe("when remote key exists") {
-      val storageService = S3StorageServiceBuilder.defaultStorageService
-      it("should return (Some, Set.nonEmpty)") {
+    def getMatchesByHash(status: (Option[HashModified], Set[(MD5Hash, KeyModified)])): Set[(MD5Hash, KeyModified)] = {
+      val (_, byHash) = status
+      byHash
+    }
+
+    describe("when remote key exists, unmodified and other key matches the hash") {
+      it("should return the match by key") {
+        val result = getMatchesByKey(invoke(localFile))
+        assert(result.contains(HashModified(hash, lastModified)))
+      }
+      it("should return both matches for the hash") {
+        val result = getMatchesByHash(invoke(localFile))
         assertResult(
-          (Some(HashModified(hash, lastModified)),
-            Set(
-              KeyModified(key, lastModified),
-              KeyModified(keyotherkey.remoteKey, lastModified)))
-        )(invoke(storageService, localFile))
+          Set(
+            (hash, KeyModified(key, lastModified)),
+            (hash, KeyModified(keyOtherKey.remoteKey, lastModified)))
+        )(result)
       }
     }
 
     describe("when remote key does not exist and no others matches hash") {
-      val storageService = S3StorageServiceBuilder.defaultStorageService
-      it("should return (None, Set.empty)") {
-        val localFile = LocalFile.resolve("missing-file", MD5Hash("unique"), source, fileToKey)
-        assertResult(
-          (None,
-            Set.empty)
-        )(invoke(storageService, localFile))
+      val localFile = LocalFile.resolve("missing-file", md5HashMap(MD5Hash("unique")), source, fileToKey)
+      it("should return no matches by key") {
+        val result = getMatchesByKey(invoke(localFile))
+        assert(result.isEmpty)
+      }
+      it("should return no matches by hash") {
+        val result = getMatchesByHash(invoke(localFile))
+        assert(result.isEmpty)
       }
     }
 
     describe("when remote key exists and no others match hash") {
-      val storageService = S3StorageServiceBuilder.defaultStorageService
-      it("should return (None, Set.nonEmpty)") {
+      val localFile = keyDiffHash
+      it("should return the match by key") {
+        val result = getMatchesByKey(invoke(localFile))
+        assert(result.contains(HashModified(diffHash, lastModified)))
+      }
+      it("should return one match by hash") {
+        val result = getMatchesByHash(invoke(localFile))
         assertResult(
-          (Some(HashModified(diffhash, lastModified)),
-            Set(KeyModified(keydiffhash.remoteKey, lastModified)))
-        )(invoke(storageService, keydiffhash))
+          Set(
+            (diffHash, KeyModified(keyDiffHash.remoteKey, lastModified)))
+        )(result)
       }
     }
 
+  }
+
+  private def md5HashMap(hash: MD5Hash) = {
+    Map("md5" -> hash)
   }
 
   describe("upload") {
@@ -90,7 +111,7 @@ class StorageServiceSuite
 
       val prefix = RemoteKey("prefix")
       val localFile =
-        LocalFile.resolve("root-file", rootHash, source, KeyGenerator.generateKey(source, prefix))
+        LocalFile.resolve("root-file", md5HashMap(Root.hash), source, KeyGenerator.generateKey(source, prefix))
       val bucket = Bucket("a-bucket")
       val remoteKey = RemoteKey("prefix/root-file")
       val uploadEventListener = new UploadEventListener(localFile)
@@ -99,13 +120,13 @@ class StorageServiceSuite
       (amazonS3TransferManager upload (_: PutObjectRequest)).when(*).returns(upload)
       val uploadResult = stub[UploadResult]
       (upload.waitForUploadResult _).when().returns(uploadResult)
-      (uploadResult.getETag _).when().returns(rootHash.hash)
+      (uploadResult.getETag _).when().returns(Root.hash.hash)
       (uploadResult.getKey _).when().returns(remoteKey.key)
 
       it("should return hash of uploaded file") {
         pending
         //FIXME: works okay on its own, but fails when run with others
-        val expected = UploadQueueEvent(remoteKey, rootHash)
+        val expected = UploadQueueEvent(remoteKey, Root.hash)
         val result = storageService.upload(localFile, bucket, uploadEventListener, 1)
         assertResult(expected)(result)
       }

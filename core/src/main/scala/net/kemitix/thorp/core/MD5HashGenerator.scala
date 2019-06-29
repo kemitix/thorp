@@ -10,51 +10,72 @@ import scala.collection.immutable.NumericRange
 
 object MD5HashGenerator {
 
-  def md5File(file: File)
-             (implicit logger: Logger): IO[MD5Hash] = {
+  val maxBufferSize = 8048
+  val defaultBuffer = new Array[Byte](maxBufferSize)
 
-    val maxBufferSize = 8048
-    val defaultBuffer = new Array[Byte](maxBufferSize)
-    def openFile = IO.pure(new FileInputStream(file))
-    def closeFile = {fis: FileInputStream => IO(fis.close())}
+  def hex(in: Array[Byte]): String = {
+    val md5 = MessageDigest getInstance "MD5"
+    md5 update in
+    (md5.digest map ("%02x" format _)).mkString
+  }
 
-    def nextChunkSize(currentOffset: Long) = {
-      // a value between 1 and maxBufferSize
-      val toRead = file.length - currentOffset
-      val result = Math.min(maxBufferSize, toRead)
-      result.toInt
+  def digest(in: String): Array[Byte] = {
+    val md5 = MessageDigest getInstance "MD5"
+    md5 update in.getBytes
+    md5.digest
+  }
+
+  def md5File(file: File)(implicit logger: Logger): IO[MD5Hash] =
+    md5FileChunk(file, 0, file.length)
+
+  private def openFile(file: File, offset: Long) = IO {
+    val stream = new FileInputStream(file)
+    stream skip offset
+    stream
+  }
+
+  private def closeFile(fis: FileInputStream) = IO(fis.close())
+
+  private def readFile(file: File, offset: Long, endOffset: Long) =
+    for {
+      fis <- openFile(file, offset)
+      digest <- digestFile(fis, offset, endOffset)
+      _ <- closeFile(fis)
+    } yield digest
+
+  private def digestFile(fis: FileInputStream, offset: Long, endOffset: Long) =
+    IO {
+      val md5 = MessageDigest getInstance "MD5"
+      NumericRange(offset, endOffset, maxBufferSize)
+        .foreach(currentOffset => md5 update readToBuffer(fis, currentOffset, endOffset))
+      md5.digest
     }
 
-    def readToBuffer(fis: FileInputStream,
-                     currentOffset: Long) = {
-      val buffer =
-        if (nextChunkSize(currentOffset) < maxBufferSize) new Array[Byte](nextChunkSize(currentOffset))
-        else defaultBuffer
-      fis read buffer
-      buffer
-    }
+  private def readToBuffer(fis: FileInputStream,
+                   currentOffset: Long,
+                   endOffset: Long) = {
+    val buffer =
+      if (nextBufferSize(currentOffset, endOffset) < maxBufferSize)
+        new Array[Byte](nextBufferSize(currentOffset, endOffset))
+      else defaultBuffer
+    fis read buffer
+    buffer
+  }
 
-    def digestFile(fis: FileInputStream) =
-      IO {
-        val md5 = MessageDigest getInstance "MD5"
-        NumericRange(0, file.length, maxBufferSize)
-          .foreach { currentOffset => {
-              val buffer = readToBuffer(fis, currentOffset)
-              md5 update buffer
-            }}
-        md5.digest
-      }
+  private def nextBufferSize(currentOffset: Long, endOffset: Long) = {
+    val toRead = endOffset - currentOffset
+    val result = Math.min(maxBufferSize, toRead)
+    result.toInt
+  }
 
-    def readFile =
-      for {
-        fis <- openFile
-        digest <- digestFile(fis)
-        _ <- closeFile(fis)
-      } yield digest
-
+  def md5FileChunk(file: File,
+                   offset: Long,
+                   size: Long)
+                  (implicit logger: Logger): IO[MD5Hash] = {
+    val endOffset = Math.min(offset + size, file.length)
     for {
       _ <- logger.debug(s"md5:reading:size ${file.length}:$file")
-      digest <- readFile
+      digest <- readFile(file, offset, endOffset)
       hash = MD5Hash.fromDigest(digest)
       _ <- logger.debug(s"md5:generated:${hash.hash}:$file")
     } yield hash
