@@ -49,8 +49,13 @@ object ActionGenerator {
 
   private def copyFile(bucket: Bucket,
                        localFile: LocalFile,
-                       matchByHash: Set[RemoteMetaData]): Stream[Action] =
-    matchByHash.headOption.map(_.remoteKey).toStream.map {sourceKey =>
-      ToCopy(bucket, sourceKey, localFile.hash, localFile.remoteKey)}
+                       matchByHash: Set[RemoteMetaData]): Stream[Action] = {
+    val headOption = matchByHash.headOption
+    headOption.toStream.map { remoteMetaData =>
+      val sourceKey = remoteMetaData.remoteKey
+      val hash = remoteMetaData.hash
+      ToCopy(bucket, sourceKey, hash, localFile.remoteKey)
+    }
+  }
 
 }

@@ -9,8 +9,6 @@ import net.kemitix.thorp.core.Resource
 import net.kemitix.thorp.domain.MD5Hash
 import org.scalatest.FunSpec
 
-import scala.reflect.macros.UnexpectedReificationException
-
 class ETagGeneratorTest extends FunSpec {
 
   private val bigFile = Resource(this, "big-file")

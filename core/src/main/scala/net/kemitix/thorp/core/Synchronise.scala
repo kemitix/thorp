@@ -6,16 +6,17 @@ import cats.effect.IO
 import cats.implicits._
 import net.kemitix.thorp.core.Action.DoNothing
 import net.kemitix.thorp.domain.{Config, LocalFile, Logger, RemoteKey, S3ObjectsData}
-import net.kemitix.thorp.storage.api.StorageService
+import net.kemitix.thorp.storage.api.{HashService, StorageService}
 
 trait Synchronise {
 
   def apply(storageService: StorageService,
+            hashService: HashService,
             configOptions: Seq[ConfigOption])
-           (implicit logger: Logger): EitherT[IO, List[String], Stream[Action]] =
+           (implicit l: Logger): EitherT[IO, List[String], Stream[Action]] =
     EitherT(ConfigurationBuilder.buildConfig(configOptions))
       .swap.map(errorMessages).swap
-      .flatMap(config => useValidConfig(storageService, config))
+      .flatMap(config => useValidConfig(storageService, hashService)(config, l))
 
   def errorMessages(errors: NonEmptyChain[ConfigValidation]): List[String] =
     errors.map(cv => cv.errorMessage).toList
@@ -26,45 +27,50 @@ trait Synchronise {
   }
 
   def useValidConfig(storageService: StorageService,
-                     config: Config)
-                    (implicit logger: Logger): EitherT[IO, List[String], Stream[Action]] = {
+                     hashService: HashService)
+                    (implicit c: Config, l: Logger): EitherT[IO, List[String], Stream[Action]] = {
     for {
-      _ <- EitherT.liftF(SyncLogging.logRunStart(config.bucket, config.prefix, config.source))
-      actions <- gatherMetadata(storageService, logger, config)
+      _ <- EitherT.liftF(SyncLogging.logRunStart(c.bucket, c.prefix, c.source))
+      actions <- gatherMetadata(storageService, hashService)
         .swap.map(error => List(error)).swap
         .map {
           case (remoteData, localData) =>
-            (actionsForLocalFiles(config, localData, remoteData) ++
-              actionsForRemoteKeys(config, remoteData))
+            (actionsForLocalFiles(localData, remoteData) ++
+              actionsForRemoteKeys(remoteData))
               .filter(removeDoNothing)
         }
     } yield actions
   }
 
   private def gatherMetadata(storageService: StorageService,
-                             logger: Logger,
-                             config: Config): EitherT[IO, String, (S3ObjectsData, Stream[LocalFile])] =
+                             hashService: HashService)
+                            (implicit l: Logger,
+                             c: Config): EitherT[IO, String, (S3ObjectsData, Stream[LocalFile])] =
     for {
-      remoteData <- fetchRemoteData(storageService, config)
-      localData <- EitherT.liftF(findLocalFiles(config, logger))
+      remoteData <- fetchRemoteData(storageService)
+      localData <- EitherT.liftF(findLocalFiles(hashService))
     } yield (remoteData, localData)
 
-  private def actionsForLocalFiles(config: Config, localData: Stream[LocalFile], remoteData: S3ObjectsData) =
-    localData.foldLeft(Stream[Action]())((acc, lf) => createActionFromLocalFile(config, lf, remoteData) ++ acc)
+  private def actionsForLocalFiles(localData: Stream[LocalFile], remoteData: S3ObjectsData)
+                                  (implicit c: Config) =
+    localData.foldLeft(Stream[Action]())((acc, lf) => createActionFromLocalFile(lf, remoteData) ++ acc)
 
-  private def actionsForRemoteKeys(config: Config, remoteData: S3ObjectsData) =
-    remoteData.byKey.keys.foldLeft(Stream[Action]())((acc, rk) => createActionFromRemoteKey(config, rk) #:: acc)
+  private def actionsForRemoteKeys(remoteData: S3ObjectsData)
+                                  (implicit c: Config) =
+    remoteData.byKey.keys.foldLeft(Stream[Action]())((acc, rk) => createActionFromRemoteKey(rk) #:: acc)
 
-  private def fetchRemoteData(storageService: StorageService, config: Config) =
-    storageService.listObjects(config.bucket, config.prefix)
+  private def fetchRemoteData(storageService: StorageService)(implicit c: Config) =
+    storageService.listObjects(c.bucket, c.prefix)
 
-  private def findLocalFiles(implicit config: Config, l: Logger) =
-    LocalFileStream.findFiles(config.source, MD5HashGenerator.md5File(_))
+  private def findLocalFiles(hashService: HashService)(implicit config: Config, l: Logger) =
+    LocalFileStream.findFiles(config.source, hashService)
 
-  private def createActionFromLocalFile(c: Config, lf: LocalFile, remoteData: S3ObjectsData) =
-    ActionGenerator.createActions(S3MetaDataEnricher.getMetadata(lf, remoteData)(c))(c)
+  private def createActionFromLocalFile(lf: LocalFile, remoteData: S3ObjectsData)
+                                       (implicit c: Config) =
+    ActionGenerator.createActions(S3MetaDataEnricher.getMetadata(lf, remoteData))
 
-  private def createActionFromRemoteKey(c: Config, rk: RemoteKey) =
+  private def createActionFromRemoteKey(rk: RemoteKey)
+                                       (implicit c: Config) =
     if (rk.isMissingLocally(c.source, c.prefix)) Action.ToDelete(c.bucket, rk)
     else DoNothing(c.bucket, rk)
 

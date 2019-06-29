@@ -10,6 +10,6 @@ import net.kemitix.thorp.domain.{Logger, MD5Hash}
   */
 trait HashService {
 
-  def hashLocalObject(file: File)(implicit l: Logger): IO[Set[MD5Hash]]
+  def hashLocalObject(file: File)(implicit l: Logger): IO[Map[String, MD5Hash]]
 
 }

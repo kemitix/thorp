@@ -7,11 +7,12 @@ import cats.effect.IO
 import net.kemitix.thorp.core.KeyGenerator.generateKey
 import net.kemitix.thorp.domain
 import net.kemitix.thorp.domain._
+import net.kemitix.thorp.storage.api.HashService
 
 object LocalFileStream {
 
   def findFiles(file: File,
-                md5HashGenerator: File => IO[MD5Hash])
+                hashService: HashService)
                (implicit c: Config,
                 logger: Logger): IO[Stream[LocalFile]] = {
 
@@ -25,10 +26,10 @@ object LocalFileStream {
             Stream(fs: _*)
               .filter(f => filters(f.toPath)))
 
-      def recurseIntoSubDirectories(file: File)(implicit c: Config): IO[Stream[LocalFile]] =
+      def recurseIntoSubDirectories(file: File): IO[Stream[LocalFile]] =
         file match {
           case f if f.isDirectory => loop(file)
-          case _ => localFile(md5HashGenerator, file, c)
+          case _ => localFile(hashService, file)
         }
 
       def recurse(fs: Stream[File]): IO[Stream[LocalFile]] =
@@ -47,9 +48,9 @@ object LocalFileStream {
     loop(file)
   }
 
-  private def localFile(md5HashGenerator: File => IO[MD5Hash], file: File, c: Config) = {
+  private def localFile(hashService: HashService, file: File)(implicit l: Logger, c: Config) = {
     for {
-      hash <- md5HashGenerator(file)
+      hash <- hashService.hashLocalObject(file)
     } yield Stream(domain.LocalFile(file, c.source, hash, generateKey(c.source, c.prefix)(file)))
   }
 
