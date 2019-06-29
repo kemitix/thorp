@@ -45,13 +45,19 @@ class StorageServiceSuite
       S3MetaDataEnricher.getS3Status(localFile, s3ObjectsData)
     }
 
+    def getMatchesByKey(status: (Option[HashModified], Set[(MD5Hash, KeyModified)])): Option[HashModified] =
+      status._1
+
+    def getMatchesByHash(status: (Option[HashModified], Set[(MD5Hash, KeyModified)])): Set[(MD5Hash, KeyModified)] =
+      status._2
+
     describe("when remote key exists, unmodified and other key matches the hash") {
       it("should return the match by key") {
-        val result = invoke(localFile)._1
+        val result = getMatchesByKey(invoke(localFile))
         assert(result.contains(HashModified(hash, lastModified)))
       }
       it("should return both matches for the hash") {
-        val result = invoke(localFile)._2
+        val result = getMatchesByHash(invoke(localFile))
         assertResult(
           Set(
             (hash, KeyModified(key, lastModified)),
@@ -63,11 +69,11 @@ class StorageServiceSuite
     describe("when remote key does not exist and no others matches hash") {
       val localFile = LocalFile.resolve("missing-file", md5HashMap(MD5Hash("unique")), source, fileToKey)
       it("should return no matches by key") {
-        val result = invoke(localFile)._1
+        val result = getMatchesByKey(invoke(localFile))
         assert(result.isEmpty)
       }
       it("should return no matches by hash") {
-        val result = invoke(localFile)._2
+        val result = getMatchesByHash(invoke(localFile))
         assert(result.isEmpty)
       }
     }
@@ -75,11 +81,11 @@ class StorageServiceSuite
     describe("when remote key exists and no others match hash") {
       val localFile = keyDiffHash
       it("should return the match by key") {
-        val result = invoke(localFile)._1
+        val result = getMatchesByKey(invoke(localFile))
         assert(result.contains(HashModified(diffHash, lastModified)))
       }
       it("should return one match by hash") {
-        val result = invoke(localFile)._2
+        val result = getMatchesByHash(invoke(localFile))
         assertResult(
           Set(
             (diffHash, KeyModified(keyDiffHash.remoteKey, lastModified)))
