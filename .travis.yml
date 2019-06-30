@@ -14,8 +14,6 @@ stages:
     if: ((branch = master AND type = push) OR (tag IS present)) AND NOT fork
 jobs:
   include:
-    - name: compile
-      script: sbt ++$TRAVIS_SCALA_VERSION compile
     - stage: test
       script: sbt ++$TRAVIS_SCALA_VERSION test
     - stage: release
