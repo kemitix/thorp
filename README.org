@@ -3,6 +3,9 @@
 Synchronisation of files with S3 using the hash of the file contents.
 
 [[https://www.codacy.com/app/kemitix/thorp][file:https://img.shields.io/codacy/grade/c1719d44f1f045a8b71e1665a6d3ce6c.svg?style=for-the-badge]]
+[[https://search.maven.org/search?q=g:net.kemitix.thorp][file:https://img.shields.io/maven-central/v/net.kemitix.thorp/thorp.svg?style=for-the-badge]]
+[[https://repo1.maven.org/maven2/net/kemitix/thorp][file:https://img.shields.io/nexus/r/https/oss.sonatype.org/net.kemitix.thorp/thorp.svg?style=for-the-badge]]
+[[https://oss.sonatype.org/content/repositories/snapshots/net/kemitix/thorp/][file:https://img.shields.io/nexus/s/https/oss.sonatype.org/net.kemitix.thorp/thorp.svg?style=for-the-badge]]
 
 Originally based on Alex Kudlick's [[https://github.com/akud/aws-s3-sync-by-hash][aws-s3-sync-by-hash]].
 
@@ -67,9 +70,6 @@ When considering a local file, the following table governs what should happen:
 
 To build as an executable jar, perform `sbt assembly`
 
-This will create the file
-`cli/target/scala-2.12/thorp-assembly-$VERSION.jar` (where $VERSION
-is substituted)
+This will create the file `cli/target/scala-2.12/thorp`
 
-Copy and rename this file as `thorp.jar` into the same directory as
-the `bin/throp` shell script.
+Copy this file to your `PATH`.
