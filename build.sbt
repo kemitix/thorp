@@ -66,6 +66,7 @@ lazy val cli = (project in file("cli"))
   .settings(applicationSettings)
   .settings(commandLineParsing)
   .settings(testDependencies)
+  .settings(assemblyJarName in assembly := "thorp.jar")
   .dependsOn(`thorp-lib`)
 
 lazy val `thorp-lib` = (project in file("thorp-lib"))
