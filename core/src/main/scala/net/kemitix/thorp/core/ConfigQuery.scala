@@ -3,22 +3,16 @@ package net.kemitix.thorp.core
 trait ConfigQuery {
 
   def showVersion(configOptions: Seq[ConfigOption]): Boolean =
-    configOptions.exists {
-      case ConfigOption.Version => true
-      case _ => false
-    }
+    configOptions contains ConfigOption.Version
+
+  def batchMode(configOptions: Seq[ConfigOption]): Boolean =
+    configOptions contains ConfigOption.BatchMode
 
   def ignoreUserOptions(configOptions: Seq[ConfigOption]): Boolean =
-    configOptions.exists {
-      case ConfigOption.IgnoreUserOptions => true
-      case _ => false
-    }
+    configOptions contains ConfigOption.IgnoreUserOptions
 
   def ignoreGlobalOptions(configOptions: Seq[ConfigOption]): Boolean =
-    configOptions.exists {
-      case ConfigOption.IgnoreGlobalOptions => true
-      case _ => false
-    }
+    configOptions contains ConfigOption.IgnoreGlobalOptions
 
 }
 
