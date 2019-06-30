@@ -1,6 +1,19 @@
-val commonSettings = Seq(
-  version := "DEV-SNAPSHOT",
+inThisBuild(List(
   organization := "net.kemitix",
+  homepage := Some(url("https://github.com/kemitix/thorp")),
+  licenses := List("mit" -> url("https://opensource.org/licenses/MIT")),
+  developers := List(
+    Developer(
+      "kemitix",
+      "Paul Campbell",
+      "pcampbell@kemitix.net",
+      url("https://github.kemitix.net")
+    )
+  )
+))
+
+val commonSettings = Seq(
+  organization := "net.kemitix.thorp",
   scalaVersion := "2.12.8",
   test in assembly := {}
 )
