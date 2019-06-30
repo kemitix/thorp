@@ -10,6 +10,9 @@ sealed trait ConfigOption {
 }
 
 object ConfigOption {
+  case object Version extends ConfigOption {
+    override def update(config: Config): Config = config
+  }
   case class Source(path: Path) extends ConfigOption {
     override def update(config: Config): Config = config.copy(source = path.toFile)
   }
