@@ -1,5 +1,5 @@
 inThisBuild(List(
-  organization := "net.kemitix",
+  organization := "net.kemitix.thorp",
   sonatypeProfileName := "net.kemitix",
   homepage := Some(url("https://github.com/kemitix/thorp")),
   licenses := List("mit" -> url("https://opensource.org/licenses/MIT")),
@@ -14,7 +14,6 @@ inThisBuild(List(
 ))
 
 val commonSettings = Seq(
-  organization := "net.kemitix.thorp",
   scalaVersion := "2.12.8",
   test in assembly := {}
 )
