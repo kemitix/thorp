@@ -2,6 +2,12 @@ package net.kemitix.thorp.core
 
 trait ConfigQuery {
 
+  def showVersion(configOptions: Seq[ConfigOption]): Boolean =
+    configOptions.exists {
+      case ConfigOption.Version => true
+      case _ => false
+    }
+
   def ignoreUserOptions(configOptions: Seq[ConfigOption]): Boolean =
     configOptions.exists {
       case ConfigOption.IgnoreUserOptions => true
