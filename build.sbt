@@ -60,13 +60,20 @@ lazy val thorp = (project in file("."))
   .settings(commonSettings)
   .aggregate(cli, `thorp-lib`, `storage-aws`, core, `storage-api`, domain)
 
+import sbtassembly.AssemblyPlugin.defaultShellScript
 lazy val cli = (project in file("cli"))
   .settings(commonSettings)
   .settings(mainClass in assembly := Some("net.kemitix.thorp.cli.Main"))
   .settings(applicationSettings)
   .settings(commandLineParsing)
   .settings(testDependencies)
-  .settings(assemblyJarName in assembly := "thorp.jar")
+  .settings(Seq(
+    assemblyOption in assembly := (
+      assemblyOption in assembly).value
+      .copy(prependShellScript =
+        Some(defaultShellScript)),
+    assemblyJarName in assembly := "thorp.jar"
+  ))
   .dependsOn(`thorp-lib`)
 
 lazy val `thorp-lib` = (project in file("thorp-lib"))
