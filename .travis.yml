@@ -3,7 +3,7 @@ scala:
   - 2.12.8
   - 2.13
 jdk:
-  - openjdk10
+  - openjdk8
   - openjdk11
 env:
   - AWS_REGION=eu-west-1
