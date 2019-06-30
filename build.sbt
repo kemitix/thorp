@@ -1,5 +1,6 @@
 inThisBuild(List(
   organization := "net.kemitix",
+  sonatypeProfileName := "net.kemitix",
   homepage := Some(url("https://github.com/kemitix/thorp")),
   licenses := List("mit" -> url("https://opensource.org/licenses/MIT")),
   developers := List(
