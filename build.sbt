@@ -67,6 +67,11 @@ lazy val cli = (project in file("cli"))
   .settings(applicationSettings)
   .settings(commandLineParsing)
   .settings(testDependencies)
+  .enablePlugins(BuildInfoPlugin)
+  .settings(
+    buildInfoKeys := Seq[BuildInfoKey](name, version),
+    buildInfoPackage := "thorp"
+  )
   .settings(Seq(
     assemblyOption in assembly := (
       assemblyOption in assembly).value

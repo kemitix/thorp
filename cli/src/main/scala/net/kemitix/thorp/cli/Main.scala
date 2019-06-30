@@ -13,7 +13,7 @@ object Main extends IOApp {
       .guaranteeCase {
           case Canceled => exitCaseLogger.warn("Interrupted")
           case Error(e) => exitCaseLogger.error(e.getMessage)
-          case Completed => exitCaseLogger.info("Done")
+          case Completed => IO.unit
       }
   }
 

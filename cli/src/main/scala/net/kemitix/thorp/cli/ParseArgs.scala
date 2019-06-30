@@ -13,6 +13,9 @@ object ParseArgs {
     OParser.sequence(
       programName("thorp"),
       head("thorp"),
+      opt[Unit]('V', "version")
+          .action((_, cos) => ConfigOption.Version :: cos)
+          .text("Show version"),
       opt[String]('s', "source")
         .action((str, cos) => ConfigOption.Source(Paths.get(str)) :: cos)
         .text("Source directory to sync to destination"),
