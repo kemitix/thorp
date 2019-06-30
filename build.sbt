@@ -13,7 +13,7 @@ inThisBuild(List(
 ))
 
 val commonSettings = Seq(
-  organization := "net.kemitix",
+  organization := "net.kemitix.thorp",
   scalaVersion := "2.12.8",
   test in assembly := {}
 )
