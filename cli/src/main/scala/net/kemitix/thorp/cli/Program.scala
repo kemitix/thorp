@@ -31,8 +31,8 @@ trait Program {
 
   private def handleActions(archive: ThorpArchive,
                             actions: Stream[Action]): IO[Stream[StorageQueueEvent]] =
-    actions.foldRight(Stream[IO[StorageQueueEvent]]()) {
-      (action, stream) => archive.update(action) ++ stream
+    actions.foldLeft(Stream[IO[StorageQueueEvent]]()) {
+      (stream, action) => archive.update(action) ++ stream
     }.sequence
 }
 
