@@ -10,7 +10,20 @@ The format is based on [[https://keepachangelog.com/en/1.0.0/][Keep a Changelog]
 ** Added
 
    - Abstraction layer encapsulating S3 as Storage (#76)
-   - Multiple copies of file are only uploaded once (#74)
+   - Display simple error message when bucket is invalid (#81)
+   - Shutdown storage service once completed (#88)
+   - Release snapshots to sonatype from TravisCI (#92)
+   - Embed launch script in fat-jar (#98)
+
+** Fixed
+
+   - Use correct hash locally for comparing multi-part uploaded files (#82)
+   - Handle large list of action in a stack-safe manner (#93)
+
+** Dependencies
+
+   - Upgrade ~scalamock~ from ~4.2.0~ to ~4.3.0~ (#84)
+   - Upgrade ~aws-java-sdk-s3~ from ~1.11.573~ to ~1.11.580~ (#86)
 
 * [0.5.0] - 2019-06-21
 
@@ -55,7 +68,7 @@ The format is based on [[https://keepachangelog.com/en/1.0.0/][Keep a Changelog]
 
 ** Changed
 
-   - ~--filter~~ renamed to ~-exclude~~
+   - ~--filter~ renamed to ~-exclude~
 
 ** Fixed
 
