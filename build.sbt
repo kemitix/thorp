@@ -72,7 +72,7 @@ lazy val cli = (project in file("cli"))
       assemblyOption in assembly).value
       .copy(prependShellScript =
         Some(defaultShellScript)),
-    assemblyJarName in assembly := "thorp.jar"
+    assemblyJarName in assembly := "thorp"
   ))
   .dependsOn(`thorp-lib`)
 
