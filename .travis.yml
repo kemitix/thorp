@@ -16,9 +16,9 @@ stages:
 jobs:
   include:
     - stage: test
-      script: sbt ++$TRAVIS_SCALA_VERSION test
+      script: sbt ++$TRAVIS_SCALA_VERSION! test
     - stage: release
-      script: sbt ++$TRAVIS_SCALA_VERSION ci-release
+      script: sbt ++$TRAVIS_SCALA_VERSION! ci-release
 cache:
   directories:
     - $HOME/.sbt/1.0/dependency
