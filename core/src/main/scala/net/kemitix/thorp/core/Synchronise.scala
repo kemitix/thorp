@@ -11,7 +11,7 @@ trait Synchronise {
 
   def apply(storageService: StorageService,
             hashService: HashService,
-            configOptions: Seq[ConfigOption])
+            configOptions: ConfigOptions)
            (implicit l: Logger): EitherT[IO, List[String], Stream[Action]] =
     EitherT(ConfigurationBuilder.buildConfig(configOptions))
       .swap.map(errorMessages).swap

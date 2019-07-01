@@ -7,8 +7,8 @@ import net.kemitix.thorp.core.ConfigOption._
 
 trait ParseConfigLines {
 
-  def parseLines(lines: List[String]): List[ConfigOption] =
-    lines.flatMap(parseLine)
+  def parseLines(lines: List[String]): ConfigOptions =
+    ConfigOptions(lines.flatMap(parseLine))
 
   private val pattern = "^\\s*(?<key>\\S*)\\s*=\\s*(?<value>\\S*)\\s*$"
   private val format = Pattern.compile(pattern)

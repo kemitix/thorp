@@ -9,7 +9,7 @@ import net.kemitix.thorp.storage.aws.S3StorageServiceBuilder.defaultStorageServi
 
 trait Program {
 
-  def apply(cliOptions: Seq[ConfigOption]): IO[ExitCode] = {
+  def apply(cliOptions: ConfigOptions): IO[ExitCode] = {
     implicit val logger: Logger = new PrintLogger()
     if (ConfigQuery.showVersion(cliOptions)) IO {
         println(s"Thorp v${thorp.BuildInfo.version}")

@@ -2,7 +2,7 @@ package net.kemitix.thorp.cli
 
 import java.nio.file.Paths
 
-import net.kemitix.thorp.core.ConfigOption
+import net.kemitix.thorp.core.{ConfigOption, ConfigOptions}
 import scopt.OParser
 
 object ParseArgs {
@@ -45,7 +45,8 @@ object ParseArgs {
     )
   }
 
-  def apply(args: List[String]): Option[List[ConfigOption]] =
+  def apply(args: List[String]): Option[ConfigOptions] =
     OParser.parse(configParser, args, List())
+      .map(ConfigOptions)
 
 }

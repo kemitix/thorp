@@ -19,7 +19,7 @@ trait ConfigurationBuilder {
 
   private val defaultConfig: Config = Config(source = pwdFile)
 
-  def buildConfig(priorityOptions: Seq[ConfigOption]): IO[Either[NonEmptyChain[ConfigValidation], Config]] = {
+  def buildConfig(priorityOptions: ConfigOptions): IO[Either[NonEmptyChain[ConfigValidation], Config]] = {
     val source = findSource(priorityOptions)
     for {
       sourceOptions <- sourceOptions(source)
@@ -30,30 +30,30 @@ trait ConfigurationBuilder {
     } yield validateConfig(config).toEither
   }
 
-  private def findSource(priorityOptions: Seq[ConfigOption]): File =
-    priorityOptions.foldRight(pwdFile)((co, f) => co match {
+  private def findSource(priorityOptions: ConfigOptions): File =
+    priorityOptions.options.foldRight(pwdFile)((co, f) => co match {
       case ConfigOption.Source(source) => source.toFile
       case _ => f
     })
 
-  private def sourceOptions(source: File): IO[Seq[ConfigOption]] =
+  private def sourceOptions(source: File): IO[ConfigOptions] =
     readFile(source, ".thorp.conf")
 
-  private def userOptions(higherPriorityOptions: Seq[ConfigOption]): IO[Seq[ConfigOption]] =
-    if (ConfigQuery.ignoreUserOptions(higherPriorityOptions)) IO(List())
+  private def userOptions(higherPriorityOptions: ConfigOptions): IO[ConfigOptions] =
+    if (ConfigQuery.ignoreUserOptions(higherPriorityOptions)) IO(ConfigOptions())
     else readFile(userHome, ".config/thorp.conf")
 
-  private def globalOptions(higherPriorityOptions: Seq[ConfigOption]): IO[Seq[ConfigOption]] =
-    if (ConfigQuery.ignoreGlobalOptions(higherPriorityOptions)) IO(List())
+  private def globalOptions(higherPriorityOptions: ConfigOptions): IO[ConfigOptions] =
+    if (ConfigQuery.ignoreGlobalOptions(higherPriorityOptions)) IO(ConfigOptions())
     else parseFile(Paths.get("/etc/thorp.conf"))
 
   private def userHome = new File(System.getProperty("user.home"))
 
-  private def readFile(source: File, filename: String): IO[Seq[ConfigOption]] =
+  private def readFile(source: File, filename: String): IO[ConfigOptions] =
     parseFile(source.toPath.resolve(filename))
 
-  private def collateOptions(configOptions: Seq[ConfigOption]): Config =
-    configOptions.foldRight(defaultConfig)((co, c) => co.update(c))
+  private def collateOptions(configOptions: ConfigOptions): Config =
+    configOptions.options.foldRight(defaultConfig)((co, c) => co.update(c))
 }
 
 object ConfigurationBuilder extends ConfigurationBuilder
