@@ -51,7 +51,7 @@ class SyncSuite
   def invokeSubject(storageService: StorageService,
                     hashService: HashService,
                     configOptions: ConfigOptions): Either[List[String], Stream[Action]] = {
-    Synchronise(storageService, hashService, configOptions).value.unsafeRunSync
+    Synchronise.createPlan(storageService, hashService, configOptions).value.unsafeRunSync
   }
 
   describe("when all files should be uploaded") {

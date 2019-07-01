@@ -9,7 +9,7 @@ import net.kemitix.thorp.storage.api.{HashService, StorageService}
 
 trait Synchronise {
 
-  def apply(storageService: StorageService,
+  def createPlan(storageService: StorageService,
             hashService: HashService,
             configOptions: ConfigOptions)
            (implicit l: Logger): EitherT[IO, List[String], Stream[Action]] =

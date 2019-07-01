@@ -17,7 +17,7 @@ trait Program {
     } else
       for {
         storageService <- defaultStorageService
-        actions <- Synchronise(storageService, defaultHashService, cliOptions).valueOrF(handleErrors)
+        actions <- Synchronise.createPlan(storageService, defaultHashService, cliOptions).valueOrF(handleErrors)
         events <- handleActions(UnversionedMirrorArchive.default(storageService), actions)
         _ <- storageService.shutdown
         _ <- SyncLogging.logRunFinished(events)
