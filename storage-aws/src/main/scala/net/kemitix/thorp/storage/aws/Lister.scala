@@ -12,7 +12,7 @@ import net.kemitix.thorp.storage.aws.S3ObjectsByKey.byKey
 import scala.collection.JavaConverters._
 import scala.util.Try
 
-class S3ClientObjectLister(amazonS3: AmazonS3) {
+class Lister(amazonS3: AmazonS3) {
 
   def listObjects(bucket: Bucket,
                   prefix: RemoteKey): EitherT[IO, String, S3ObjectsData] = {

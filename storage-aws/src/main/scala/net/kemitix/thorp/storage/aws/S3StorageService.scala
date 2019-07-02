@@ -12,7 +12,7 @@ class S3StorageService(amazonS3Client: => AmazonS3,
                        amazonS3TransferManager: => TransferManager)
   extends StorageService {
 
-  lazy val objectLister = new S3ClientObjectLister(amazonS3Client)
+  lazy val objectLister = new Lister(amazonS3Client)
   lazy val copier = new Copier(amazonS3Client)
   lazy val uploader = new Uploader(amazonS3TransferManager)
   lazy val deleter = new Deleter(amazonS3Client)
