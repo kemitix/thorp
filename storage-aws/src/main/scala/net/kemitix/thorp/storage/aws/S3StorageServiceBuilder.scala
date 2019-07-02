@@ -10,7 +10,7 @@ object S3StorageServiceBuilder {
                     amazonS3TransferManager: TransferManager): StorageService =
     new S3StorageService(amazonS3Client, amazonS3TransferManager)
 
-  def defaultStorageService: StorageService =
+  lazy val defaultStorageService: StorageService =
     createService(
       AmazonS3ClientBuilder.defaultClient,
       TransferManagerBuilder.defaultTransferManager)

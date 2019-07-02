@@ -15,11 +15,10 @@ trait Program {
         println(s"Thorp v${thorp.BuildInfo.version}")
         ExitCode.Success
     } else {
-      val storageService = defaultStorageService
       for {
-        actions <- Synchronise.createPlan(storageService, defaultHashService, cliOptions).valueOrF(handleErrors)
-        events <- handleActions(UnversionedMirrorArchive.default(storageService), actions)
-        _ <- storageService.shutdown
+        actions <- Synchronise.createPlan(defaultStorageService, defaultHashService, cliOptions).valueOrF(handleErrors)
+        events <- handleActions(UnversionedMirrorArchive.default(defaultStorageService), actions)
+        _ <- defaultStorageService.shutdown
         _ <- SyncLogging.logRunFinished(events)
       } yield ExitCode.Success
     }
