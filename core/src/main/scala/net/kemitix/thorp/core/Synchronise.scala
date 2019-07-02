@@ -58,7 +58,8 @@ trait Synchronise {
                                   (implicit c: Config) =
     remoteData.byKey.keys.foldLeft(Stream[Action]())((acc, rk) => createActionFromRemoteKey(rk) #:: acc)
 
-  private def fetchRemoteData(storageService: StorageService)(implicit c: Config) =
+  private def fetchRemoteData(storageService: StorageService)
+                             (implicit c: Config, l: Logger) =
     storageService.listObjects(c.bucket, c.prefix)
 
   private def findLocalFiles(hashService: HashService)

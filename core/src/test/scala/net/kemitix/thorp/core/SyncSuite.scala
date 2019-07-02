@@ -157,7 +157,8 @@ class SyncSuite
     extends StorageService {
 
     override def listObjects(bucket: Bucket,
-                             prefix: RemoteKey): EitherT[IO, String, S3ObjectsData] =
+                             prefix: RemoteKey)
+                            (implicit l: Logger): EitherT[IO, String, S3ObjectsData] =
       EitherT.liftF(IO.pure(s3ObjectsData))
 
     override def upload(localFile: LocalFile,
