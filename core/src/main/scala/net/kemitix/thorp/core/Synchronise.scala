@@ -14,7 +14,7 @@ trait Synchronise {
             configOptions: ConfigOptions)
            (implicit l: Logger): EitherT[IO, List[String], Stream[Action]] =
     EitherT(ConfigurationBuilder.buildConfig(configOptions))
-      .swap.map(errorMessages).swap
+      .leftMap(errorMessages)
       .flatMap(config => useValidConfig(storageService, hashService)(config, l))
 
   def errorMessages(errors: NonEmptyChain[ConfigValidation]): List[String] =
