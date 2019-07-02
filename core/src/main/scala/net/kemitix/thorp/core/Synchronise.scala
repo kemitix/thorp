@@ -44,15 +44,15 @@ trait Synchronise {
   private def gatherMetadata(storageService: StorageService,
                              hashService: HashService)
                             (implicit l: Logger,
-                             c: Config): EitherT[IO, String, (S3ObjectsData, Stream[LocalFile])] =
+                             c: Config): EitherT[IO, String, (S3ObjectsData, LocalFiles)] =
     for {
       remoteData <- fetchRemoteData(storageService)
       localData <- EitherT.liftF(findLocalFiles(hashService))
     } yield (remoteData, localData)
 
-  private def actionsForLocalFiles(localData: Stream[LocalFile], remoteData: S3ObjectsData)
+  private def actionsForLocalFiles(localData: LocalFiles, remoteData: S3ObjectsData)
                                   (implicit c: Config) =
-    localData.foldLeft(Stream[Action]())((acc, lf) => createActionFromLocalFile(lf, remoteData) ++ acc)
+    localData.localFiles.foldLeft(Stream[Action]())((acc, lf) => createActionFromLocalFile(lf, remoteData) ++ acc)
 
   private def actionsForRemoteKeys(remoteData: S3ObjectsData)
                                   (implicit c: Config) =
