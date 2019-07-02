@@ -42,9 +42,9 @@ trait Program {
   }
 
   private def handleActions(archive: ThorpArchive,
-                            actions: SyncPlan)
+                            syncPlan: SyncPlan)
                            (implicit l: Logger): IO[Stream[StorageQueueEvent]] =
-    actions.actions.foldLeft(Stream[IO[StorageQueueEvent]]()) {
+    syncPlan.actions.foldLeft(Stream[IO[StorageQueueEvent]]()) {
       (stream, action) => archive.update(action) ++ stream
     }.sequence
 }
