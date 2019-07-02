@@ -8,7 +8,7 @@ object Main extends IOApp {
   override def run(args: List[String]): IO[ExitCode] = {
     val exitCaseLogger = new PrintLogger(false)
     ParseArgs(args)
-      .map(Program(_))
+      .map(Program.run)
       .getOrElse(IO(ExitCode.Error))
       .guaranteeCase {
           case Canceled => exitCaseLogger.warn("Interrupted")
