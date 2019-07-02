@@ -8,24 +8,24 @@ import net.kemitix.thorp.storage.api.StorageService
 
 case class UnversionedMirrorArchive(storageService: StorageService,
                                     batchMode: Boolean) extends ThorpArchive {
-  override def update(action: Action)
+  override def update(indexedAction: (Action, Int))
                      (implicit l: Logger): Stream[IO[StorageQueueEvent]] =
     Stream(
-      action match {
-        case ToUpload(bucket, localFile) =>
+      indexedAction match {
+        case (ToUpload(bucket, localFile), index) =>
           for {
             event <- storageService.upload(localFile, bucket, batchMode, new UploadEventListener(localFile), 1)
             _ <- fileUploaded(localFile, batchMode)
           } yield event
-        case ToCopy(bucket, sourceKey, hash, targetKey) =>
+        case (ToCopy(bucket, sourceKey, hash, targetKey), index) =>
           for {
             event <- storageService.copy(bucket, sourceKey, hash, targetKey)
           } yield event
-        case ToDelete(bucket, remoteKey) =>
+        case (ToDelete(bucket, remoteKey), index) =>
           for {
             event <- storageService.delete(bucket, remoteKey)
           } yield event
-        case DoNothing(_, remoteKey) =>
+        case (DoNothing(_, remoteKey), index) =>
           IO.pure(DoNothingQueueEvent(remoteKey))
       })
 

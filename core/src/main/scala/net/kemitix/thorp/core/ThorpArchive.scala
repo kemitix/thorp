@@ -5,7 +5,7 @@ import net.kemitix.thorp.domain.{LocalFile, Logger, StorageQueueEvent}
 
 trait ThorpArchive {
 
-  def update(action: Action)(implicit l: Logger): Stream[IO[StorageQueueEvent]]
+  def update(indexedAction: (Action, Int))(implicit l: Logger): Stream[IO[StorageQueueEvent]]
 
   def fileUploaded(localFile: LocalFile,
                    batchMode: Boolean)
