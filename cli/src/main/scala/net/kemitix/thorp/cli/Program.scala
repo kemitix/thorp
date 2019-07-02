@@ -14,15 +14,18 @@ trait Program {
     if (ConfigQuery.showVersion(cliOptions)) IO {
         println(s"Thorp v${thorp.BuildInfo.version}")
         ExitCode.Success
-    } else {
+    } else
       for {
-        syncPlan <- Synchronise.createPlan(defaultStorageService, defaultHashService, cliOptions).valueOrF(handleErrors)
+        syncPlan <- createPlan(cliOptions)
         events <- handleActions(thorpArchive(cliOptions), syncPlan)
         _ <- defaultStorageService.shutdown
         _ <- SyncLogging.logRunFinished(events)
       } yield ExitCode.Success
-    }
   }
+
+  private def createPlan(cliOptions: ConfigOptions)
+                        (implicit l: Logger): IO[SyncPlan] =
+    Synchronise.createPlan(defaultStorageService, defaultHashService, cliOptions).valueOrF(handleErrors)
 
   private def thorpArchive(cliOptions: ConfigOptions) =
     UnversionedMirrorArchive.default(defaultStorageService, ConfigQuery.batchMode(cliOptions))
