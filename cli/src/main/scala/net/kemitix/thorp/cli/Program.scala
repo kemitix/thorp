@@ -11,10 +11,11 @@ trait Program {
 
   def run(cliOptions: ConfigOptions): IO[ExitCode] = {
     implicit val logger: Logger = new PrintLogger()
-    if (ConfigQuery.showVersion(cliOptions)) IO {
-        println(s"Thorp v${thorp.BuildInfo.version}")
-        ExitCode.Success
-    } else
+    if (ConfigQuery.showVersion(cliOptions))
+      for {
+        _ <- logger.info(s"Thorp v${thorp.BuildInfo.version}")
+      } yield ExitCode.Success
+    else
       for {
         syncPlan <- createPlan(cliOptions)
         archive <- thorpArchive(cliOptions)
