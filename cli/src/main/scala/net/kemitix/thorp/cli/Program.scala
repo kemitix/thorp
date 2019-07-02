@@ -17,7 +17,8 @@ trait Program {
     } else
       for {
         syncPlan <- createPlan(cliOptions)
-        events <- handleActions(thorpArchive(cliOptions), syncPlan)
+        archive <- thorpArchive(cliOptions)
+        events <- handleActions(archive, syncPlan)
         _ <- defaultStorageService.shutdown
         _ <- SyncLogging.logRunFinished(events)
       } yield ExitCode.Success
@@ -28,7 +29,7 @@ trait Program {
     Synchronise.createPlan(defaultStorageService, defaultHashService, cliOptions).valueOrF(handleErrors)
 
   private def thorpArchive(cliOptions: ConfigOptions) =
-    UnversionedMirrorArchive.default(defaultStorageService, ConfigQuery.batchMode(cliOptions))
+    IO.pure(UnversionedMirrorArchive.default(defaultStorageService, ConfigQuery.batchMode(cliOptions)))
 
   private def handleErrors(implicit logger: Logger): List[String] => IO[SyncPlan] = {
     errors => {
