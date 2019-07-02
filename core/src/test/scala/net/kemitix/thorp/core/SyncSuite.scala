@@ -49,9 +49,16 @@ class SyncSuite
   ))
 
   def invokeSubject(storageService: StorageService,
-                    hashService: HashService,
-                    configOptions: ConfigOptions): Either[List[String], Stream[Action]] = {
+                              hashService: HashService,
+                              configOptions: ConfigOptions): Either[List[String], SyncPlan] = {
     Synchronise.createPlan(storageService, hashService, configOptions).value.unsafeRunSync
+  }
+
+  def invokeSubjectForActions(storageService: StorageService,
+                              hashService: HashService,
+                              configOptions: ConfigOptions): Either[List[String], Stream[Action]] = {
+    invokeSubject(storageService, hashService, configOptions)
+      .map(_.actions)
   }
 
   describe("when all files should be uploaded") {
@@ -62,7 +69,7 @@ class SyncSuite
       val expected = Right(Set(
         ToUpload(testBucket, rootFile),
         ToUpload(testBucket, leafFile)))
-      val result = invokeSubject(storageService, hashService, configOptions)
+      val result = invokeSubjectForActions(storageService, hashService, configOptions)
       assertResult(expected)(result.map(_.toSet))
     }
   }
@@ -81,7 +88,7 @@ class SyncSuite
     val storageService = new RecordingStorageService(testBucket, s3ObjectsData)
     it("no actions") {
       val expected = Stream()
-      val result = invokeSubject(storageService, hashService, configOptions)
+      val result = invokeSubjectForActions(storageService, hashService, configOptions)
       assert(result.isRight)
       assertResult(expected)(result.right.get)
     }
@@ -103,7 +110,7 @@ class SyncSuite
         ToCopy(testBucket,  sourceKey, Root.hash, targetKey),
         ToDelete(testBucket, sourceKey)
       )
-      val result = invokeSubject(storageService, hashService, configOptions)
+      val result = invokeSubjectForActions(storageService, hashService, configOptions)
       assert(result.isRight)
       assertResult(expected)(result.right.get)
     }
@@ -130,7 +137,7 @@ class SyncSuite
       val expected = Stream(
         ToDelete(testBucket, deletedKey)
       )
-      val result = invokeSubject(storageService,hashService, configOptions)
+      val result = invokeSubjectForActions(storageService,hashService, configOptions)
       assert(result.isRight)
       assertResult(expected)(result.right.get)
     }
@@ -146,7 +153,7 @@ class SyncSuite
     val storageService = new RecordingStorageService(testBucket, s3ObjectsData)
     it("is not uploaded") {
       val expected = Stream()
-      val result = invokeSubject(storageService, hashService, ConfigOption.Exclude("leaf") :: configOptions)
+      val result = invokeSubjectForActions(storageService, hashService, ConfigOption.Exclude("leaf") :: configOptions)
       assert(result.isRight)
       assertResult(expected)(result.right.get)
     }

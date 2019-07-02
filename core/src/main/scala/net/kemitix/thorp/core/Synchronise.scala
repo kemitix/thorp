@@ -12,7 +12,7 @@ trait Synchronise {
   def createPlan(storageService: StorageService,
             hashService: HashService,
             configOptions: ConfigOptions)
-           (implicit l: Logger): EitherT[IO, List[String], Stream[Action]] =
+           (implicit l: Logger): EitherT[IO, List[String], SyncPlan] =
     EitherT(ConfigurationBuilder.buildConfig(configOptions))
       .leftMap(errorMessages)
       .flatMap(config => useValidConfig(storageService, hashService)(config, l))
@@ -25,16 +25,16 @@ trait Synchronise {
     case _ => true
   }
 
-  def assemblePlan(implicit c: Config): ((S3ObjectsData, LocalFiles)) => Stream[Action] = {
+  def assemblePlan(implicit c: Config): ((S3ObjectsData, LocalFiles)) => SyncPlan = {
     case (remoteData, localData) =>
-      (actionsForLocalFiles(localData, remoteData) ++
+      SyncPlan(actions = (actionsForLocalFiles(localData, remoteData) ++
         actionsForRemoteKeys(remoteData))
-        .filter(removeDoNothing)
+        .filter(removeDoNothing))
   }
 
   def useValidConfig(storageService: StorageService,
                      hashService: HashService)
-                    (implicit c: Config, l: Logger): EitherT[IO, List[String], Stream[Action]] = {
+                    (implicit c: Config, l: Logger): EitherT[IO, List[String], SyncPlan] = {
     for {
       _ <- EitherT.liftF(SyncLogging.logRunStart(c.bucket, c.prefix, c.source))
       actions <- gatherMetadata(storageService, hashService)

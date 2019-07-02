@@ -24,19 +24,19 @@ trait Program {
     }
   }
 
-  private def handleErrors(implicit logger: Logger): List[String] => IO[Stream[Action]] = {
+  private def handleErrors(implicit logger: Logger): List[String] => IO[SyncPlan] = {
     errors => {
       for {
         _ <- logger.error("There were errors:")
         _ <- errors.map(error => logger.error(s" - $error")).sequence
-      } yield Stream()
+      } yield SyncPlan()
     }
   }
 
   private def handleActions(archive: ThorpArchive,
-                            actions: Stream[Action])
+                            actions: SyncPlan)
                            (implicit l: Logger): IO[Stream[StorageQueueEvent]] =
-    actions.foldLeft(Stream[IO[StorageQueueEvent]]()) {
+    actions.actions.foldLeft(Stream[IO[StorageQueueEvent]]()) {
       (stream, action) => archive.update(action) ++ stream
     }.sequence
 }
