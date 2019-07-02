@@ -21,19 +21,18 @@ class Lister(amazonS3: AmazonS3) {
                   prefix: RemoteKey)
                  (implicit l: Logger): EitherT[IO, String, S3ObjectsData] = {
 
-    val requestMore = (token:Token) => new ListObjectsV2Request()
+    val requestMore = (token: Token) => new ListObjectsV2Request()
       .withBucketName(bucket.name)
       .withPrefix(prefix.key)
       .withContinuationToken(token)
 
     def fetchBatch: ListObjectsV2Request => EitherT[IO, String, Batch] =
-      request =>
-        EitherT {
-          for {
-            _ <- l.info("Fetching remote summaries...")
-            batch <- tryFetchBatch(request)
-          } yield batch
-        }
+      request => EitherT {
+        for {
+          _ <- ListerLogger.logFetchBatch
+          batch <- tryFetchBatch(request)
+        } yield batch
+      }
 
     def fetchMore(more: Option[Token]): EitherT[IO, String, Stream[S3ObjectSummary]] = {
       more match {
