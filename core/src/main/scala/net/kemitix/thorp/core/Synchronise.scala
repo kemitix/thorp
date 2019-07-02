@@ -31,7 +31,7 @@ trait Synchronise {
     for {
       _ <- EitherT.liftF(SyncLogging.logRunStart(c.bucket, c.prefix, c.source))
       actions <- gatherMetadata(storageService, hashService)
-        .swap.map(error => List(error)).swap
+        .leftMap(error => List(error))
         .map {
           case (remoteData, localData) =>
             (actionsForLocalFiles(localData, remoteData) ++
