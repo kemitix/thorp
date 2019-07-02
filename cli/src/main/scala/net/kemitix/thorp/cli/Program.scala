@@ -14,14 +14,15 @@ trait Program {
     if (ConfigQuery.showVersion(cliOptions)) IO {
         println(s"Thorp v${thorp.BuildInfo.version}")
         ExitCode.Success
-    } else
+    } else {
+      val storageService = defaultStorageService
       for {
-        storageService <- defaultStorageService
         actions <- Synchronise.createPlan(storageService, defaultHashService, cliOptions).valueOrF(handleErrors)
         events <- handleActions(UnversionedMirrorArchive.default(storageService), actions)
         _ <- storageService.shutdown
         _ <- SyncLogging.logRunFinished(events)
       } yield ExitCode.Success
+    }
   }
 
   private def handleErrors(implicit logger: Logger): List[String] => IO[Stream[Action]] = {
