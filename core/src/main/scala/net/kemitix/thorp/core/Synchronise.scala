@@ -25,6 +25,13 @@ trait Synchronise {
     case _ => true
   }
 
+  def assemblePlan(implicit c: Config): ((S3ObjectsData, LocalFiles)) => Stream[Action] = {
+    case (remoteData, localData) =>
+      (actionsForLocalFiles(localData, remoteData) ++
+        actionsForRemoteKeys(remoteData))
+        .filter(removeDoNothing)
+  }
+
   def useValidConfig(storageService: StorageService,
                      hashService: HashService)
                     (implicit c: Config, l: Logger): EitherT[IO, List[String], Stream[Action]] = {
@@ -32,12 +39,7 @@ trait Synchronise {
       _ <- EitherT.liftF(SyncLogging.logRunStart(c.bucket, c.prefix, c.source))
       actions <- gatherMetadata(storageService, hashService)
         .leftMap(error => List(error))
-        .map {
-          case (remoteData, localData) =>
-            (actionsForLocalFiles(localData, remoteData) ++
-              actionsForRemoteKeys(remoteData))
-              .filter(removeDoNothing)
-        }
+        .map(assemblePlan)
     } yield actions
   }
 
