@@ -6,13 +6,14 @@ import net.kemitix.thorp.domain.StorageQueueEvent.DoNothingQueueEvent
 import net.kemitix.thorp.domain.{StorageQueueEvent, UploadEventListener}
 import net.kemitix.thorp.storage.api.StorageService
 
-case class UnversionedMirrorArchive(storageService: StorageService) extends ThorpArchive {
+case class UnversionedMirrorArchive(storageService: StorageService,
+                                    batchMode: Boolean) extends ThorpArchive {
   override def update(action: Action): Stream[IO[StorageQueueEvent]] =
     Stream(
       action match {
         case ToUpload(bucket, localFile) =>
           for {
-            event <- storageService.upload(localFile, bucket, new UploadEventListener(localFile), 1)
+            event <- storageService.upload(localFile, bucket, batchMode, new UploadEventListener(localFile), 1)
           } yield event
         case ToCopy(bucket, sourceKey, hash, targetKey) =>
           for {
@@ -29,6 +30,7 @@ case class UnversionedMirrorArchive(storageService: StorageService) extends Thor
 }
 
 object UnversionedMirrorArchive {
-  def default(storageService: StorageService): ThorpArchive =
-    new UnversionedMirrorArchive(storageService)
+  def default(storageService: StorageService,
+              batchMode: Boolean): ThorpArchive =
+    new UnversionedMirrorArchive(storageService, batchMode)
 }

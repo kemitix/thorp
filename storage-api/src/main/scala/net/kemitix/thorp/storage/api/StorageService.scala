@@ -13,6 +13,7 @@ trait StorageService {
 
   def upload(localFile: LocalFile,
              bucket: Bucket,
+             batchMode: Boolean,
              uploadEventListener: UploadEventListener,
              tryCount: Int): IO[StorageQueueEvent]
 

@@ -15,10 +15,11 @@ class Uploader(transferManager: => AmazonTransferManager) {
 
   def upload(localFile: LocalFile,
              bucket: Bucket,
+             batchMode: Boolean,
              uploadEventListener: UploadEventListener,
              tryCount: Int): IO[StorageQueueEvent] =
     for {
-      upload <- transfer(localFile, bucket, uploadEventListener)
+      upload <- transfer(localFile, bucket, batchMode, uploadEventListener)
       action = upload match {
         case Right(r) => UploadQueueEvent(RemoteKey(r.getKey), MD5Hash(r.getETag))
         case Left(e) => ErrorQueueEvent(localFile.remoteKey, e)
@@ -27,10 +28,11 @@ class Uploader(transferManager: => AmazonTransferManager) {
 
   private def transfer(localFile: LocalFile,
                        bucket: Bucket,
+                       batchMode: Boolean,
                        uploadEventListener: UploadEventListener,
                       ): IO[Either[Throwable, UploadResult]] = {
     val listener: ProgressListener = progressListener(uploadEventListener)
-    val putObjectRequest = request(localFile, bucket, listener)
+    val putObjectRequest = request(localFile, bucket, batchMode, listener)
     IO {
       Try(transferManager.upload(putObjectRequest))
         .map(_.waitForUploadResult)
@@ -38,12 +40,16 @@ class Uploader(transferManager: => AmazonTransferManager) {
     }
   }
 
-  private def request(localFile: LocalFile, bucket: Bucket, listener: ProgressListener): PutObjectRequest = {
+  private def request(localFile: LocalFile,
+                      bucket: Bucket,
+                      batchMode: Boolean,
+                      listener: ProgressListener): PutObjectRequest = {
     val metadata = new ObjectMetadata()
     localFile.md5base64.foreach(metadata.setContentMD5)
-    new PutObjectRequest(bucket.name, localFile.remoteKey.key, localFile.file)
+    val request = new PutObjectRequest(bucket.name, localFile.remoteKey.key, localFile.file)
       .withMetadata(metadata)
-      .withGeneralProgressListener(listener)
+    if (batchMode) request
+    else request.withGeneralProgressListener(listener)
   }
 
   private def progressListener(uploadEventListener: UploadEventListener) =

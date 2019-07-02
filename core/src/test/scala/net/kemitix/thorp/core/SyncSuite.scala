@@ -162,6 +162,7 @@ class SyncSuite
 
     override def upload(localFile: LocalFile,
                         bucket: Bucket,
+                        batchMode: Boolean,
                         uploadEventListener: UploadEventListener,
                         tryCount: Int): IO[UploadQueueEvent] =
       IO.pure(UploadQueueEvent(localFile.remoteKey, localFile.hashes("md5")))

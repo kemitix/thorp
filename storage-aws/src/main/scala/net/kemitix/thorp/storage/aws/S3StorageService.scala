@@ -29,9 +29,10 @@ class S3StorageService(amazonS3Client: => AmazonS3,
 
   override def upload(localFile: LocalFile,
                       bucket: Bucket,
+                      batchMode: Boolean,
                       uploadEventListener: UploadEventListener,
                       tryCount: Int): IO[StorageQueueEvent] =
-    uploader.upload(localFile, bucket, uploadEventListener, 1)
+    uploader.upload(localFile, bucket, batchMode, uploadEventListener, 1)
 
   override def delete(bucket: Bucket,
                       remoteKey: RemoteKey): IO[StorageQueueEvent] =
