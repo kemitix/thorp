@@ -6,7 +6,7 @@ import com.amazonaws.services.s3.model.CopyObjectRequest
 import net.kemitix.thorp.domain.StorageQueueEvent.CopyQueueEvent
 import net.kemitix.thorp.domain._
 
-class S3ClientCopier(amazonS3: AmazonS3) {
+class Copier(amazonS3: AmazonS3) {
 
   def copy(bucket: Bucket,
            sourceKey: RemoteKey,
