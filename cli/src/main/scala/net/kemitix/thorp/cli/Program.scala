@@ -17,12 +17,15 @@ trait Program {
     } else {
       for {
         syncPlan <- Synchronise.createPlan(defaultStorageService, defaultHashService, cliOptions).valueOrF(handleErrors)
-        events <- handleActions(UnversionedMirrorArchive.default(defaultStorageService, ConfigQuery.batchMode(cliOptions)), syncPlan)
+        events <- handleActions(thorpArchive(cliOptions), syncPlan)
         _ <- defaultStorageService.shutdown
         _ <- SyncLogging.logRunFinished(events)
       } yield ExitCode.Success
     }
   }
+
+  private def thorpArchive(cliOptions: ConfigOptions) =
+    UnversionedMirrorArchive.default(defaultStorageService, ConfigQuery.batchMode(cliOptions))
 
   private def handleErrors(implicit logger: Logger): List[String] => IO[SyncPlan] = {
     errors => {
