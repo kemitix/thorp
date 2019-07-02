@@ -27,6 +27,10 @@ class LocalFileStreamSuite extends FunSpec {
           .map { x: LocalFile => x.relative.toString }
       assertResult(Set("subdir/leaf-file", "root-file"))(result)
     }
+    it("should count all files") {
+      val result = invoke.count
+      assertResult(2)(result)
+    }
   }
 
   private def invoke = {

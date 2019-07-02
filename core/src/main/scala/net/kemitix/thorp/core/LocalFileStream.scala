@@ -51,7 +51,10 @@ object LocalFileStream {
   private def localFile(hashService: HashService, file: File)(implicit l: Logger, c: Config) = {
     for {
       hash <- hashService.hashLocalObject(file)
-    } yield LocalFiles(Stream(domain.LocalFile(file, c.source, hash, generateKey(c.source, c.prefix)(file))))
+    } yield
+      LocalFiles(
+        localFiles = Stream(domain.LocalFile(file, c.source, hash, generateKey(c.source, c.prefix)(file))),
+        count = 1)
   }
 
   //TODO: Change this to return an Either[IllegalArgumentException, Array[File]]
