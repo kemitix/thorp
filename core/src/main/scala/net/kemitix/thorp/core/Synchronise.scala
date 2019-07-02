@@ -61,8 +61,12 @@ trait Synchronise {
   private def fetchRemoteData(storageService: StorageService)(implicit c: Config) =
     storageService.listObjects(c.bucket, c.prefix)
 
-  private def findLocalFiles(hashService: HashService)(implicit config: Config, l: Logger) =
-    LocalFileStream.findFiles(config.source, hashService)
+  private def findLocalFiles(hashService: HashService)
+                            (implicit config: Config, l: Logger) =
+    for {
+      _ <- SyncLogging.logFileScan
+      localFiles <- LocalFileStream.findFiles(config.source, hashService)
+    } yield localFiles
 
   private def createActionFromLocalFile(lf: LocalFile, remoteData: S3ObjectsData)
                                        (implicit c: Config) =
