@@ -18,7 +18,7 @@ trait Program {
     else
       for {
         syncPlan <- createPlan(cliOptions)
-        archive <- thorpArchive(cliOptions)
+        archive <- thorpArchive(cliOptions, syncPlan)
         events <- handleActions(archive, syncPlan)
         _ <- defaultStorageService.shutdown
         _ <- SyncLogging.logRunFinished(events)
@@ -29,8 +29,13 @@ trait Program {
                         (implicit l: Logger): IO[SyncPlan] =
     Synchronise.createPlan(defaultStorageService, defaultHashService, cliOptions).valueOrF(handleErrors)
 
-  private def thorpArchive(cliOptions: ConfigOptions) =
-    IO.pure(UnversionedMirrorArchive.default(defaultStorageService, ConfigQuery.batchMode(cliOptions)))
+  private def thorpArchive(cliOptions: ConfigOptions,
+                           syncPlan: SyncPlan) =
+    IO.pure(UnversionedMirrorArchive.default(
+      defaultStorageService,
+      ConfigQuery.batchMode(cliOptions),
+      syncPlan
+    ))
 
   private def handleErrors(implicit logger: Logger): List[String] => IO[SyncPlan] = {
     errors => {

@@ -3,11 +3,12 @@ package net.kemitix.thorp.core
 import cats.effect.IO
 import net.kemitix.thorp.core.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.domain.StorageQueueEvent.DoNothingQueueEvent
-import net.kemitix.thorp.domain.{LocalFile, Logger, StorageQueueEvent, UploadEventListener}
+import net.kemitix.thorp.domain.{Logger, StorageQueueEvent, UploadEventListener}
 import net.kemitix.thorp.storage.api.StorageService
 
 case class UnversionedMirrorArchive(storageService: StorageService,
-                                    batchMode: Boolean) extends ThorpArchive {
+                                    batchMode: Boolean,
+                                    syncPlan: SyncPlan) extends ThorpArchive {
   override def update(indexedAction: (Action, Int))
                      (implicit l: Logger): Stream[IO[StorageQueueEvent]] =
     Stream(
@@ -33,6 +34,7 @@ case class UnversionedMirrorArchive(storageService: StorageService,
 
 object UnversionedMirrorArchive {
   def default(storageService: StorageService,
-              batchMode: Boolean): ThorpArchive =
-    new UnversionedMirrorArchive(storageService, batchMode)
+              batchMode: Boolean,
+              syncPlan: SyncPlan): ThorpArchive =
+    new UnversionedMirrorArchive(storageService, batchMode, syncPlan)
 }
