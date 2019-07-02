@@ -102,6 +102,8 @@ class StorageServiceSuite
     Map("md5" -> hash)
   }
 
+  val batchMode: Boolean = true
+
   describe("upload") {
 
     describe("when uploading a file") {
@@ -127,7 +129,7 @@ class StorageServiceSuite
         pending
         //FIXME: works okay on its own, but fails when run with others
         val expected = UploadQueueEvent(remoteKey, Root.hash)
-        val result = storageService.upload(localFile, bucket, uploadEventListener, 1)
+        val result = storageService.upload(localFile, bucket, batchMode, uploadEventListener, 1)
         assertResult(expected)(result)
       }
     }

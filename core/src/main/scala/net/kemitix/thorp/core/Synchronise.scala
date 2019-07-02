@@ -9,12 +9,12 @@ import net.kemitix.thorp.storage.api.{HashService, StorageService}
 
 trait Synchronise {
 
-  def apply(storageService: StorageService,
+  def createPlan(storageService: StorageService,
             hashService: HashService,
-            configOptions: Seq[ConfigOption])
+            configOptions: ConfigOptions)
            (implicit l: Logger): EitherT[IO, List[String], Stream[Action]] =
     EitherT(ConfigurationBuilder.buildConfig(configOptions))
-      .swap.map(errorMessages).swap
+      .leftMap(errorMessages)
       .flatMap(config => useValidConfig(storageService, hashService)(config, l))
 
   def errorMessages(errors: NonEmptyChain[ConfigValidation]): List[String] =

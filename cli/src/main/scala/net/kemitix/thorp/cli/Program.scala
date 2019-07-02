@@ -9,19 +9,19 @@ import net.kemitix.thorp.storage.aws.S3StorageServiceBuilder.defaultStorageServi
 
 trait Program {
 
-  def apply(cliOptions: Seq[ConfigOption]): IO[ExitCode] = {
+  def run(cliOptions: ConfigOptions): IO[ExitCode] = {
     implicit val logger: Logger = new PrintLogger()
     if (ConfigQuery.showVersion(cliOptions)) IO {
         println(s"Thorp v${thorp.BuildInfo.version}")
         ExitCode.Success
-    } else
+    } else {
       for {
-        storageService <- defaultStorageService
-        actions <- Synchronise(storageService, defaultHashService, cliOptions).valueOrF(handleErrors)
-        events <- handleActions(UnversionedMirrorArchive.default(storageService), actions)
-        _ <- storageService.shutdown
+        actions <- Synchronise.createPlan(defaultStorageService, defaultHashService, cliOptions).valueOrF(handleErrors)
+        events <- handleActions(UnversionedMirrorArchive.default(defaultStorageService, ConfigQuery.batchMode(cliOptions)), actions)
+        _ <- defaultStorageService.shutdown
         _ <- SyncLogging.logRunFinished(events)
       } yield ExitCode.Success
+    }
   }
 
   private def handleErrors(implicit logger: Logger): List[String] => IO[Stream[Action]] = {
@@ -34,7 +34,8 @@ trait Program {
   }
 
   private def handleActions(archive: ThorpArchive,
-                            actions: Stream[Action]): IO[Stream[StorageQueueEvent]] =
+                            actions: Stream[Action])
+                           (implicit l: Logger): IO[Stream[StorageQueueEvent]] =
     actions.foldLeft(Stream[IO[StorageQueueEvent]]()) {
       (stream, action) => archive.update(action) ++ stream
     }.sequence

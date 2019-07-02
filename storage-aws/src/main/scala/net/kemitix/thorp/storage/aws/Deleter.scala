@@ -6,7 +6,7 @@ import com.amazonaws.services.s3.model.DeleteObjectRequest
 import net.kemitix.thorp.domain.StorageQueueEvent.DeleteQueueEvent
 import net.kemitix.thorp.domain.{Bucket, RemoteKey}
 
-class S3ClientDeleter(amazonS3: AmazonS3) {
+class Deleter(amazonS3: AmazonS3) {
 
   def delete(bucket: Bucket,
              remoteKey: RemoteKey): IO[DeleteQueueEvent] =

@@ -18,13 +18,13 @@ class SyncSuite
 
   private val source = Resource(this, "upload")
   private val prefix = RemoteKey("prefix")
-  private val configOptions = List(
+  private val configOptions = ConfigOptions(List(
     ConfigOption.Source(source.toPath),
     ConfigOption.Bucket("bucket"),
     ConfigOption.Prefix("prefix"),
     ConfigOption.IgnoreGlobalOptions,
     ConfigOption.IgnoreUserOptions
-  )
+  ))
   implicit private val logger: Logger = new DummyLogger
   private val lastModified = LastModified(Instant.now)
 
@@ -50,8 +50,8 @@ class SyncSuite
 
   def invokeSubject(storageService: StorageService,
                     hashService: HashService,
-                    configOptions: List[ConfigOption]): Either[List[String], Stream[Action]] = {
-    Synchronise(storageService, hashService, configOptions).value.unsafeRunSync
+                    configOptions: ConfigOptions): Either[List[String], Stream[Action]] = {
+    Synchronise.createPlan(storageService, hashService, configOptions).value.unsafeRunSync
   }
 
   describe("when all files should be uploaded") {
@@ -162,6 +162,7 @@ class SyncSuite
 
     override def upload(localFile: LocalFile,
                         bucket: Bucket,
+                        batchMode: Boolean,
                         uploadEventListener: UploadEventListener,
                         tryCount: Int): IO[UploadQueueEvent] =
       IO.pure(UploadQueueEvent(localFile.remoteKey, localFile.hashes("md5")))

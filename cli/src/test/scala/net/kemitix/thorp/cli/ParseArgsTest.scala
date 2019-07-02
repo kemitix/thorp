@@ -1,7 +1,7 @@
 package net.kemitix.thorp.cli
 
 import net.kemitix.thorp.core.ConfigOption.Debug
-import net.kemitix.thorp.core.{ConfigOption, Resource}
+import net.kemitix.thorp.core.{ConfigOptions, Resource}
 import org.scalatest.FunSpec
 
 import scala.util.Try
@@ -26,11 +26,11 @@ class ParseArgsTest extends FunSpec {
   }
 
   describe("parse - debug") {
-    def invokeWithArgument(arg: String): List[ConfigOption] = {
+    def invokeWithArgument(arg: String): ConfigOptions = {
       val strings = List("--source", pathTo("."), "--bucket", "bucket", arg)
           .filter(_ != "")
       val maybeOptions = ParseArgs(strings)
-      maybeOptions.getOrElse(List())
+      maybeOptions.getOrElse(ConfigOptions())
     }
 
     describe("when no debug flag") {

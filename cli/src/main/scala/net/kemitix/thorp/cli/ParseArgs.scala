@@ -2,7 +2,7 @@ package net.kemitix.thorp.cli
 
 import java.nio.file.Paths
 
-import net.kemitix.thorp.core.ConfigOption
+import net.kemitix.thorp.core.{ConfigOption, ConfigOptions}
 import scopt.OParser
 
 object ParseArgs {
@@ -14,8 +14,11 @@ object ParseArgs {
       programName("thorp"),
       head("thorp"),
       opt[Unit]('V', "version")
-          .action((_, cos) => ConfigOption.Version :: cos)
-          .text("Show version"),
+        .action((_, cos) => ConfigOption.Version :: cos)
+        .text("Show version"),
+      opt[Unit]('B', "batch")
+        .action((_, cos) => ConfigOption.BatchMode :: cos)
+        .text("Enable batch-mode"),
       opt[String]('s', "source")
         .action((str, cos) => ConfigOption.Source(Paths.get(str)) :: cos)
         .text("Source directory to sync to destination"),
@@ -45,7 +48,8 @@ object ParseArgs {
     )
   }
 
-  def apply(args: List[String]): Option[List[ConfigOption]] =
+  def apply(args: List[String]): Option[ConfigOptions] =
     OParser.parse(configParser, args, List())
+      .map(ConfigOptions)
 
 }

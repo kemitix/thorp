@@ -10,6 +10,7 @@ The format is based on [[https://keepachangelog.com/en/1.0.0/][Keep a Changelog]
 ** Added
 
    - Add a version command-line option (#99)
+   - Add a batch mode (#85)
 
 * [0.6.0] - 2019-06-30
 

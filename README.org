@@ -16,6 +16,8 @@ hash of the file contents.
     thorp
     Usage: thorp [options]
 
+      -V, --version         Display the version and quit
+      -B, --batch           Enabled batch-mode
       -s, --source <value>  Source directory to sync to S3
       -b, --bucket <value>  S3 bucket name
       -p, --prefix <value>  Prefix within the S3 Bucket
@@ -29,6 +31,11 @@ hash of the file contents.
 If you don't provide a ~source~ the current diretory will be used.
 
 The ~--include~ and ~--exclude~ parameters can be used more than once.
+
+** Batch mode
+
+Batch mode disable the ANSI console display and logs simple messages
+that can be written to a file.
 
 * Configuration
 

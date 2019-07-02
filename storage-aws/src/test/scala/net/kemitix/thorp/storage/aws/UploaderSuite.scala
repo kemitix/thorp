@@ -27,6 +27,8 @@ class UploaderSuite
       "md5" -> hash
     )
 
+  val batchMode: Boolean = true
+
   describe("S3ClientMultiPartTransferManagerSuite") {
     describe("upload") {
       pending
@@ -43,7 +45,7 @@ class UploaderSuite
       val uploader = new Uploader(amazonS3TransferManager)
       it("should upload") {
         val expected = UploadQueueEvent(returnedKey, returnedHash)
-        val result = uploader.upload(bigFile, config.bucket, uploadEventListener, 1)
+        val result = uploader.upload(bigFile, config.bucket, batchMode, uploadEventListener, 1)
         assertResult(expected)(result)
       }
     }

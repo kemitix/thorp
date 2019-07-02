@@ -12,10 +12,10 @@ class S3StorageService(amazonS3Client: => AmazonS3,
                        amazonS3TransferManager: => TransferManager)
   extends StorageService {
 
-  lazy val objectLister = new S3ClientObjectLister(amazonS3Client)
-  lazy val copier = new S3ClientCopier(amazonS3Client)
+  lazy val objectLister = new Lister(amazonS3Client)
+  lazy val copier = new Copier(amazonS3Client)
   lazy val uploader = new Uploader(amazonS3TransferManager)
-  lazy val deleter = new S3ClientDeleter(amazonS3Client)
+  lazy val deleter = new Deleter(amazonS3Client)
 
   override def listObjects(bucket: Bucket,
                            prefix: RemoteKey): EitherT[IO, String, S3ObjectsData] =
@@ -29,9 +29,10 @@ class S3StorageService(amazonS3Client: => AmazonS3,
 
   override def upload(localFile: LocalFile,
                       bucket: Bucket,
+                      batchMode: Boolean,
                       uploadEventListener: UploadEventListener,
                       tryCount: Int): IO[StorageQueueEvent] =
-    uploader.upload(localFile, bucket, uploadEventListener, 1)
+    uploader.upload(localFile, bucket, batchMode, uploadEventListener, 1)
 
   override def delete(bucket: Bucket,
                       remoteKey: RemoteKey): IO[StorageQueueEvent] =
