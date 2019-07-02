@@ -26,10 +26,17 @@ trait Synchronise {
   }
 
   def assemblePlan(implicit c: Config): ((S3ObjectsData, LocalFiles)) => SyncPlan = {
-    case (remoteData, localData) =>
-      SyncPlan(actions = (actionsForLocalFiles(localData, remoteData) ++
-        actionsForRemoteKeys(remoteData))
-        .filter(removeDoNothing))
+    case (remoteData, localData) => {
+      val actions =
+        (actionsForLocalFiles(localData, remoteData) ++
+          actionsForRemoteKeys(remoteData))
+          .filter(removeDoNothing)
+      SyncPlan(
+        actions = actions,
+        count = localData.count,
+        totalSizeBytes = localData.totalSizeBytes
+      )
+    }
   }
 
   def useValidConfig(storageService: StorageService,
