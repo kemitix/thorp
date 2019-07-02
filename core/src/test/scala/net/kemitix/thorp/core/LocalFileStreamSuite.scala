@@ -31,6 +31,10 @@ class LocalFileStreamSuite extends FunSpec {
       val result = invoke.count
       assertResult(2)(result)
     }
+    it("should sum the size of all files") {
+      val result = invoke.totalSizeBytes
+      assertResult(113)(result)
+    }
   }
 
   private def invoke = {
