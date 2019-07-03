@@ -12,6 +12,12 @@ The format is based on [[https://keepachangelog.com/en/1.0.0/][Keep a Changelog]
    - Add a version command-line option (#99)
    - Add a batch mode (#85)
 
+* [0.6.1] - 2019-07-03
+
+** Fixed
+
+   - Release to sonatype using correct profile name (#102)
+
 * [0.6.0] - 2019-06-30
 
 ** Added
