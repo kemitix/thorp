@@ -36,7 +36,7 @@ val awsSdkDependencies = Seq(
   libraryDependencies ++= Seq(
     "com.amazonaws" % "aws-java-sdk-s3" % "1.11.580",
     // override the versions AWS uses, which is they do to preserve Java 6 compatibility
-    "com.fasterxml.jackson.core" % "jackson-databind" % "2.9.9",
+    "com.fasterxml.jackson.core" % "jackson-databind" % "2.9.9.1",
     "com.fasterxml.jackson.dataformat" % "jackson-dataformat-cbor" % "2.9.9"
   )
 )
