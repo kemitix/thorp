@@ -52,6 +52,7 @@ trait Program {
                            (implicit l: Logger): IO[Stream[StorageQueueEvent]] =
     syncPlan.actions
       .zipWithIndex
+      .reverse
       .foldLeft(Stream[IO[StorageQueueEvent]]()) {
         (stream, indexedAction) => archive.update(indexedAction) ++ stream
       }.sequence
