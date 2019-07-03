@@ -7,7 +7,7 @@ import net.kemitix.thorp.domain.{Logger, StorageQueueEvent}
 import net.kemitix.thorp.storage.aws.S3HashService.defaultHashService
 import net.kemitix.thorp.storage.aws.S3StorageServiceBuilder.defaultStorageService
 
-trait Program {
+trait Program extends Synchronise {
 
   def run(cliOptions: ConfigOptions): IO[ExitCode] = {
     implicit val logger: Logger = new PrintLogger()
@@ -17,17 +17,13 @@ trait Program {
       } yield ExitCode.Success
     else
       for {
-        syncPlan <- createPlan(cliOptions)
+        syncPlan <- createPlan(defaultStorageService, defaultHashService, cliOptions).valueOrF(handleErrors)
         archive <- thorpArchive(cliOptions, syncPlan)
         events <- handleActions(archive, syncPlan)
         _ <- defaultStorageService.shutdown
         _ <- SyncLogging.logRunFinished(events)
       } yield ExitCode.Success
   }
-
-  private def createPlan(cliOptions: ConfigOptions)
-                        (implicit l: Logger): IO[SyncPlan] =
-    Synchronise.createPlan(defaultStorageService, defaultHashService, cliOptions).valueOrF(handleErrors)
 
   private def thorpArchive(cliOptions: ConfigOptions,
                            syncPlan: SyncPlan) =
