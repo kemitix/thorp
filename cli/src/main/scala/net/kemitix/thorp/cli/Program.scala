@@ -25,8 +25,8 @@ trait Program extends PlanBuilder {
       } yield ExitCode.Success
   }
 
-  private def thorpArchive(cliOptions: ConfigOptions,
-                           syncPlan: SyncPlan) =
+  def thorpArchive(cliOptions: ConfigOptions,
+                           syncPlan: SyncPlan): IO[ThorpArchive] =
     IO.pure(
       UnversionedMirrorArchive.default(
         defaultStorageService,
