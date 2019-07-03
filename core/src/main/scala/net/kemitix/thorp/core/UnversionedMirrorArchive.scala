@@ -8,7 +8,7 @@ import net.kemitix.thorp.storage.api.StorageService
 
 case class UnversionedMirrorArchive(storageService: StorageService,
                                     batchMode: Boolean,
-                                    syncPlan: SyncPlan) extends ThorpArchive {
+                                    syncTotals: SyncTotals) extends ThorpArchive {
   override def update(indexedAction: (Action, Int))
                      (implicit l: Logger): Stream[IO[StorageQueueEvent]] =
     Stream(
@@ -35,6 +35,6 @@ case class UnversionedMirrorArchive(storageService: StorageService,
 object UnversionedMirrorArchive {
   def default(storageService: StorageService,
               batchMode: Boolean,
-              syncPlan: SyncPlan): ThorpArchive =
-    new UnversionedMirrorArchive(storageService, batchMode, syncPlan)
+              syncTotals: SyncTotals): ThorpArchive =
+    new UnversionedMirrorArchive(storageService, batchMode, syncTotals)
 }

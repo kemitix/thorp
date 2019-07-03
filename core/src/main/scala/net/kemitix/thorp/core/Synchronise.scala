@@ -33,9 +33,9 @@ trait Synchronise {
           .filter(removeDoNothing)
       SyncPlan(
         actions = actions,
-        count = localData.count,
-        totalSizeBytes = localData.totalSizeBytes
-      )
+        syncTotals = SyncTotals(
+          count = localData.count,
+          totalSizeBytes = localData.totalSizeBytes))
     }
   }
 

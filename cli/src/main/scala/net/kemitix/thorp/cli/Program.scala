@@ -31,10 +31,11 @@ trait Program {
 
   private def thorpArchive(cliOptions: ConfigOptions,
                            syncPlan: SyncPlan) =
-    IO.pure(UnversionedMirrorArchive.default(
-      defaultStorageService,
-      ConfigQuery.batchMode(cliOptions),
-      syncPlan
+    IO.pure(
+      UnversionedMirrorArchive.default(
+        defaultStorageService,
+        ConfigQuery.batchMode(cliOptions),
+        syncPlan.syncTotals
     ))
 
   private def handleErrors(implicit logger: Logger): List[String] => IO[SyncPlan] = {
