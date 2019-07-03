@@ -3,7 +3,7 @@ package net.kemitix.thorp.core
 import cats.effect.IO
 import net.kemitix.thorp.core.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.domain.StorageQueueEvent.DoNothingQueueEvent
-import net.kemitix.thorp.domain.{Logger, StorageQueueEvent, UploadEventListener}
+import net.kemitix.thorp.domain.{Logger, StorageQueueEvent, SyncTotals, UploadEventListener}
 import net.kemitix.thorp.storage.api.StorageService
 
 case class UnversionedMirrorArchive(storageService: StorageService,
