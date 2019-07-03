@@ -10,7 +10,9 @@ trait UploadEventLogger {
 
   def logRequestCycle(localFile: LocalFile,
                       event: RequestEvent,
-                      bytesTransferred: Long): Unit = {
+                      bytesTransferred: Long,
+                      index: Int,
+                      syncTotals: SyncTotals): Unit = {
     val remoteKey = localFile.remoteKey.key
     val fileLength = localFile.file.length
     if (bytesTransferred < fileLength) {

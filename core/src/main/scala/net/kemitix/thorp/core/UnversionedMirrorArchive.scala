@@ -15,7 +15,7 @@ case class UnversionedMirrorArchive(storageService: StorageService,
       indexedAction match {
         case (ToUpload(bucket, localFile), index) =>
           for {
-            event <- storageService.upload(localFile, bucket, batchMode, new UploadEventListener(localFile), 1)
+            event <- storageService.upload(localFile, bucket, batchMode, new UploadEventListener(localFile, index, syncTotals), 1)
             _ <- fileUploaded(localFile, batchMode)
           } yield event
         case (ToCopy(bucket, sourceKey, hash, targetKey), index) =>
