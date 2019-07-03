@@ -51,7 +51,7 @@ class SyncSuite
   def invokeSubject(storageService: StorageService,
                               hashService: HashService,
                               configOptions: ConfigOptions): Either[List[String], SyncPlan] = {
-    Synchronise.createPlan(storageService, hashService, configOptions).value.unsafeRunSync
+    PlanBuilder.createPlan(storageService, hashService, configOptions).value.unsafeRunSync
   }
 
   def invokeSubjectForActions(storageService: StorageService,

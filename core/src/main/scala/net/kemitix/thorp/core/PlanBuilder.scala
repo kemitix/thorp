@@ -7,7 +7,7 @@ import net.kemitix.thorp.core.Action.DoNothing
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.{HashService, StorageService}
 
-trait Synchronise {
+trait PlanBuilder {
 
   def createPlan(storageService: StorageService,
             hashService: HashService,
@@ -89,4 +89,4 @@ trait Synchronise {
 
 }
 
-object Synchronise extends Synchronise
+object PlanBuilder extends PlanBuilder

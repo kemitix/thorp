@@ -7,7 +7,7 @@ import net.kemitix.thorp.domain.{Logger, StorageQueueEvent}
 import net.kemitix.thorp.storage.aws.S3HashService.defaultHashService
 import net.kemitix.thorp.storage.aws.S3StorageServiceBuilder.defaultStorageService
 
-trait Program extends Synchronise {
+trait Program extends PlanBuilder {
 
   def run(cliOptions: ConfigOptions): IO[ExitCode] = {
     implicit val logger: Logger = new PrintLogger()
