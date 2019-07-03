@@ -45,13 +45,25 @@ trait Program extends PlanBuilder {
 
   private def handleActions(archive: ThorpArchive,
                             syncPlan: SyncPlan)
-                           (implicit l: Logger): IO[Stream[StorageQueueEvent]] =
-    syncPlan.actions
+                           (implicit l: Logger): IO[Stream[StorageQueueEvent]] = {
+    type Accumulator = (Stream[IO[StorageQueueEvent]], Long)
+    val zero: Accumulator = (Stream(), syncPlan.syncTotals.totalSizeBytes)
+    val (actions, _) = syncPlan.actions
       .zipWithIndex
       .reverse
-      .foldLeft(Stream[IO[StorageQueueEvent]]()) {
-        (stream, indexedAction) => archive.update(indexedAction) ++ stream
-      }.sequence
+      .foldLeft(zero) {
+        (acc: Accumulator, indexedAction) => {
+          val (stream, bytesToDo) = acc
+          val (action, index) = indexedAction
+          val remainingBytes = bytesToDo - action.size
+          (
+            archive.update(index, action, remainingBytes) ++ stream,
+            remainingBytes
+          )
+        }
+      }
+    actions.sequence
+  }
 }
 
 object Program extends Program

@@ -84,8 +84,8 @@ trait PlanBuilder {
 
   private def createActionFromRemoteKey(rk: RemoteKey)
                                        (implicit c: Config) =
-    if (rk.isMissingLocally(c.source, c.prefix)) Action.ToDelete(c.bucket, rk)
-    else DoNothing(c.bucket, rk)
+    if (rk.isMissingLocally(c.source, c.prefix)) Action.ToDelete(c.bucket, rk, 0L)
+    else DoNothing(c.bucket, rk, 0L)
 
 }
 

@@ -67,8 +67,8 @@ class SyncSuite
       byKey = Map()))
     it("uploads all files") {
       val expected = Right(Set(
-        ToUpload(testBucket, rootFile),
-        ToUpload(testBucket, leafFile)))
+        ToUpload(testBucket, rootFile, rootFile.file.length),
+        ToUpload(testBucket, leafFile, leafFile.file.length)))
       val result = invokeSubjectForActions(storageService, hashService, configOptions)
       assertResult(expected)(result.map(_.toSet))
     }
@@ -107,8 +107,8 @@ class SyncSuite
     val storageService = new RecordingStorageService(testBucket, s3ObjectsData)
     it("copies the file and deletes the original") {
       val expected = Stream(
-        ToCopy(testBucket,  sourceKey, Root.hash, targetKey),
-        ToDelete(testBucket, sourceKey)
+        ToCopy(testBucket,  sourceKey, Root.hash, targetKey, rootFile.file.length),
+        ToDelete(testBucket, sourceKey, 0L)
       )
       val result = invokeSubjectForActions(storageService, hashService, configOptions)
       assert(result.isRight)
@@ -135,7 +135,7 @@ class SyncSuite
     val storageService = new RecordingStorageService(testBucket, s3ObjectsData)
     it("deleted key") {
       val expected = Stream(
-        ToDelete(testBucket, deletedKey)
+        ToDelete(testBucket, deletedKey, 0L)
       )
       val result = invokeSubjectForActions(storageService,hashService, configOptions)
       assert(result.isRight)
