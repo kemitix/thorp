@@ -33,7 +33,8 @@ trait UploadEventLogger {
                             current: Long,
                             max: Long,
                             pre: Long = 0): String = {
-    s"$GREEN$label:$RESET ${format(current)} of ${format(max)}" +
+    val percent = f"${(current * 100) / max}%2d"
+    s"$GREEN$label:$RESET ($percent%) ${format(current)} of ${format(max)}" +
       (if (pre > 0) s" (pre-synced ${format(pre)}"
       else "") + s"$eraseLineForward\n" +
       progressBar(current, max, Terminal.width)
