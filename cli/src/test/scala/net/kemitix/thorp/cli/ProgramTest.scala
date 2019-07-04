@@ -5,7 +5,7 @@ import java.io.File
 import cats.data.EitherT
 import cats.effect.IO
 import net.kemitix.thorp.core.Action.{ToCopy, ToDelete, ToUpload}
-import net.kemitix.thorp.core.{Action, ConfigOption, ConfigOptions, Resource, SyncPlan, PlanBuilder, ThorpArchive}
+import net.kemitix.thorp.core._
 import net.kemitix.thorp.domain.{Bucket, LocalFile, Logger, MD5Hash, RemoteKey, StorageQueueEvent}
 import net.kemitix.thorp.storage.api.{HashService, StorageService}
 import org.scalatest.FunSpec
