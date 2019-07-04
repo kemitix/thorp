@@ -29,7 +29,7 @@ class ActionGeneratorSuite
           matchByKey = Some(theRemoteMetadata) // remote exists
           )
         it("do nothing") {
-          val expected = List(DoNothing(bucket, theFile.remoteKey))
+          val expected = List(DoNothing(bucket, theFile.remoteKey, theFile.file.length))
           val result = invoke(input)
           assertResult(expected)(result)
         }
@@ -44,7 +44,7 @@ class ActionGeneratorSuite
           matchByHash = Set(otherRemoteMetadata), // other matches
           matchByKey = None) // remote is missing
         it("copy from other key") {
-          val expected = List(ToCopy(bucket, otherRemoteKey, theHash, theRemoteKey)) // copy
+          val expected = List(ToCopy(bucket, otherRemoteKey, theHash, theRemoteKey, theFile.file.length)) // copy
           val result = invoke(input)
           assertResult(expected)(result)
         }
@@ -56,7 +56,7 @@ class ActionGeneratorSuite
           matchByHash = Set.empty, // other no matches
           matchByKey = None) // remote is missing
         it("upload") {
-          val expected = List(ToUpload(bucket, theFile)) // upload
+          val expected = List(ToUpload(bucket, theFile, theFile.file.length)) // upload
           val result = invoke(input)
           assertResult(expected)(result)
         }
@@ -75,7 +75,7 @@ class ActionGeneratorSuite
           matchByHash = Set(otherRemoteMetadata), // other matches
           matchByKey = Some(oldRemoteMetadata)) // remote exists
         it("copy from other key") {
-          val expected = List(ToCopy(bucket, otherRemoteKey, theHash, theRemoteKey)) // copy
+          val expected = List(ToCopy(bucket, otherRemoteKey, theHash, theRemoteKey, theFile.file.length)) // copy
           val result = invoke(input)
           assertResult(expected)(result)
         }
@@ -91,7 +91,7 @@ class ActionGeneratorSuite
           matchByKey = Some(theRemoteMetadata) // remote exists
         )
         it("upload") {
-          val expected = List(ToUpload(bucket, theFile)) // upload
+          val expected = List(ToUpload(bucket, theFile, theFile.file.length)) // upload
           val result = invoke(input)
           assertResult(expected)(result)
         }

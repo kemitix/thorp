@@ -3,15 +3,17 @@ package net.kemitix.thorp.domain
 import net.kemitix.thorp.domain.UploadEvent.RequestEvent
 import net.kemitix.thorp.domain.UploadEventLogger.logRequestCycle
 
-class UploadEventListener(localFile: LocalFile) {
+class UploadEventListener(localFile: LocalFile,
+                          index: Int,
+                          syncTotals: SyncTotals,
+                          totalBytesSoFar: Long) {
 
   var bytesTransferred = 0L
 
-  def listener: UploadEvent => Unit =
-    {
+  def listener: UploadEvent => Unit = {
       case e: RequestEvent =>
         bytesTransferred += e.transferred
-        logRequestCycle(localFile, e, bytesTransferred)
-      case _ => ()
+        logRequestCycle(localFile, e, bytesTransferred, index, syncTotals, totalBytesSoFar)
+    case _ => ()
     }
 }

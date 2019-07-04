@@ -116,7 +116,7 @@ class StorageServiceSuite
         LocalFile.resolve("root-file", md5HashMap(Root.hash), source, KeyGenerator.generateKey(source, prefix))
       val bucket = Bucket("a-bucket")
       val remoteKey = RemoteKey("prefix/root-file")
-      val uploadEventListener = new UploadEventListener(localFile)
+      val uploadEventListener = new UploadEventListener(localFile, 1, SyncTotals(), 0L)
 
       val upload = stub[Upload]
       (amazonS3TransferManager upload (_: PutObjectRequest)).when(*).returns(upload)

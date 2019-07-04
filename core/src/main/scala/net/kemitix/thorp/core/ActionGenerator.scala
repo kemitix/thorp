@@ -40,12 +40,12 @@ object ActionGenerator {
   private def doNothing(bucket: Bucket,
                         remoteKey: RemoteKey) =
     Stream(
-      DoNothing(bucket, remoteKey))
+      DoNothing(bucket, remoteKey, 0L))
 
   private def uploadFile(bucket: Bucket,
                          localFile: LocalFile) =
     Stream(
-      ToUpload(bucket, localFile))
+      ToUpload(bucket, localFile, localFile.file.length))
 
   private def copyFile(bucket: Bucket,
                        localFile: LocalFile,
@@ -54,7 +54,7 @@ object ActionGenerator {
     headOption.toStream.map { remoteMetaData =>
       val sourceKey = remoteMetaData.remoteKey
       val hash = remoteMetaData.hash
-      ToCopy(bucket, sourceKey, hash, localFile.remoteKey)
+      ToCopy(bucket, sourceKey, hash, localFile.remoteKey, localFile.file.length)
     }
   }
 

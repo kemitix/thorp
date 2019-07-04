@@ -23,9 +23,21 @@ class LocalFileStreamSuite extends FunSpec {
   describe("findFiles") {
     it("should find all files") {
       val result: Set[String] =
-        LocalFileStream.findFiles(uploadResource, hashService).unsafeRunSync.toSet
+        invoke.localFiles.toSet
           .map { x: LocalFile => x.relative.toString }
       assertResult(Set("subdir/leaf-file", "root-file"))(result)
     }
+    it("should count all files") {
+      val result = invoke.count
+      assertResult(2)(result)
+    }
+    it("should sum the size of all files") {
+      val result = invoke.totalSizeBytes
+      assertResult(113)(result)
+    }
+  }
+
+  private def invoke = {
+    LocalFileStream.findFiles(uploadResource, hashService).unsafeRunSync
   }
 }

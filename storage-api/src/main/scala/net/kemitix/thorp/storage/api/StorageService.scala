@@ -9,7 +9,8 @@ trait StorageService {
   def shutdown: IO[StorageQueueEvent]
 
   def listObjects(bucket: Bucket,
-                  prefix: RemoteKey): EitherT[IO, String, S3ObjectsData]
+                  prefix: RemoteKey)
+                 (implicit l: Logger): EitherT[IO, String, S3ObjectsData]
 
   def upload(localFile: LocalFile,
              bucket: Bucket,

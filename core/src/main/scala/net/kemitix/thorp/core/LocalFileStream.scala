@@ -14,11 +14,11 @@ object LocalFileStream {
   def findFiles(file: File,
                 hashService: HashService)
                (implicit c: Config,
-                logger: Logger): IO[Stream[LocalFile]] = {
+                logger: Logger): IO[LocalFiles] = {
 
     val filters: Path => Boolean = Filter.isIncluded(c.filters)
 
-    def loop(file: File): IO[Stream[LocalFile]] = {
+    def loop(file: File): IO[LocalFiles] = {
 
       def dirPaths(file: File): IO[Stream[File]] =
         IO(listFiles(file))
@@ -26,16 +26,16 @@ object LocalFileStream {
             Stream(fs: _*)
               .filter(f => filters(f.toPath)))
 
-      def recurseIntoSubDirectories(file: File): IO[Stream[LocalFile]] =
+      def recurseIntoSubDirectories(file: File): IO[LocalFiles] =
         file match {
           case f if f.isDirectory => loop(file)
           case _ => localFile(hashService, file)
         }
 
-      def recurse(fs: Stream[File]): IO[Stream[LocalFile]] =
-        fs.foldLeft(IO.pure(Stream.empty[LocalFile]))((acc, f) =>
+      def recurse(fs: Stream[File]): IO[LocalFiles] =
+        fs.foldLeft(IO.pure(LocalFiles()))((acc, f) =>
           recurseIntoSubDirectories(f)
-            .flatMap(lfs => acc.map(s => s ++ lfs)))
+            .flatMap(localFiles => acc.map(accLocalFiles => accLocalFiles ++ localFiles)))
 
       for {
         _ <- logger.debug(s"- Entering: $file")
@@ -48,10 +48,16 @@ object LocalFileStream {
     loop(file)
   }
 
-  private def localFile(hashService: HashService, file: File)(implicit l: Logger, c: Config) = {
+  private def localFile(hashService: HashService,
+                        file: File)
+                       (implicit l: Logger, c: Config) = {
     for {
       hash <- hashService.hashLocalObject(file)
-    } yield Stream(domain.LocalFile(file, c.source, hash, generateKey(c.source, c.prefix)(file)))
+    } yield
+      LocalFiles(
+        localFiles = Stream(domain.LocalFile(file, c.source, hash, generateKey(c.source, c.prefix)(file))),
+        count = 1,
+        totalSizeBytes = file.length)
   }
 
   //TODO: Change this to return an Either[IllegalArgumentException, Array[File]]
