@@ -1,12 +1,12 @@
 package net.kemitix.thorp.domain
 
 import java.io.File
-import java.nio.file.Paths
+import java.nio.file.{Path, Paths}
 
 final case class RemoteKey(key: String) {
 
-  def asFile(source: File, prefix: RemoteKey): File =
-    source.toPath.resolve(relativeTo(prefix)).toFile
+  def asFile(source: Path, prefix: RemoteKey): File =
+    source.resolve(relativeTo(prefix)).toFile
 
   private def relativeTo(prefix: RemoteKey) = {
     prefix match {
@@ -15,7 +15,7 @@ final case class RemoteKey(key: String) {
     }
   }
 
-  def isMissingLocally(source: File, prefix: RemoteKey): Boolean =
+  def isMissingLocally(source: Path, prefix: RemoteKey): Boolean =
     ! asFile(source, prefix).exists
 
   def resolve(path: String): RemoteKey =

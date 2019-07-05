@@ -1,6 +1,6 @@
 package net.kemitix.thorp.core
 
-import java.io.File
+import java.nio.file.Path
 
 import cats.data.{NonEmptyChain, Validated, ValidatedNec}
 import cats.implicits._
@@ -10,15 +10,15 @@ sealed trait ConfigValidator {
 
   type ValidationResult[A] = ValidatedNec[ConfigValidation, A]
 
-  def validateSourceIsDirectory(source: File): ValidationResult[File] =
-    if(source.isDirectory) source.validNec
+  def validateSourceIsDirectory(source: Path): ValidationResult[Path] =
+    if(source.toFile.isDirectory) source.validNec
     else ConfigValidation.SourceIsNotADirectory.invalidNec
 
-  def validateSourceIsReadable(source: File): ValidationResult[File] =
-    if(source.canRead) source.validNec
+  def validateSourceIsReadable(source: Path): ValidationResult[Path] =
+    if(source.toFile.canRead) source.validNec
     else ConfigValidation.SourceIsNotReadable.invalidNec
 
-  def validateSource(source: File): ValidationResult[File] =
+  def validateSource(source: Path): ValidationResult[Path] =
     validateSourceIsDirectory(source).andThen(s => validateSourceIsReadable(s))
 
   def validateBucket(bucket: Bucket): ValidationResult[Bucket] =

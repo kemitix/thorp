@@ -10,9 +10,10 @@ class ActionGeneratorSuite
   extends FunSpec {
 
   private val source = Resource(this, "upload")
+  private val sourcePath = source.toPath
   private val prefix = RemoteKey("prefix")
   private val bucket = Bucket("bucket")
-  implicit private val config: Config = Config(bucket, prefix, source = source)
+  implicit private val config: Config = Config(bucket, prefix, source = sourcePath)
   private val fileToKey = KeyGenerator.generateKey(config.source, config.prefix) _
   val lastModified = LastModified(Instant.now())
 
@@ -22,7 +23,7 @@ class ActionGeneratorSuite
 
       describe("#1 local exists, remote exists, remote matches - do nothing") {
         val theHash = MD5Hash("the-hash")
-        val theFile = LocalFile.resolve("the-file", md5HashMap(theHash), source, fileToKey)
+        val theFile = LocalFile.resolve("the-file", md5HashMap(theHash), sourcePath, fileToKey)
         val theRemoteMetadata = RemoteMetaData(theFile.remoteKey, theHash, lastModified)
         val input = S3MetaData(theFile, // local exists
           matchByHash = Set(theRemoteMetadata), // remote matches
@@ -36,7 +37,7 @@ class ActionGeneratorSuite
       }
       describe("#2 local exists, remote is missing, other matches - copy") {
         val theHash = MD5Hash("the-hash")
-        val theFile = LocalFile.resolve("the-file", md5HashMap(theHash), source, fileToKey)
+        val theFile = LocalFile.resolve("the-file", md5HashMap(theHash), sourcePath, fileToKey)
         val theRemoteKey = theFile.remoteKey
         val otherRemoteKey = prefix.resolve("other-key")
         val otherRemoteMetadata = RemoteMetaData(otherRemoteKey, theHash, lastModified)
@@ -51,7 +52,7 @@ class ActionGeneratorSuite
       }
       describe("#3 local exists, remote is missing, other no matches - upload") {
         val theHash = MD5Hash("the-hash")
-        val theFile = LocalFile.resolve("the-file", md5HashMap(theHash), source, fileToKey)
+        val theFile = LocalFile.resolve("the-file", md5HashMap(theHash), sourcePath, fileToKey)
         val input = S3MetaData(theFile, // local exists
           matchByHash = Set.empty, // other no matches
           matchByKey = None) // remote is missing
@@ -63,7 +64,7 @@ class ActionGeneratorSuite
       }
       describe("#4 local exists, remote exists, remote no match, other matches - copy") {
         val theHash = MD5Hash("the-hash")
-        val theFile = LocalFile.resolve("the-file", md5HashMap(theHash), source, fileToKey)
+        val theFile = LocalFile.resolve("the-file", md5HashMap(theHash), sourcePath, fileToKey)
         val theRemoteKey = theFile.remoteKey
         val oldHash = MD5Hash("old-hash")
         val otherRemoteKey = prefix.resolve("other-key")
@@ -82,7 +83,7 @@ class ActionGeneratorSuite
       }
       describe("#5 local exists, remote exists, remote no match, other no matches - upload") {
         val theHash = MD5Hash("the-hash")
-        val theFile = LocalFile.resolve("the-file", md5HashMap(theHash), source, fileToKey)
+        val theFile = LocalFile.resolve("the-file", md5HashMap(theHash), sourcePath, fileToKey)
         val theRemoteKey = theFile.remoteKey
         val oldHash = MD5Hash("old-hash")
         val theRemoteMetadata = RemoteMetaData(theRemoteKey, oldHash, lastModified)

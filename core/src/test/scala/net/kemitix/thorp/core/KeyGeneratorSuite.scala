@@ -7,29 +7,27 @@ import org.scalatest.FunSpec
 
 class KeyGeneratorSuite extends FunSpec {
 
-    private val source: File = Resource(this, "upload")
-    private val prefix = RemoteKey("prefix")
-    implicit private val config: Config = Config(Bucket("bucket"), prefix, source = source)
-    private val fileToKey = KeyGenerator.generateKey(config.source, config.prefix) _
+  private val source: File = Resource(this, "upload")
+  private val sourcePath = source.toPath
+  private val prefix = RemoteKey("prefix")
+  implicit private val config: Config = Config(Bucket("bucket"), prefix, source = sourcePath)
+  private val fileToKey = KeyGenerator.generateKey(config.source, config.prefix) _
 
-    describe("key generator") {
-      def resolve(subdir: String): File = {
-        source.toPath.resolve(subdir).toFile
-      }
+  describe("key generator") {
 
-      describe("when file is within source") {
-        it("has a valid key") {
-          val subdir = "subdir"
-          assertResult(RemoteKey(s"${prefix.key}/$subdir"))(fileToKey(resolve(subdir)))
-        }
-      }
-
-      describe("when file is deeper within source") {
-        it("has a valid key") {
-          val subdir = "subdir/deeper/still"
-          assertResult(RemoteKey(s"${prefix.key}/$subdir"))(fileToKey(resolve(subdir)))
-        }
+    describe("when file is within source") {
+      it("has a valid key") {
+        val subdir = "subdir"
+        assertResult(RemoteKey(s"${prefix.key}/$subdir"))(fileToKey(sourcePath.resolve(subdir)))
       }
     }
+
+    describe("when file is deeper within source") {
+      it("has a valid key") {
+        val subdir = "subdir/deeper/still"
+        assertResult(RemoteKey(s"${prefix.key}/$subdir"))(fileToKey(sourcePath.resolve(subdir)))
+      }
+    }
+  }
 
 }

@@ -1,6 +1,6 @@
 package net.kemitix.thorp.core
 
-import java.io.File
+import java.nio.file.Path
 
 import cats.effect.IO
 import cats.implicits._
@@ -11,7 +11,7 @@ trait SyncLogging {
 
   def logRunStart(bucket: Bucket,
                   prefix: RemoteKey,
-                  source: File)
+                  source: Path)
                  (implicit logger: Logger): IO[Unit] =
     logger.info(s"Bucket: ${bucket.name}, Prefix: ${prefix.key}, Source: $source, ")
 

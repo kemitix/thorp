@@ -1,22 +1,24 @@
 package net.kemitix.thorp.cli
 
 import java.io.File
+import java.nio.file.Path
 
 import cats.data.EitherT
 import cats.effect.IO
 import net.kemitix.thorp.core.Action.{ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.core._
-import net.kemitix.thorp.domain.{Bucket, LocalFile, Logger, MD5Hash, RemoteKey, StorageQueueEvent}
+import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.{HashService, StorageService}
 import org.scalatest.FunSpec
 
 class ProgramTest extends FunSpec {
 
   val source: File = Resource(this, ".")
+  val sourcePath: Path = source.toPath
   val bucket: Bucket = Bucket("aBucket")
   val hash: MD5Hash = MD5Hash("aHash")
   val copyAction: Action = ToCopy(bucket, RemoteKey("copy-me"), hash, RemoteKey("overwrite-me"), 17L)
-  val uploadAction: Action = ToUpload(bucket, LocalFile.resolve("aFile", Map(), source, _ => RemoteKey("upload-me")), 23L)
+  val uploadAction: Action = ToUpload(bucket, LocalFile.resolve("aFile", Map(), sourcePath, _ => RemoteKey("upload-me")), 23L)
   val deleteAction: Action = ToDelete(bucket, RemoteKey("delete-me"), 0L)
 
   val configOptions: ConfigOptions = ConfigOptions(options = List(

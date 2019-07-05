@@ -11,58 +11,65 @@ import net.kemitix.thorp.storage.api.HashService
 
 object LocalFileStream {
 
-  def findFiles(file: File,
+  def findFiles(source: Path,
                 hashService: HashService)
                (implicit c: Config,
                 logger: Logger): IO[LocalFiles] = {
 
-    val filters: Path => Boolean = Filter.isIncluded(c.filters)
+    val isIncluded: Path => Boolean = Filter.isIncluded(c.filters)
 
-    def loop(file: File): IO[LocalFiles] = {
+    def loop(path: Path): IO[LocalFiles] = {
 
-      def dirPaths(file: File): IO[Stream[File]] =
-        IO(listFiles(file))
+      def dirPaths(path: Path): IO[Stream[Path]] =
+        IO(listFiles(path))
           .map(fs =>
             Stream(fs: _*)
-              .filter(f => filters(f.toPath)))
+              .map(_.toPath)
+              .filter(isIncluded))
 
-      def recurseIntoSubDirectories(file: File): IO[LocalFiles] =
-        file match {
-          case f if f.isDirectory => loop(file)
-          case _ => localFile(hashService, file)
+      def recurseIntoSubDirectories(path: Path): IO[LocalFiles] =
+        path.toFile match {
+          case f if f.isDirectory => loop(path)
+          case _ => localFile(hashService, path)
         }
 
-      def recurse(fs: Stream[File]): IO[LocalFiles] =
-        fs.foldLeft(IO.pure(LocalFiles()))((acc, f) =>
-          recurseIntoSubDirectories(f)
+      def recurse(paths: Stream[Path]): IO[LocalFiles] =
+        paths.foldLeft(IO.pure(LocalFiles()))((acc, path) =>
+          recurseIntoSubDirectories(path)
             .flatMap(localFiles => acc.map(accLocalFiles => accLocalFiles ++ localFiles)))
 
       for {
-        _ <- logger.debug(s"- Entering: $file")
-        fs <- dirPaths(file)
+        _ <- logger.debug(s"- Entering: $path")
+        fs <- dirPaths(path)
         lfs <- recurse(fs)
-        _ <- logger.debug(s"- Leaving : $file")
+        _ <- logger.debug(s"- Leaving : $path")
       } yield lfs
     }
 
-    loop(file)
+    loop(source)
   }
 
   private def localFile(hashService: HashService,
-                        file: File)
+                        path: Path)
                        (implicit l: Logger, c: Config) = {
+    val file = path.toFile
     for {
-      hash <- hashService.hashLocalObject(file)
+      hash <- hashService.hashLocalObject(path)
     } yield
       LocalFiles(
-        localFiles = Stream(domain.LocalFile(file, c.source, hash, generateKey(c.source, c.prefix)(file))),
+        localFiles = Stream(
+          domain.LocalFile(
+            file,
+            c.source.toFile,
+            hash,
+            generateKey(c.source, c.prefix)(path))),
         count = 1,
         totalSizeBytes = file.length)
   }
 
   //TODO: Change this to return an Either[IllegalArgumentException, Array[File]]
-  private def listFiles(file: File) = {
-    Option(file.listFiles)
-      .getOrElse(throw new IllegalArgumentException(s"Directory not found $file"))
+  private def listFiles(path: Path): Array[File] = {
+    Option(path.toFile.listFiles)
+      .getOrElse(throw new IllegalArgumentException(s"Directory not found $path"))
   }
 }

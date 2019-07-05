@@ -8,6 +8,7 @@ import org.scalatest.FunSpec
 class ETagGeneratorTest extends FunSpec {
 
   private val bigFile = Resource(this, "big-file")
+  private val bigFilePath = bigFile.toPath
   private val configuration = new TransferManagerConfiguration
   private val chunkSize = 1200000
   configuration.setMinimumUploadPartSize(chunkSize)
@@ -35,7 +36,7 @@ class ETagGeneratorTest extends FunSpec {
         "8a0c1d0778ac8fcf4ca2010eba4711eb"
       ).zipWithIndex
       md5Hashes.foreach { case (hash, index) =>
-        test(hash, ETagGenerator.hashChunk(bigFile, index, chunkSize)(logger).unsafeRunSync)
+        test(hash, ETagGenerator.hashChunk(bigFilePath, index, chunkSize)(logger).unsafeRunSync)
       }
     }
   }
@@ -43,7 +44,7 @@ class ETagGeneratorTest extends FunSpec {
   describe("create etag for whole file") {
     val expected = "f14327c90ad105244c446c498bfe9a7d-2"
     it("should match aws etag for the file") {
-      val result = ETagGenerator.eTag(bigFile)(logger).unsafeRunSync
+      val result = ETagGenerator.eTag(bigFilePath)(logger).unsafeRunSync
       assertResult(expected)(result)
     }
   }

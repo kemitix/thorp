@@ -1,6 +1,7 @@
 package net.kemitix.thorp.core
 
 import java.io.{File, FileInputStream}
+import java.nio.file.Path
 import java.security.MessageDigest
 
 import cats.effect.IO
@@ -25,8 +26,8 @@ object MD5HashGenerator {
     md5.digest
   }
 
-  def md5File(file: File)(implicit logger: Logger): IO[MD5Hash] =
-    md5FileChunk(file, 0, file.length)
+  def md5File(path: Path)(implicit logger: Logger): IO[MD5Hash] =
+    md5FileChunk(path, 0, path.toFile.length)
 
   private def openFile(file: File, offset: Long) = IO {
     val stream = new FileInputStream(file)
@@ -68,16 +69,17 @@ object MD5HashGenerator {
     result.toInt
   }
 
-  def md5FileChunk(file: File,
+  def md5FileChunk(path: Path,
                    offset: Long,
                    size: Long)
                   (implicit logger: Logger): IO[MD5Hash] = {
+    val file = path.toFile
     val endOffset = Math.min(offset + size, file.length)
     for {
-      _ <- logger.debug(s"md5:reading:size ${file.length}:$file")
+      _ <- logger.debug(s"md5:reading:size ${file.length}:$path")
       digest <- readFile(file, offset, endOffset)
       hash = MD5Hash.fromDigest(digest)
-      _ <- logger.debug(s"md5:generated:${hash.hash}:$file")
+      _ <- logger.debug(s"md5:generated:${hash.hash}:$path")
     } yield hash
   }
 

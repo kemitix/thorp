@@ -1,7 +1,6 @@
 package net.kemitix.thorp.core
 
-import java.io.File
-import java.nio.file.Paths
+import java.nio.file.{Path, Paths}
 
 import cats.data.NonEmptyChain
 import cats.effect.IO
@@ -15,9 +14,9 @@ import net.kemitix.thorp.domain.Config
   */
 trait ConfigurationBuilder {
 
-  private val pwdFile: File = Paths.get(System.getenv("PWD")).toFile
+  private val pwd: Path = Paths.get(System.getenv("PWD"))
 
-  private val defaultConfig: Config = Config(source = pwdFile)
+  private val defaultConfig: Config = Config(source = pwd)
 
   def buildConfig(priorityOptions: ConfigOptions): IO[Either[NonEmptyChain[ConfigValidation], Config]] = {
     val source = findSource(priorityOptions)
@@ -30,13 +29,13 @@ trait ConfigurationBuilder {
     } yield validateConfig(config).toEither
   }
 
-  private def findSource(priorityOptions: ConfigOptions): File =
-    priorityOptions.options.foldRight(pwdFile)((co, f) => co match {
-      case ConfigOption.Source(source) => source.toFile
+  private def findSource(priorityOptions: ConfigOptions): Path =
+    priorityOptions.options.foldRight(pwd)((co, f) => co match {
+      case ConfigOption.Source(source) => source
       case _ => f
     })
 
-  private def sourceOptions(source: File): IO[ConfigOptions] =
+  private def sourceOptions(source: Path): IO[ConfigOptions] =
     readFile(source, ".thorp.conf")
 
   private def userOptions(higherPriorityOptions: ConfigOptions): IO[ConfigOptions] =
@@ -47,10 +46,10 @@ trait ConfigurationBuilder {
     if (ConfigQuery.ignoreGlobalOptions(higherPriorityOptions)) IO(ConfigOptions())
     else parseFile(Paths.get("/etc/thorp.conf"))
 
-  private def userHome = new File(System.getProperty("user.home"))
+  private def userHome = Paths.get(System.getProperty("user.home"))
 
-  private def readFile(source: File, filename: String): IO[ConfigOptions] =
-    parseFile(source.toPath.resolve(filename))
+  private def readFile(source: Path, filename: String): IO[ConfigOptions] =
+    parseFile(source.resolve(filename))
 
   private def collateOptions(configOptions: ConfigOptions): Config =
     configOptions.options.foldRight(defaultConfig)((co, c) => co.update(c))

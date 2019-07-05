@@ -18,19 +18,20 @@ class StorageServiceSuite
     with MockFactory {
 
   val source = Resource(this, "upload")
+  val sourcePath = source.toPath
 
   private val prefix = RemoteKey("prefix")
-  implicit private val config: Config = Config(Bucket("bucket"), prefix, source = source)
+  implicit private val config: Config = Config(Bucket("bucket"), prefix, source = sourcePath)
   implicit private val implLogger: Logger = new DummyLogger
   private val fileToKey = KeyGenerator.generateKey(config.source, config.prefix) _
 
   describe("getS3Status") {
     val hash = MD5Hash("hash")
-    val localFile = LocalFile.resolve("the-file", md5HashMap(hash), source, fileToKey)
+    val localFile = LocalFile.resolve("the-file", md5HashMap(hash), sourcePath, fileToKey)
     val key = localFile.remoteKey
-    val keyOtherKey = LocalFile.resolve("other-key-same-hash", md5HashMap(hash), source, fileToKey)
+    val keyOtherKey = LocalFile.resolve("other-key-same-hash", md5HashMap(hash), sourcePath, fileToKey)
     val diffHash = MD5Hash("diff")
-    val keyDiffHash = LocalFile.resolve("other-key-diff-hash", md5HashMap(diffHash), source, fileToKey)
+    val keyDiffHash = LocalFile.resolve("other-key-diff-hash", md5HashMap(diffHash), sourcePath, fileToKey)
     val lastModified = LastModified(Instant.now)
     val s3ObjectsData: S3ObjectsData = S3ObjectsData(
       byHash = Map(
@@ -70,7 +71,7 @@ class StorageServiceSuite
     }
 
     describe("when remote key does not exist and no others matches hash") {
-      val localFile = LocalFile.resolve("missing-file", md5HashMap(MD5Hash("unique")), source, fileToKey)
+      val localFile = LocalFile.resolve("missing-file", md5HashMap(MD5Hash("unique")), sourcePath, fileToKey)
       it("should return no matches by key") {
         val result = getMatchesByKey(invoke(localFile))
         assert(result.isEmpty)
@@ -113,7 +114,7 @@ class StorageServiceSuite
 
       val prefix = RemoteKey("prefix")
       val localFile =
-        LocalFile.resolve("root-file", md5HashMap(Root.hash), source, KeyGenerator.generateKey(source, prefix))
+        LocalFile.resolve("root-file", md5HashMap(Root.hash), sourcePath, KeyGenerator.generateKey(sourcePath, prefix))
       val bucket = Bucket("a-bucket")
       val remoteKey = RemoteKey("prefix/root-file")
       val uploadEventListener = new UploadEventListener(localFile, 1, SyncTotals(), 0L)
