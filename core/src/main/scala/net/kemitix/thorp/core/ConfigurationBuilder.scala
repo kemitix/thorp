@@ -1,12 +1,12 @@
 package net.kemitix.thorp.core
 
-import java.nio.file.{Path, Paths}
+import java.nio.file.{Files, Path, Paths}
 
 import cats.data.NonEmptyChain
 import cats.effect.IO
 import net.kemitix.thorp.core.ConfigValidator.validateConfig
 import net.kemitix.thorp.core.ParseConfigFile.parseFile
-import net.kemitix.thorp.domain.Config
+import net.kemitix.thorp.domain.{Config, Sources}
 
 /**
   * Builds a configuration from settings in a file within the
@@ -14,14 +14,11 @@ import net.kemitix.thorp.domain.Config
   */
 trait ConfigurationBuilder {
 
-  private val pwd: Path = Paths.get(System.getenv("PWD"))
-
-  private val defaultConfig: Config = Config(source = pwd)
 
   def buildConfig(priorityOptions: ConfigOptions): IO[Either[NonEmptyChain[ConfigValidation], Config]] = {
-    val source = findSource(priorityOptions)
+    val sources = ConfigQuery.sources(priorityOptions)
     for {
-      sourceOptions <- sourceOptions(source)
+      sourceOptions <- sourceOptions(sources)
       userOptions <- userOptions(priorityOptions ++ sourceOptions)
       globalOptions <- globalOptions(priorityOptions ++ sourceOptions ++ userOptions)
       collected = priorityOptions ++ sourceOptions ++ userOptions ++ globalOptions
@@ -29,14 +26,12 @@ trait ConfigurationBuilder {
     } yield validateConfig(config).toEither
   }
 
-  private def findSource(priorityOptions: ConfigOptions): Path =
-    priorityOptions.options.foldRight(pwd)((co, f) => co match {
-      case ConfigOption.Source(source) => source
-      case _ => f
-    })
-
-  private def sourceOptions(source: Path): IO[ConfigOptions] =
-    readFile(source, ".thorp.conf")
+  private def sourceOptions(sources: Sources): IO[ConfigOptions] =
+    sources.paths
+      .map(_.resolve(".thorp.conf"))
+      .find(Files.exists(_))
+      .map(parseFile)
+      .getOrElse(IO.pure(ParseConfigLines.parseLines(List())))
 
   private def userOptions(higherPriorityOptions: ConfigOptions): IO[ConfigOptions] =
     if (ConfigQuery.ignoreUserOptions(higherPriorityOptions)) IO(ConfigOptions())
@@ -51,8 +46,17 @@ trait ConfigurationBuilder {
   private def readFile(source: Path, filename: String): IO[ConfigOptions] =
     parseFile(source.resolve(filename))
 
-  private def collateOptions(configOptions: ConfigOptions): Config =
-    configOptions.options.foldRight(defaultConfig)((co, c) => co.update(c))
+  private def collateOptions(configOptions: ConfigOptions): Config = {
+    val pwd = Paths.get(System.getenv("PWD"))
+    val initialSource =
+      if (noSourcesProvided(configOptions)) List(pwd) else List()
+    val initialConfig = Config(sources = Sources(initialSource))
+    configOptions.options.foldRight(initialConfig)((co, c) => co.update(c))
+  }
+
+  private def noSourcesProvided(configOptions: ConfigOptions) = {
+    ConfigQuery.sources(configOptions).paths.isEmpty
+  }
 }
 
 object ConfigurationBuilder extends ConfigurationBuilder

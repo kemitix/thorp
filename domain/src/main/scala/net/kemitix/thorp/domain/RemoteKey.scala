@@ -15,8 +15,8 @@ final case class RemoteKey(key: String) {
     }
   }
 
-  def isMissingLocally(source: Path, prefix: RemoteKey): Boolean =
-    ! asFile(source, prefix).exists
+  def isMissingLocally(sources: Sources, prefix: RemoteKey): Boolean =
+    !sources.paths.exists(source => asFile(source, prefix).exists)
 
   def resolve(path: String): RemoteKey =
     RemoteKey(key + "/" + path)

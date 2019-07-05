@@ -17,7 +17,7 @@ object ConfigOption {
     override def update(config: Config): Config = config.copy(batchMode = true)
   }
   case class Source(path: Path) extends ConfigOption {
-    override def update(config: Config): Config = config.copy(source = path)
+    override def update(config: Config): Config = config.copy(sources = config.sources ++ path)
   }
   case class Bucket(name: String) extends ConfigOption {
     override def update(config: Config): Config = config.copy(bucket = domain.Bucket(name))

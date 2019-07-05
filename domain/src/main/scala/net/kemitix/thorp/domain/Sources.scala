@@ -11,5 +11,15 @@ import java.nio.file.Path
   * uploaded, and the others are ignored.
   */
 case class Sources(paths: List[Path]) {
+  def ++(path: Path): Sources = Sources(paths ++ List(path))
 
+  /**
+    * Returns the source path for the given path.
+    *
+    * @param path the path to find the matching source
+    * @return the source for the path
+    * @throws NoSuchElementException if no source matches the path
+    */
+  def forPath(path: Path): Path =
+    paths.find(source => path.startsWith(source)).get
 }

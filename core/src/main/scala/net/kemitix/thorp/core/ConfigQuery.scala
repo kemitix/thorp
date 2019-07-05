@@ -1,6 +1,6 @@
 package net.kemitix.thorp.core
 
-import java.nio.file.Path
+import net.kemitix.thorp.domain.Sources
 
 trait ConfigQuery {
 
@@ -16,11 +16,13 @@ trait ConfigQuery {
   def ignoreGlobalOptions(configOptions: ConfigOptions): Boolean =
     configOptions contains ConfigOption.IgnoreGlobalOptions
 
-  def sources(configOptions: ConfigOptions): List[Path] =
-    configOptions.options.flatMap {
-      case s: ConfigOption.Source => Some(s)
+  def sources(configOptions: ConfigOptions): Sources = {
+    val paths = configOptions.options.flatMap( {
+      case ConfigOption.Source(sourcePath) => Some(sourcePath)
       case _ => None
-    }.map { s => s.path }
+    })
+    Sources(paths)
+  }
 }
 
 object ConfigQuery extends ConfigQuery

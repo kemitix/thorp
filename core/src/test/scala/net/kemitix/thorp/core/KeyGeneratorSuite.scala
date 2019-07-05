@@ -2,7 +2,7 @@ package net.kemitix.thorp.core
 
 import java.io.File
 
-import net.kemitix.thorp.domain.{Bucket, Config, RemoteKey}
+import net.kemitix.thorp.domain.{Bucket, Config, RemoteKey, Sources}
 import org.scalatest.FunSpec
 
 class KeyGeneratorSuite extends FunSpec {
@@ -10,8 +10,8 @@ class KeyGeneratorSuite extends FunSpec {
   private val source: File = Resource(this, "upload")
   private val sourcePath = source.toPath
   private val prefix = RemoteKey("prefix")
-  implicit private val config: Config = Config(Bucket("bucket"), prefix, source = sourcePath)
-  private val fileToKey = KeyGenerator.generateKey(config.source, config.prefix) _
+  implicit private val config: Config = Config(Bucket("bucket"), prefix, sources = Sources(List(sourcePath)))
+  private val fileToKey = KeyGenerator.generateKey(config.sources, config.prefix) _
 
   describe("key generator") {
 

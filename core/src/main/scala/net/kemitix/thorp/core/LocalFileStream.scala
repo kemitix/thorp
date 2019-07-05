@@ -53,6 +53,7 @@ object LocalFileStream {
                         path: Path)
                        (implicit l: Logger, c: Config) = {
     val file = path.toFile
+    val source = c.sources.forPath(path)
     for {
       hash <- hashService.hashLocalObject(path)
     } yield
@@ -60,9 +61,9 @@ object LocalFileStream {
         localFiles = Stream(
           domain.LocalFile(
             file,
-            c.source.toFile,
+            source.toFile,
             hash,
-            generateKey(c.source, c.prefix)(path))),
+            generateKey(c.sources, c.prefix)(path))),
         count = 1,
         totalSizeBytes = file.length)
   }

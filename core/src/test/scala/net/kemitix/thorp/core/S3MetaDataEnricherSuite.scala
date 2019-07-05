@@ -12,8 +12,8 @@ class S3MetaDataEnricherSuite
   private val source = Resource(this, "upload")
   private val sourcePath = source.toPath
   private val prefix = RemoteKey("prefix")
-  implicit private val config: Config = Config(Bucket("bucket"), prefix, source = sourcePath)
-  private val fileToKey = KeyGenerator.generateKey(config.source, config.prefix) _
+  implicit private val config: Config = Config(Bucket("bucket"), prefix, sources = Sources(List(sourcePath)))
+  private val fileToKey = KeyGenerator.generateKey(config.sources, config.prefix) _
   val lastModified = LastModified(Instant.now())
 
   def getMatchesByKey(status: (Option[HashModified], Set[(MD5Hash, KeyModified)])): Option[HashModified] = {

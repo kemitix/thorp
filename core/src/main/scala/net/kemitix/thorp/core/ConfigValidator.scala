@@ -4,7 +4,7 @@ import java.nio.file.Path
 
 import cats.data.{NonEmptyChain, Validated, ValidatedNec}
 import cats.implicits._
-import net.kemitix.thorp.domain.{Bucket, Config}
+import net.kemitix.thorp.domain.{Bucket, Config, Sources}
 
 sealed trait ConfigValidator {
 
@@ -25,9 +25,15 @@ sealed trait ConfigValidator {
     if (bucket.name.isEmpty) ConfigValidation.BucketNameIsMissing.invalidNec
     else bucket.validNec
 
+  def validateSources(sources: Sources): ValidationResult[Sources] =
+    sources.paths.map { source =>
+      validateSource(source)
+    }.sequence
+      .map(_ => sources)
+
   def validateConfig(config: Config): Validated[NonEmptyChain[ConfigValidation], Config] =
     (
-      validateSource(config.source),
+      validateSources(config.sources),
       validateBucket(config.bucket)
     ).mapN((_, _) => config)
 }

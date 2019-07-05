@@ -13,8 +13,8 @@ class ActionGeneratorSuite
   private val sourcePath = source.toPath
   private val prefix = RemoteKey("prefix")
   private val bucket = Bucket("bucket")
-  implicit private val config: Config = Config(bucket, prefix, source = sourcePath)
-  private val fileToKey = KeyGenerator.generateKey(config.source, config.prefix) _
+  implicit private val config: Config = Config(bucket, prefix, sources = Sources(List(sourcePath)))
+  private val fileToKey = KeyGenerator.generateKey(config.sources, config.prefix) _
   val lastModified = LastModified(Instant.now())
 
     describe("create actions") {

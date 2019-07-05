@@ -18,9 +18,9 @@ class UploaderSuite
   private val source = Resource(this, ".")
   private val sourcePath = source.toPath
   private val prefix = RemoteKey("prefix")
-  implicit private val config: Config = Config(Bucket("bucket"), prefix, source = sourcePath)
+  implicit private val config: Config = Config(Bucket("bucket"), prefix, sources = Sources(List(sourcePath)))
   implicit private val implLogger: Logger = new DummyLogger
-  private val fileToKey = generateKey(config.source, config.prefix) _
+  private val fileToKey = generateKey(config.sources, config.prefix) _
   val lastModified = LastModified(Instant.now())
 
   def md5HashMap(hash: MD5Hash): Map[String, MD5Hash] =

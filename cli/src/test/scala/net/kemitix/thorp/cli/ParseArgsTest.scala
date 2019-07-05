@@ -37,7 +37,7 @@ class ParseArgsTest extends FunSpec {
       it("should get multiple sources") {
         val expected = Set("path1", "path2").map(Paths.get(_))
         val configOptions = maybeConfigOptions.get
-        val result = ConfigQuery.sources(configOptions).toSet
+        val result = ConfigQuery.sources(configOptions).paths.toSet
         assertResult(expected)(result)
       }
     }

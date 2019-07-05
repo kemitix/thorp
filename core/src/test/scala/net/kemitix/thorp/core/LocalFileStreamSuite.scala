@@ -2,7 +2,7 @@ package net.kemitix.thorp.core
 
 import java.nio.file.Paths
 
-import net.kemitix.thorp.domain.{Config, LocalFile, Logger, MD5HashData}
+import net.kemitix.thorp.domain.{Config, LocalFile, Logger, MD5HashData, Sources}
 import net.kemitix.thorp.storage.api.HashService
 import org.scalatest.FunSpec
 
@@ -18,7 +18,7 @@ class LocalFileStreamSuite extends FunSpec {
   private def file(filename: String) =
     sourcePath.resolve(Paths.get(filename))
 
-  implicit private val config: Config = Config(source = sourcePath)
+  implicit private val config: Config = Config(sources = Sources(List(sourcePath)))
   implicit private val logger: Logger = new DummyLogger
 
   describe("findFiles") {

@@ -21,9 +21,9 @@ class StorageServiceSuite
   val sourcePath = source.toPath
 
   private val prefix = RemoteKey("prefix")
-  implicit private val config: Config = Config(Bucket("bucket"), prefix, source = sourcePath)
+  implicit private val config: Config = Config(Bucket("bucket"), prefix, sources = Sources(List(sourcePath)))
   implicit private val implLogger: Logger = new DummyLogger
-  private val fileToKey = KeyGenerator.generateKey(config.source, config.prefix) _
+  private val fileToKey = KeyGenerator.generateKey(config.sources, config.prefix) _
 
   describe("getS3Status") {
     val hash = MD5Hash("hash")
@@ -114,7 +114,7 @@ class StorageServiceSuite
 
       val prefix = RemoteKey("prefix")
       val localFile =
-        LocalFile.resolve("root-file", md5HashMap(Root.hash), sourcePath, KeyGenerator.generateKey(sourcePath, prefix))
+        LocalFile.resolve("root-file", md5HashMap(Root.hash), sourcePath, KeyGenerator.generateKey(config.sources, prefix))
       val bucket = Bucket("a-bucket")
       val remoteKey = RemoteKey("prefix/root-file")
       val uploadEventListener = new UploadEventListener(localFile, 1, SyncTotals(), 0L)
