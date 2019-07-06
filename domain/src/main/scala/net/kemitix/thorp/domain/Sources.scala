@@ -11,7 +11,8 @@ import java.nio.file.Path
   * uploaded, and the others are ignored.
   */
 case class Sources(paths: List[Path]) {
-  def ++(path: Path): Sources = Sources(paths ++ List(path))
+  def ++(path: Path): Sources = this ++ List(path)
+  def ++(otherPaths: List[Path]): Sources = Sources(paths ++ otherPaths)
 
   /**
     * Returns the source path for the given path.

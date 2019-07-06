@@ -21,7 +21,7 @@ class SyncSuite
   private val prefix = RemoteKey("prefix")
   private val configOptions =
     ConfigOptions(List(
-      ConfigOption.Source(source.toPath),
+      ConfigOption.Source(sourcePath),
       ConfigOption.Bucket("bucket"),
       ConfigOption.Prefix("prefix"),
       ConfigOption.IgnoreGlobalOptions,

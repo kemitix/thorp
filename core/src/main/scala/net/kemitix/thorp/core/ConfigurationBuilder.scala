@@ -4,6 +4,7 @@ import java.nio.file.{Files, Path, Paths}
 
 import cats.data.NonEmptyChain
 import cats.effect.IO
+import cats.implicits._
 import net.kemitix.thorp.core.ConfigValidator.validateConfig
 import net.kemitix.thorp.core.ParseConfigFile.parseFile
 import net.kemitix.thorp.domain.{Config, Sources}
@@ -26,12 +27,39 @@ trait ConfigurationBuilder {
     } yield validateConfig(config).toEither
   }
 
-  private def sourceOptions(sources: Sources): IO[ConfigOptions] =
-    sources.paths
-      .map(_.resolve(".thorp.conf"))
-      .find(Files.exists(_))
-      .map(parseFile)
-      .getOrElse(IO.pure(ParseConfigLines.parseLines(List())))
+  private def sourceOptions(sources: Sources): IO[ConfigOptions] = {
+    def existingThorpConfigFiles(sources: Sources) =
+      sources.paths
+        .map(_.resolve(".thorp.config"))
+        .filter(Files.exists(_))
+
+    def filterForSources: IO[ConfigOptions] => IO[(Sources, ConfigOptions)] =
+      for {configOptions <- _} yield (ConfigQuery.sources(configOptions), configOptions)
+
+    def recurseIntoSources: IO[(Sources, ConfigOptions)] => IO[ConfigOptions] =
+      ioSourcesConfigOptions =>
+        for {
+          sourcesConfigOptions <- ioSourcesConfigOptions
+          (sources, configOptions) = sourcesConfigOptions
+          moreSourcesConfigOptions <- filterForSources(sourceOptions(sources))
+          (_, moreConfigOptions) = moreSourcesConfigOptions
+        } yield configOptions ++ moreConfigOptions
+
+    def emptyConfig: IO[ConfigOptions] = IO.pure(ConfigOptions())
+
+    def collectConfigOptions: (IO[ConfigOptions], IO[ConfigOptions]) => IO[ConfigOptions] =
+      (ioConfigOptions, ioAcc) =>
+        for {
+          configOptions <- ioConfigOptions
+          acc <- ioAcc
+        } yield configOptions ++ acc
+
+    existingThorpConfigFiles(sources)
+      .map(ParseConfigFile.parseFile)
+      .map(filterForSources)
+      .map(recurseIntoSources)
+      .foldRight(emptyConfig)(collectConfigOptions)
+  }
 
   private def userOptions(higherPriorityOptions: ConfigOptions): IO[ConfigOptions] =
     if (ConfigQuery.ignoreUserOptions(higherPriorityOptions)) IO(ConfigOptions())
@@ -51,7 +79,7 @@ trait ConfigurationBuilder {
     val initialSource =
       if (noSourcesProvided(configOptions)) List(pwd) else List()
     val initialConfig = Config(sources = Sources(initialSource))
-    configOptions.options.foldRight(initialConfig)((co, c) => co.update(c))
+    configOptions.options.foldLeft(initialConfig)((c, co) => co.update(c))
   }
 
   private def noSourcesProvided(configOptions: ConfigOptions) = {

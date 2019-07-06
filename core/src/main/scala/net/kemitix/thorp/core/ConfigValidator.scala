@@ -19,16 +19,17 @@ sealed trait ConfigValidator {
     else ConfigValidation.SourceIsNotReadable.invalidNec
 
   def validateSource(source: Path): ValidationResult[Path] =
-    validateSourceIsDirectory(source).andThen(s => validateSourceIsReadable(s))
+    validateSourceIsDirectory(source)
+      .andThen(s =>
+        validateSourceIsReadable(s))
 
   def validateBucket(bucket: Bucket): ValidationResult[Bucket] =
     if (bucket.name.isEmpty) ConfigValidation.BucketNameIsMissing.invalidNec
     else bucket.validNec
 
   def validateSources(sources: Sources): ValidationResult[Sources] =
-    sources.paths.map { source =>
-      validateSource(source)
-    }.sequence
+    sources.paths
+      .map(validateSource).sequence
       .map(_ => sources)
 
   def validateConfig(config: Config): Validated[NonEmptyChain[ConfigValidation], Config] =
