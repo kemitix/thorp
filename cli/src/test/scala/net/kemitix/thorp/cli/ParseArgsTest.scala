@@ -27,17 +27,14 @@ class ParseArgsTest extends FunSpec {
       it("should succeed") {pending}
     }
     describe("when there are multiple sources") {
-      val maybeConfigOptions = ParseArgs(List(
+      val args = List(
         "--source", "path1",
         "--source", "path2",
-        "--bucket", "bucket"))
-      it("should accept more than one source") {
-        assert(maybeConfigOptions.isDefined)
-      }
+        "--bucket", "bucket")
       it("should get multiple sources") {
-        val expected = Set("path1", "path2").map(Paths.get(_))
-        val configOptions = maybeConfigOptions.get
-        val result = ConfigQuery.sources(configOptions).paths.toSet
+        val expected = Some(Set("path1", "path2").map(Paths.get(_)))
+        val configOptions = ParseArgs(args)
+        val result = configOptions.map(ConfigQuery.sources(_).paths.toSet)
         assertResult(expected)(result)
       }
     }
