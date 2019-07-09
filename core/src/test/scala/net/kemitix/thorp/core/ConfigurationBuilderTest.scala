@@ -13,14 +13,6 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
   private val coBucket: ConfigOption.Bucket = ConfigOption.Bucket(aBucket.name)
   private val thorpConfigFileName = ".thorp.config"
 
-  @deprecated
-  private val validBase =
-    ConfigOptions(List(
-      coBucket,
-      ConfigOption.IgnoreUserOptions,
-      ConfigOption.IgnoreGlobalOptions
-    ))
-
   private def configOptions(options: ConfigOption*): ConfigOptions =
     ConfigOptions(List(
         ConfigOption.IgnoreUserOptions,
@@ -40,18 +32,16 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
       val expected = Right(Config(aBucket, sources = Sources(List(pwd))))
       val options = configOptions(coBucket)
       val result = invoke(options)
-      assert(result.isRight, result)
       assertResult(expected)(result)
     }
   }
   describe("when has a single source with no .thorp.config") {
     it("should only include the source once") {
       withDirectory(aSource => {
-        val expected = Sources(List(aSource))
+        val expected = Right(Sources(List(aSource)))
         val options = configOptions(ConfigOption.Source(aSource), coBucket)
-        val result = invoke(options)
-        assert(result.isRight, result)
-        assertResult(expected)(result.right.get.sources)
+        val result = invoke(options).map(_.sources)
+        assertResult(expected)(result)
       })
     }
   }
@@ -59,14 +49,13 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
     it("should include both sources in order") {
       withDirectory(currentSource => {
         withDirectory(previousSource => {
-          val expected = List(currentSource, previousSource)
+          val expected = Right(List(currentSource, previousSource))
           val options = configOptions(
             ConfigOption.Source(currentSource),
             ConfigOption.Source(previousSource),
             coBucket)
-          val result = invoke(options)
-          assert(result.isRight, result)
-          assertResult(expected)(result.right.get.sources.paths)
+          val result = invoke(options).map(_.sources.paths)
+          assertResult(expected)(result)
         })
       })
     }
@@ -77,13 +66,12 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
         withDirectory(previousSource => {
           writeFile(currentSource, thorpConfigFileName,
             s"source = $previousSource")
-          val expected = List(currentSource, previousSource)
+          val expected = Right(List(currentSource, previousSource))
           val options = configOptions(
             ConfigOption.Source(currentSource),
             coBucket)
-          val result = invoke(options)
-          assert(result.isRight, result)
-          assertResult(expected)(result.right.get.sources.paths)
+          val result = invoke(options).map(_.sources.paths)
+          assertResult(expected)(result)
         })
       })
     }
@@ -103,25 +91,23 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
               "include = previous-include",
               "exclude = previous-exclude")
             // should have both sources in order
-            val expectedSources = Sources(List(currentSource, previousSource))
+            val expectedSources = Right(Sources(List(currentSource, previousSource)))
             // should have bucket from current only
-            val expectedBuckets = Bucket("current-bucket")
+            val expectedBuckets = Right(Bucket("current-bucket"))
             // should have prefix from current only
-            val expectedPrefixes = RemoteKey("current-prefix")
+            val expectedPrefixes = Right(RemoteKey("current-prefix"))
             // should have filters from both sources
-            val expectedFilters = List(
+            val expectedFilters = Right(List(
               Filter.Exclude("previous-exclude"),
               Filter.Include("previous-include"),
               Filter.Exclude("current-exclude"),
-              Filter.Include("current-include"))
+              Filter.Include("current-include")))
             val options = configOptions(ConfigOption.Source(currentSource))
             val result = invoke(options)
-            assert(result.isRight, result)
-            val config = result.right.get
-            assertResult(expectedSources)(config.sources)
-            assertResult(expectedBuckets)(config.bucket)
-            assertResult(expectedPrefixes)(config.prefix)
-            assertResult(expectedFilters)(config.filters)
+            assertResult(expectedSources)(result.map(_.sources))
+            assertResult(expectedBuckets)(result.map(_.bucket))
+            assertResult(expectedPrefixes)(result.map(_.prefix))
+            assertResult(expectedFilters)(result.map(_.filters))
           })
         })
       }
