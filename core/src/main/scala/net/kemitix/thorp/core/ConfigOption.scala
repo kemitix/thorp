@@ -20,10 +20,18 @@ object ConfigOption {
     override def update(config: Config): Config = config.copy(sources = config.sources ++ path)
   }
   case class Bucket(name: String) extends ConfigOption {
-    override def update(config: Config): Config = config.copy(bucket = domain.Bucket(name))
+    override def update(config: Config): Config =
+      if (config.bucket.name.isEmpty)
+        config.copy(bucket = domain.Bucket(name))
+      else
+        config
   }
   case class Prefix(path: String) extends ConfigOption {
-    override def update(config: Config): Config = config.copy(prefix = RemoteKey(path))
+    override def update(config: Config): Config =
+      if (config.prefix.key.isEmpty)
+        config.copy(prefix = RemoteKey(path))
+      else
+        config
   }
   case class Include(pattern: String) extends ConfigOption {
     override def update(config: Config): Config = config.copy(filters = domain.Filter.Include(pattern) :: config.filters)
