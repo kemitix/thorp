@@ -78,14 +78,29 @@ class ConfigurationBuilderTest extends FunSpec {
     val currentSourceFile = resourcePath.resolve("parent1").toFile
     val currentSource = currentSourceFile.toPath
     val previousSource = path2
-    writeFile(currentSourceFile, thorpConfigFileName, List(s"source = $previousSource"))
-    val source = ConfigOption.Source(currentSource)
-    val configOptions = validBase ++ ConfigOptions(List(source))
-    it("should include both sources") {
-      val expected = List(currentSource, previousSource)
-      val result = invoke(configOptions).right.get.sources.paths
-      deleteFile(currentSourceFile, thorpConfigFileName)
-      assertResult(expected)(result)
+    describe("when settings are only in current") {
+      it("should have bucket from current") {pending}
+      it("should have prefix from current") {pending}
+      it("should have filters from current for current source") {pending}
+    }
+    describe("when settings are in current and previous") {
+      writeFile(currentSourceFile, thorpConfigFileName, List(s"source = $previousSource"))
+      val source = ConfigOption.Source(currentSource)
+      val configOptions = validBase ++ ConfigOptions(List(source))
+      it("should include both sources") {
+        val expected = List(currentSource, previousSource)
+        val result = invoke(configOptions).right.get.sources.paths
+        deleteFile(currentSourceFile, thorpConfigFileName)
+        assertResult(expected)(result)
+      }
+      it("should have bucket from current only") {pending}
+      it("should have prefix from current only") {pending}
+      it("should have filters from both current and previous") {pending}
+    }
+    describe("when settings are only in previous") {
+      it("should have bucket from previous") {pending}
+      it("should have prefix from previous") {pending}
+      it("should have filters from previous for previous source") {pending}
     }
   }
 
