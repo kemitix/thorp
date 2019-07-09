@@ -121,13 +121,12 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
           writeFile(currentSource, thorpConfigFileName, s"source = $parentSource")
           withDirectory(grandParentSource => {
             writeFile(parentSource, thorpConfigFileName, s"source = $grandParentSource")
-            val expected = List(currentSource, parentSource, grandParentSource)
+            val expected = Right(List(currentSource, parentSource, grandParentSource))
             val options = configOptions(
               ConfigOption.Source(currentSource),
               coBucket)
-            val result = invoke(options)
-            assert(result.isRight, result)
-            assertResult(expected)(result.right.get.sources.paths)
+            val result = invoke(options).map(_.sources.paths)
+            assertResult(expected)(result)
           })
         })
       })
