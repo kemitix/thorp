@@ -4,16 +4,14 @@ import java.io.IOException
 import java.nio.file.attribute.BasicFileAttributes
 import java.nio.file.{FileVisitResult, Files, Path, SimpleFileVisitor}
 
+import scala.util.Try
+
 trait TemporaryFolder {
 
   def withDirectory(testCode: Path => Any): Unit = {
     val dir: Path = Files.createTempDirectory("thorp-temp")
-    try {
-      testCode(dir)
-    }
-    finally {
-      remove(dir)
-    }
+    Try(testCode(dir)).recover({ case _ => Nil })
+    remove(dir)
   }
 
   def remove(root: Path): Unit = {
