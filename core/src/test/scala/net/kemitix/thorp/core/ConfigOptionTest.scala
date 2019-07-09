@@ -5,9 +5,6 @@ import org.scalatest.FunSpec
 
 class ConfigOptionTest extends FunSpec with TemporaryFolder {
 
-  private val source = Resource(this, "")
-  private val sourcePath = source.toPath
-
   describe("when more than one source") {
     it("should preserve their order") {
       withDirectory(path1 => {
