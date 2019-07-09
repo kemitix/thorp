@@ -1,7 +1,8 @@
 package net.kemitix.thorp.core
 
 import java.io.IOException
-import java.nio.file.{Files, Path}
+import java.nio.file.attribute.BasicFileAttributes
+import java.nio.file.{FileVisitResult, Files, Path, SimpleFileVisitor}
 
 trait TemporaryFolder {
 
@@ -14,9 +15,6 @@ trait TemporaryFolder {
       remove(dir)
     }
   }
-
-  import java.nio.file.attribute.BasicFileAttributes
-  import java.nio.file.{FileVisitResult, Files, Path, SimpleFileVisitor}
 
   def remove(root: Path): Unit = {
     Files.walkFileTree(root, new SimpleFileVisitor[Path] {
