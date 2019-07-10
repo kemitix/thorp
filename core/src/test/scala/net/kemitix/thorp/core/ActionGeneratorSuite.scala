@@ -19,7 +19,9 @@ class ActionGeneratorSuite
 
     describe("create actions") {
 
-      def invoke(input: S3MetaData) = ActionGenerator.createActions(input).toList
+      val previousActions = Stream.empty[Action]
+
+      def invoke(input: S3MetaData) = ActionGenerator.createActions(input, previousActions).toList
 
       describe("#1 local exists, remote exists, remote matches - do nothing") {
         val theHash = MD5Hash("the-hash")

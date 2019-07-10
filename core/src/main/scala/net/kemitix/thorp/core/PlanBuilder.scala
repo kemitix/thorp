@@ -61,7 +61,7 @@ trait PlanBuilder {
 
   private def actionsForLocalFiles(localData: LocalFiles, remoteData: S3ObjectsData)
                                   (implicit c: Config) =
-    localData.localFiles.foldLeft(Stream[Action]())((acc, lf) => createActionFromLocalFile(lf, remoteData) ++ acc)
+    localData.localFiles.foldLeft(Stream[Action]())((acc, lf) => createActionFromLocalFile(lf, remoteData, acc) ++ acc)
 
   private def actionsForRemoteKeys(remoteData: S3ObjectsData)
                                   (implicit c: Config) =
@@ -93,9 +93,11 @@ trait PlanBuilder {
     } yield localFiles
   }
 
-  private def createActionFromLocalFile(lf: LocalFile, remoteData: S3ObjectsData)
+  private def createActionFromLocalFile(lf: LocalFile,
+                                        remoteData: S3ObjectsData,
+                                        previousActions: Stream[Action])
                                        (implicit c: Config) =
-    ActionGenerator.createActions(S3MetaDataEnricher.getMetadata(lf, remoteData))
+    ActionGenerator.createActions(S3MetaDataEnricher.getMetadata(lf, remoteData), previousActions)
 
   private def createActionFromRemoteKey(rk: RemoteKey)
                                        (implicit c: Config) =

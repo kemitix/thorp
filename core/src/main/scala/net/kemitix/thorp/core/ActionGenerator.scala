@@ -5,7 +5,17 @@ import net.kemitix.thorp.domain._
 
 object ActionGenerator {
 
-  def createActions(s3MetaData: S3MetaData)
+  def remoteNameNotAlreadyQueued(localFile: LocalFile,
+                                 previousActions: Stream[Action]): Boolean = {
+    val key = localFile.remoteKey.key
+    !previousActions.exists {
+      case ToUpload(_, lf, _) => lf.remoteKey.key equals key
+      case _ => false
+    }
+  }
+
+  def createActions(s3MetaData: S3MetaData,
+                    previousActions: Stream[Action])
                    (implicit c: Config): Stream[Action] =
     s3MetaData match {
 
@@ -21,7 +31,8 @@ object ActionGenerator {
 
       // #3 local exists, remote is missing, other no matches - upload
       case S3MetaData(localFile, otherMatches, None)
-        if otherMatches.isEmpty
+        if otherMatches.isEmpty &&
+          remoteNameNotAlreadyQueued(localFile, previousActions)
       => uploadFile(c.bucket, localFile)
 
       // #4 local exists, remote exists, remote no match, other matches - copy
@@ -35,6 +46,8 @@ object ActionGenerator {
         if hashMatches.isEmpty
       => uploadFile(c.bucket, localFile)
 
+      case S3MetaData(localFile, _, _) =>
+        doNothing(c.bucket, localFile.remoteKey)
     }
 
   private def doNothing(bucket: Bucket,
