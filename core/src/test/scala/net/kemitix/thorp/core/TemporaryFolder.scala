@@ -1,6 +1,6 @@
 package net.kemitix.thorp.core
 
-import java.io.IOException
+import java.io.{File, IOException, PrintWriter}
 import java.nio.file.attribute.BasicFileAttributes
 import java.nio.file.{FileVisitResult, Files, Path, SimpleFileVisitor}
 
@@ -27,4 +27,17 @@ trait TemporaryFolder {
       }
     })
   }
+
+  def writeFile(directory: Path, name: String, contents: String*): Unit = {
+    directory.toFile.mkdirs
+    val pw = new PrintWriter(directory.resolve(name).toFile, "UTF-8")
+    contents.foreach(pw.println)
+    pw.close()
+  }
+
+  def createFile(path: Path, name: String, content: String*): File = {
+    writeFile(path, name, content:_*)
+    path.resolve(name).toFile
+  }
+
 }

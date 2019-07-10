@@ -1,6 +1,5 @@
 package net.kemitix.thorp.core
 
-import java.io.PrintWriter
 import java.nio.file.{Path, Paths}
 
 import net.kemitix.thorp.domain._
@@ -18,14 +17,6 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
         ConfigOption.IgnoreUserOptions,
         ConfigOption.IgnoreGlobalOptions
       ) ++ options)
-
-  private def writeFile(directory: Path, name: String, contents: String*): Unit = {
-    directory.toFile.mkdirs
-    val pw = new PrintWriter(directory.resolve(name).toFile, "UTF-8")
-    contents.foreach(pw.println)
-    pw.close()
-  }
-
 
   describe("when no source") {
     it("should use the current (PWD) directory") {
