@@ -8,10 +8,11 @@ import scala.util.Try
 
 trait TemporaryFolder {
 
-  def withDirectory(testCode: Path => Any): Unit = {
+  def withDirectory(testCode: Path => Any): Any = {
     val dir: Path = Files.createTempDirectory("thorp-temp")
-    Try(testCode(dir)).recover({ case _ => Nil })
+    val t = Try(testCode(dir))
     remove(dir)
+    t.get
   }
 
   def remove(root: Path): Unit = {
