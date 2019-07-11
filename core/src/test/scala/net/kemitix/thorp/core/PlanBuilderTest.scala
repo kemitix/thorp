@@ -3,7 +3,7 @@ package net.kemitix.thorp.core
 import java.io.File
 import java.nio.file.Path
 
-import net.kemitix.thorp.core.Action.ToUpload
+import net.kemitix.thorp.core.Action.{ToDelete, ToUpload}
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.{HashService, StorageService}
 import org.scalatest.FreeSpec
@@ -20,8 +20,8 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
 
     val filename1 = "file-1"
     val filename2 = "file-2"
-    val remoteKey1 = RemoteKey("/" + filename1)
-    val remoteKey2 = RemoteKey("/" + filename2)
+    val remoteKey1 = RemoteKey(filename1)
+    val remoteKey2 = RemoteKey(filename2)
     val hashService = SimpleHashService()
 
     "two sources" - {
@@ -36,8 +36,8 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
               val hash2 = hashService.hashLocalObject(fileInSecondSource.toPath).unsafeRunSync()("md5")
 
               val expected = Right(List(
-                toUpload(secondSource, fileInSecondSource, hash2, remoteKey2),
-                toUpload(firstSource, fileInFirstSource, hash1, remoteKey1)
+                toUpload(remoteKey2, hash2, secondSource, fileInSecondSource),
+                toUpload(remoteKey1, hash1, firstSource, fileInFirstSource)
               ))
 
               val storageService = DummyStorageService(emptyS3ObjectData, Map(
@@ -65,7 +65,7 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
               val hash2 = hashService.hashLocalObject(fileInSecondSource.toPath).unsafeRunSync()("md5")
 
               val expected = Right(List(
-                toUpload(firstSource, fileInFirstSource, hash1, remoteKey1)
+                toUpload(remoteKey1, hash1, firstSource, fileInFirstSource)
               ))
 
               val storageService = DummyStorageService(emptyS3ObjectData, Map(
@@ -137,16 +137,36 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
         }
       }
       "with remote file not present in either source" - {
-        "delete from remote" ignore {}
+        "delete from remote" in {
+          withDirectory(firstSource => {
+
+            withDirectory(secondSource => {
+
+              val expected = Right(List(("delete", remoteKey1.key, "", "", "")))
+
+              val s3ObjectData = S3ObjectsData(
+                byKey = Map(remoteKey1 -> HashModified(MD5Hash(""), lastModified)))
+
+              val storageService = DummyStorageService(s3ObjectData, Map())
+
+              val result = invoke(storageService, hashService, configOptions(
+                ConfigOption.Source(firstSource),
+                ConfigOption.Source(secondSource),
+                ConfigOption.Bucket("a-bucket")))
+
+              assertResult(expected)(result)
+            })
+          })
+        }
       }
     }
   }
 
-  private def toUpload(source: Path,
-                       file: File,
+  private def toUpload(remoteKey: RemoteKey,
                        md5Hash: MD5Hash,
-                       remoteKey: RemoteKey) =
-    ("upload", file.toString, source.toString, md5Hash.hash, remoteKey.key)
+                       source: Path,
+                       file: File): (String, String, String, String, String) =
+    ("upload", remoteKey.key, md5Hash.hash, source.toString, file.toString)
 
   private def configOptions(configOptions: ConfigOption*): ConfigOptions =
     ConfigOptions(List(configOptions:_*))
@@ -156,8 +176,9 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
                      configOptions: ConfigOptions): Either[List[String], List[(String, String, String, String, String)]] =
     planBuilder.createPlan(storageService, hashService, configOptions)
       .value.unsafeRunSync().map(_.actions.toList.map({
-      case ToUpload(_, lf, _) => ("upload", lf.file.toString, lf.source.toString, lf.hashes("md5").hash, lf.remoteKey.key)
-      case _ => ("other", "", "", "", "")
+      case ToUpload(_, lf, _) => ("upload", lf.remoteKey.key, lf.hashes("md5").hash, lf.source.toString, lf.file.toString)
+      case ToDelete(_, remoteKey, _) => ("delete", remoteKey.key, "", "", "")
+      case x => ("other", x.toString, "", "", "")
     }))
 
 }
