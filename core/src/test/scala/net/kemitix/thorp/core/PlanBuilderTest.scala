@@ -57,8 +57,8 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
       "same filename in both" - {
         "only upload file in first source" in {
           withDirectory(firstSource => {
-              val fileInFirstSource: File = createFile(firstSource, filename1, "file-1-content")
-              val hash1 = hashService.hashLocalObject(fileInFirstSource.toPath).unsafeRunSync()("md5")
+            val fileInFirstSource: File = createFile(firstSource, filename1, "file-1-content")
+            val hash1 = hashService.hashLocalObject(fileInFirstSource.toPath).unsafeRunSync()("md5")
 
             withDirectory(secondSource => {
               val fileInSecondSource: File = createFile(secondSource, filename1, "file-2-content")
@@ -109,7 +109,36 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
           })
         }
       }
-      "with remote file only present in first source" ignore  {}
+      "with remote file only present in first source" - {
+        "do not delete it" in {
+          withDirectory(firstSource => {
+            val fileInFirstSource: File = createFile(firstSource, filename1, "file-1-content")
+            val hash1 = hashService.hashLocalObject(fileInFirstSource.toPath).unsafeRunSync()("md5")
+
+            withDirectory(secondSource => {
+
+              val expected = Right(List())
+
+              val s3ObjectData = S3ObjectsData(
+                byHash = Map(hash1 -> Set(KeyModified(remoteKey1, lastModified))),
+                byKey = Map(remoteKey1 -> HashModified(hash1, lastModified)))
+
+              val storageService = DummyStorageService(s3ObjectData, Map(
+                fileInFirstSource -> (remoteKey1, hash1)))
+
+              val result = invoke(storageService, hashService, configOptions(
+                ConfigOption.Source(firstSource),
+                ConfigOption.Source(secondSource),
+                ConfigOption.Bucket("a-bucket")))
+
+              assertResult(expected)(result)
+            })
+          })
+        }
+      }
+      "with remote file not present in either source" - {
+        "delete from remote" ignore {}
+      }
     }
   }
 
