@@ -11,7 +11,7 @@ import org.scalatest.FreeSpec
 class PlanBuilderTest extends FreeSpec with TemporaryFolder {
 
   private val planBuilder = new PlanBuilder {}
-  private val emptyS3ObjectData = S3ObjectsData(Map(), Map())
+  private val emptyS3ObjectData = S3ObjectsData()
   private implicit val logger: Logger = new DummyLogger
 
   val lastModified: LastModified = LastModified()

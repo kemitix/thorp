@@ -82,10 +82,7 @@ class S3MetaDataEnricherSuite
       describe("#3 local exists, remote is missing, remote no match, other no matches - upload") {
         val theHash = MD5Hash("the-hash")
         val theFile = LocalFile.resolve("the-file", md5HashMap(theHash), sourcePath, fileToKey)
-        val s3: S3ObjectsData = S3ObjectsData(
-          byHash = Map(),
-          byKey = Map()
-        )
+        val s3: S3ObjectsData = S3ObjectsData()
         it("generates valid metadata") {
           val expected = S3MetaData(theFile,
             matchByHash = Set.empty,

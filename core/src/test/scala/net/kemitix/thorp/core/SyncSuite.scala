@@ -68,9 +68,7 @@ class SyncSuite
   }
 
   describe("when all files should be uploaded") {
-    val storageService = new RecordingStorageService(testBucket, S3ObjectsData(
-      byHash = Map(),
-      byKey = Map()))
+    val storageService = new RecordingStorageService(testBucket, S3ObjectsData())
     it("uploads all files") {
       val expected = Right(Set(
         ToUpload(testBucket, rootFile, rootFile.file.length),
