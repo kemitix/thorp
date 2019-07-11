@@ -11,7 +11,9 @@ object KeyGenerator {
                  (path: Path): RemoteKey = {
     val source = sources.forPath(path)
     val relativePath = source.relativize(path.toAbsolutePath)
-    RemoteKey(s"${prefix.key}/$relativePath")
+    RemoteKey(List(prefix.key, relativePath.toString)
+        .filterNot(_.isEmpty)
+        .mkString("/"))
   }
 
 }
