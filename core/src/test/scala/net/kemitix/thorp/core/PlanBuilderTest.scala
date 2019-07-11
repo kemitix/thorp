@@ -4,7 +4,7 @@ import java.io.File
 import java.nio.file.Path
 
 import net.kemitix.thorp.core.Action.ToUpload
-import net.kemitix.thorp.domain.{Bucket, LocalFile, Logger, MD5Hash, RemoteKey, S3ObjectsData}
+import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.{HashService, StorageService}
 import org.scalatest.FreeSpec
 
@@ -14,10 +14,14 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
   private val emptyS3ObjectData = S3ObjectsData(Map(), Map())
   private implicit val logger: Logger = new DummyLogger
 
+  val lastModified: LastModified = LastModified()
+
   "create a plan" - {
 
     val filename1 = "file-1"
     val filename2 = "file-2"
+    val remoteKey1 = RemoteKey("/" + filename1)
+    val remoteKey2 = RemoteKey("/" + filename2)
     val hashService = SimpleHashService()
 
     "two sources" - {
@@ -30,9 +34,6 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
             withDirectory(secondSource => {
               val fileInSecondSource = createFile(secondSource, filename2, "file-2-content")
               val hash2 = hashService.hashLocalObject(fileInSecondSource.toPath).unsafeRunSync()("md5")
-
-              val remoteKey1 = RemoteKey(filename1)
-              val remoteKey2 = RemoteKey(filename2)
 
               val expected = Right(List(
                 toUpload(secondSource, fileInSecondSource, hash2, remoteKey2),
@@ -63,9 +64,6 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
               val fileInSecondSource: File = createFile(secondSource, filename1, "file-2-content")
               val hash2 = hashService.hashLocalObject(fileInSecondSource.toPath).unsafeRunSync()("md5")
 
-              val remoteKey1 = RemoteKey(filename1)
-              val remoteKey2 = RemoteKey(filename1)
-
               val expected = Right(List(
                 toUpload(firstSource, fileInFirstSource, hash1, remoteKey1)
               ))
@@ -84,7 +82,33 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
           })
         }
       }
-      "with remote file only present in second source" ignore  {}
+      "with a remote file only present in second source" -  {
+        "do not delete it " in {
+          withDirectory(firstSource => {
+
+            withDirectory(secondSource => {
+              val fileInSecondSource = createFile(secondSource, filename2, "file-2-content")
+              val hash2 = hashService.hashLocalObject(fileInSecondSource.toPath).unsafeRunSync()("md5")
+
+              val expected = Right(List())
+
+              val s3ObjectData = S3ObjectsData(
+                byHash = Map(hash2 -> Set(KeyModified(remoteKey2, lastModified))),
+                byKey = Map(remoteKey2 -> HashModified(hash2, lastModified)))
+
+              val storageService = DummyStorageService(s3ObjectData, Map(
+                fileInSecondSource -> (remoteKey2, hash2)))
+
+              val result = invoke(storageService, hashService, configOptions(
+                ConfigOption.Source(firstSource),
+                ConfigOption.Source(secondSource),
+                ConfigOption.Bucket("a-bucket")))
+
+              assertResult(expected)(result)
+            })
+          })
+        }
+      }
       "with remote file only present in first source" ignore  {}
     }
   }
@@ -93,7 +117,7 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
                        file: File,
                        md5Hash: MD5Hash,
                        remoteKey: RemoteKey) =
-    ("upload", file.toString, source.toString, md5Hash.hash, "/" + remoteKey.key)
+    ("upload", file.toString, source.toString, md5Hash.hash, remoteKey.key)
 
   private def configOptions(configOptions: ConfigOption*): ConfigOptions =
     ConfigOptions(List(configOptions:_*))
