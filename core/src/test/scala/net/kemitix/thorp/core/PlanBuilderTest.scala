@@ -3,7 +3,7 @@ package net.kemitix.thorp.core
 import java.io.File
 import java.nio.file.Path
 
-import net.kemitix.thorp.core.Action.{ToDelete, ToUpload}
+import net.kemitix.thorp.core.Action.{ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.{HashService, StorageService}
 import org.scalatest.FreeSpec
@@ -18,13 +18,95 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
 
   "create a plan" - {
 
-    val filename1 = "file-1"
-    val filename2 = "file-2"
-    val remoteKey1 = RemoteKey(filename1)
-    val remoteKey2 = RemoteKey(filename2)
     val hashService = SimpleHashService()
 
+    "one source" - {
+      "a file" - {
+        val filename = "aFile"
+        val remoteKey = RemoteKey(filename)
+        "with no matching remote key" - {
+          "with no other remote key with matching hash" - {
+            "upload file" in {
+              withDirectory(source => {
+                val file = createFile(source, filename, "file-content")
+                val hash = md5Hash(file)
+
+                val expected = Right(List(
+                  toUpload(remoteKey, hash, source, file)
+                ))
+
+                val storageService = DummyStorageService(emptyS3ObjectData, Map(
+                  file -> (remoteKey, hash)
+                ))
+
+                val result = invoke(storageService, hashService, configOptions(
+                  ConfigOption.Source(source),
+                  ConfigOption.Bucket("a-bucket")))
+
+                assertResult(expected)(result)
+              })
+            }
+          }
+          "with another remote key with matching hash" - {
+            "copy file" in {
+              withDirectory(source => {
+                val anOtherFilename = "other"
+                val content = "file-content"
+                val aFile = createFile(source, filename, content)
+                val anOtherFile = createFile(source, anOtherFilename, content)
+                val aHash = md5Hash(aFile)
+
+                val anOtherKey = RemoteKey("other")
+
+                val expected = Right(List(
+                  toCopy(anOtherKey, aHash, remoteKey)
+                ))
+
+                val s3ObjectsData = S3ObjectsData(
+                  byHash = Map(aHash -> Set(KeyModified(anOtherKey, lastModified))),
+                  byKey = Map(anOtherKey -> HashModified(aHash, lastModified))
+                )
+
+                val storageService = DummyStorageService(s3ObjectsData, Map(
+                  aFile -> (remoteKey, aHash)
+                ))
+
+                val result = invoke(storageService, hashService, configOptions(
+                  ConfigOption.Source(source),
+                  ConfigOption.Bucket("a-bucket")))
+
+                assertResult(expected)(result)
+              })
+            }
+          }
+        }
+        "with matching remote key" - {
+          "with matching hash" - {
+            "do nothing" ignore {}
+          }
+          "with no other remote key with matching hash" - {
+            "upload file" ignore {}
+          }
+          "with another remote key with matching hash" - {
+            "copy file" ignore {}
+          }
+        }
+      }
+      "a remote key" - {
+        "with a matching local file" - {
+          "do nothing" ignore {}
+        }
+        "with no matching local file" - {
+          "delete remote key" ignore {}
+        }
+      }
+    }
+
     "two sources" - {
+      val filename1 = "file-1"
+      val filename2 = "file-2"
+      val remoteKey1 = RemoteKey(filename1)
+      val remoteKey2 = RemoteKey(filename2)
       "unique files in both" - {
         "upload all files" in {
           withDirectory(firstSource => {
@@ -173,6 +255,11 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
                        file: File): (String, String, String, String, String) =
     ("upload", remoteKey.key, md5Hash.hash, source.toString, file.toString)
 
+  private def toCopy(sourceKey: RemoteKey,
+                     md5Hash: MD5Hash,
+                     targetKey: RemoteKey): (String, String, String, String, String) =
+    ("copy", sourceKey.key, md5Hash.hash, targetKey.key, "")
+
   private def configOptions(configOptions: ConfigOption*): ConfigOptions =
     ConfigOptions(List(configOptions:_*))
 
@@ -183,6 +270,7 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
       .value.unsafeRunSync().map(_.actions.toList.map({
       case ToUpload(_, lf, _) => ("upload", lf.remoteKey.key, lf.hashes("md5").hash, lf.source.toString, lf.file.toString)
       case ToDelete(_, remoteKey, _) => ("delete", remoteKey.key, "", "", "")
+      case ToCopy(_, sourceKey, hash, targetKey, _) => ("copy", sourceKey.key, hash.hash, targetKey.key, "")
       case x => ("other", x.toString, "", "", "")
     }))
 
