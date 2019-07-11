@@ -29,11 +29,11 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
         "upload all files" in {
           withDirectory(firstSource => {
             val fileInFirstSource = createFile(firstSource, filename1, "file-1-content")
-            val hash1 = hashService.hashLocalObject(fileInFirstSource.toPath).unsafeRunSync()("md5")
+            val hash1 = md5Hash(fileInFirstSource)
 
             withDirectory(secondSource => {
               val fileInSecondSource = createFile(secondSource, filename2, "file-2-content")
-              val hash2 = hashService.hashLocalObject(fileInSecondSource.toPath).unsafeRunSync()("md5")
+              val hash2 = md5Hash(fileInSecondSource)
 
               val expected = Right(List(
                 toUpload(remoteKey2, hash2, secondSource, fileInSecondSource),
@@ -58,11 +58,11 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
         "only upload file in first source" in {
           withDirectory(firstSource => {
             val fileInFirstSource: File = createFile(firstSource, filename1, "file-1-content")
-            val hash1 = hashService.hashLocalObject(fileInFirstSource.toPath).unsafeRunSync()("md5")
+            val hash1 = md5Hash(fileInFirstSource)
 
             withDirectory(secondSource => {
               val fileInSecondSource: File = createFile(secondSource, filename1, "file-2-content")
-              val hash2 = hashService.hashLocalObject(fileInSecondSource.toPath).unsafeRunSync()("md5")
+              val hash2 = md5Hash(fileInSecondSource)
 
               val expected = Right(List(
                 toUpload(remoteKey1, hash1, firstSource, fileInFirstSource)
@@ -88,7 +88,7 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
 
             withDirectory(secondSource => {
               val fileInSecondSource = createFile(secondSource, filename2, "file-2-content")
-              val hash2 = hashService.hashLocalObject(fileInSecondSource.toPath).unsafeRunSync()("md5")
+              val hash2 = md5Hash(fileInSecondSource)
 
               val expected = Right(List())
 
@@ -113,7 +113,7 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
         "do not delete it" in {
           withDirectory(firstSource => {
             val fileInFirstSource: File = createFile(firstSource, filename1, "file-1-content")
-            val hash1 = hashService.hashLocalObject(fileInFirstSource.toPath).unsafeRunSync()("md5")
+            val hash1 = md5Hash(fileInFirstSource)
 
             withDirectory(secondSource => {
 
@@ -160,6 +160,11 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
         }
       }
     }
+
+    def md5Hash(file: File) = {
+      hashService.hashLocalObject(file.toPath).unsafeRunSync()("md5")
+    }
+
   }
 
   private def toUpload(remoteKey: RemoteKey,
