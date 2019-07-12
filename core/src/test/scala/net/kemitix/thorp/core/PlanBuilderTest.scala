@@ -168,11 +168,57 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
         }
       }
       "a remote key" - {
+        val filename = "aFile"
+        val remoteKey = RemoteKey(filename)
         "with a matching local file" - {
-          "do nothing" ignore {}
+          "do nothing" in {
+            withDirectory(source => {
+              val file = createFile(source, filename, "file-content")
+              val hash = md5Hash(file)
+
+              // DoNothing actions should have been filtered out of the plan
+              val expected = Right(List())
+
+              val s3ObjectsData = S3ObjectsData(
+                byHash = Map(hash -> Set(KeyModified(remoteKey, lastModified))),
+                byKey = Map(remoteKey -> HashModified(hash, lastModified))
+              )
+
+              val storageService = DummyStorageService(s3ObjectsData, Map(
+                file -> (remoteKey, hash)
+              ))
+
+              val result = invoke(storageService, hashService, configOptions(
+                ConfigOption.Source(source),
+                ConfigOption.Bucket("a-bucket")))
+
+              assertResult(expected)(result)
+            })
+          }
         }
         "with no matching local file" - {
-          "delete remote key" ignore {}
+          "delete remote key" ignore {
+            withDirectory(source => {
+              val hash = MD5Hash("file-content")
+
+              val expected = Right(List(
+                toDelete(remoteKey)
+              ))
+
+              val s3ObjectsData = S3ObjectsData(
+                byHash = Map(hash -> Set(KeyModified(remoteKey, lastModified))),
+                byKey = Map(remoteKey -> HashModified(hash, lastModified))
+              )
+
+              val storageService = DummyStorageService(s3ObjectsData, Map.empty)
+
+              val result = invoke(storageService, hashService, configOptions(
+                ConfigOption.Source(source),
+                ConfigOption.Bucket("a-bucket")))
+
+              assertResult(expected)(result)
+            })
+          }
         }
       }
     }
