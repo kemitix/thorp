@@ -4,7 +4,6 @@ import java.nio.file.{Files, Path, Paths}
 
 import cats.data.NonEmptyChain
 import cats.effect.IO
-import cats.implicits._
 import net.kemitix.thorp.core.ConfigValidator.validateConfig
 import net.kemitix.thorp.core.ParseConfigFile.parseFile
 import net.kemitix.thorp.domain.{Config, Sources}
