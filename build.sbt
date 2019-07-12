@@ -15,6 +15,9 @@ inThisBuild(List(
 val commonSettings = Seq(
   sonatypeProfileName := "net.kemitix",
   scalaVersion := "2.12.8",
+  scalacOptions ++= Seq(
+    "-Ywarn-unused-import",
+    "-Xfatal-warnings"),
   test in assembly := {}
 )
 
