@@ -20,6 +20,7 @@ object ParseArgs {
         .action((_, cos) => ConfigOption.BatchMode :: cos)
         .text("Enable batch-mode"),
       opt[String]('s', "source")
+        .unbounded()
         .action((str, cos) => ConfigOption.Source(Paths.get(str)) :: cos)
         .text("Source directory to sync to destination"),
       opt[String]('b', "bucket")

@@ -43,7 +43,7 @@ trait PlanBuilder {
                      hashService: HashService)
                     (implicit c: Config, l: Logger): EitherT[IO, List[String], SyncPlan] = {
     for {
-      _ <- EitherT.liftF(SyncLogging.logRunStart(c.bucket, c.prefix, c.source))
+      _ <- EitherT.liftF(SyncLogging.logRunStart(c.bucket, c.prefix, c.sources))
       actions <- gatherMetadata(storageService, hashService)
         .leftMap(error => List(error))
         .map(assemblePlan)
@@ -61,7 +61,7 @@ trait PlanBuilder {
 
   private def actionsForLocalFiles(localData: LocalFiles, remoteData: S3ObjectsData)
                                   (implicit c: Config) =
-    localData.localFiles.foldLeft(Stream[Action]())((acc, lf) => createActionFromLocalFile(lf, remoteData) ++ acc)
+    localData.localFiles.foldLeft(Stream[Action]())((acc, lf) => createActionFromLocalFile(lf, remoteData, acc) ++ acc)
 
   private def actionsForRemoteKeys(remoteData: S3ObjectsData)
                                   (implicit c: Config) =
@@ -75,16 +75,33 @@ trait PlanBuilder {
                             (implicit config: Config, l: Logger) =
     for {
       _ <- SyncLogging.logFileScan
-      localFiles <- LocalFileStream.findFiles(config.source, hashService)
+      localFiles <- findFiles(hashService)
     } yield localFiles
 
-  private def createActionFromLocalFile(lf: LocalFile, remoteData: S3ObjectsData)
+  private def findFiles(hashService: HashService)
+                       (implicit c: Config, l: Logger): IO[LocalFiles] = {
+    val ioListLocalFiles = (for {
+      source <- c.sources.paths
+    } yield LocalFileStream.findFiles(source, hashService)).sequence
+    for {
+      listLocalFiles <- ioListLocalFiles
+      localFiles = listLocalFiles.foldRight(LocalFiles()){
+        (acc, moreLocalFiles) => {
+          acc ++ moreLocalFiles
+        }
+      }
+    } yield localFiles
+  }
+
+  private def createActionFromLocalFile(lf: LocalFile,
+                                        remoteData: S3ObjectsData,
+                                        previousActions: Stream[Action])
                                        (implicit c: Config) =
-    ActionGenerator.createActions(S3MetaDataEnricher.getMetadata(lf, remoteData))
+    ActionGenerator.createActions(S3MetaDataEnricher.getMetadata(lf, remoteData), previousActions)
 
   private def createActionFromRemoteKey(rk: RemoteKey)
                                        (implicit c: Config) =
-    if (rk.isMissingLocally(c.source, c.prefix)) Action.ToDelete(c.bucket, rk, 0L)
+    if (rk.isMissingLocally(c.sources, c.prefix)) Action.ToDelete(c.bucket, rk, 0L)
     else DoNothing(c.bucket, rk, 0L)
 
 }

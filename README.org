@@ -33,6 +33,10 @@ If you don't provide a ~source~ the current diretory will be used.
 
 The ~--include~ and ~--exclude~ parameters can be used more than once.
 
+The ~--source~ parameter can be used more than once, in which case,
+all files in all sources will be consolidated into the same
+bucket/prefix.
+
 ** Batch mode
 
 Batch mode disable the ANSI console display and logs simple messages
@@ -46,15 +50,18 @@ that can be written to a file.
   - User: ~ ~/.config/thorp.conf~
   - Source: ~${source}/.thorp.conf~
 
-Command line arguments override those in Source, which override those
-in User, which override those Global, which override any built-in
-config.
+  Command line arguments override those in Source, which override
+  those in User, which override those Global, which override any
+  built-in config.
 
-Built-in config consists of using the current working directory as the
-~source~.
+  When there is more than one source, only the first ".thorp.conf"
+  file found will be used.
 
-Note, that ~include~ and ~exclude~ are cumulative across all
-configuration files.
+  Built-in config consists of using the current working directory as
+  the ~source~.
+
+  Note, that ~include~ and ~exclude~ are cumulative across all
+  configuration files.
 
 * Behaviour
 

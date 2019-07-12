@@ -16,10 +16,11 @@ class UploaderSuite
     with MockFactory {
 
   private val source = Resource(this, ".")
+  private val sourcePath = source.toPath
   private val prefix = RemoteKey("prefix")
-  implicit private val config: Config = Config(Bucket("bucket"), prefix, source = source)
+  implicit private val config: Config = Config(Bucket("bucket"), prefix, sources = Sources(List(sourcePath)))
   implicit private val implLogger: Logger = new DummyLogger
-  private val fileToKey = generateKey(config.source, config.prefix) _
+  private val fileToKey = generateKey(config.sources, config.prefix) _
   val lastModified = LastModified(Instant.now())
 
   def md5HashMap(hash: MD5Hash): Map[String, MD5Hash] =
@@ -38,7 +39,7 @@ class UploaderSuite
       // dies when putObject is called
       val returnedKey = RemoteKey("returned-key")
       val returnedHash = MD5Hash("returned-hash")
-      val bigFile = LocalFile.resolve("small-file", md5HashMap(MD5Hash("the-hash")), source, fileToKey)
+      val bigFile = LocalFile.resolve("small-file", md5HashMap(MD5Hash("the-hash")), sourcePath, fileToKey)
       val uploadEventListener = new UploadEventListener(bigFile, 1, SyncTotals(), 0L)
       val amazonS3 = mock[AmazonS3]
       val amazonS3TransferManager = TransferManagerBuilder.standard().withS3Client(amazonS3).build

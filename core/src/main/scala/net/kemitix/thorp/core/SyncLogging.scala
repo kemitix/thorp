@@ -1,7 +1,5 @@
 package net.kemitix.thorp.core
 
-import java.io.File
-
 import cats.effect.IO
 import cats.implicits._
 import net.kemitix.thorp.domain.StorageQueueEvent.{CopyQueueEvent, DeleteQueueEvent, ErrorQueueEvent, UploadQueueEvent}
@@ -11,13 +9,15 @@ trait SyncLogging {
 
   def logRunStart(bucket: Bucket,
                   prefix: RemoteKey,
-                  source: File)
-                 (implicit logger: Logger): IO[Unit] =
-    logger.info(s"Bucket: ${bucket.name}, Prefix: ${prefix.key}, Source: $source, ")
+                  sources: Sources)
+                 (implicit logger: Logger): IO[Unit] = {
+    val sourcesList = sources.paths.mkString(", ")
+    logger.info(s"Bucket: ${bucket.name}, Prefix: ${prefix.key}, Source: $sourcesList, ")
+  }
 
   def logFileScan(implicit c: Config,
                   logger: Logger): IO[Unit] =
-    logger.info(s"Scanning local files: ${c.source}...")
+    logger.info(s"Scanning local files: ${c.sources}...")
 
   def logErrors(actions: Stream[StorageQueueEvent])
                (implicit logger: Logger): IO[Unit] =

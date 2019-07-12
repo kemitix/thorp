@@ -21,9 +21,9 @@ final case class LocalFile(file: File, source: File, hashes: Map[String, MD5Hash
 object LocalFile {
   def resolve(path: String,
               md5Hashes: Map[String, MD5Hash],
-              source: File,
-              fileToKey: File => RemoteKey): LocalFile = {
-    val file = source.toPath.resolve(path).toFile
-    LocalFile(file, source, md5Hashes, fileToKey(file))
+              source: Path,
+              pathToKey: Path => RemoteKey): LocalFile = {
+    val resolvedPath = source.resolve(path)
+    LocalFile(resolvedPath.toFile, source.toFile, md5Hashes, pathToKey(resolvedPath))
   }
 }

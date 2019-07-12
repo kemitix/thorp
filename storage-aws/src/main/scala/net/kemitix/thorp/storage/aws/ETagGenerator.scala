@@ -1,6 +1,6 @@
 package net.kemitix.thorp.storage.aws
 
-import java.io.File
+import java.nio.file.Path
 
 import cats.effect.IO
 import cats.implicits._
@@ -12,11 +12,11 @@ import net.kemitix.thorp.domain.{Logger, MD5Hash}
 
 trait ETagGenerator {
 
-  def eTag(file: File)(implicit l: Logger): IO[String]= {
-    val partSize = calculatePartSize(file)
-    val parts = numParts(file.length, partSize)
+  def eTag(path: Path)(implicit l: Logger): IO[String]= {
+    val partSize = calculatePartSize(path)
+    val parts = numParts(path.toFile.length, partSize)
     partsIndex(parts)
-      .map(digestChunk(file, partSize)).sequence
+      .map(digestChunk(path, partSize)).sequence
       .map(concatenateDigests)
       .map(MD5HashGenerator.hex)
       .map(hash => s"$hash-$parts")
@@ -28,8 +28,8 @@ trait ETagGenerator {
   private def concatenateDigests: List[Array[Byte]] => Array[Byte] =
     lab => lab.foldLeft(Array[Byte]())((acc, ab) => acc ++ ab)
 
-  private def calculatePartSize(file: File) = {
-    val request = new PutObjectRequest("", "", file)
+  private def calculatePartSize(path: Path) = {
+    val request = new PutObjectRequest("", "", path.toFile)
     val configuration = new TransferManagerConfiguration
     TransferManagerUtils.calculateOptimalPartSize(request, configuration)
   }
@@ -43,11 +43,11 @@ trait ETagGenerator {
   def offsets(totalFileSizeBytes: Long, optimalPartSize: Long): List[Long] =
     Range.Long(0, totalFileSizeBytes, optimalPartSize).toList
 
-  def digestChunk(file: File, chunkSize: Long)(chunkNumber: Long)(implicit l: Logger): IO[Array[Byte]] =
-    hashChunk(file, chunkNumber, chunkSize).map(_.digest)
+  def digestChunk(path: Path, chunkSize: Long)(chunkNumber: Long)(implicit l: Logger): IO[Array[Byte]] =
+    hashChunk(path, chunkNumber, chunkSize).map(_.digest)
 
-  def hashChunk(file: File, chunkNumber: Long, chunkSize: Long)(implicit l: Logger): IO[MD5Hash] =
-    MD5HashGenerator.md5FileChunk(file, chunkNumber * chunkSize, chunkSize)
+  def hashChunk(path: Path, chunkNumber: Long, chunkSize: Long)(implicit l: Logger): IO[MD5Hash] =
+    MD5HashGenerator.md5FileChunk(path, chunkNumber * chunkSize, chunkSize)
 }
 
 object ETagGenerator extends ETagGenerator

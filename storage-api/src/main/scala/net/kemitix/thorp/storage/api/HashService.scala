@@ -1,6 +1,6 @@
 package net.kemitix.thorp.storage.api
 
-import java.io.File
+import java.nio.file.Path
 
 import cats.effect.IO
 import net.kemitix.thorp.domain.{Logger, MD5Hash}
@@ -10,6 +10,7 @@ import net.kemitix.thorp.domain.{Logger, MD5Hash}
   */
 trait HashService {
 
-  def hashLocalObject(file: File)(implicit l: Logger): IO[Map[String, MD5Hash]]
+  def hashLocalObject(path: Path)
+                     (implicit l: Logger): IO[Map[String, MD5Hash]]
 
 }

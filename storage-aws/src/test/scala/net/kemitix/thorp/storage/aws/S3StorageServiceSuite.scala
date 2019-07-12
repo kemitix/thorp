@@ -18,8 +18,9 @@ class S3StorageServiceSuite
 
   describe("listObjectsInPrefix") {
     val source = Resource(this, "upload")
+    val sourcePath = source.toPath
     val prefix = RemoteKey("prefix")
-    implicit val config: Config = Config(Bucket("bucket"), prefix, source = source)
+    implicit val config: Config = Config(Bucket("bucket"), prefix, sources = Sources(List(sourcePath)))
     implicit val implLogger: Logger = new DummyLogger
 
     val lm = LastModified(Instant.now.truncatedTo(ChronoUnit.MILLIS))

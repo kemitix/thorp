@@ -1,6 +1,6 @@
 package net.kemitix.thorp.storage.aws
 
-import java.io.File
+import java.nio.file.Path
 
 import cats.effect.IO
 import net.kemitix.thorp.core.MD5HashGenerator
@@ -12,13 +12,14 @@ trait S3HashService extends HashService {
   /**
     * Generates an MD5 Hash and an multi-part ETag
     *
-    * @param file the local file to scan
+    * @param path the local path to scan
     * @return a set of hash values
     */
-  override def hashLocalObject(file: File)(implicit l: Logger): IO[Map[String, MD5Hash]] =
+  override def hashLocalObject(path: Path)
+                              (implicit l: Logger): IO[Map[String, MD5Hash]] =
     for {
-      md5 <- MD5HashGenerator.md5File(file)
-      etag <- ETagGenerator.eTag(file).map(MD5Hash(_))
+      md5 <- MD5HashGenerator.md5File(path)
+      etag <- ETagGenerator.eTag(path).map(MD5Hash(_))
     } yield Map(
       "md5" -> md5,
       "etag" -> etag

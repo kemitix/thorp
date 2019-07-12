@@ -1,17 +1,19 @@
 package net.kemitix.thorp.core
 
-import java.io.File
+import java.nio.file.Path
 
-import net.kemitix.thorp.domain.RemoteKey
+import net.kemitix.thorp.domain.{RemoteKey, Sources}
 
 object KeyGenerator {
 
-  def generateKey(source: File, prefix: RemoteKey)
-                 (file: File): RemoteKey = {
-    val otherPath = file.toPath.toAbsolutePath
-    val sourcePath = source.toPath
-    val relativePath = sourcePath.relativize(otherPath)
-    RemoteKey(s"${prefix.key}/$relativePath")
+  def generateKey(sources: Sources,
+                  prefix: RemoteKey)
+                 (path: Path): RemoteKey = {
+    val source = sources.forPath(path)
+    val relativePath = source.relativize(path.toAbsolutePath)
+    RemoteKey(List(prefix.key, relativePath.toString)
+        .filterNot(_.isEmpty)
+        .mkString("/"))
   }
 
 }

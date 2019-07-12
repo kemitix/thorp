@@ -17,14 +17,16 @@ class SyncSuite
   extends FunSpec {
 
   private val source = Resource(this, "upload")
+  private val sourcePath = source.toPath
   private val prefix = RemoteKey("prefix")
-  private val configOptions = ConfigOptions(List(
-    ConfigOption.Source(source.toPath),
-    ConfigOption.Bucket("bucket"),
-    ConfigOption.Prefix("prefix"),
-    ConfigOption.IgnoreGlobalOptions,
-    ConfigOption.IgnoreUserOptions
-  ))
+  private val configOptions =
+    ConfigOptions(List(
+      ConfigOption.Source(sourcePath),
+      ConfigOption.Bucket("bucket"),
+      ConfigOption.Prefix("prefix"),
+      ConfigOption.IgnoreGlobalOptions,
+      ConfigOption.IgnoreUserOptions
+    ))
   implicit private val logger: Logger = new DummyLogger
   private val lastModified = LastModified(Instant.now)
 
@@ -35,22 +37,26 @@ class SyncSuite
   // source contains the files root-file and subdir/leaf-file
   val rootRemoteKey = RemoteKey("prefix/root-file")
   val leafRemoteKey = RemoteKey("prefix/subdir/leaf-file")
-  val rootFile: LocalFile = LocalFile.resolve("root-file", md5HashMap(Root.hash), source, _ => rootRemoteKey)
+  val rootFile: LocalFile =
+    LocalFile.resolve("root-file", md5HashMap(Root.hash), sourcePath, _ => rootRemoteKey)
+  val leafFile: LocalFile =
+    LocalFile.resolve("subdir/leaf-file", md5HashMap(Leaf.hash), sourcePath, _ => leafRemoteKey)
 
-  private def md5HashMap(md5Hash: MD5Hash): Map[String, MD5Hash] = {
+  private def md5HashMap(md5Hash: MD5Hash): Map[String, MD5Hash] =
     Map("md5" -> md5Hash)
-  }
 
-  val leafFile: LocalFile = LocalFile.resolve("subdir/leaf-file", md5HashMap(Leaf.hash), source, _ => leafRemoteKey)
+  val hashService =
+    DummyHashService(Map(
+      file("root-file") -> Map("md5" -> MD5HashData.Root.hash),
+      file("subdir/leaf-file") -> Map("md5" -> MD5HashData.Leaf.hash)
+    ))
 
-  val hashService = DummyHashService(Map(
-    file("root-file") -> Map("md5" -> MD5HashData.Root.hash),
-    file("subdir/leaf-file") -> Map("md5" -> MD5HashData.Leaf.hash)
-  ))
+  private def file(filename: String) =
+    sourcePath.resolve(Paths.get(filename))
 
   def invokeSubject(storageService: StorageService,
-                              hashService: HashService,
-                              configOptions: ConfigOptions): Either[List[String], SyncPlan] = {
+                    hashService: HashService,
+                    configOptions: ConfigOptions): Either[List[String], SyncPlan] = {
     PlanBuilder.createPlan(storageService, hashService, configOptions).value.unsafeRunSync
   }
 
@@ -62,9 +68,7 @@ class SyncSuite
   }
 
   describe("when all files should be uploaded") {
-    val storageService = new RecordingStorageService(testBucket, S3ObjectsData(
-      byHash = Map(),
-      byKey = Map()))
+    val storageService = new RecordingStorageService(testBucket, S3ObjectsData())
     it("uploads all files") {
       val expected = Right(Set(
         ToUpload(testBucket, rootFile, rootFile.file.length),
@@ -73,9 +77,6 @@ class SyncSuite
       assertResult(expected)(result.map(_.toSet))
     }
   }
-
-  private def file(filename: String) =
-    source.toPath.resolve(Paths.get(filename)).toFile
 
   describe("when no files should be uploaded") {
     val s3ObjectsData = S3ObjectsData(

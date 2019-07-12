@@ -1,7 +1,9 @@
 package net.kemitix.thorp.cli
 
+import java.nio.file.Paths
+
 import net.kemitix.thorp.core.ConfigOption.Debug
-import net.kemitix.thorp.core.{ConfigOptions, Resource}
+import net.kemitix.thorp.core.{ConfigOptions, ConfigQuery, Resource}
 import org.scalatest.FunSpec
 
 import scala.util.Try
@@ -15,13 +17,26 @@ class ParseArgsTest extends FunSpec {
       ParseArgs(List("--source", path, "--bucket", "bucket"))
 
     describe("when source is a directory") {
-      val result = invokeWithSource(pathTo("."))
       it("should succeed") {
+        val result = invokeWithSource(pathTo("."))
         assert(result.isDefined)
       }
     }
     describe("when source is a relative path to a directory") {
+      val result = invokeWithSource(pathTo("."))
       it("should succeed") {pending}
+    }
+    describe("when there are multiple sources") {
+      val args = List(
+        "--source", "path1",
+        "--source", "path2",
+        "--bucket", "bucket")
+      it("should get multiple sources") {
+        val expected = Some(Set("path1", "path2").map(Paths.get(_)))
+        val configOptions = ParseArgs(args)
+        val result = configOptions.map(ConfigQuery.sources(_).paths.toSet)
+        assertResult(expected)(result)
+      }
     }
   }
 
