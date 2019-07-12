@@ -107,11 +107,63 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
               })
             }
           }
-          "with no other remote key with matching hash" - {
-            "upload file" ignore {}
-          }
-          "with another remote key with matching hash" - {
-            "copy file" ignore {}
+          "with different hash" - {
+            "with no matching remote hash" - {
+              "upload file" in {
+                withDirectory(source => {
+                  val file = createFile(source, filename, "file-content")
+                  val currentHash = md5Hash(file)
+                  val originalHash = MD5Hash("original-file-content")
+
+                  val expected = Right(List(
+                    toUpload(remoteKey, currentHash, source, file)
+                  ))
+
+                  val s3ObjectsData = S3ObjectsData(
+                    byHash = Map(originalHash -> Set(KeyModified(remoteKey, lastModified))),
+                    byKey = Map(remoteKey -> HashModified(originalHash, lastModified))
+                  )
+
+                  val storageService = DummyStorageService(s3ObjectsData, Map(
+                    file -> (remoteKey, currentHash)
+                  ))
+
+                  val result = invoke(storageService, hashService, configOptions(
+                    ConfigOption.Source(source),
+                    ConfigOption.Bucket("a-bucket")))
+
+                  assertResult(expected)(result)
+                })
+              }
+            }
+            "with matching remote hash" - {
+              "copy file" in {
+                withDirectory(source => {
+                  val file = createFile(source, filename, "file-content")
+                  val hash = md5Hash(file)
+                  val sourceKey = RemoteKey("other-key")
+
+                  val expected = Right(List(
+                    toCopy(sourceKey, hash, remoteKey)
+                  ))
+
+                  val s3ObjectsData = S3ObjectsData(
+                    byHash = Map(hash -> Set(KeyModified(sourceKey, lastModified))),
+                    byKey = Map()
+                  )
+
+                  val storageService = DummyStorageService(s3ObjectsData, Map(
+                    file -> (remoteKey, hash)
+                  ))
+
+                  val result = invoke(storageService, hashService, configOptions(
+                    ConfigOption.Source(source),
+                    ConfigOption.Bucket("a-bucket")))
+
+                  assertResult(expected)(result)
+                })
+              }
+            }
           }
         }
       }
