@@ -12,7 +12,7 @@ The format is based on [[https://keepachangelog.com/en/1.0.0/][Keep a Changelog]
    - Add a version command-line option (#99)
    - Add a batch mode (#85)
    - Display total size and progress for entire run (#94)
-   - Sync more than one source directory into a single bucket/prefile (#25)
+   - Sync more than one source directory into a single bucket/prefix (#25)
 
 ** Dependencies
 
