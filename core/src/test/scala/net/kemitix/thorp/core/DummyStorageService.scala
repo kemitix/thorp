@@ -4,7 +4,7 @@ import java.io.File
 
 import cats.data.EitherT
 import cats.effect.IO
-import net.kemitix.thorp.domain.{Bucket, LocalFile, Logger, MD5Hash, RemoteKey, S3ObjectsData, StorageQueueEvent, UploadEventListener}
+import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.StorageService
 
 case class DummyStorageService(s3ObjectData: S3ObjectsData,
