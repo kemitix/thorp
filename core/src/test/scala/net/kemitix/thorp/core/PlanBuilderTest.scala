@@ -3,7 +3,7 @@ package net.kemitix.thorp.core
 import java.io.File
 import java.nio.file.Path
 
-import net.kemitix.thorp.core.Action.{ToCopy, ToDelete, ToUpload}
+import net.kemitix.thorp.core.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.{HashService, StorageService}
 import org.scalatest.FreeSpec
@@ -82,7 +82,30 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
         }
         "with matching remote key" - {
           "with matching hash" - {
-            "do nothing" ignore {}
+            "do nothing" in {
+              withDirectory(source => {
+                val file = createFile(source, filename, "file-content")
+                val hash = md5Hash(file)
+
+                // DoNothing actions should have been filtered out of the plan
+                val expected = Right(List())
+
+                val s3ObjectsData = S3ObjectsData(
+                  byHash = Map(hash -> Set(KeyModified(remoteKey, lastModified))),
+                  byKey = Map(remoteKey -> HashModified(hash, lastModified))
+                )
+
+                val storageService = DummyStorageService(s3ObjectsData, Map(
+                  file -> (remoteKey, hash)
+                ))
+
+                val result = invoke(storageService, hashService, configOptions(
+                  ConfigOption.Source(source),
+                  ConfigOption.Bucket("a-bucket")))
+
+                assertResult(expected)(result)
+              })
+            }
           }
           "with no other remote key with matching hash" - {
             "upload file" ignore {}
@@ -224,7 +247,9 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
 
             withDirectory(secondSource => {
 
-              val expected = Right(List(("delete", remoteKey1.key, "", "", "")))
+              val expected = Right(List(
+                toDelete(remoteKey1)
+              ))
 
               val s3ObjectData = S3ObjectsData(
                 byKey = Map(remoteKey1 -> HashModified(MD5Hash(""), lastModified)))
@@ -260,6 +285,9 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
                      targetKey: RemoteKey): (String, String, String, String, String) =
     ("copy", sourceKey.key, md5Hash.hash, targetKey.key, "")
 
+  private def toDelete(remoteKey: RemoteKey): (String, String, String, String, String) =
+    ("delete", remoteKey.key, "", "", "")
+
   private def configOptions(configOptions: ConfigOption*): ConfigOptions =
     ConfigOptions(List(configOptions:_*))
 
@@ -271,6 +299,7 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
       case ToUpload(_, lf, _) => ("upload", lf.remoteKey.key, lf.hashes("md5").hash, lf.source.toString, lf.file.toString)
       case ToDelete(_, remoteKey, _) => ("delete", remoteKey.key, "", "", "")
       case ToCopy(_, sourceKey, hash, targetKey, _) => ("copy", sourceKey.key, hash.hash, targetKey.key, "")
+      case DoNothing(_, remoteKey, _) => ("do-nothing", remoteKey.key, "", "", "")
       case x => ("other", x.toString, "", "", "")
     }))
 
