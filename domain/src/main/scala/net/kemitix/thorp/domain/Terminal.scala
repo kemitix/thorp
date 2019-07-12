@@ -2,55 +2,8 @@ package net.kemitix.thorp.domain
 
 object Terminal {
 
-  private val esc = "\u001B"
-  private val csi = esc + "["
-
-  /**
-    * Move the cursor up, default 1 line.
-    *
-    * Stops at the edge of the screen.
-    */
-  def cursorUp(lines: Int = 1): String = csi + lines + "A"
-
-  /**
-    * Move the cursor down, default 1 line.
-    *
-    * Stops at the edge of the screen.
-    */
-  def cursorDown(lines: Int = 1): String = csi + lines + "B"
-
-  /**
-    * Move the cursor forward, default 1 column.
-    *
-    * Stops at the edge of the screen.
-    */
-  def cursorForward(cols: Int = 1): String = csi + cols + "C"
-
-  /**
-    * Move the cursor back, default 1 column,
-    *
-    * Stops at the edge of the screen.
-    */
-  def cursorBack(cols: Int = 1): String = csi + cols + "D"
-
-  /**
-    * Move the cursor to the beginning of the line, default 1, down.
-    */
-  def cursorNextLine(lines: Int = 1): String = csi + lines + "E"
-  /**
-    * Move the cursor to the beginning of the line, default 1, up.
-    */
-  def cursorPrevLine(lines: Int = 1): String = csi + lines + "F"
-
-  /**
-    * Move the cursor to the column on the current line.
-    */
-  def cursorHorizAbs(col: Int): String = csi + col + "G"
-
-  /**
-    * Move the cursor to the position on screen (1,1 is the top-left).
-    */
-  def cursorPosition(row: Int, col: Int): String = csi + row + ";" + col + "H"
+  val esc: String = "\u001B"
+  val csi: String = esc + "["
 
   /**
     * Clear from cursor to end of screen.
@@ -98,6 +51,74 @@ object Terminal {
   val eraseLine: String = csi + "2K"
 
   /**
+    * Saves the cursor position/state.
+    */
+  val saveCursorPosition: String = csi + "s"
+
+  /**
+    * Restores the cursor position/state.
+    */
+  val restoreCursorPosition: String  = csi + "u"
+  val enableAlternateBuffer: String  = csi + "?1049h"
+  val disableAlternateBuffer: String = csi + "?1049l"
+  private val subBars = Map(0 -> " ",
+                            1 -> "▏",
+                            2 -> "▎",
+                            3 -> "▍",
+                            4 -> "▌",
+                            5 -> "▋",
+                            6 -> "▊",
+                            7 -> "▉")
+
+  /**
+    * Move the cursor up, default 1 line.
+    *
+    * Stops at the edge of the screen.
+    */
+  def cursorUp(lines: Int = 1): String = csi + lines + "A"
+
+  /**
+    * Move the cursor down, default 1 line.
+    *
+    * Stops at the edge of the screen.
+    */
+  def cursorDown(lines: Int = 1): String = csi + lines + "B"
+
+  /**
+    * Move the cursor forward, default 1 column.
+    *
+    * Stops at the edge of the screen.
+    */
+  def cursorForward(cols: Int = 1): String = csi + cols + "C"
+
+  /**
+    * Move the cursor back, default 1 column,
+    *
+    * Stops at the edge of the screen.
+    */
+  def cursorBack(cols: Int = 1): String = csi + cols + "D"
+
+  /**
+    * Move the cursor to the beginning of the line, default 1, down.
+    */
+  def cursorNextLine(lines: Int = 1): String = csi + lines + "E"
+
+  /**
+    * Move the cursor to the beginning of the line, default 1, up.
+    */
+  def cursorPrevLine(lines: Int = 1): String = csi + lines + "F"
+
+  /**
+    * Move the cursor to the column on the current line.
+    */
+  def cursorHorizAbs(col: Int): String = csi + col + "G"
+
+  /**
+    * Move the cursor to the position on screen (1,1 is the top-left).
+    */
+  def cursorPosition(row: Int, col: Int): String = csi + row + ";" + col + "H"
+
+  /**
     * Scroll page up, default 1, lines.
     */
   def scrollUp(lines: Int = 1): String = csi + lines + "S"
@@ -106,20 +127,6 @@ object Terminal {
     * Scroll page down, default 1, lines.
     */
   def scrollDown(lines: Int = 1): String = csi + lines + "T"
-
-  /**
-    * Saves the cursor position/state.
-    */
-  val saveCursorPosition: String = csi + "s"
-
-  /**
-    * Restores the cursor position/state.
-    */
-  val restoreCursorPosition: String = csi + "u"
-
-  val enableAlternateBuffer: String = csi + "?1049h"
-
-  val disableAlternateBuffer: String = csi + "?1049l"
 
   /**
     * The Width of the terminal, as reported by the COLUMNS environment variable.
@@ -135,28 +142,22 @@ object Terminal {
       .getOrElse(80)
   }
 
-  private val subBars = Map(
-    0 -> " ",
-    1 -> "▏",
-    2 -> "▎",
-    3 -> "▍",
-    4 -> "▌",
-    5 -> "▋",
-    6 -> "▊",
-    7 -> "▉")
-
-  def progressBar(pos: Double, max: Double, width: Int): String = {
-    val barWidth = width - 2
-    val phases = subBars.values.size
-    val pxWidth = barWidth * phases
-    val ratio = pos / max
-    val pxDone = pxWidth * ratio
+  def progressBar(
+      pos: Double,
+      max: Double,
+      width: Int
+  ): String = {
+    val barWidth          = width - 2
+    val phases            = subBars.values.size
+    val pxWidth           = barWidth * phases
+    val ratio             = pos / max
+    val pxDone            = pxWidth * ratio
     val fullHeadSize: Int = (pxDone / phases).toInt
-    val part = (pxDone % phases).toInt
-    val partial = if (part != 0) subBars.getOrElse(part, "") else ""
-    val head = ("█" * fullHeadSize) + partial
-    val tailSize = barWidth - head.length
-    val tail = " " * tailSize
+    val part              = (pxDone % phases).toInt
+    val partial           = if (part != 0) subBars.getOrElse(part, "") else ""
+    val head              = ("█" * fullHeadSize) + partial
+    val tailSize          = barWidth - head.length
+    val tail              = " " * tailSize
     s"[$head$tail]"
   }
 

@@ -12,11 +12,15 @@ import java.nio.file.Path
   *
   * A path should only occur once in paths.
   */
-case class Sources(paths: List[Path]) {
-  def ++(path: Path): Sources = this ++ List(path)
+case class Sources(
+    paths: List[Path]
+) {
+  def ++(path: Path): Sources             = this ++ List(path)
   def ++(otherPaths: List[Path]): Sources = Sources(
-    otherPaths.foldLeft(paths)((acc, path) => if (acc.contains(path)) acc else acc ++ List(path))
-  )
+    otherPaths.foldLeft(paths) { (acc, path) =>
+      if (acc.contains(path)) acc
+      else acc ++ List(path)
+    })
 
   /**
     * Returns the source path for the given path.
