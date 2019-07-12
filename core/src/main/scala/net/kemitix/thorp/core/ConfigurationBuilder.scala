@@ -6,7 +6,7 @@ import cats.data.NonEmptyChain
 import cats.effect.IO
 import net.kemitix.thorp.core.ConfigValidator.validateConfig
 import net.kemitix.thorp.core.ParseConfigFile.parseFile
-import net.kemitix.thorp.domain.{Config, Sources}
+import net.kemitix.thorp.domain.Config
 
 /**
   * Builds a configuration from settings in a file within the
@@ -18,10 +18,10 @@ trait ConfigurationBuilder {
     val sources = ConfigQuery.sources(priorityOptions)
     for {
       sourceOptions <- SourceConfigLoader.loadSourceConfigs(sources)
-      userOptions <- userOptions(priorityOptions ++ sourceOptions)
+      userOptions   <- userOptions(priorityOptions ++ sourceOptions)
       globalOptions <- globalOptions(priorityOptions ++ sourceOptions ++ userOptions)
       collected = priorityOptions ++ sourceOptions ++ userOptions ++ globalOptions
-      config = collateOptions(collected)
+      config    = collateOptions(collected)
     } yield validateConfig(config).toEither
   }
 
@@ -38,9 +38,8 @@ trait ConfigurationBuilder {
   private def readFile(source: Path, filename: String): IO[ConfigOptions] =
     parseFile(source.resolve(filename))
 
-  private def collateOptions(configOptions: ConfigOptions): Config = {
+  private def collateOptions(configOptions: ConfigOptions): Config =
     configOptions.options.foldLeft(Config())((c, co) => co.update(c))
-  }
 
 }
 
