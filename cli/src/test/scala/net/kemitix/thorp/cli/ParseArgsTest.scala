@@ -24,17 +24,15 @@ class ParseArgsTest extends FunSpec {
     }
     describe("when source is a relative path to a directory") {
       val result = invokeWithSource(pathTo("."))
-      it("should succeed") {pending}
+      it("should succeed") { pending }
     }
     describe("when there are multiple sources") {
-      val args = List(
-        "--source", "path1",
-        "--source", "path2",
-        "--bucket", "bucket")
+      val args =
+        List("--source", "path1", "--source", "path2", "--bucket", "bucket")
       it("should get multiple sources") {
-        val expected = Some(Set("path1", "path2").map(Paths.get(_)))
+        val expected      = Some(Set("path1", "path2").map(Paths.get(_)))
         val configOptions = ParseArgs(args)
-        val result = configOptions.map(ConfigQuery.sources(_).paths.toSet)
+        val result        = configOptions.map(ConfigQuery.sources(_).paths.toSet)
         assertResult(expected)(result)
       }
     }
@@ -43,7 +41,7 @@ class ParseArgsTest extends FunSpec {
   describe("parse - debug") {
     def invokeWithArgument(arg: String): ConfigOptions = {
       val strings = List("--source", pathTo("."), "--bucket", "bucket", arg)
-          .filter(_ != "")
+        .filter(_ != "")
       val maybeOptions = ParseArgs(strings)
       maybeOptions.getOrElse(ConfigOptions())
     }
