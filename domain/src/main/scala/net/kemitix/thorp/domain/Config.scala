@@ -5,4 +5,4 @@ final case class Config(bucket: Bucket = Bucket(""),
                         filters: List[Filter] = List(),
                         debug: Boolean = false,
                         batchMode: Boolean = false,
-                        sources: Sources)
+                        sources: Sources = Sources(List()))
