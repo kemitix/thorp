@@ -4,35 +4,48 @@ import cats.effect.IO
 import com.amazonaws.event.{ProgressEvent, ProgressEventType, ProgressListener}
 import com.amazonaws.services.s3.model.{ObjectMetadata, PutObjectRequest}
 import com.amazonaws.services.s3.transfer.model.UploadResult
-import com.amazonaws.services.s3.transfer.{TransferManager => AmazonTransferManager}
-import net.kemitix.thorp.domain.StorageQueueEvent.{ErrorQueueEvent, UploadQueueEvent}
-import net.kemitix.thorp.domain.UploadEvent.{ByteTransferEvent, RequestEvent, TransferEvent}
+import com.amazonaws.services.s3.transfer.{
+  TransferManager => AmazonTransferManager
+}
+import net.kemitix.thorp.domain.StorageQueueEvent.{
+  ErrorQueueEvent,
+  UploadQueueEvent
+}
+import net.kemitix.thorp.domain.UploadEvent.{
+  ByteTransferEvent,
+  RequestEvent,
+  TransferEvent
+}
 import net.kemitix.thorp.domain.{StorageQueueEvent, _}
 
 import scala.util.Try
 
 class Uploader(transferManager: => AmazonTransferManager) {
 
-  def upload(localFile: LocalFile,
-             bucket: Bucket,
-             batchMode: Boolean,
-             uploadEventListener: UploadEventListener,
-             tryCount: Int): IO[StorageQueueEvent] =
+  def upload(
+      localFile: LocalFile,
+      bucket: Bucket,
+      batchMode: Boolean,
+      uploadEventListener: UploadEventListener,
+      tryCount: Int
+  ): IO[StorageQueueEvent] =
     for {
       upload <- transfer(localFile, bucket, batchMode, uploadEventListener)
       action = upload match {
-        case Right(r) => UploadQueueEvent(RemoteKey(r.getKey), MD5Hash(r.getETag))
+        case Right(r) =>
+          UploadQueueEvent(RemoteKey(r.getKey), MD5Hash(r.getETag))
         case Left(e) => ErrorQueueEvent(localFile.remoteKey, e)
       }
     } yield action
 
-  private def transfer(localFile: LocalFile,
-                       bucket: Bucket,
-                       batchMode: Boolean,
-                       uploadEventListener: UploadEventListener,
-                      ): IO[Either[Throwable, UploadResult]] = {
+  private def transfer(
+      localFile: LocalFile,
+      bucket: Bucket,
+      batchMode: Boolean,
+      uploadEventListener: UploadEventListener
+  ): IO[Either[Throwable, UploadResult]] = {
     val listener: ProgressListener = progressListener(uploadEventListener)
-    val putObjectRequest = request(localFile, bucket, batchMode, listener)
+    val putObjectRequest           = request(localFile, bucket, batchMode, listener)
     IO {
       Try(transferManager.upload(putObjectRequest))
         .map(_.waitForUploadResult)
@@ -40,23 +53,25 @@ class Uploader(transferManager: => AmazonTransferManager) {
     }
   }
 
-  private def request(localFile: LocalFile,
-                      bucket: Bucket,
-                      batchMode: Boolean,
-                      listener: ProgressListener): PutObjectRequest = {
+  private def request(
+      localFile: LocalFile,
+      bucket: Bucket,
+      batchMode: Boolean,
+      listener: ProgressListener
+  ): PutObjectRequest = {
     val metadata = new ObjectMetadata()
     localFile.md5base64.foreach(metadata.setContentMD5)
-    val request = new PutObjectRequest(bucket.name, localFile.remoteKey.key, localFile.file)
-      .withMetadata(metadata)
+    val request =
+      new PutObjectRequest(bucket.name, localFile.remoteKey.key, localFile.file)
+        .withMetadata(metadata)
     if (batchMode) request
     else request.withGeneralProgressListener(listener)
   }
 
   private def progressListener(uploadEventListener: UploadEventListener) =
     new ProgressListener {
-      override def progressChanged(progressEvent: ProgressEvent): Unit = {
+      override def progressChanged(progressEvent: ProgressEvent): Unit =
         uploadEventListener.listener(eventHandler(progressEvent))
-      }
 
       private def eventHandler(progressEvent: ProgressEvent) = {
         progressEvent match {

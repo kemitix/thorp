@@ -15,15 +15,17 @@ trait S3HashService extends HashService {
     * @param path the local path to scan
     * @return a set of hash values
     */
-  override def hashLocalObject(path: Path)
-                              (implicit l: Logger): IO[Map[String, MD5Hash]] =
+  override def hashLocalObject(
+      path: Path
+  )(implicit l: Logger): IO[Map[String, MD5Hash]] =
     for {
-      md5 <- MD5HashGenerator.md5File(path)
+      md5  <- MD5HashGenerator.md5File(path)
       etag <- ETagGenerator.eTag(path).map(MD5Hash(_))
-    } yield Map(
-      "md5" -> md5,
-      "etag" -> etag
-    )
+    } yield
+      Map(
+        "md5"  -> md5,
+        "etag" -> etag
+      )
 
 }
 
