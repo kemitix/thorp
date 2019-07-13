@@ -15,6 +15,7 @@ import net.kemitix.thorp.domain.{Config, Sources}
   */
 trait ConfigurationBuilder {
 
+  private val thorpConfigFileName = ".thorp.conf"
 
   def buildConfig(priorityOptions: ConfigOptions): IO[Either[NonEmptyChain[ConfigValidation], Config]] = {
     val sources = ConfigQuery.sources(priorityOptions)
@@ -30,7 +31,7 @@ trait ConfigurationBuilder {
   private def sourceOptions(sources: Sources): IO[ConfigOptions] = {
     def existingThorpConfigFiles(sources: Sources) =
       sources.paths
-        .map(_.resolve(".thorp.config"))
+        .map(_.resolve(thorpConfigFileName))
         .filter(Files.exists(_))
 
     def filterForSources: IO[ConfigOptions] => IO[(Sources, ConfigOptions)] =

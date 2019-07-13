@@ -10,7 +10,7 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
   private val pwd: Path = Paths.get(System.getenv("PWD"))
   private val aBucket = Bucket("aBucket")
   private val coBucket: ConfigOption.Bucket = ConfigOption.Bucket(aBucket.name)
-  private val thorpConfigFileName = ".thorp.config"
+  private val thorpConfigFileName           = ".thorp.conf"
 
   private def configOptions(options: ConfigOption*): ConfigOptions =
     ConfigOptions(List(
@@ -26,7 +26,7 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
       assertResult(expected)(result)
     }
   }
-  describe("when has a single source with no .thorp.config") {
+  describe("when has a single source with no .thorp.conf") {
     it("should only include the source once") {
       withDirectory(aSource => {
         val expected = Right(Sources(List(aSource)))
@@ -51,7 +51,7 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
       })
     }
   }
-  describe("when current source has .thorp.config with source to another") {
+  describe("when current source has .thorp.conf with source to another") {
     it("should include both sources in order") {
       withDirectory(currentSource => {
         withDirectory(previousSource => {
