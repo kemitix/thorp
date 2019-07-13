@@ -10,13 +10,14 @@ import scala.language.postfixOps
 
 class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
 
-  private val pwd: Path = Paths.get(System.getenv("PWD"))
-  private val aBucket = Bucket("aBucket")
+  private val pwd: Path                     = Paths.get(System.getenv("PWD"))
+  private val aBucket                       = Bucket("aBucket")
   private val coBucket: ConfigOption.Bucket = ConfigOption.Bucket(aBucket.name)
   private val thorpConfigFileName           = ".thorp.conf"
 
   private def configOptions(options: ConfigOption*): ConfigOptions =
-    ConfigOptions(List(
+    ConfigOptions(
+      List(
         ConfigOption.IgnoreUserOptions,
         ConfigOption.IgnoreGlobalOptions
       ) ++ options)
@@ -59,8 +60,8 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
     it("should only include the source once") {
       withDirectory(aSource => {
         val expected = Right(Sources(List(aSource)))
-        val options = configOptions(ConfigOption.Source(aSource), coBucket)
-        val result = invoke(options).map(_.sources)
+        val options  = configOptions(ConfigOption.Source(aSource), coBucket)
+        val result   = invoke(options).map(_.sources)
         assertResult(expected)(result)
       })
     }
@@ -70,10 +71,9 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
       withDirectory(currentSource => {
         withDirectory(previousSource => {
           val expected = Right(List(currentSource, previousSource))
-          val options = configOptions(
-            ConfigOption.Source(currentSource),
-            ConfigOption.Source(previousSource),
-            coBucket)
+          val options = configOptions(ConfigOption.Source(currentSource),
+                                      ConfigOption.Source(previousSource),
+                                      coBucket)
           val result = invoke(options).map(_.sources.paths)
           assertResult(expected)(result)
         })
@@ -84,12 +84,12 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
     it("should include both sources in order") {
       withDirectory(currentSource => {
         withDirectory(previousSource => {
-          writeFile(currentSource, thorpConfigFileName,
-            s"source = $previousSource")
+          writeFile(currentSource,
+                    thorpConfigFileName,
+                    s"source = $previousSource")
           val expected = Right(List(currentSource, previousSource))
-          val options = configOptions(
-            ConfigOption.Source(currentSource),
-            coBucket)
+          val options =
+            configOptions(ConfigOption.Source(currentSource), coBucket)
           val result = invoke(options).map(_.sources.paths)
           assertResult(expected)(result)
         })
@@ -99,19 +99,24 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
       it("should include settings from only current") {
         withDirectory(previousSource => {
           withDirectory(currentSource => {
-            writeFile(currentSource, thorpConfigFileName,
+            writeFile(
+              currentSource,
+              thorpConfigFileName,
               s"source = $previousSource",
               "bucket = current-bucket",
               "prefix = current-prefix",
               "include = current-include",
-              "exclude = current-exclude")
-            writeFile(previousSource, thorpConfigFileName,
-              "bucket = previous-bucket",
-              "prefix = previous-prefix",
-              "include = previous-include",
-              "exclude = previous-exclude")
+              "exclude = current-exclude"
+            )
+            writeFile(previousSource,
+                      thorpConfigFileName,
+                      "bucket = previous-bucket",
+                      "prefix = previous-prefix",
+                      "include = previous-include",
+                      "exclude = previous-exclude")
             // should have both sources in order
-            val expectedSources = Right(Sources(List(currentSource, previousSource)))
+            val expectedSources =
+              Right(Sources(List(currentSource, previousSource)))
             // should have bucket from current only
             val expectedBuckets = Right(Bucket("current-bucket"))
             // should have prefix from current only
@@ -121,7 +126,7 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
               Filter.Exclude("current-exclude"),
               Filter.Include("current-include")))
             val options = configOptions(ConfigOption.Source(currentSource))
-            val result = invoke(options)
+            val result  = invoke(options)
             assertResult(expectedSources)(result.map(_.sources))
             assertResult(expectedBuckets)(result.map(_.bucket))
             assertResult(expectedPrefixes)(result.map(_.prefix))
@@ -136,7 +141,9 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
     it("should only include first two sources") {
       withDirectory(currentSource => {
         withDirectory(parentSource => {
-          writeFile(currentSource, thorpConfigFileName, s"source = $parentSource")
+          writeFile(currentSource,
+                    thorpConfigFileName,
+                    s"source = $parentSource")
           withDirectory(grandParentSource => {
             writeFile(parentSource, thorpConfigFileName, s"source = $grandParentSource")
             val expected = Right(List(currentSource, parentSource))

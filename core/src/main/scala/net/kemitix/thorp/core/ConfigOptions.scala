@@ -2,10 +2,14 @@ package net.kemitix.thorp.core
 
 import cats.Semigroup
 
-case class ConfigOptions(options: List[ConfigOption] = List())
-    extends Semigroup[ConfigOptions] {
+case class ConfigOptions(
+    options: List[ConfigOption] = List()
+) extends Semigroup[ConfigOptions] {
 
-  override def combine(x: ConfigOptions, y: ConfigOptions): ConfigOptions =
+  override def combine(
+      x: ConfigOptions,
+      y: ConfigOptions
+  ): ConfigOptions =
     x ++ y
 
   def ++(other: ConfigOptions): ConfigOptions =
