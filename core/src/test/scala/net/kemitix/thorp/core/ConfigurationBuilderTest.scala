@@ -2,6 +2,7 @@ package net.kemitix.thorp.core
 
 import java.nio.file.{Path, Paths}
 
+import net.kemitix.thorp.domain.Filter.{Exclude, Include}
 import net.kemitix.thorp.domain._
 import org.scalatest.FunSpec
 
@@ -24,6 +25,30 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
       val options = configOptions(coBucket)
       val result = invoke(options)
       assertResult(expected)(result)
+    }
+  }
+  describe("a source") {
+    describe("with .thorp.conf") {
+      describe("with settings") {
+        withDirectory(source => {
+          createFile(source, thorpConfigFileName,
+            "bucket = a-bucket", "prefix = a-prefix", "include = an-inclusion",
+            "exclude = an-exclusion")
+          val result = invoke(configOptions(ConfigOption.Source(source)))
+          it("should have bucket") {
+            val expected = Right(Bucket("a-bucket"))
+            assertResult(expected)(result.map(_.bucket))
+          }
+          it("should have prefix") {
+            val expected = Right(RemoteKey("a-prefix"))
+            assertResult(expected)(result.map(_.prefix))
+          }
+          it("should have filters") {
+            val expected = Right(List(Include("an-inclusion"), Exclude("an-exclusion")))
+            assertResult(expected)(result.map(_.filters))
+          }
+        })
+      }
     }
   }
   describe("when has a single source with no .thorp.conf") {
