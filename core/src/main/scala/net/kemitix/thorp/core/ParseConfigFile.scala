@@ -20,6 +20,7 @@ trait ParseConfigFile {
     for {
       lines <- IO(Files.lines(filename))
       list = lines.iterator.asScala.toList
+      _ <- IO(println(s"lines as list: $list"))
       _ <- IO(lines.close())
     } yield list
 

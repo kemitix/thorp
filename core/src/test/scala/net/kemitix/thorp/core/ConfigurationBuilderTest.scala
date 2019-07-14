@@ -6,6 +6,8 @@ import net.kemitix.thorp.domain.Filter.{Exclude, Include}
 import net.kemitix.thorp.domain._
 import org.scalatest.FunSpec
 
+import scala.language.postfixOps
+
 class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
 
   private val pwd: Path = Paths.get(System.getenv("PWD"))
@@ -21,9 +23,9 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
 
   describe("when no source") {
     it("should use the current (PWD) directory") {
-      val expected = Right(Config(aBucket, sources = Sources(List(pwd))))
+      val expected = Right(Sources(List(pwd)))
       val options = configOptions(coBucket)
-      val result = invoke(options)
+      val result = invoke(options).map(_.sources)
       assertResult(expected)(result)
     }
   }
@@ -31,9 +33,12 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
     describe("with .thorp.conf") {
       describe("with settings") {
         withDirectory(source => {
-          createFile(source, thorpConfigFileName,
-            "bucket = a-bucket", "prefix = a-prefix", "include = an-inclusion",
+          val configFileName = createFile(source, thorpConfigFileName,
+            "bucket = a-bucket",
+            "prefix = a-prefix",
+            "include = an-inclusion",
             "exclude = an-exclusion")
+          println(s"wrote: $configFileName")
           val result = invoke(configOptions(ConfigOption.Source(source)))
           it("should have bucket") {
             val expected = Right(Bucket("a-bucket"))
@@ -44,7 +49,7 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
             assertResult(expected)(result.map(_.prefix))
           }
           it("should have filters") {
-            val expected = Right(List(Include("an-inclusion"), Exclude("an-exclusion")))
+            val expected = Right(List(Exclude("an-exclusion"), Include("an-inclusion")))
             assertResult(expected)(result.map(_.filters))
           }
         })
@@ -92,7 +97,7 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
       })
     }
     describe("when settings are in current and previous") {
-      it("should include some settings from both sources and some from only current") {
+      it("should include settings from only current") {
         withDirectory(previousSource => {
           withDirectory(currentSource => {
             writeFile(currentSource, thorpConfigFileName,
@@ -114,8 +119,6 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
             val expectedPrefixes = Right(RemoteKey("current-prefix"))
             // should have filters from both sources
             val expectedFilters = Right(List(
-              Filter.Exclude("previous-exclude"),
-              Filter.Include("previous-include"),
               Filter.Exclude("current-exclude"),
               Filter.Include("current-include")))
             val options = configOptions(ConfigOption.Source(currentSource))
@@ -131,13 +134,13 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
   }
 
   describe("when source has thorp.config source to another source that does the same") {
-    it("should include all three sources") {
+    it("should only include first two sources") {
       withDirectory(currentSource => {
         withDirectory(parentSource => {
           writeFile(currentSource, thorpConfigFileName, s"source = $parentSource")
           withDirectory(grandParentSource => {
             writeFile(parentSource, thorpConfigFileName, s"source = $grandParentSource")
-            val expected = Right(List(currentSource, parentSource, grandParentSource))
+            val expected = Right(List(currentSource, parentSource))
             val options = configOptions(
               ConfigOption.Source(currentSource),
               coBucket)
@@ -151,4 +154,5 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
 
   private def invoke(configOptions: ConfigOptions) =
     ConfigurationBuilder.buildConfig(configOptions).unsafeRunSync
+
 }
