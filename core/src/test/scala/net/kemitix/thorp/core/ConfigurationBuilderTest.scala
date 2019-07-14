@@ -38,7 +38,6 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
             "prefix = a-prefix",
             "include = an-inclusion",
             "exclude = an-exclusion")
-          println(s"wrote: $configFileName")
           val result = invoke(configOptions(ConfigOption.Source(source)))
           it("should have bucket") {
             val expected = Right(Bucket("a-bucket"))

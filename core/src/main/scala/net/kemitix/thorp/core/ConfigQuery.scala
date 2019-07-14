@@ -23,7 +23,6 @@ trait ConfigQuery {
       case ConfigOption.Source(sourcePath) => Some(sourcePath)
       case _ => None
     })
-    println(s"paths = ${paths}")
     Sources(paths match {
       case List() => List(Paths.get(System.getenv("PWD")))
       case _ => paths
