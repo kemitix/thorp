@@ -6,11 +6,15 @@ The format is based on [[https://keepachangelog.com/en/1.0.0/][Keep a Changelog]
 [[https://semver.org/spec/v2.0.0.html][Semantic Versioning]].
 
 
-* [0.7.1] - 2019-07-13
+* [0.7.1] - 2019-07-14
+
+** Changed
+
+   - Only settings in ~.thorp.conf~ for explicit sources are used (#111)
 
 ** Fixed
 
-   - Not reading ~.thorp.conf~ file (#110)
+   - Not reading ~.thorp.conf~ file (#110)(#111)
 
 * [0.7.0] - 2019-07-12
 

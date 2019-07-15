@@ -12,12 +12,12 @@ trait SyncLogging {
                   sources: Sources)
                  (implicit logger: Logger): IO[Unit] = {
     val sourcesList = sources.paths.mkString(", ")
-    logger.info(s"Bucket: ${bucket.name}, Prefix: ${prefix.key}, Source: $sourcesList, ")
+    logger.info(s"Bucket: ${bucket.name}, Prefix: ${prefix.key}, Source: $sourcesList")
   }
 
   def logFileScan(implicit c: Config,
                   logger: Logger): IO[Unit] =
-    logger.info(s"Scanning local files: ${c.sources}...")
+    logger.info(s"Scanning local files: ${c.sources.paths.mkString(", ")}...")
 
   def logErrors(actions: Stream[StorageQueueEvent])
                (implicit logger: Logger): IO[Unit] =

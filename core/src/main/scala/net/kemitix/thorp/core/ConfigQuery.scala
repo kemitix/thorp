@@ -1,5 +1,7 @@
 package net.kemitix.thorp.core
 
+import java.nio.file.Paths
+
 import net.kemitix.thorp.domain.Sources
 
 trait ConfigQuery {
@@ -21,7 +23,10 @@ trait ConfigQuery {
       case ConfigOption.Source(sourcePath) => Some(sourcePath)
       case _ => None
     })
-    Sources(paths)
+    Sources(paths match {
+      case List() => List(Paths.get(System.getenv("PWD")))
+      case _ => paths
+    })
   }
 }
 
