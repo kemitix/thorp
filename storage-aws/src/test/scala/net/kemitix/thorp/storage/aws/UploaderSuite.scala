@@ -1,7 +1,5 @@
 package net.kemitix.thorp.storage.aws
 
-import java.time.Instant
-
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.transfer._
 import net.kemitix.thorp.core.KeyGenerator.generateKey
