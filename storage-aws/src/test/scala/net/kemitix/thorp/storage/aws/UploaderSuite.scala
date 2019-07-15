@@ -12,20 +12,17 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.FunSpec
 
 class UploaderSuite extends FunSpec with MockFactory {
-  val lastModified       = LastModified(Instant.now())
-  val batchMode: Boolean = true
-  private val source     = Resource(this, ".")
+
+  private val batchMode: Boolean = true
+  private val source             = Resource(this, ".")
+  private val sourcePath         = source.toPath
+  private val prefix             = RemoteKey("prefix")
   implicit private val config: Config =
     Config(Bucket("bucket"), prefix, sources = Sources(List(sourcePath)))
-  implicit private val implLogger: Logger = new DummyLogger
-  private val sourcePath                  = source.toPath
-  private val prefix                      = RemoteKey("prefix")
   private val fileToKey                   = generateKey(config.sources, config.prefix) _
+  implicit private val implLogger: Logger = new DummyLogger
 
-  def md5HashMap(hash: MD5Hash): Map[String, MD5Hash] =
-    Map(
-      "md5" -> hash
-    )
+  def md5HashMap(hash: MD5Hash): Map[String, MD5Hash] = Map("md5" -> hash)
 
   describe("S3ClientMultiPartTransferManagerSuite") {
     describe("upload") {
