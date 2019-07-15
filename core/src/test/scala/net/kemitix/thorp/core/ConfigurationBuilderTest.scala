@@ -6,8 +6,6 @@ import net.kemitix.thorp.domain.Filter.{Exclude, Include}
 import net.kemitix.thorp.domain._
 import org.scalatest.FunSpec
 
-import scala.language.postfixOps
-
 class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
 
   private val pwd: Path                     = Paths.get(System.getenv("PWD"))

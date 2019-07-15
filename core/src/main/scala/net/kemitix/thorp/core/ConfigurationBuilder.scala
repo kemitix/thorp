@@ -1,6 +1,6 @@
 package net.kemitix.thorp.core
 
-import java.nio.file.{Files, Path, Paths}
+import java.nio.file.{Path, Paths}
 
 import cats.data.NonEmptyChain
 import cats.effect.IO
@@ -21,18 +21,18 @@ trait ConfigurationBuilder {
   private val pwd                  = Paths.get(System.getenv("PWD"))
 
   def buildConfig(priorityOpts: ConfigOptions)
-    : IO[Either[NonEmptyChain[ConfigValidation], Config]] =
+      : IO[Either[NonEmptyChain[ConfigValidation], Config]] = {
+    val sources = ConfigQuery.sources(priorityOpts)
     for {
       sourceOptions <- SourceConfigLoader.loadSourceConfigs(sources)
-      userOptions   <- userOptions(priorityOptions ++ sourceOptions)
-      globalOptions <- globalOptions(priorityOptions ++ sourceOptions ++ userOptions)
-      collected = priorityOptions ++ sourceOptions ++ userOptions ++ globalOptions
+      userOptions   <- userOptions(priorityOpts ++ sourceOptions)
+      globalOptions <- globalOptions(priorityOpts ++ sourceOptions ++ userOptions)
+      collected = priorityOpts ++ sourceOptions ++ userOptions ++ globalOptions
       config    = collateOptions(collected)
     } yield validateConfig(config).toEither
+  }
 
-  private def userOptions(higherPriorityOptions: ConfigOptions): IO[ConfigOptions] =
-    if (ConfigQuery.ignoreUserOptions(higherPriorityOptions)) IO(ConfigOptions())
-    else readFile(userHome, ".config/thorp.conf")
+  private val emptyConfig = IO(ConfigOptions())
 
   private def userOptions(priorityOpts: ConfigOptions) =
     if (ConfigQuery.ignoreUserOptions(priorityOpts)) emptyConfig

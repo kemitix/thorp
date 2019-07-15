@@ -1,7 +1,5 @@
 package net.kemitix.thorp.core
 
-import java.nio.file.{Files, Path}
-
 import cats.effect.IO
 import cats.implicits._
 import net.kemitix.thorp.domain.Sources
