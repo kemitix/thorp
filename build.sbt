@@ -1,3 +1,5 @@
+import sbtassembly.AssemblyPlugin.defaultShellScript
+
 inThisBuild(List(
   organization := "net.kemitix.thorp",
   homepage := Some(url("https://github.com/kemitix/thorp")),
@@ -61,7 +63,6 @@ lazy val thorp = (project in file("."))
   .settings(commonSettings)
   .aggregate(cli, `thorp-lib`, `storage-aws`, core, `storage-api`, domain)
 
-import sbtassembly.AssemblyPlugin.defaultShellScript
 lazy val cli = (project in file("cli"))
   .settings(commonSettings)
   .settings(mainClass in assembly := Some("net.kemitix.thorp.cli.Main"))
