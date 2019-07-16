@@ -17,7 +17,13 @@ val commonSettings = Seq(
   scalaVersion := "2.12.8",
   scalacOptions ++= Seq(
     "-Ywarn-unused-import",
-    "-Xfatal-warnings"),
+    "-Xfatal-warnings",
+    "-feature",
+    "-deprecation",
+    "-unchecked",
+    "-language:postfixOps",
+    "-language:higherKinds",
+    "-Ypartial-unification"),
   test in assembly := {}
 )
 
@@ -46,15 +52,7 @@ val awsSdkDependencies = Seq(
 val catsEffectsSettings = Seq(
   libraryDependencies ++=  Seq(
     "org.typelevel" %% "cats-effect" % "1.3.1"
-  ),
-  // recommended for cats-effects
-  scalacOptions ++= Seq(
-    "-feature",
-    "-deprecation",
-    "-unchecked",
-    "-language:postfixOps",
-    "-language:higherKinds",
-    "-Ypartial-unification")
+  )
 )
 
 // cli -> thorp-lib -> storage-aws -> core -> storage-api -> domain
