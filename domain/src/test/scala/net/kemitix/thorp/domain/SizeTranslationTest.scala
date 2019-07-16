@@ -27,7 +27,8 @@ class SizeTranslationTest extends FunSpec {
     }
     describe("when size is over 10Gb") {
       it("should be in Gb with three decimal place") {
-        assertResult("5468.168Gb")(SizeTranslation.sizeInEnglish(5871400857278L))
+        assertResult("5468.168Gb")(
+          SizeTranslation.sizeInEnglish(5871400857278L))
       }
     }
   }

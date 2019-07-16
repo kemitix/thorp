@@ -7,18 +7,21 @@ import org.scalatest.FunSpec
 
 class ETagGeneratorTest extends FunSpec {
 
-  private val bigFile = Resource(this, "big-file")
-  private val bigFilePath = bigFile.toPath
+  private val bigFile       = Resource(this, "big-file")
+  private val bigFilePath   = bigFile.toPath
   private val configuration = new TransferManagerConfiguration
-  private val chunkSize = 1200000
+  private val chunkSize     = 1200000
   configuration.setMinimumUploadPartSize(chunkSize)
   private val logger = new DummyLogger
 
   describe("Create offsets") {
     it("should create offsets") {
-      val offsets = ETagGenerator.offsets(bigFile.length, chunkSize)
+      val offsets = ETagGenerator
+        .offsets(bigFile.length, chunkSize)
         .foldRight(List[Long]())((l: Long, a: List[Long]) => l :: a)
-      assertResult(List(0, chunkSize, chunkSize * 2, chunkSize * 3, chunkSize * 4))(offsets)
+      assertResult(
+        List(0, chunkSize, chunkSize * 2, chunkSize * 3, chunkSize * 4))(
+        offsets)
     }
   }
 
@@ -35,8 +38,12 @@ class ETagGeneratorTest extends FunSpec {
         "5bd6e10a99fef100fe7bf5eaa0a42384",
         "8a0c1d0778ac8fcf4ca2010eba4711eb"
       ).zipWithIndex
-      md5Hashes.foreach { case (hash, index) =>
-        test(hash, ETagGenerator.hashChunk(bigFilePath, index, chunkSize)(logger).unsafeRunSync)
+      md5Hashes.foreach {
+        case (hash, index) =>
+          test(hash,
+               ETagGenerator
+                 .hashChunk(bigFilePath, index, chunkSize)(logger)
+                 .unsafeRunSync)
       }
     }
   }

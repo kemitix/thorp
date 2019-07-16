@@ -6,8 +6,10 @@ import org.scalatest.FunSpec
 
 class ParseConfigFileTest extends FunSpec {
 
-  private def invoke(filename: Path) = ParseConfigFile.parseFile(filename).unsafeRunSync
   private val empty = ConfigOptions()
+
+  private def invoke(filename: Path) =
+    ParseConfigFile.parseFile(filename).unsafeRunSync
 
   describe("parse a missing file") {
     val filename = Paths.get("/path/to/missing/file")
@@ -29,9 +31,9 @@ class ParseConfigFileTest extends FunSpec {
   }
   describe("parse a file with properties") {
     val filename = Resource(this, "simple-config").toPath
-    val expected = ConfigOptions(List(
-      ConfigOption.Source(Paths.get("/path/to/source")),
-      ConfigOption.Bucket("bucket-name")))
+    val expected = ConfigOptions(
+      List(ConfigOption.Source(Paths.get("/path/to/source")),
+           ConfigOption.Bucket("bucket-name")))
     it("should return some options") {
       assertResult(expected)(invoke(filename))
     }

@@ -1,5 +1,7 @@
 package net.kemitix.thorp.core
 
+import java.nio.file.Paths
+
 import net.kemitix.thorp.domain.Sources
 
 trait ConfigQuery {
@@ -17,12 +19,16 @@ trait ConfigQuery {
     configOptions contains ConfigOption.IgnoreGlobalOptions
 
   def sources(configOptions: ConfigOptions): Sources = {
-    val paths = configOptions.options.flatMap( {
+    val paths = configOptions.options.flatMap {
       case ConfigOption.Source(sourcePath) => Some(sourcePath)
       case _ => None
+    }
+    Sources(paths match {
+      case List() => List(Paths.get(System.getenv("PWD")))
+      case _ => paths
     })
-    Sources(paths)
   }
+
 }
 
 object ConfigQuery extends ConfigQuery

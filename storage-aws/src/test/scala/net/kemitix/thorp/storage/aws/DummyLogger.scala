@@ -7,7 +7,7 @@ class DummyLogger extends Logger {
 
   override def debug(message: => String): IO[Unit] = IO.unit
 
-  override def info(message: =>String): IO[Unit] = IO.unit
+  override def info(message: => String): IO[Unit] = IO.unit
 
   override def warn(message: String): IO[Unit] = IO.unit
 

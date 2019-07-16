@@ -3,7 +3,12 @@ package net.kemitix.thorp.domain
 import java.io.File
 import java.nio.file.Path
 
-final case class LocalFile(file: File, source: File, hashes: Map[String, MD5Hash], remoteKey: RemoteKey) {
+final case class LocalFile(
+    file: File,
+    source: File,
+    hashes: Map[String, MD5Hash],
+    remoteKey: RemoteKey
+) {
 
   require(!file.isDirectory, s"LocalFile must not be a directory: $file")
 
@@ -19,11 +24,18 @@ final case class LocalFile(file: File, source: File, hashes: Map[String, MD5Hash
 }
 
 object LocalFile {
-  def resolve(path: String,
-              md5Hashes: Map[String, MD5Hash],
-              source: Path,
-              pathToKey: Path => RemoteKey): LocalFile = {
+
+  def resolve(
+      path: String,
+      md5Hashes: Map[String, MD5Hash],
+      source: Path,
+      pathToKey: Path => RemoteKey
+  ): LocalFile = {
     val resolvedPath = source.resolve(path)
-    LocalFile(resolvedPath.toFile, source.toFile, md5Hashes, pathToKey(resolvedPath))
+    LocalFile(resolvedPath.toFile,
+              source.toFile,
+              md5Hashes,
+              pathToKey(resolvedPath))
   }
+
 }

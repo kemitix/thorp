@@ -11,9 +11,9 @@ object Main extends IOApp {
       .map(Program.run)
       .getOrElse(IO(ExitCode.Error))
       .guaranteeCase {
-          case Canceled => exitCaseLogger.warn("Interrupted")
-          case Error(e) => exitCaseLogger.error(e.getMessage)
-          case Completed => IO.unit
+        case Canceled  => exitCaseLogger.warn("Interrupted")
+        case Error(e)  => exitCaseLogger.error(e.getMessage)
+        case Completed => IO.unit
       }
   }
 

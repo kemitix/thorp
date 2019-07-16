@@ -1,6 +1,10 @@
 package net.kemitix.thorp.core
 
-import net.kemitix.thorp.domain.StorageQueueEvent.{CopyQueueEvent, DeleteQueueEvent, UploadQueueEvent}
+import net.kemitix.thorp.domain.StorageQueueEvent.{
+  CopyQueueEvent,
+  DeleteQueueEvent,
+  UploadQueueEvent
+}
 import net.kemitix.thorp.domain.{MD5Hash, RemoteKey}
 import org.scalatest.FunSpec
 
@@ -8,13 +12,13 @@ class StorageQueueEventSuite extends FunSpec {
 
   describe("Ordering of types") {
     val remoteKey = RemoteKey("remote-key")
-    val md5Hash = MD5Hash("md5hash")
-    val copy = CopyQueueEvent(remoteKey)
-    val upload = UploadQueueEvent(remoteKey, md5Hash)
-    val delete = DeleteQueueEvent(remoteKey)
-    val unsorted = List(delete, copy, upload)
+    val md5Hash   = MD5Hash("md5hash")
+    val copy      = CopyQueueEvent(remoteKey)
+    val upload    = UploadQueueEvent(remoteKey, md5Hash)
+    val delete    = DeleteQueueEvent(remoteKey)
+    val unsorted  = List(delete, copy, upload)
     it("should sort as copy < upload < delete ") {
-      val result = unsorted.sorted
+      val result   = unsorted.sorted
       val expected = List(copy, upload, delete)
       assertResult(expected)(result)
     }
