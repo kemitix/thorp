@@ -1,3 +1,5 @@
+import sbtassembly.AssemblyPlugin.defaultShellScript
+
 inThisBuild(List(
   organization := "net.kemitix.thorp",
   homepage := Some(url("https://github.com/kemitix/thorp")),
@@ -15,6 +17,15 @@ inThisBuild(List(
 val commonSettings = Seq(
   sonatypeProfileName := "net.kemitix",
   scalaVersion := "2.12.8",
+  scalacOptions ++= Seq(
+    "-Ywarn-unused-import",
+    "-Xfatal-warnings",
+    "-feature",
+    "-deprecation",
+    "-unchecked",
+    "-language:postfixOps",
+    "-language:higherKinds",
+    "-Ypartial-unification"),
   test in assembly := {}
 )
 
@@ -43,15 +54,7 @@ val awsSdkDependencies = Seq(
 val catsEffectsSettings = Seq(
   libraryDependencies ++=  Seq(
     "org.typelevel" %% "cats-effect" % "1.3.1"
-  ),
-  // recommended for cats-effects
-  scalacOptions ++= Seq(
-    "-feature",
-    "-deprecation",
-    "-unchecked",
-    "-language:postfixOps",
-    "-language:higherKinds",
-    "-Ypartial-unification")
+  )
 )
 
 // cli -> thorp-lib -> storage-aws -> core -> storage-api -> domain
@@ -60,7 +63,6 @@ lazy val thorp = (project in file("."))
   .settings(commonSettings)
   .aggregate(cli, `thorp-lib`, `storage-aws`, core, `storage-api`, domain)
 
-import sbtassembly.AssemblyPlugin.defaultShellScript
 lazy val cli = (project in file("cli"))
   .settings(commonSettings)
   .settings(mainClass in assembly := Some("net.kemitix.thorp.cli.Main"))

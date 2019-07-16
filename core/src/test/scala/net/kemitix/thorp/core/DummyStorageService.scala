@@ -9,14 +9,13 @@ import net.kemitix.thorp.storage.api.StorageService
 
 case class DummyStorageService(s3ObjectData: S3ObjectsData,
                                uploadFiles: Map[File, (RemoteKey, MD5Hash)])
-  extends StorageService {
+    extends StorageService {
 
   override def shutdown: IO[StorageQueueEvent] =
     IO.pure(StorageQueueEvent.ShutdownQueueEvent())
 
-  override def listObjects(bucket: Bucket,
-                           prefix: RemoteKey)
-                          (implicit l: Logger): EitherT[IO, String, S3ObjectsData] =
+  override def listObjects(bucket: Bucket, prefix: RemoteKey)(
+      implicit l: Logger): EitherT[IO, String, S3ObjectsData] =
     EitherT.liftF(IO.pure(s3ObjectData))
 
   override def upload(localFile: LocalFile,

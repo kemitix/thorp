@@ -13,13 +13,14 @@ class FiltersSuite extends FunSpec {
   private val path4 = "/path/to/another/file"
   private val path5 = "/home/pcampbell/repos/kemitix/s3thorp"
   private val path6 = "/kemitix/s3thorp/upload/subdir"
-  private val paths = List(path1, path2, path3, path4, path5, path6).map(Paths.get(_))
+  private val paths =
+    List(path1, path2, path3, path4, path5, path6).map(Paths.get(_))
 
   describe("Include") {
 
     describe("default filter") {
       val include = Include()
-       it("should include files") {
+      it("should include files") {
         paths.foreach(path => assertResult(true)(include.isIncluded(path)))
       }
     }
@@ -92,7 +93,7 @@ class FiltersSuite extends FunSpec {
       val filters = List[Filter]()
       it("should accept all files") {
         val expected = paths
-        val result = invoke(filters)
+        val result   = invoke(filters)
         assertResult(expected)(result)
       }
     }
@@ -100,7 +101,7 @@ class FiltersSuite extends FunSpec {
       val filters = List(Include(".txt"))
       it("should only include two matching paths") {
         val expected = List(path2, path3).map(Paths.get(_))
-        val result = invoke(filters)
+        val result   = invoke(filters)
         assertResult(expected)(result)
       }
     }
@@ -108,7 +109,7 @@ class FiltersSuite extends FunSpec {
       val filters = List(Exclude("path"))
       it("should include only other paths") {
         val expected = List(path1, path2, path5, path6).map(Paths.get(_))
-        val result = invoke(filters)
+        val result   = invoke(filters)
         assertResult(expected)(result)
       }
     }
@@ -116,7 +117,7 @@ class FiltersSuite extends FunSpec {
       val filters = List(Include(".txt"), Exclude(".*"))
       it("should include nothing") {
         val expected = List()
-        val result = invoke(filters)
+        val result   = invoke(filters)
         assertResult(expected)(result)
       }
     }
@@ -124,7 +125,7 @@ class FiltersSuite extends FunSpec {
       val filters = List(Exclude(".*"), Include(".txt"))
       it("should include only the .txt files") {
         val expected = List(path2, path3).map(Paths.get(_))
-        val result = invoke(filters)
+        val result   = invoke(filters)
         assertResult(expected)(result)
       }
     }

@@ -9,7 +9,8 @@ import scala.collection.JavaConverters._
 trait ParseConfigFile {
 
   def parseFile(filename: Path): IO[ConfigOptions] =
-    readFile(filename).map(ParseConfigLines.parseLines)
+    readFile(filename)
+      .map(ParseConfigLines.parseLines)
 
   private def readFile(filename: Path) = {
     if (Files.exists(filename)) readFileThatExists(filename)

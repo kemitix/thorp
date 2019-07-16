@@ -8,12 +8,11 @@ import net.kemitix.thorp.storage.api.HashService
 
 case class SimpleHashService() extends HashService {
 
-  override def hashLocalObject(path: Path)
-                              (implicit l: Logger): IO[Map[String, MD5Hash]] =
+  override def hashLocalObject(
+      path: Path
+  )(implicit l: Logger): IO[Map[String, MD5Hash]] =
     for {
       md5 <- MD5HashGenerator.md5File(path)
-    } yield Map(
-      "md5" -> md5
-    )
+    } yield Map("md5" -> md5)
 
 }

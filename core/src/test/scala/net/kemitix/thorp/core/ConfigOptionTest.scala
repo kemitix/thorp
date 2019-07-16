@@ -9,15 +9,16 @@ class ConfigOptionTest extends FunSpec with TemporaryFolder {
     it("should preserve their order") {
       withDirectory(path1 => {
         withDirectory(path2 => {
-          val configOptions = ConfigOptions(List(
-            ConfigOption.Source(path1),
-            ConfigOption.Source(path2),
-            ConfigOption.Bucket("bucket"),
-            ConfigOption.IgnoreGlobalOptions,
-            ConfigOption.IgnoreUserOptions
-          ))
+          val configOptions = ConfigOptions(
+            List(
+              ConfigOption.Source(path1),
+              ConfigOption.Source(path2),
+              ConfigOption.Bucket("bucket"),
+              ConfigOption.IgnoreGlobalOptions,
+              ConfigOption.IgnoreUserOptions
+            ))
           val expected = Sources(List(path1, path2))
-          val result = invoke(configOptions)
+          val result   = invoke(configOptions)
           assert(result.isRight, result)
           assertResult(expected)(ConfigQuery.sources(configOptions))
         })

@@ -10,22 +10,23 @@ import org.scalatest.FunSpec
 
 class S3ObjectsByHashSuite extends FunSpec {
 
-    describe("grouping s3 object together by their hash values") {
-      val hash = MD5Hash("hash")
-      val key1 = RemoteKey("key-1")
-      val key2 = RemoteKey("key-2")
-      val lastModified = LastModified(Instant.now.truncatedTo(ChronoUnit.MILLIS))
-      val o1 = s3object(hash, key1, lastModified)
-      val o2 = s3object(hash, key2, lastModified)
-      val os = Stream(o1, o2)
-      it("should group by the hash value") {
-        val expected: Map[MD5Hash, Set[KeyModified]] = Map(
-          hash -> Set(KeyModified(key1, lastModified), KeyModified(key2, lastModified))
-        )
-        val result = S3ObjectsByHash.byHash(os)
-        assertResult(expected)(result)
-      }
+  describe("grouping s3 object together by their hash values") {
+    val hash         = MD5Hash("hash")
+    val key1         = RemoteKey("key-1")
+    val key2         = RemoteKey("key-2")
+    val lastModified = LastModified(Instant.now.truncatedTo(ChronoUnit.MILLIS))
+    val o1           = s3object(hash, key1, lastModified)
+    val o2           = s3object(hash, key2, lastModified)
+    val os           = Stream(o1, o2)
+    it("should group by the hash value") {
+      val expected: Map[MD5Hash, Set[KeyModified]] = Map(
+        hash -> Set(KeyModified(key1, lastModified),
+                    KeyModified(key2, lastModified))
+      )
+      val result = S3ObjectsByHash.byHash(os)
+      assertResult(expected)(result)
     }
+  }
 
   private def s3object(md5Hash: MD5Hash,
                        remoteKey: RemoteKey,

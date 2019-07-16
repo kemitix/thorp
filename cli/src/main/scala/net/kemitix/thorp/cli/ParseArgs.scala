@@ -35,7 +35,7 @@ object ParseArgs {
         .text("Include only matching paths"),
       opt[String]('x', "exclude")
         .unbounded()
-        .action((str,cos) => ConfigOption.Exclude(str) :: cos)
+        .action((str, cos) => ConfigOption.Exclude(str) :: cos)
         .text("Exclude matching paths"),
       opt[Unit]('d', "debug")
         .action((_, cos) => ConfigOption.Debug() :: cos)
@@ -50,7 +50,8 @@ object ParseArgs {
   }
 
   def apply(args: List[String]): Option[ConfigOptions] =
-    OParser.parse(configParser, args, List())
+    OParser
+      .parse(configParser, args, List())
       .map(ConfigOptions)
 
 }

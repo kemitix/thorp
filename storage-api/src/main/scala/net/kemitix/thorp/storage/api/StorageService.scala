@@ -8,22 +8,29 @@ trait StorageService {
 
   def shutdown: IO[StorageQueueEvent]
 
-  def listObjects(bucket: Bucket,
-                  prefix: RemoteKey)
-                 (implicit l: Logger): EitherT[IO, String, S3ObjectsData]
+  def listObjects(
+      bucket: Bucket,
+      prefix: RemoteKey
+  )(implicit l: Logger): EitherT[IO, String, S3ObjectsData]
 
-  def upload(localFile: LocalFile,
-             bucket: Bucket,
-             batchMode: Boolean,
-             uploadEventListener: UploadEventListener,
-             tryCount: Int): IO[StorageQueueEvent]
+  def upload(
+      localFile: LocalFile,
+      bucket: Bucket,
+      batchMode: Boolean,
+      uploadEventListener: UploadEventListener,
+      tryCount: Int
+  ): IO[StorageQueueEvent]
 
-  def copy(bucket: Bucket,
-           sourceKey: RemoteKey,
-           hash: MD5Hash,
-           targetKey: RemoteKey): IO[StorageQueueEvent]
+  def copy(
+      bucket: Bucket,
+      sourceKey: RemoteKey,
+      hash: MD5Hash,
+      targetKey: RemoteKey
+  ): IO[StorageQueueEvent]
 
-  def delete(bucket: Bucket,
-             remoteKey: RemoteKey): IO[StorageQueueEvent]
+  def delete(
+      bucket: Bucket,
+      remoteKey: RemoteKey
+  ): IO[StorageQueueEvent]
 
 }
