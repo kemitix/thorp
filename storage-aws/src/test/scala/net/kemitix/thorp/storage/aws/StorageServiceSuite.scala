@@ -4,8 +4,8 @@ import java.time.Instant
 
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.PutObjectRequest
+import com.amazonaws.services.s3.transfer.Upload
 import com.amazonaws.services.s3.transfer.model.UploadResult
-import com.amazonaws.services.s3.transfer.{TransferManager, Upload}
 import net.kemitix.thorp.core.{KeyGenerator, Resource, S3MetaDataEnricher}
 import net.kemitix.thorp.domain.MD5HashData.Root
 import net.kemitix.thorp.domain.StorageQueueEvent.UploadQueueEvent
@@ -124,10 +124,10 @@ class StorageServiceSuite extends FunSpec with MockFactory {
   describe("upload") {
 
     describe("when uploading a file") {
-      val amazonS3                = stub[AmazonS3]
-      val amazonS3TransferManager = stub[TransferManager]
+      val amazonS3              = stub[AmazonS3]
+      val amazonTransferManager = stub[AmazonTransferManager]
       val storageService =
-        new S3StorageService(amazonS3, amazonS3TransferManager)
+        new S3StorageService(amazonS3, amazonTransferManager)
 
       val prefix = RemoteKey("prefix")
       val localFile =
@@ -141,7 +141,7 @@ class StorageServiceSuite extends FunSpec with MockFactory {
         new UploadEventListener(localFile, 1, SyncTotals(), 0L)
 
       val upload = stub[Upload]
-      (amazonS3TransferManager upload (_: PutObjectRequest))
+      (amazonTransferManager upload (_: PutObjectRequest))
         .when(*)
         .returns(upload)
       val uploadResult = stub[UploadResult]

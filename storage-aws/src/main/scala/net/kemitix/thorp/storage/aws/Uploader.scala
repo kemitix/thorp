@@ -4,9 +4,6 @@ import cats.effect.IO
 import com.amazonaws.event.{ProgressEvent, ProgressEventType, ProgressListener}
 import com.amazonaws.services.s3.model.{ObjectMetadata, PutObjectRequest}
 import com.amazonaws.services.s3.transfer.model.UploadResult
-import com.amazonaws.services.s3.transfer.{
-  TransferManager => AmazonTransferManager
-}
 import net.kemitix.thorp.domain.StorageQueueEvent.{
   ErrorQueueEvent,
   UploadQueueEvent

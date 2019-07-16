@@ -10,7 +10,6 @@ import com.amazonaws.services.s3.model.{
   ListObjectsV2Result,
   S3ObjectSummary
 }
-import com.amazonaws.services.s3.transfer.TransferManager
 import net.kemitix.thorp.core.Resource
 import net.kemitix.thorp.domain._
 import org.scalamock.scalatest.MockFactory
@@ -52,7 +51,7 @@ class S3StorageServiceSuite extends FunSpec with MockFactory {
     val o2 = objectSummary(h2, k2, lm)
 
     val amazonS3                = stub[AmazonS3]
-    val amazonS3TransferManager = stub[TransferManager]
+    val amazonS3TransferManager = stub[AmazonTransferManager]
     val storageService          = new S3StorageService(amazonS3, amazonS3TransferManager)
 
     val myFakeResponse = new ListObjectsV2Result()

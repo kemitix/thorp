@@ -38,9 +38,10 @@ class UploaderSuite extends FunSpec with MockFactory {
       val uploadEventListener =
         new UploadEventListener(bigFile, 1, SyncTotals(), 0L)
       val amazonS3 = mock[AmazonS3]
-      val amazonS3TransferManager =
-        TransferManagerBuilder.standard().withS3Client(amazonS3).build
-      val uploader = new Uploader(amazonS3TransferManager)
+      val amazonTransferManager =
+        AmazonTransferManager(
+          TransferManagerBuilder.standard().withS3Client(amazonS3).build)
+      val uploader = new Uploader(amazonTransferManager)
       it("should upload") {
         val expected = UploadQueueEvent(returnedKey, returnedHash)
         val result = uploader.upload(bigFile,
