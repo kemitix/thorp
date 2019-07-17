@@ -3,6 +3,9 @@ package net.kemitix.thorp.domain
 import java.io.File
 import java.nio.file.Path
 
+import monocle.macros.Lenses
+
+@Lenses
 final case class LocalFile(
     file: File,
     source: File,

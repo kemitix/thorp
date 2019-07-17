@@ -2,6 +2,8 @@ package net.kemitix.thorp.domain
 
 import java.nio.file.Path
 
+import monocle.macros.Lenses
+
 /**
   * The paths to synchronise with target.
   *
@@ -12,12 +14,13 @@ import java.nio.file.Path
   *
   * A path should only occur once in paths.
   */
+@Lenses
 case class Sources(
     paths: List[Path]
 ) {
-  def ++(path: Path): Sources             = this ++ List(path)
-  def ++(otherPaths: List[Path]): Sources = Sources(
-    otherPaths.foldLeft(paths) { (acc, path) =>
+  def ++(path: Path): Sources = this ++ List(path)
+  def ++(otherPaths: List[Path]): Sources =
+    Sources(otherPaths.foldLeft(paths) { (acc, path) =>
       if (acc.contains(path)) acc
       else acc ++ List(path)
     })
