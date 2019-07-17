@@ -1,11 +1,12 @@
 package net.kemitix.thorp.core
 
-import java.nio.file.{Path, Paths}
+import java.nio.file.Paths
 
 import cats.data.NonEmptyChain
 import cats.effect.IO
 import net.kemitix.thorp.core.ConfigValidator.validateConfig
 import net.kemitix.thorp.core.ParseConfigFile.parseFile
+import net.kemitix.thorp.core.ConfigOptions.options
 import net.kemitix.thorp.domain.Config
 
 /**
@@ -22,11 +23,10 @@ trait ConfigurationBuilder {
     : IO[Either[NonEmptyChain[ConfigValidation], Config]] = {
     val sources = ConfigQuery.sources(priorityOpts)
     for {
-      sourceOptions <- SourceConfigLoader.loadSourceConfigs(sources)
-      userOptions   <- userOptions(priorityOpts ++ sourceOptions)
-      globalOptions <- globalOptions(
-        priorityOpts ++ sourceOptions ++ userOptions)
-      collected = priorityOpts ++ sourceOptions ++ userOptions ++ globalOptions
+      sourceOpts <- SourceConfigLoader.loadSourceConfigs(sources)
+      userOpts   <- userOptions(priorityOpts ++ sourceOpts)
+      globalOpts <- globalOptions(priorityOpts ++ sourceOpts ++ userOpts)
+      collected = priorityOpts ++ sourceOpts ++ userOpts ++ globalOpts
       config    = collateOptions(collected)
     } yield validateConfig(config).toEither
   }
@@ -35,20 +35,18 @@ trait ConfigurationBuilder {
 
   private def userOptions(priorityOpts: ConfigOptions) =
     if (ConfigQuery.ignoreUserOptions(priorityOpts)) emptyConfig
-    else readFile(userHome, userConfigFilename)
+    else parseFile(userHome.resolve(userConfigFilename))
 
   private def globalOptions(priorityOpts: ConfigOptions) =
     if (ConfigQuery.ignoreGlobalOptions(priorityOpts)) emptyConfig
     else parseFile(globalConfig)
 
-  private def readFile(
-      source: Path,
-      filename: String
-  ) =
-    parseFile(source.resolve(filename))
-
   private def collateOptions(configOptions: ConfigOptions): Config =
-    configOptions.options.foldLeft(Config())((c, co) => co.update(c))
+    options
+      .get(configOptions)
+      .foldLeft(Config()) { (config, configOption) =>
+        configOption.update(config)
+      }
 
 }
 
