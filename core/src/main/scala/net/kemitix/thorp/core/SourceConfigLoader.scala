@@ -12,7 +12,7 @@ trait SourceConfigLoader {
     sources => {
 
       val sourceConfigOptions =
-        ConfigOptions(sources.paths.map(ConfigOption.Source))
+        ConfigOptions(sources.paths.map(ConfigOption.Source(_)))
 
       val reduce: List[ConfigOptions] => ConfigOptions =
         _.foldLeft(sourceConfigOptions) { (acc, co) => acc ++ co }
