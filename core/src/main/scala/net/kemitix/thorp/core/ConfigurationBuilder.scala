@@ -14,19 +14,18 @@ import net.kemitix.thorp.domain.Config
   */
 trait ConfigurationBuilder {
 
-  private val sourceConfigFilename = ".thorp.config"
-  private val userConfigFilename   = ".config/thorp.conf"
-  private val globalConfig         = Paths.get("/etc/thorp.conf")
-  private val userHome             = Paths.get(System.getProperty("user.home"))
-  private val pwd                  = Paths.get(System.getenv("PWD"))
+  private val userConfigFilename = ".config/thorp.conf"
+  private val globalConfig       = Paths.get("/etc/thorp.conf")
+  private val userHome           = Paths.get(System.getProperty("user.home"))
 
   def buildConfig(priorityOpts: ConfigOptions)
-      : IO[Either[NonEmptyChain[ConfigValidation], Config]] = {
+    : IO[Either[NonEmptyChain[ConfigValidation], Config]] = {
     val sources = ConfigQuery.sources(priorityOpts)
     for {
       sourceOptions <- SourceConfigLoader.loadSourceConfigs(sources)
       userOptions   <- userOptions(priorityOpts ++ sourceOptions)
-      globalOptions <- globalOptions(priorityOpts ++ sourceOptions ++ userOptions)
+      globalOptions <- globalOptions(
+        priorityOpts ++ sourceOptions ++ userOptions)
       collected = priorityOpts ++ sourceOptions ++ userOptions ++ globalOptions
       config    = collateOptions(collected)
     } yield validateConfig(config).toEither
