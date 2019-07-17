@@ -52,7 +52,7 @@ case class UnversionedMirrorArchive(
       localFile,
       bucket,
       batchMode,
-      new UploadEventListener(localFile, index, syncTotals, totalBytesSoFar),
+      UploadEventListener(localFile, index, syncTotals, totalBytesSoFar),
       1)
 }
 

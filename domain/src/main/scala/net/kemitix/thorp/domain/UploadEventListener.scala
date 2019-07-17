@@ -3,7 +3,7 @@ package net.kemitix.thorp.domain
 import net.kemitix.thorp.domain.UploadEvent.RequestEvent
 import net.kemitix.thorp.domain.UploadEventLogger.logRequestCycle
 
-class UploadEventListener(
+case class UploadEventListener(
     localFile: LocalFile,
     index: Int,
     syncTotals: SyncTotals,
