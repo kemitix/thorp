@@ -35,15 +35,15 @@ object ActionGenerator {
         doNothing(c.bucket, localFile.remoteKey)
     }
 
+  private def key = LocalFile.remoteKey ^|-> RemoteKey.key
+
   def isUploadAlreadyQueued(
       previousActions: Stream[Action]
   )(
       localFile: LocalFile
-  ): Boolean = {
-    !previousActions.exists {
-      case ToUpload(_, lf, _) => lf.remoteKey.key equals localFile.remoteKey.key
-      case _                  => false
-    }
+  ): Boolean = !previousActions.exists {
+    case ToUpload(_, lf, _) => key.get(lf) equals key.get(localFile)
+    case _                  => false
   }
 
   private def doNothing(

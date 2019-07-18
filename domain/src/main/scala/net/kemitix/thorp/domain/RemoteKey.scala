@@ -3,6 +3,9 @@ package net.kemitix.thorp.domain
 import java.io.File
 import java.nio.file.{Path, Paths}
 
+import monocle.macros.Lenses
+
+@Lenses
 final case class RemoteKey(
     key: String
 ) {

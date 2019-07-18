@@ -1,6 +1,7 @@
 package net.kemitix.thorp.core
 
 import cats.effect.IO
+import monocle.macros.Lenses
 import net.kemitix.thorp.core.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.domain.StorageQueueEvent.DoNothingQueueEvent
 import net.kemitix.thorp.domain.{
@@ -13,6 +14,7 @@ import net.kemitix.thorp.domain.{
 }
 import net.kemitix.thorp.storage.api.StorageService
 
+@Lenses
 case class UnversionedMirrorArchive(
     storageService: StorageService,
     batchMode: Boolean,
@@ -52,7 +54,7 @@ case class UnversionedMirrorArchive(
       localFile,
       bucket,
       batchMode,
-      new UploadEventListener(localFile, index, syncTotals, totalBytesSoFar),
+      UploadEventListener(localFile, index, syncTotals, totalBytesSoFar),
       1)
 }
 

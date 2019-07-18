@@ -137,7 +137,7 @@ class StorageServiceSuite extends FunSpec with MockFactory {
       val bucket    = Bucket("a-bucket")
       val remoteKey = RemoteKey("prefix/root-file")
       val uploadEventListener =
-        new UploadEventListener(localFile, 1, SyncTotals(), 0L)
+        UploadEventListener(localFile, 1, SyncTotals(), 0L)
 
       val upload = stub[AmazonUpload]
       (amazonTransferManager upload (_: PutObjectRequest))

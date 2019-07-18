@@ -18,11 +18,14 @@ trait SyncLogging {
       sources: Sources
   )(implicit logger: Logger): IO[Unit] = {
     val sourcesList = sources.paths.mkString(", ")
-    logger.info(s"Bucket: ${bucket.name}, Prefix: ${prefix.key}, Source: $sourcesList")
+    logger.info(
+      List(s"Bucket: ${bucket.name}",
+           s"Prefix: ${prefix.key}",
+           s"Source: $sourcesList")
+        .mkString(", "))
   }
 
-  def logFileScan(implicit c: Config,
-                  logger: Logger): IO[Unit] =
+  def logFileScan(implicit c: Config, logger: Logger): IO[Unit] =
     logger.info(s"Scanning local files: ${c.sources.paths.mkString(", ")}...")
 
   def logRunFinished(
@@ -50,16 +53,14 @@ trait SyncLogging {
 
   private def countActivities: (Counters, StorageQueueEvent) => Counters =
     (counters: Counters, s3Action: StorageQueueEvent) => {
+      import Counters._
+      val increment: Int => Int = _ + 1
       s3Action match {
-        case _: UploadQueueEvent =>
-          counters.copy(uploaded = counters.uploaded + 1)
-        case _: CopyQueueEvent =>
-          counters.copy(copied = counters.copied + 1)
-        case _: DeleteQueueEvent =>
-          counters.copy(deleted = counters.deleted + 1)
-        case ErrorQueueEvent(_, _) =>
-          counters.copy(errors = counters.errors + 1)
-        case _ => counters
+        case _: UploadQueueEvent => uploaded.modify(increment)(counters)
+        case _: CopyQueueEvent   => copied.modify(increment)(counters)
+        case _: DeleteQueueEvent => deleted.modify(increment)(counters)
+        case _: ErrorQueueEvent  => errors.modify(increment)(counters)
+        case _                   => counters
       }
     }
 

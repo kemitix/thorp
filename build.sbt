@@ -26,6 +26,9 @@ val commonSettings = Seq(
     "-language:postfixOps",
     "-language:higherKinds",
     "-Ypartial-unification"),
+  addCompilerPlugin(
+    "org.scalameta" % "paradise" % "3.0.0-M11" cross CrossVersion.full
+  ),
   test in assembly := {}
 )
 
@@ -36,6 +39,12 @@ val testDependencies = Seq(
   libraryDependencies ++= Seq(
     "org.scalatest" %% "scalatest" % "3.0.8" % Test,
     "org.scalamock" %% "scalamock" % "4.3.0" % Test
+  )
+)
+val domainDependencies = Seq(
+  libraryDependencies ++= Seq(
+    "com.github.julien-truffaut"  %%  "monocle-core"    % "1.6.0",
+    "com.github.julien-truffaut"  %%  "monocle-macro"   % "1.6.0",
   )
 )
 val commandLineParsing = Seq(
@@ -109,6 +118,7 @@ lazy val `storage-api` = (project in file("storage-api"))
 
 lazy val domain = (project in file("domain"))
   .settings(commonSettings)
+  .settings(domainDependencies)
   .settings(assemblyJarName in assembly := "domain.jar")
   .settings(catsEffectsSettings)
   .settings(testDependencies)
