@@ -1,7 +1,9 @@
 package net.kemitix.thorp.core
 
 import cats.Semigroup
+import monocle.macros.Lenses
 
+@Lenses
 case class ConfigOptions(
     options: List[ConfigOption] = List()
 ) extends Semigroup[ConfigOptions] {

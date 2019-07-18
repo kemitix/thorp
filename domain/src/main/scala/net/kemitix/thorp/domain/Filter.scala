@@ -3,6 +3,8 @@ package net.kemitix.thorp.domain
 import java.nio.file.Path
 import java.util.regex.Pattern
 
+import monocle.macros.Lenses
+
 sealed trait Filter
 
 object Filter {
@@ -30,6 +32,7 @@ object Filter {
     }
   }
 
+  @Lenses
   case class Include(
       include: String = ".*"
   ) extends Filter {
@@ -40,6 +43,7 @@ object Filter {
 
   }
 
+  @Lenses
   case class Exclude(
       exclude: String
   ) extends Filter {

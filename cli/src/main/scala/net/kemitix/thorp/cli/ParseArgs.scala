@@ -52,6 +52,6 @@ object ParseArgs {
   def apply(args: List[String]): Option[ConfigOptions] =
     OParser
       .parse(configParser, args, List())
-      .map(ConfigOptions)
+      .map(ConfigOptions(_))
 
 }
