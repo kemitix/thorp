@@ -18,11 +18,14 @@ trait SyncLogging {
       sources: Sources
   )(implicit logger: Logger): IO[Unit] = {
     val sourcesList = sources.paths.mkString(", ")
-    logger.info(s"Bucket: ${bucket.name}, Prefix: ${prefix.key}, Source: $sourcesList")
+    logger.info(
+      List(s"Bucket: ${bucket.name}",
+           s"Prefix: ${prefix.key}",
+           s"Source: $sourcesList")
+        .mkString(", "))
   }
 
-  def logFileScan(implicit c: Config,
-                  logger: Logger): IO[Unit] =
+  def logFileScan(implicit c: Config, logger: Logger): IO[Unit] =
     logger.info(s"Scanning local files: ${c.sources.paths.mkString(", ")}...")
 
   def logRunFinished(
