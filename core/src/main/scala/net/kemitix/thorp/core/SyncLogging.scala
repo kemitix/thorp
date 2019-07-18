@@ -50,16 +50,14 @@ trait SyncLogging {
 
   private def countActivities: (Counters, StorageQueueEvent) => Counters =
     (counters: Counters, s3Action: StorageQueueEvent) => {
+      import Counters._
+      val increment: Int => Int = _ + 1
       s3Action match {
-        case _: UploadQueueEvent =>
-          counters.copy(uploaded = counters.uploaded + 1)
-        case _: CopyQueueEvent =>
-          counters.copy(copied = counters.copied + 1)
-        case _: DeleteQueueEvent =>
-          counters.copy(deleted = counters.deleted + 1)
-        case ErrorQueueEvent(_, _) =>
-          counters.copy(errors = counters.errors + 1)
-        case _ => counters
+        case _: UploadQueueEvent => uploaded.modify(increment)(counters)
+        case _: CopyQueueEvent   => copied.modify(increment)(counters)
+        case _: DeleteQueueEvent => deleted.modify(increment)(counters)
+        case _: ErrorQueueEvent  => errors.modify(increment)(counters)
+        case _                   => counters
       }
     }
 
