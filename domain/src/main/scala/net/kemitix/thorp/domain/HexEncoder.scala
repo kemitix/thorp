@@ -4,19 +4,15 @@ import java.math.BigInteger
 
 trait HexEncoder {
 
-  def encode(bytes: Array[Byte]): String = {
-    val bigInteger = new BigInteger(1, bytes)
-    String.format("%0" + (bytes.length << 1) + "x", bigInteger)
-  }
+  def encode(bytes: Array[Byte]): String =
+    String.format("%0" + (bytes.length << 1) + "x", new BigInteger(1, bytes))
 
-  def decode(hexString: String): Array[Byte] = {
-    val byteArray = new BigInteger(hexString, 16).toByteArray
-    if (byteArray(0) == 0) {
-      val output = new Array[Byte](byteArray.length - 1)
-      System.arraycopy(byteArray, 1, output, 0, output.length)
-      output
-    } else byteArray
-  }
+  def decode(hexString: String): Array[Byte] =
+    hexString
+      .replaceAll("[^0-9A-Fa-f]", "")
+      .sliding(2, 2)
+      .toArray
+      .map(Integer.parseInt(_, 16).toByte)
 
 }
 
