@@ -6,6 +6,18 @@ The format is based on [[https://keepachangelog.com/en/1.0.0/][Keep a Changelog]
 [[https://semver.org/spec/v2.0.0.html][Semantic Versioning]].
 
 
+* [0.7.2] - 2019-07-19
+
+** Changed
+
+   - Apply ~scalafmt~ (#108)
+   - Uses Lenses (#113)
+
+** Fixed
+
+   - Creates incorrect MD5 hash for some files (#103)
+   - NullPointerException creating scaladoc (#115)
+
 * [0.7.1] - 2019-07-15
 
 ** Changed
