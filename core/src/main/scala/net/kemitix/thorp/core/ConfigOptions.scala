@@ -1,9 +1,9 @@
 package net.kemitix.thorp.core
 
 import cats.Semigroup
-import monocle.macros.Lenses
+import monocle.Lens
+import monocle.macros.GenLens
 
-@Lenses
 case class ConfigOptions(
     options: List[ConfigOption] = List()
 ) extends Semigroup[ConfigOptions] {
@@ -23,4 +23,9 @@ case class ConfigOptions(
   def contains[A1 >: ConfigOption](elem: A1): Boolean =
     options contains elem
 
+}
+
+object ConfigOptions {
+  val options: Lens[ConfigOptions, List[ConfigOption]] =
+    GenLens[ConfigOptions](_.options)
 }

@@ -26,9 +26,6 @@ val commonSettings = Seq(
     "-language:postfixOps",
     "-language:higherKinds",
     "-Ypartial-unification"),
-  addCompilerPlugin(
-    "org.scalameta" % "paradise" % "3.0.0-M11" cross CrossVersion.full
-  ),
   test in assembly := {}
 )
 
