@@ -3,9 +3,6 @@ package net.kemitix.thorp.domain
 import net.kemitix.thorp.domain.UploadEvent.RequestEvent
 import net.kemitix.thorp.domain.UploadEventLogger.logRequestCycle
 
-import monocle.macros.Lenses
-
-@Lenses
 case class UploadEventListener(
     localFile: LocalFile,
     index: Int,

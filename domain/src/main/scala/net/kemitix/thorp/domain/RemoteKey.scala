@@ -3,9 +3,8 @@ package net.kemitix.thorp.domain
 import java.io.File
 import java.nio.file.{Path, Paths}
 
-import monocle.macros.Lenses
+import monocle.macros.GenLens
 
-@Lenses
 final case class RemoteKey(
     key: String
 ) {
@@ -37,4 +36,8 @@ final case class RemoteKey(
   def resolve(path: String): RemoteKey =
     RemoteKey(List(key, path).filterNot(_.isEmpty).mkString("/"))
 
+}
+
+object RemoteKey {
+  val key = GenLens[RemoteKey](_.key)
 }

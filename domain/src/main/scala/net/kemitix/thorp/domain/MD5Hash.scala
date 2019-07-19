@@ -4,9 +4,6 @@ import java.util.Base64
 
 import net.kemitix.thorp.domain.QuoteStripper.stripQuotes
 
-import monocle.macros.Lenses
-
-@Lenses
 final case class MD5Hash(
     in: String
 ) {
