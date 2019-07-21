@@ -57,16 +57,17 @@ trait Program extends PlanBuilder {
     type Accumulator = (Stream[StorageQueueEvent], Long)
     val zero: Accumulator = (Stream(), syncPlan.syncTotals.totalSizeBytes)
     TaskR
-      .foldLeft(syncPlan.actions.zipWithIndex)(zero)((acc, indexedAction) => {
-        val (action, index)     = indexedAction
-        val (stream, bytesToDo) = acc
-        val remainingBytes      = bytesToDo - action.size
-        (for {
-          event <- archive.update(index, action, remainingBytes)
-          events = event #:: stream
-        } yield events)
-          .map((_, remainingBytes))
-      })
+      .foldLeft(syncPlan.actions.reverse.zipWithIndex)(zero)(
+        (acc, indexedAction) => {
+          val (action, index)     = indexedAction
+          val (stream, bytesToDo) = acc
+          val remainingBytes      = bytesToDo - action.size
+          (for {
+            event <- archive.update(index, action, remainingBytes)
+            events = stream ++ Stream(event)
+          } yield events)
+            .map((_, remainingBytes))
+        })
       .map {
         case (events, _) => events
       }
