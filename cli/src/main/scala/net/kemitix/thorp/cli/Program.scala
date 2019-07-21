@@ -15,11 +15,12 @@ trait Program extends PlanBuilder {
     val showVersion = ConfigQuery.showVersion(cliOptions)
     for {
       _ <- ZIO.when(showVersion)(putStrLn(version))
-      _ <- ZIO.when(!showVersion)(doProgram(cliOptions).catchAll(handleErrors))
+      _ <- ZIO.when(!showVersion)(execute(cliOptions).catchAll(handleErrors))
     } yield ()
   }
 
-  def doProgram(cliOptions: ConfigOptions): ZIO[Console, Throwable, Unit] = {
+  private def execute(
+      cliOptions: ConfigOptions): ZIO[Console, Throwable, Unit] = {
     for {
       plan    <- createPlan(defaultStorageService, defaultHashService, cliOptions)
       archive <- thorpArchive(cliOptions, plan.syncTotals)
@@ -29,7 +30,7 @@ trait Program extends PlanBuilder {
     } yield ()
   }
 
-  def handleErrors(throwable: Throwable): ZIO[Console, Nothing, Unit] =
+  private def handleErrors(throwable: Throwable): ZIO[Console, Nothing, Unit] =
     for {
       _ <- putStrLn("There were errors:")
       _ <- throwable match {
