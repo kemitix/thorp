@@ -2,6 +2,7 @@ package net.kemitix.thorp.core
 
 import net.kemitix.thorp.domain.Sources
 import org.scalatest.FunSpec
+import zio.DefaultRuntime
 
 class ConfigOptionTest extends FunSpec with TemporaryFolder {
 
@@ -27,6 +28,9 @@ class ConfigOptionTest extends FunSpec with TemporaryFolder {
   }
 
   private def invoke(configOptions: ConfigOptions) = {
-    ConfigurationBuilder.buildConfig(configOptions).unsafeRunSync
+    val runtime = new DefaultRuntime {}
+    runtime.unsafeRunSync {
+      ConfigurationBuilder.buildConfig(configOptions)
+    }.toEither
   }
 }

@@ -4,8 +4,8 @@ import java.io.{File, FileInputStream}
 import java.nio.file.Path
 import java.security.MessageDigest
 
-import cats.effect.IO
-import net.kemitix.thorp.domain.{Logger, MD5Hash}
+import net.kemitix.thorp.domain.MD5Hash
+import zio.Task
 
 import scala.collection.immutable.NumericRange
 
@@ -26,21 +26,19 @@ object MD5HashGenerator {
     md5.digest
   }
 
-  def md5File(path: Path)(implicit logger: Logger): IO[MD5Hash] =
+  def md5File(path: Path): Task[MD5Hash] =
     md5FileChunk(path, 0, path.toFile.length)
 
   def md5FileChunk(
       path: Path,
       offset: Long,
       size: Long
-  )(implicit logger: Logger): IO[MD5Hash] = {
+  ): Task[MD5Hash] = {
     val file      = path.toFile
     val endOffset = Math.min(offset + size, file.length)
     for {
-      _      <- logger.debug(s"md5:reading:size ${file.length}:$path")
       digest <- readFile(file, offset, endOffset)
       hash = MD5Hash.fromDigest(digest)
-      _ <- logger.debug(s"md5:generated:${hash.hash}:$path")
     } yield hash
   }
 
@@ -58,20 +56,20 @@ object MD5HashGenerator {
   private def openFile(
       file: File,
       offset: Long
-  ) = IO {
+  ) = Task {
     val stream = new FileInputStream(file)
     stream skip offset
     stream
   }
 
-  private def closeFile(fis: FileInputStream) = IO(fis.close())
+  private def closeFile(fis: FileInputStream) = Task(fis.close())
 
   private def digestFile(
       fis: FileInputStream,
       offset: Long,
       endOffset: Long
   ) =
-    IO {
+    Task {
       val md5 = MessageDigest getInstance "MD5"
       NumericRange(offset, endOffset, maxBufferSize)
         .foreach(currentOffset =>

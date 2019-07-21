@@ -7,12 +7,15 @@ import net.kemitix.thorp.core.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.{HashService, StorageService}
 import org.scalatest.FreeSpec
+import zio.DefaultRuntime
 
 class PlanBuilderTest extends FreeSpec with TemporaryFolder {
-  val lastModified: LastModified      = LastModified()
-  private val planBuilder             = new PlanBuilder {}
-  private implicit val logger: Logger = new DummyLogger
-  private val emptyS3ObjectData       = S3ObjectsData()
+
+  private val runtime = new DefaultRuntime {}
+
+  private val lastModified: LastModified = LastModified()
+  private val planBuilder                = new PlanBuilder {}
+  private val emptyS3ObjectData          = S3ObjectsData()
 
   "create a plan" - {
 
@@ -426,7 +429,14 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
     }
 
     def md5Hash(file: File) = {
-      hashService.hashLocalObject(file.toPath).unsafeRunSync()("md5")
+      runtime
+        .unsafeRunSync {
+          hashService.hashLocalObject(file.toPath).map(_.get("md5"))
+        }
+        .toEither
+        .right
+        .get
+        .get
     }
 
   }
@@ -450,14 +460,17 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
   private def configOptions(configOptions: ConfigOption*): ConfigOptions =
     ConfigOptions(List(configOptions: _*))
 
-  private def invoke(storageService: StorageService,
-                     hashService: HashService,
-                     configOptions: ConfigOptions)
-    : Either[List[String], List[(String, String, String, String, String)]] =
-    planBuilder
-      .createPlan(storageService, hashService, configOptions)
-      .value
-      .unsafeRunSync()
+  private def invoke(
+      storageService: StorageService,
+      hashService: HashService,
+      configOptions: ConfigOptions
+  ): Either[Any, List[(String, String, String, String, String)]] =
+    runtime
+      .unsafeRunSync {
+        planBuilder
+          .createPlan(storageService, hashService, configOptions)
+      }
+      .toEither
       .map(_.actions.toList.map({
         case ToUpload(_, lf, _) =>
           ("upload",

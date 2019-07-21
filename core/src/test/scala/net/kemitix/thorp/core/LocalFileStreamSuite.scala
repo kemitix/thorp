@@ -5,6 +5,7 @@ import java.nio.file.Paths
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.HashService
 import org.scalatest.FunSpec
+import zio.DefaultRuntime
 
 class LocalFileStreamSuite extends FunSpec {
 
@@ -21,7 +22,6 @@ class LocalFileStreamSuite extends FunSpec {
 
   implicit private val config: Config = Config(
     sources = Sources(List(sourcePath)))
-  implicit private val logger: Logger = new DummyLogger
 
   describe("findFiles") {
     it("should find all files") {
@@ -42,7 +42,15 @@ class LocalFileStreamSuite extends FunSpec {
     }
   }
 
-  private def invoke =
-    LocalFileStream.findFiles(sourcePath, hashService).unsafeRunSync
+  private def invoke = {
+    val runtime = new DefaultRuntime {}
+    runtime
+      .unsafeRunSync {
+        LocalFileStream.findFiles(sourcePath, hashService)
+      }
+      .toEither
+      .right
+      .get // if is not a Right, then throw an error
+  }
 
 }

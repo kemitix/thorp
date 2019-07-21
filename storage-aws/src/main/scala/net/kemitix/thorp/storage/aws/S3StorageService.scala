@@ -1,11 +1,11 @@
 package net.kemitix.thorp.storage.aws
 
-import cats.data.EitherT
-import cats.effect.IO
 import com.amazonaws.services.s3.AmazonS3
 import net.kemitix.thorp.domain.StorageQueueEvent.ShutdownQueueEvent
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.StorageService
+import zio.console.Console
+import zio.{Task, TaskR}
 
 class S3StorageService(
     amazonS3Client: => AmazonS3,
@@ -20,7 +20,7 @@ class S3StorageService(
   override def listObjects(
       bucket: Bucket,
       prefix: RemoteKey
-  )(implicit l: Logger): EitherT[IO, String, S3ObjectsData] =
+  ): TaskR[Console, S3ObjectsData] =
     objectLister.listObjects(bucket, prefix)
 
   override def copy(
@@ -28,7 +28,7 @@ class S3StorageService(
       sourceKey: RemoteKey,
       hash: MD5Hash,
       targetKey: RemoteKey
-  ): IO[StorageQueueEvent] =
+  ): Task[StorageQueueEvent] =
     copier.copy(bucket, sourceKey, hash, targetKey)
 
   override def upload(
@@ -37,17 +37,17 @@ class S3StorageService(
       batchMode: Boolean,
       uploadEventListener: UploadEventListener,
       tryCount: Int
-  ): IO[StorageQueueEvent] =
+  ): Task[StorageQueueEvent] =
     uploader.upload(localFile, bucket, batchMode, uploadEventListener, 1)
 
   override def delete(
       bucket: Bucket,
       remoteKey: RemoteKey
-  ): IO[StorageQueueEvent] =
+  ): Task[StorageQueueEvent] =
     deleter.delete(bucket, remoteKey)
 
-  override def shutdown: IO[StorageQueueEvent] =
-    IO {
+  override def shutdown: Task[StorageQueueEvent] =
+    Task {
       amazonTransferManager.shutdownNow(true)
       amazonS3Client.shutdown()
       ShutdownQueueEvent()

@@ -1,5 +1,7 @@
 package net.kemitix.thorp.core
 
+import java.nio.file.Path
+
 sealed trait ConfigValidation {
 
   def errorMessage: String
@@ -17,6 +19,13 @@ object ConfigValidation {
 
   case object BucketNameIsMissing extends ConfigValidation {
     override def errorMessage: String = "Bucket name is missing"
+  }
+
+  case class ErrorReadingFile(
+      path: Path,
+      message: String
+  ) extends ConfigValidation {
+    override def errorMessage: String = s"Error reading file '$path': $message"
   }
 
 }

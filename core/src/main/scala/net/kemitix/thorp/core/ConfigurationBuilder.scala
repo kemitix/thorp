@@ -2,12 +2,11 @@ package net.kemitix.thorp.core
 
 import java.nio.file.Paths
 
-import cats.data.NonEmptyChain
-import cats.effect.IO
+import net.kemitix.thorp.core.ConfigOptions.options
 import net.kemitix.thorp.core.ConfigValidator.validateConfig
 import net.kemitix.thorp.core.ParseConfigFile.parseFile
-import net.kemitix.thorp.core.ConfigOptions.options
 import net.kemitix.thorp.domain.Config
+import zio.IO
 
 /**
   * Builds a configuration from settings in a file within the
@@ -19,25 +18,31 @@ trait ConfigurationBuilder {
   private val globalConfig       = Paths.get("/etc/thorp.conf")
   private val userHome           = Paths.get(System.getProperty("user.home"))
 
-  def buildConfig(priorityOpts: ConfigOptions)
-    : IO[Either[NonEmptyChain[ConfigValidation], Config]] = {
-    val sources = ConfigQuery.sources(priorityOpts)
+  def buildConfig(
+      priorityOpts: ConfigOptions): IO[List[ConfigValidation], Config] =
     for {
-      sourceOpts <- SourceConfigLoader.loadSourceConfigs(sources)
+      config <- getConfigOptions(priorityOpts).map(collateOptions)
+      valid  <- validateConfig(config)
+    } yield valid
+
+  private def getConfigOptions(
+      priorityOpts: ConfigOptions): IO[List[ConfigValidation], ConfigOptions] =
+    for {
+      sourceOpts <- SourceConfigLoader.loadSourceConfigs(
+        ConfigQuery.sources(priorityOpts))
       userOpts   <- userOptions(priorityOpts ++ sourceOpts)
       globalOpts <- globalOptions(priorityOpts ++ sourceOpts ++ userOpts)
-      collected = priorityOpts ++ sourceOpts ++ userOpts ++ globalOpts
-      config    = collateOptions(collected)
-    } yield validateConfig(config).toEither
-  }
+    } yield priorityOpts ++ sourceOpts ++ userOpts ++ globalOpts
 
-  private val emptyConfig = IO(ConfigOptions())
+  private val emptyConfig = IO.succeed(ConfigOptions())
 
-  private def userOptions(priorityOpts: ConfigOptions) =
+  private def userOptions(
+      priorityOpts: ConfigOptions): IO[List[ConfigValidation], ConfigOptions] =
     if (ConfigQuery.ignoreUserOptions(priorityOpts)) emptyConfig
     else parseFile(userHome.resolve(userConfigFilename))
 
-  private def globalOptions(priorityOpts: ConfigOptions) =
+  private def globalOptions(
+      priorityOpts: ConfigOptions): IO[List[ConfigValidation], ConfigOptions] =
     if (ConfigQuery.ignoreGlobalOptions(priorityOpts)) emptyConfig
     else parseFile(globalConfig)
 

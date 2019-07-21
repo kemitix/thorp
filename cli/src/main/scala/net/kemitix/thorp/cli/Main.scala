@@ -1,20 +1,14 @@
 package net.kemitix.thorp.cli
 
-import cats.effect.ExitCase.{Canceled, Completed, Error}
-import cats.effect.{ExitCode, IO, IOApp}
+import zio.{App, ZIO}
 
-object Main extends IOApp {
+object Main extends App {
 
-  override def run(args: List[String]): IO[ExitCode] = {
-    val exitCaseLogger = new PrintLogger(false)
-    ParseArgs(args)
-      .map(Program.run)
-      .getOrElse(IO(ExitCode.Error))
-      .guaranteeCase {
-        case Canceled  => exitCaseLogger.warn("Interrupted")
-        case Error(e)  => exitCaseLogger.error(e.getMessage)
-        case Completed => IO.unit
-      }
-  }
+  override def run(args: List[String]): ZIO[Environment, Nothing, Int] = {
+    for {
+      cliOptions <- ParseArgs(args)
+      _          <- Program.run(cliOptions)
+    } yield ()
+  }.fold(failure => 1, success => 0)
 
 }

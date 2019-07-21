@@ -2,10 +2,10 @@ package net.kemitix.thorp.storage.aws
 
 import java.nio.file.Path
 
-import cats.effect.IO
 import net.kemitix.thorp.core.MD5HashGenerator
-import net.kemitix.thorp.domain.{Logger, MD5Hash}
+import net.kemitix.thorp.domain.MD5Hash
 import net.kemitix.thorp.storage.api.HashService
+import zio.Task
 
 trait S3HashService extends HashService {
 
@@ -17,7 +17,7 @@ trait S3HashService extends HashService {
     */
   override def hashLocalObject(
       path: Path
-  )(implicit l: Logger): IO[Map[String, MD5Hash]] =
+  ): Task[Map[String, MD5Hash]] =
     for {
       md5  <- MD5HashGenerator.md5File(path)
       etag <- ETagGenerator.eTag(path).map(MD5Hash(_))

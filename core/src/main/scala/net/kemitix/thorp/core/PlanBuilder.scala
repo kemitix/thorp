@@ -1,11 +1,10 @@
 package net.kemitix.thorp.core
 
-import cats.data.{EitherT, NonEmptyChain}
-import cats.effect.IO
-import cats.implicits._
 import net.kemitix.thorp.core.Action.DoNothing
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.{HashService, StorageService}
+import zio.console._
+import zio.{Task, TaskR}
 
 trait PlanBuilder {
 
@@ -13,30 +12,29 @@ trait PlanBuilder {
       storageService: StorageService,
       hashService: HashService,
       configOptions: ConfigOptions
-  )(implicit l: Logger): EitherT[IO, List[String], SyncPlan] =
-    EitherT(ConfigurationBuilder.buildConfig(configOptions))
-      .leftMap(errorMessages)
-      .flatMap(config => useValidConfig(storageService, hashService)(config, l))
-
-  def errorMessages(errors: NonEmptyChain[ConfigValidation]): List[String] =
-    errors.map(cv => cv.errorMessage).toList
+  ): TaskR[Console, SyncPlan] =
+    ConfigurationBuilder
+      .buildConfig(configOptions)
+      .catchAll(errors => TaskR.fail(ConfigValidationException(errors)))
+      .flatMap(config => useValidConfig(storageService, hashService)(config))
 
   def useValidConfig(
       storageService: StorageService,
       hashService: HashService
-  )(implicit c: Config, l: Logger): EitherT[IO, List[String], SyncPlan] =
+  )(implicit c: Config): TaskR[Console, SyncPlan] = {
     for {
-      _       <- EitherT.liftF(SyncLogging.logRunStart(c.bucket, c.prefix, c.sources))
+      _       <- SyncLogging.logRunStart(c.bucket, c.prefix, c.sources)
       actions <- buildPlan(storageService, hashService)
     } yield actions
+  }
 
   private def buildPlan(
       storageService: StorageService,
       hashService: HashService
-  )(implicit c: Config, l: Logger) =
-    gatherMetadata(storageService, hashService)
-      .leftMap(List(_))
-      .map(assemblePlan)
+  )(implicit c: Config): TaskR[Console, SyncPlan] =
+    for {
+      metadata <- gatherMetadata(storageService, hashService)
+    } yield assemblePlan(c)(metadata)
 
   def assemblePlan(
       implicit c: Config): ((S3ObjectsData, LocalFiles)) => SyncPlan = {
@@ -91,21 +89,20 @@ trait PlanBuilder {
   private def gatherMetadata(
       storageService: StorageService,
       hashService: HashService
-  )(implicit l: Logger,
-    c: Config): EitherT[IO, String, (S3ObjectsData, LocalFiles)] =
+  )(implicit c: Config): TaskR[Console, (S3ObjectsData, LocalFiles)] =
     for {
       remoteData <- fetchRemoteData(storageService)
-      localData  <- EitherT.liftF(findLocalFiles(hashService))
+      localData  <- findLocalFiles(hashService)
     } yield (remoteData, localData)
 
   private def fetchRemoteData(
       storageService: StorageService
-  )(implicit c: Config, l: Logger) =
+  )(implicit c: Config): TaskR[Console, S3ObjectsData] =
     storageService.listObjects(c.bucket, c.prefix)
 
   private def findLocalFiles(
       hashService: HashService
-  )(implicit config: Config, l: Logger) =
+  )(implicit config: Config): TaskR[Console, LocalFiles] =
     for {
       _          <- SyncLogging.logFileScan
       localFiles <- findFiles(hashService)
@@ -113,19 +110,10 @@ trait PlanBuilder {
 
   private def findFiles(
       hashService: HashService
-  )(implicit c: Config, l: Logger) = {
-    val ioListLocalFiles = (for {
-      source <- c.sources.paths
-    } yield LocalFileStream.findFiles(source, hashService)).sequence
-    for {
-      listLocalFiles <- ioListLocalFiles
-      localFiles = listLocalFiles.foldRight(LocalFiles()) {
-        (acc, moreLocalFiles) =>
-          {
-            acc ++ moreLocalFiles
-          }
-      }
-    } yield localFiles
+  )(implicit c: Config): Task[LocalFiles] = {
+    Task
+      .foreach(c.sources.paths)(LocalFileStream.findFiles(_, hashService))
+      .map(_.foldLeft(LocalFiles())((acc, localFile) => acc ++ localFile))
   }
 
 }
