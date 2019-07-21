@@ -434,9 +434,9 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
           hashService.hashLocalObject(file.toPath).map(_.get("md5"))
         }
         .toEither
-        .right
-        .get
-        .get
+        .toOption
+        .flatten
+        .getOrElse(MD5Hash("invalid md5 hash in test"))
     }
 
   }
