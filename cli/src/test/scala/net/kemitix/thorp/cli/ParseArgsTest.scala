@@ -5,16 +5,19 @@ import java.nio.file.Paths
 import net.kemitix.thorp.core.ConfigOption.Debug
 import net.kemitix.thorp.core.{ConfigOptions, ConfigQuery, Resource}
 import org.scalatest.FunSpec
+import zio.DefaultRuntime
 
 import scala.util.Try
 
 class ParseArgsTest extends FunSpec {
 
+  private val runtime = new DefaultRuntime {}
+
   val source = Resource(this, "")
 
   describe("parse - source") {
     def invokeWithSource(path: String) =
-      ParseArgs(List("--source", path, "--bucket", "bucket"))
+      invoke(List("--source", path, "--bucket", "bucket"))
 
     describe("when source is a directory") {
       it("should succeed") {
@@ -31,7 +34,7 @@ class ParseArgsTest extends FunSpec {
         List("--source", "path1", "--source", "path2", "--bucket", "bucket")
       it("should get multiple sources") {
         val expected      = Some(Set("path1", "path2").map(Paths.get(_)))
-        val configOptions = ParseArgs(args)
+        val configOptions = invoke(args)
         val result        = configOptions.map(ConfigQuery.sources(_).paths.toSet)
         assertResult(expected)(result)
       }
@@ -42,7 +45,7 @@ class ParseArgsTest extends FunSpec {
     def invokeWithArgument(arg: String): ConfigOptions = {
       val strings = List("--source", pathTo("."), "--bucket", "bucket", arg)
         .filter(_ != "")
-      val maybeOptions = ParseArgs(strings)
+      val maybeOptions = invoke(strings)
       maybeOptions.getOrElse(ConfigOptions())
     }
 
@@ -70,5 +73,13 @@ class ParseArgsTest extends FunSpec {
     Try(Resource(this, value))
       .map(_.getCanonicalPath)
       .getOrElse("[not-found]")
+
+  private def invoke(args: List[String]) =
+    runtime
+      .unsafeRunSync {
+        ParseArgs(args)
+      }
+      .toEither
+      .toOption
 
 }

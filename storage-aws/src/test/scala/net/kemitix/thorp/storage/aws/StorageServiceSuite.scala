@@ -20,7 +20,6 @@ class StorageServiceSuite extends FunSpec with MockFactory {
   private val prefix = RemoteKey("prefix")
   implicit private val config: Config =
     Config(Bucket("bucket"), prefix, sources = Sources(List(sourcePath)))
-  implicit private val implLogger: Logger = new DummyLogger
   private val fileToKey =
     KeyGenerator.generateKey(config.sources, config.prefix) _
 

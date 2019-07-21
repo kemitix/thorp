@@ -2,14 +2,14 @@ package net.kemitix.thorp.storage.api
 
 import java.nio.file.Path
 
-import cats.effect.IO
-import net.kemitix.thorp.domain.{Logger, MD5Hash}
+import net.kemitix.thorp.domain.MD5Hash
+import zio.Task
 
 /**
   * Creates one, or more, hashes for local objects.
   */
 trait HashService {
 
-  def hashLocalObject(path: Path)(implicit l: Logger): IO[Map[String, MD5Hash]]
+  def hashLocalObject(path: Path): Task[Map[String, MD5Hash]]
 
 }

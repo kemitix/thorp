@@ -4,8 +4,6 @@ import java.io.File
 import java.nio.file.Paths
 import java.time.Instant
 
-import cats.data.EitherT
-import cats.effect.IO
 import net.kemitix.thorp.core.Action.{ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.domain.MD5HashData.{Leaf, Root}
 import net.kemitix.thorp.domain.StorageQueueEvent.{
@@ -17,8 +15,13 @@ import net.kemitix.thorp.domain.StorageQueueEvent.{
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.{HashService, StorageService}
 import org.scalatest.FunSpec
+import zio.console.Console
+import zio.{DefaultRuntime, Task, TaskR}
 
 class SyncSuite extends FunSpec {
+
+  private val runtime = new DefaultRuntime {}
+
   private val testBucket = Bucket("bucket")
   private val source     = Resource(this, "upload")
   private val sourcePath = source.toPath
@@ -30,7 +33,6 @@ class SyncSuite extends FunSpec {
                       md5HashMap(Root.hash),
                       sourcePath,
                       _ => rootRemoteKey)
-  implicit private val logger: Logger = new DummyLogger
   private val leafFile: LocalFile =
     LocalFile.resolve("subdir/leaf-file",
                       md5HashMap(Leaf.hash),
@@ -57,24 +59,6 @@ class SyncSuite extends FunSpec {
                        remoteKey: RemoteKey,
                        localFile: LocalFile): (String, String, File) =
     (bucket.name, remoteKey.key, localFile.file)
-
-  def invokeSubjectForActions(
-      storageService: StorageService,
-      hashService: HashService,
-      configOptions: ConfigOptions): Either[List[String], Stream[Action]] = {
-    invokeSubject(storageService, hashService, configOptions)
-      .map(_.actions)
-  }
-
-  def invokeSubject(
-      storageService: StorageService,
-      hashService: HashService,
-      configOptions: ConfigOptions): Either[List[String], SyncPlan] = {
-    PlanBuilder
-      .createPlan(storageService, hashService, configOptions)
-      .value
-      .unsafeRunSync
-  }
 
   private def md5HashMap(md5Hash: MD5Hash): Map[String, MD5Hash] =
     Map("md5" -> md5Hash)
@@ -211,28 +195,45 @@ class SyncSuite extends FunSpec {
                                 s3ObjectsData: S3ObjectsData)
       extends StorageService {
 
-    override def listObjects(bucket: Bucket, prefix: RemoteKey)(
-        implicit l: Logger): EitherT[IO, String, S3ObjectsData] =
-      EitherT.liftF(IO.pure(s3ObjectsData))
+    override def listObjects(bucket: Bucket,
+                             prefix: RemoteKey): TaskR[Console, S3ObjectsData] =
+      TaskR(s3ObjectsData)
 
     override def upload(localFile: LocalFile,
                         bucket: Bucket,
                         batchMode: Boolean,
                         uploadEventListener: UploadEventListener,
-                        tryCount: Int): IO[UploadQueueEvent] =
-      IO.pure(UploadQueueEvent(localFile.remoteKey, localFile.hashes("md5")))
+                        tryCount: Int): Task[UploadQueueEvent] =
+      Task(UploadQueueEvent(localFile.remoteKey, localFile.hashes("md5")))
 
     override def copy(bucket: Bucket,
                       sourceKey: RemoteKey,
                       hashes: MD5Hash,
-                      targetKey: RemoteKey): IO[CopyQueueEvent] =
-      IO.pure(CopyQueueEvent(targetKey))
+                      targetKey: RemoteKey): Task[CopyQueueEvent] =
+      Task(CopyQueueEvent(targetKey))
 
     override def delete(bucket: Bucket,
-                        remoteKey: RemoteKey): IO[DeleteQueueEvent] =
-      IO.pure(DeleteQueueEvent(remoteKey))
+                        remoteKey: RemoteKey): Task[DeleteQueueEvent] =
+      Task(DeleteQueueEvent(remoteKey))
 
-    override def shutdown: IO[StorageQueueEvent] =
-      IO.pure(ShutdownQueueEvent())
+    override def shutdown: Task[StorageQueueEvent] =
+      Task(ShutdownQueueEvent())
+  }
+
+  def invokeSubjectForActions(
+      storageService: StorageService,
+      hashService: HashService,
+      configOptions: ConfigOptions): Either[Any, Stream[Action]] = {
+    invoke(storageService, hashService, configOptions)
+      .map(_.actions)
+  }
+
+  def invoke(storageService: StorageService,
+             hashService: HashService,
+             configOptions: ConfigOptions): Either[Any, SyncPlan] = {
+    runtime.unsafeRunSync {
+      PlanBuilder
+        .createPlan(storageService, hashService, configOptions)
+    }.toEither
   }
 }

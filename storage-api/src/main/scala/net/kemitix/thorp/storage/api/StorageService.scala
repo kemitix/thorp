@@ -1,17 +1,17 @@
 package net.kemitix.thorp.storage.api
 
-import cats.data.EitherT
-import cats.effect.IO
 import net.kemitix.thorp.domain._
+import zio.console.Console
+import zio.{Task, TaskR}
 
 trait StorageService {
 
-  def shutdown: IO[StorageQueueEvent]
+  def shutdown: Task[StorageQueueEvent]
 
   def listObjects(
       bucket: Bucket,
       prefix: RemoteKey
-  )(implicit l: Logger): EitherT[IO, String, S3ObjectsData]
+  ): TaskR[Console, S3ObjectsData]
 
   def upload(
       localFile: LocalFile,
@@ -19,18 +19,18 @@ trait StorageService {
       batchMode: Boolean,
       uploadEventListener: UploadEventListener,
       tryCount: Int
-  ): IO[StorageQueueEvent]
+  ): Task[StorageQueueEvent]
 
   def copy(
       bucket: Bucket,
       sourceKey: RemoteKey,
       hash: MD5Hash,
       targetKey: RemoteKey
-  ): IO[StorageQueueEvent]
+  ): Task[StorageQueueEvent]
 
   def delete(
       bucket: Bucket,
       remoteKey: RemoteKey
-  ): IO[StorageQueueEvent]
+  ): Task[StorageQueueEvent]
 
 }

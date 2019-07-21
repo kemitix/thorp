@@ -1,7 +1,8 @@
 package net.kemitix.thorp.core
 
-import cats.effect.IO
-import net.kemitix.thorp.domain.{LocalFile, Logger, StorageQueueEvent}
+import net.kemitix.thorp.domain.{LocalFile, StorageQueueEvent}
+import zio.TaskR
+import zio.console._
 
 trait ThorpArchive {
 
@@ -9,13 +10,15 @@ trait ThorpArchive {
       index: Int,
       action: Action,
       totalBytesSoFar: Long
-  )(implicit l: Logger): Stream[IO[StorageQueueEvent]]
+  ): TaskR[Console, StorageQueueEvent]
 
   def logFileUploaded(
       localFile: LocalFile,
       batchMode: Boolean
-  )(implicit l: Logger): IO[Unit] =
-    if (batchMode) l.info(s"Uploaded: ${localFile.remoteKey.key}")
-    else IO.unit
+  ): TaskR[Console, Unit] =
+    for {
+      _ <- TaskR.when(batchMode)(
+        putStrLn(s"Uploaded: ${localFile.remoteKey.key}"))
+    } yield ()
 
 }

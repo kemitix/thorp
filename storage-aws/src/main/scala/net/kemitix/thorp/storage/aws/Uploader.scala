@@ -1,9 +1,7 @@
 package net.kemitix.thorp.storage.aws
 
-import cats.effect.IO
 import com.amazonaws.event.{ProgressEvent, ProgressEventType, ProgressListener}
 import com.amazonaws.services.s3.model.{ObjectMetadata, PutObjectRequest}
-import com.amazonaws.services.s3.transfer.model.UploadResult
 import net.kemitix.thorp.domain.StorageQueueEvent.{
   ErrorQueueEvent,
   UploadQueueEvent
@@ -14,8 +12,7 @@ import net.kemitix.thorp.domain.UploadEvent.{
   TransferEvent
 }
 import net.kemitix.thorp.domain.{StorageQueueEvent, _}
-
-import scala.util.Try
+import zio.Task
 
 class Uploader(transferManager: => AmazonTransferManager) {
 
@@ -25,29 +22,24 @@ class Uploader(transferManager: => AmazonTransferManager) {
       batchMode: Boolean,
       uploadEventListener: UploadEventListener,
       tryCount: Int
-  ): IO[StorageQueueEvent] =
+  ): Task[StorageQueueEvent] =
     for {
       upload <- transfer(localFile, bucket, batchMode, uploadEventListener)
-      action = upload match {
-        case Right(r) =>
-          UploadQueueEvent(RemoteKey(r.getKey), MD5Hash(r.getETag))
-        case Left(e) => ErrorQueueEvent(localFile.remoteKey, e)
-      }
-    } yield action
+    } yield upload
 
   private def transfer(
       localFile: LocalFile,
       bucket: Bucket,
       batchMode: Boolean,
       uploadEventListener: UploadEventListener
-  ): IO[Either[Throwable, UploadResult]] = {
+  ): Task[StorageQueueEvent] = {
     val listener: ProgressListener = progressListener(uploadEventListener)
     val putObjectRequest           = request(localFile, bucket, batchMode, listener)
-    IO {
-      Try(transferManager.upload(putObjectRequest))
-        .map(_.waitForUploadResult)
-        .toEither
-    }
+    Task(transferManager.upload(putObjectRequest))
+      .map(_.waitForUploadResult)
+      .map(upload =>
+        UploadQueueEvent(RemoteKey(upload.getKey), MD5Hash(upload.getETag)))
+      .catchAll(e => Task.succeed(ErrorQueueEvent(localFile.remoteKey, e)))
   }
 
   private def request(

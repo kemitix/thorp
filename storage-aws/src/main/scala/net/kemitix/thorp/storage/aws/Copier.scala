@@ -1,10 +1,10 @@
 package net.kemitix.thorp.storage.aws
 
-import cats.effect.IO
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.CopyObjectRequest
 import net.kemitix.thorp.domain.StorageQueueEvent.CopyQueueEvent
 import net.kemitix.thorp.domain._
+import zio.Task
 
 class Copier(amazonS3: AmazonS3) {
 
@@ -13,7 +13,7 @@ class Copier(amazonS3: AmazonS3) {
       sourceKey: RemoteKey,
       hash: MD5Hash,
       targetKey: RemoteKey
-  ): IO[StorageQueueEvent] =
+  ): Task[StorageQueueEvent] =
     for {
       _ <- copyObject(bucket, sourceKey, hash, targetKey)
     } yield CopyQueueEvent(targetKey)
@@ -31,7 +31,7 @@ class Copier(amazonS3: AmazonS3) {
         bucket.name,
         targetKey.key
       ).withMatchingETagConstraint(hash.hash)
-    IO(amazonS3.copyObject(request))
+    Task(amazonS3.copyObject(request))
   }
 
 }

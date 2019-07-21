@@ -14,8 +14,11 @@ import net.kemitix.thorp.core.Resource
 import net.kemitix.thorp.domain._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.FunSpec
+import zio.DefaultRuntime
 
 class S3StorageServiceSuite extends FunSpec with MockFactory {
+
+  private val runtime = new DefaultRuntime {}
 
   describe("listObjectsInPrefix") {
     val source     = Resource(this, "upload")
@@ -23,7 +26,6 @@ class S3StorageServiceSuite extends FunSpec with MockFactory {
     val prefix     = RemoteKey("prefix")
     implicit val config: Config =
       Config(Bucket("bucket"), prefix, sources = Sources(List(sourcePath)))
-    implicit val implLogger: Logger = new DummyLogger
 
     val lm = LastModified(Instant.now.truncatedTo(ChronoUnit.MILLIS))
 
@@ -73,12 +75,15 @@ class S3StorageServiceSuite extends FunSpec with MockFactory {
                       k1b -> HashModified(h1, lm),
                       k2  -> HashModified(h2, lm))
         ))
-      val result = storageService
-        .listObjects(Bucket("bucket"), RemoteKey("prefix"))
-        .value
-        .unsafeRunSync
+      val result = invoke(storageService)
       assertResult(expected)(result)
     }
   }
+
+  private def invoke(storageService: S3StorageService) =
+    runtime.unsafeRunSync {
+      storageService
+        .listObjects(Bucket("bucket"), RemoteKey("prefix"))
+    }.toEither
 
 }

@@ -3,15 +3,18 @@ package net.kemitix.thorp.cli
 import java.io.File
 import java.nio.file.Path
 
-import cats.data.EitherT
-import cats.effect.IO
 import net.kemitix.thorp.core.Action.{ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.core._
+import net.kemitix.thorp.domain.StorageQueueEvent.DoNothingQueueEvent
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.{HashService, StorageService}
 import org.scalatest.FunSpec
+import zio.console.Console
+import zio.{DefaultRuntime, Task, TaskR}
 
 class ProgramTest extends FunSpec {
+
+  private val runtime = new DefaultRuntime {}
 
   val source: File     = Resource(this, ".")
   val sourcePath: Path = source.toPath
@@ -35,36 +38,46 @@ class ProgramTest extends FunSpec {
     val archive = TestProgram.thorpArchive
     it("should be handled in correct order") {
       val expected = List(copyAction, uploadAction, deleteAction)
-      TestProgram.run(configOptions).unsafeRunSync
+      invoke(configOptions)
       val result = archive.actions
       assertResult(expected)(result)
     }
   }
 
+  private def invoke(configOptions: ConfigOptions) =
+    runtime.unsafeRunSync {
+      TestProgram.run(configOptions)
+    }.toEither
+
   trait TestPlanBuilder extends PlanBuilder {
-    override def createPlan(storageService: StorageService,
-                            hashService: HashService,
-                            configOptions: ConfigOptions)(
-        implicit l: Logger): EitherT[IO, List[String], SyncPlan] = {
-      EitherT.right(
-        IO(SyncPlan(Stream(copyAction, uploadAction, deleteAction))))
+    override def createPlan(
+        storageService: StorageService,
+        hashService: HashService,
+        configOptions: ConfigOptions
+    ): Task[SyncPlan] = {
+      Task(SyncPlan(Stream(copyAction, uploadAction, deleteAction)))
     }
   }
 
   class ActionCaptureArchive extends ThorpArchive {
     var actions: List[Action] = List[Action]()
-    override def update(index: Int, action: Action, totalBytesSoFar: Long)(
-        implicit l: Logger): Stream[IO[StorageQueueEvent]] = {
+    override def update(
+        index: Int,
+        action: Action,
+        totalBytesSoFar: Long
+    ): TaskR[Console, StorageQueueEvent] = {
       actions = action :: actions
-      Stream()
+      TaskR(DoNothingQueueEvent(RemoteKey("")))
     }
   }
 
   object TestProgram extends Program with TestPlanBuilder {
     val thorpArchive: ActionCaptureArchive = new ActionCaptureArchive
-    override def thorpArchive(cliOptions: ConfigOptions,
-                              syncPlan: SyncPlan): IO[ThorpArchive] =
-      IO.pure(thorpArchive)
+    override def thorpArchive(
+        cliOptions: ConfigOptions,
+        syncTotals: SyncTotals
+    ): Task[ThorpArchive] =
+      Task(thorpArchive)
   }
 
 }

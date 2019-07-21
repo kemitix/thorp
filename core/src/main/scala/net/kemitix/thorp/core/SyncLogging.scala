@@ -1,7 +1,5 @@
 package net.kemitix.thorp.core
 
-import cats.effect.IO
-import cats.implicits._
 import net.kemitix.thorp.domain.StorageQueueEvent.{
   CopyQueueEvent,
   DeleteQueueEvent,
@@ -9,6 +7,8 @@ import net.kemitix.thorp.domain.StorageQueueEvent.{
   UploadQueueEvent
 }
 import net.kemitix.thorp.domain._
+import zio.ZIO
+import zio.console._
 
 trait SyncLogging {
 
@@ -16,40 +16,44 @@ trait SyncLogging {
       bucket: Bucket,
       prefix: RemoteKey,
       sources: Sources
-  )(implicit logger: Logger): IO[Unit] = {
+  ): ZIO[Console, Nothing, Unit] = {
     val sourcesList = sources.paths.mkString(", ")
-    logger.info(
-      List(s"Bucket: ${bucket.name}",
-           s"Prefix: ${prefix.key}",
-           s"Source: $sourcesList")
-        .mkString(", "))
+    for {
+      _ <- putStrLn(
+        List(s"Bucket: ${bucket.name}",
+             s"Prefix: ${prefix.key}",
+             s"Source: $sourcesList")
+          .mkString(", "))
+    } yield ()
   }
 
-  def logFileScan(implicit c: Config, logger: Logger): IO[Unit] =
-    logger.info(s"Scanning local files: ${c.sources.paths.mkString(", ")}...")
+  def logFileScan(implicit c: Config): ZIO[Console, Nothing, Unit] =
+    putStrLn(s"Scanning local files: ${c.sources.paths.mkString(", ")}...")
 
   def logRunFinished(
       actions: Stream[StorageQueueEvent]
-  )(implicit logger: Logger): IO[Unit] = {
+  ): ZIO[Console, Nothing, Unit] = {
     val counters = actions.foldLeft(Counters())(countActivities)
     for {
-      _ <- logger.info(s"Uploaded ${counters.uploaded} files")
-      _ <- logger.info(s"Copied   ${counters.copied} files")
-      _ <- logger.info(s"Deleted  ${counters.deleted} files")
-      _ <- logger.info(s"Errors   ${counters.errors}")
+      _ <- putStrLn(s"Uploaded ${counters.uploaded} files")
+      _ <- putStrLn(s"Copied   ${counters.copied} files")
+      _ <- putStrLn(s"Deleted  ${counters.deleted} files")
+      _ <- putStrLn(s"Errors   ${counters.errors}")
       _ <- logErrors(actions)
     } yield ()
   }
 
   def logErrors(
       actions: Stream[StorageQueueEvent]
-  )(implicit logger: Logger): IO[Unit] =
-    for {
-      _ <- actions.map {
-        case ErrorQueueEvent(k, e) => logger.warn(s"${k.key}: ${e.getMessage}")
-        case _                     => IO.unit
-      }.sequence
-    } yield ()
+  ): ZIO[Console, Nothing, Unit] = {
+    ZIO.foldLeft(actions)(()) { (_, action) =>
+      action match {
+        case ErrorQueueEvent(k, e) =>
+          putStrLn(s"${k.key}: ${e.getMessage}")
+        case _ => ZIO.unit
+      }
+    }
+  }
 
   private def countActivities: (Counters, StorageQueueEvent) => Counters =
     (counters: Counters, s3Action: StorageQueueEvent) => {

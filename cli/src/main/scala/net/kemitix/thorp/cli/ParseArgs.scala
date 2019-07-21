@@ -4,8 +4,16 @@ import java.nio.file.Paths
 
 import net.kemitix.thorp.core.{ConfigOption, ConfigOptions}
 import scopt.OParser
+import zio.Task
 
 object ParseArgs {
+
+  def apply(args: List[String]): Task[ConfigOptions] = Task {
+    OParser
+      .parse(configParser, args, List())
+      .map(ConfigOptions(_))
+      .getOrElse(ConfigOptions())
+  }
 
   val configParser: OParser[Unit, List[ConfigOption]] = {
     val parserBuilder = OParser.builder[List[ConfigOption]]
@@ -48,10 +56,5 @@ object ParseArgs {
         .text("Ignore user configuration")
     )
   }
-
-  def apply(args: List[String]): Option[ConfigOptions] =
-    OParser
-      .parse(configParser, args, List())
-      .map(ConfigOptions(_))
 
 }

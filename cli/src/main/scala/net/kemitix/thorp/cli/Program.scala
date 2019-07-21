@@ -1,74 +1,79 @@
 package net.kemitix.thorp.cli
 
-import cats.effect.{ExitCode, IO}
-import cats.implicits._
 import net.kemitix.thorp.core._
-import net.kemitix.thorp.domain.{Logger, StorageQueueEvent}
+import net.kemitix.thorp.domain.{StorageQueueEvent, SyncTotals}
 import net.kemitix.thorp.storage.aws.S3HashService.defaultHashService
 import net.kemitix.thorp.storage.aws.S3StorageServiceBuilder.defaultStorageService
+import zio.console._
+import zio.{Task, TaskR, ZIO}
 
 trait Program extends PlanBuilder {
 
-  def run(cliOptions: ConfigOptions): IO[ExitCode] = {
-    implicit val logger: Logger = new PrintLogger()
-    if (ConfigQuery.showVersion(cliOptions))
-      for {
-        _ <- logger.info(s"Thorp v${thorp.BuildInfo.version}")
-      } yield ExitCode.Success
-    else
-      for {
-        syncPlan <- createPlan(
-          defaultStorageService,
-          defaultHashService,
-          cliOptions
-        ).valueOrF(handleErrors)
-        archive <- thorpArchive(cliOptions, syncPlan)
-        events  <- handleActions(archive, syncPlan)
-        _       <- defaultStorageService.shutdown
-        _       <- SyncLogging.logRunFinished(events)
-      } yield ExitCode.Success
+  lazy val version = s"Thorp v${thorp.BuildInfo.version}"
+
+  def run(cliOptions: ConfigOptions): ZIO[Console, Nothing, Unit] = {
+    val showVersion = ConfigQuery.showVersion(cliOptions)
+    for {
+      _ <- ZIO.when(showVersion)(putStrLn(version))
+      _ <- ZIO.when(!showVersion)(execute(cliOptions).catchAll(handleErrors))
+    } yield ()
   }
+
+  private def execute(
+      cliOptions: ConfigOptions): ZIO[Console, Throwable, Unit] = {
+    for {
+      plan    <- createPlan(defaultStorageService, defaultHashService, cliOptions)
+      archive <- thorpArchive(cliOptions, plan.syncTotals)
+      events  <- handleActions(archive, plan)
+      _       <- defaultStorageService.shutdown
+      _       <- SyncLogging.logRunFinished(events)
+    } yield ()
+  }
+
+  private def handleErrors(throwable: Throwable): ZIO[Console, Nothing, Unit] =
+    for {
+      _ <- putStrLn("There were errors:")
+      _ <- throwable match {
+        case ConfigValidationException(errors) =>
+          ZIO.foreach(errors)(error => putStrLn(s"- $error"))
+        case x => throw x
+      }
+    } yield ()
 
   def thorpArchive(
       cliOptions: ConfigOptions,
-      syncPlan: SyncPlan
-  ): IO[ThorpArchive] =
-    IO.pure(
-      UnversionedMirrorArchive.default(
-        defaultStorageService,
-        ConfigQuery.batchMode(cliOptions),
-        syncPlan.syncTotals
-      ))
-
-  private def handleErrors(
-      implicit logger: Logger
-  ): List[String] => IO[SyncPlan] = errors => {
-    for {
-      _ <- logger.error("There were errors:")
-      _ <- errors.map(error => logger.error(s" - $error")).sequence
-    } yield SyncPlan()
+      syncTotals: SyncTotals
+  ): Task[ThorpArchive] = Task {
+    UnversionedMirrorArchive.default(
+      defaultStorageService,
+      ConfigQuery.batchMode(cliOptions),
+      syncTotals
+    )
   }
 
   private def handleActions(
       archive: ThorpArchive,
       syncPlan: SyncPlan
-  )(implicit l: Logger): IO[Stream[StorageQueueEvent]] = {
-    type Accumulator = (Stream[IO[StorageQueueEvent]], Long)
+  ): TaskR[Console, Stream[StorageQueueEvent]] = {
+    type Accumulator = (Stream[StorageQueueEvent], Long)
     val zero: Accumulator = (Stream(), syncPlan.syncTotals.totalSizeBytes)
-    val (actions, _) = syncPlan.actions.zipWithIndex.reverse
-      .foldLeft(zero) { (acc: Accumulator, indexedAction) =>
-        {
-          val (stream, bytesToDo) = acc
+    TaskR
+      .foldLeft(syncPlan.actions.reverse.zipWithIndex)(zero)(
+        (acc, indexedAction) => {
           val (action, index)     = indexedAction
+          val (stream, bytesToDo) = acc
           val remainingBytes      = bytesToDo - action.size
-          (
-            archive.update(index, action, remainingBytes) ++ stream,
-            remainingBytes
-          )
-        }
+          (for {
+            event <- archive.update(index, action, remainingBytes)
+            events = stream ++ Stream(event)
+          } yield events)
+            .map((_, remainingBytes))
+        })
+      .map {
+        case (events, _) => events
       }
-    actions.sequence
   }
+
 }
 
 object Program extends Program

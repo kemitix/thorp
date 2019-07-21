@@ -1,17 +1,17 @@
 package net.kemitix.thorp.storage.aws
 
-import cats.effect.IO
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.DeleteObjectRequest
 import net.kemitix.thorp.domain.StorageQueueEvent.DeleteQueueEvent
 import net.kemitix.thorp.domain.{Bucket, RemoteKey, StorageQueueEvent}
+import zio.Task
 
 class Deleter(amazonS3: AmazonS3) {
 
   def delete(
       bucket: Bucket,
       remoteKey: RemoteKey
-  ): IO[StorageQueueEvent] =
+  ): Task[StorageQueueEvent] =
     for {
       _ <- deleteObject(bucket, remoteKey)
     } yield DeleteQueueEvent(remoteKey)
@@ -21,7 +21,7 @@ class Deleter(amazonS3: AmazonS3) {
       remoteKey: RemoteKey
   ) = {
     val request = new DeleteObjectRequest(bucket.name, remoteKey.key)
-    IO(amazonS3.deleteObject(request))
+    Task(amazonS3.deleteObject(request))
   }
 
 }

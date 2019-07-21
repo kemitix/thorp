@@ -1,25 +1,26 @@
 package net.kemitix.thorp.core
 
-import cats.effect.IO
-import cats.implicits._
 import net.kemitix.thorp.domain.Sources
+import zio.IO
 
 trait SourceConfigLoader {
 
   val thorpConfigFileName = ".thorp.conf"
 
-  def loadSourceConfigs: Sources => IO[ConfigOptions] =
+  def loadSourceConfigs: Sources => IO[List[ConfigValidation], ConfigOptions] =
     sources => {
 
       val sourceConfigOptions =
-        ConfigOptions(sources.paths.map(ConfigOption.Source(_)))
+        ConfigOptions(sources.paths.map(ConfigOption.Source))
 
       val reduce: List[ConfigOptions] => ConfigOptions =
-        _.foldLeft(sourceConfigOptions) { (acc, co) => acc ++ co }
+        _.foldLeft(sourceConfigOptions) { (acc, co) =>
+          acc ++ co
+        }
 
-      sources.paths
-        .map(_.resolve(thorpConfigFileName))
-        .map(ParseConfigFile.parseFile).sequence
+      IO.foreach(sources.paths) { path =>
+          ParseConfigFile.parseFile(path.resolve(thorpConfigFileName))
+        }
         .map(reduce)
     }
 

@@ -2,25 +2,25 @@ package net.kemitix.thorp.storage.aws
 
 import java.nio.file.Path
 
-import cats.effect.IO
-import cats.implicits._
 import com.amazonaws.services.s3.model.PutObjectRequest
 import com.amazonaws.services.s3.transfer.TransferManagerConfiguration
 import com.amazonaws.services.s3.transfer.internal.TransferManagerUtils
 import net.kemitix.thorp.core.MD5HashGenerator
-import net.kemitix.thorp.domain.{Logger, MD5Hash}
+import net.kemitix.thorp.domain.MD5Hash
+import zio.Task
 
 trait ETagGenerator {
 
   def eTag(
       path: Path
-  )(implicit l: Logger): IO[String] = {
+  ): Task[String] = {
     val partSize = calculatePartSize(path)
     val parts    = numParts(path.toFile.length, partSize)
-    partsIndex(parts)
-      .map(digestChunk(path, partSize))
-      .sequence
-      .map(concatenateDigests)
+    Task
+      .foreach(partsIndex(parts)) { chunkNumber =>
+        digestChunk(path, partSize)(chunkNumber)
+      }
+      .map(parts => concatenateDigests(parts))
       .map(MD5HashGenerator.hex)
       .map(hash => s"$hash-$parts")
   }
@@ -53,14 +53,14 @@ trait ETagGenerator {
       chunkSize: Long
   )(
       chunkNumber: Long
-  )(implicit l: Logger): IO[Array[Byte]] =
+  ): Task[Array[Byte]] =
     hashChunk(path, chunkNumber, chunkSize).map(_.digest)
 
   def hashChunk(
       path: Path,
       chunkNumber: Long,
       chunkSize: Long
-  )(implicit l: Logger): IO[MD5Hash] =
+  ): Task[MD5Hash] =
     MD5HashGenerator.md5FileChunk(path, chunkNumber * chunkSize, chunkSize)
 
   def offsets(

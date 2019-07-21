@@ -1,14 +1,13 @@
 package net.kemitix.thorp.core
 
-import cats.Semigroup
 import monocle.Lens
 import monocle.macros.GenLens
 
 case class ConfigOptions(
     options: List[ConfigOption] = List()
-) extends Semigroup[ConfigOptions] {
+) {
 
-  override def combine(
+  def combine(
       x: ConfigOptions,
       y: ConfigOptions
   ): ConfigOptions =

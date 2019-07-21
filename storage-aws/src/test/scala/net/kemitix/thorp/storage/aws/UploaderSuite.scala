@@ -17,8 +17,7 @@ class UploaderSuite extends FunSpec with MockFactory {
   private val prefix             = RemoteKey("prefix")
   implicit private val config: Config =
     Config(Bucket("bucket"), prefix, sources = Sources(List(sourcePath)))
-  private val fileToKey                   = generateKey(config.sources, config.prefix) _
-  implicit private val implLogger: Logger = new DummyLogger
+  private val fileToKey = generateKey(config.sources, config.prefix) _
 
   def md5HashMap(hash: MD5Hash): Map[String, MD5Hash] = Map("md5" -> hash)
 

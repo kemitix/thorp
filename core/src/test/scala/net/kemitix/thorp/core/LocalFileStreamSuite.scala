@@ -5,6 +5,7 @@ import java.nio.file.Paths
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.HashService
 import org.scalatest.FunSpec
+import zio.DefaultRuntime
 
 class LocalFileStreamSuite extends FunSpec {
 
@@ -21,28 +22,34 @@ class LocalFileStreamSuite extends FunSpec {
 
   implicit private val config: Config = Config(
     sources = Sources(List(sourcePath)))
-  implicit private val logger: Logger = new DummyLogger
 
   describe("findFiles") {
     it("should find all files") {
-      val result: Set[String] =
-        invoke.localFiles.toSet
-          .map { x: LocalFile =>
-            x.relative.toString
-          }
-      assertResult(Set("subdir/leaf-file", "root-file"))(result)
+      val expected = Right(Set("subdir/leaf-file", "root-file"))
+      val result =
+        invoke()
+          .map(_.localFiles)
+          .map(localFiles => localFiles.map(_.relative.toString))
+          .map(_.toSet)
+      assertResult(expected)(result)
     }
     it("should count all files") {
-      val result = invoke.count
-      assertResult(2)(result)
+      val expected = Right(2)
+      val result   = invoke().map(_.count)
+      assertResult(expected)(result)
     }
     it("should sum the size of all files") {
-      val result = invoke.totalSizeBytes
-      assertResult(113)(result)
+      val expected = Right(113)
+      val result   = invoke().map(_.totalSizeBytes)
+      assertResult(expected)(result)
     }
   }
 
-  private def invoke =
-    LocalFileStream.findFiles(sourcePath, hashService).unsafeRunSync
+  private def invoke() = {
+    val runtime = new DefaultRuntime {}
+    runtime.unsafeRunSync {
+      LocalFileStream.findFiles(sourcePath, hashService)
+    }.toEither
+  }
 
 }
