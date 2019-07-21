@@ -57,11 +57,6 @@ val awsSdkDependencies = Seq(
     "com.fasterxml.jackson.dataformat" % "jackson-dataformat-cbor" % "2.9.9"
   )
 )
-val catsEffectsSettings = Seq(
-  libraryDependencies ++=  Seq(
-    "org.typelevel" %% "cats-effect" % "1.3.1"
-  )
-)
 val zioDependencies = Seq(
   libraryDependencies ++= Seq (
     "dev.zio" %% "zio" % "1.0.0-RC10-1"
@@ -123,5 +118,4 @@ lazy val domain = (project in file("domain"))
   .settings(commonSettings)
   .settings(domainDependencies)
   .settings(assemblyJarName in assembly := "domain.jar")
-  .settings(catsEffectsSettings)
   .settings(testDependencies)
