@@ -4,12 +4,7 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.Date
 
-import com.amazonaws.services.s3.AmazonS3
-import com.amazonaws.services.s3.model.{
-  ListObjectsV2Request,
-  ListObjectsV2Result,
-  S3ObjectSummary
-}
+import com.amazonaws.services.s3.model.{ListObjectsV2Result, S3ObjectSummary}
 import net.kemitix.thorp.console.MyConsole
 import net.kemitix.thorp.core.Resource
 import net.kemitix.thorp.domain._
@@ -54,18 +49,19 @@ class S3StorageServiceSuite extends FunSpec with MockFactory {
     val k2 = RemoteKey("key2")
     val o2 = objectSummary(h2, k2, lm)
 
-    val amazonS3                = stub[AmazonS3]
+    val amazonS3Client          = stub[AmazonS3.Client]
     val amazonS3TransferManager = stub[AmazonTransferManager]
-    val storageService          = new S3StorageService(amazonS3, amazonS3TransferManager)
+    val storageService =
+      new S3StorageService(amazonS3Client, amazonS3TransferManager)
 
     val myFakeResponse = new ListObjectsV2Result()
     val summaries      = myFakeResponse.getObjectSummaries
     summaries.add(o1a)
     summaries.add(o1b)
     summaries.add(o2)
-    (amazonS3 listObjectsV2 (_: ListObjectsV2Request))
-      .when(*)
-      .returns(myFakeResponse)
+    (amazonS3Client.listObjectsV2 _)
+      .when()
+      .returns(_ => myFakeResponse)
 
     it(
       "should build list of hash lookups, with duplicate objects grouped by hash") {

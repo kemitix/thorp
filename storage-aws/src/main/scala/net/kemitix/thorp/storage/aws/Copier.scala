@@ -1,12 +1,11 @@
 package net.kemitix.thorp.storage.aws
 
-import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.CopyObjectRequest
 import net.kemitix.thorp.domain.StorageQueueEvent.CopyQueueEvent
 import net.kemitix.thorp.domain._
 import zio.Task
 
-class Copier(amazonS3: AmazonS3) {
+class Copier(amazonS3: AmazonS3.Client) {
 
   def copy(
       bucket: Bucket,
@@ -15,8 +14,9 @@ class Copier(amazonS3: AmazonS3) {
       targetKey: RemoteKey
   ): Task[StorageQueueEvent] =
     for {
-      _ <- copyObject(bucket, sourceKey, hash, targetKey)
-    } yield CopyQueueEvent(targetKey)
+      _      <- copyObject(bucket, sourceKey, hash, targetKey)
+      result <- Task.succeed(CopyQueueEvent(targetKey))
+    } yield result
 
   private def copyObject(
       bucket: Bucket,

@@ -1,13 +1,13 @@
 package net.kemitix.thorp.storage.aws
 
+import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder
-import com.amazonaws.services.s3.{AmazonS3, AmazonS3ClientBuilder}
 import net.kemitix.thorp.storage.api.StorageService
 
 object S3StorageServiceBuilder {
 
   def createService(
-      amazonS3Client: AmazonS3,
+      amazonS3Client: AmazonS3.Client,
       amazonTransferManager: AmazonTransferManager
   ): StorageService =
     new S3StorageService(
@@ -17,7 +17,7 @@ object S3StorageServiceBuilder {
 
   lazy val defaultStorageService: StorageService =
     createService(
-      AmazonS3ClientBuilder.defaultClient,
+      AmazonS3.ClientImpl(AmazonS3ClientBuilder.defaultClient),
       AmazonTransferManager(TransferManagerBuilder.defaultTransferManager)
     )
 
