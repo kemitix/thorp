@@ -17,14 +17,6 @@ class S3StorageServiceSuite extends FreeSpec with MockFactory {
 
   private val runtime = Runtime(MyConsole.Live, PlatformLive.Default)
 
-  trait S3ClientTest {
-    val amazonS3Client: AmazonS3.Client = stub[AmazonS3.Client]
-    val amazonS3TransferManager: AmazonTransferManager =
-      stub[AmazonTransferManager]
-    val storageService: S3StorageService =
-      new S3StorageService(amazonS3Client, amazonS3TransferManager)
-  }
-
   "listObjects" - {
     def objectSummary(hash: MD5Hash,
                       remoteKey: RemoteKey,
@@ -64,11 +56,11 @@ class S3StorageServiceSuite extends FreeSpec with MockFactory {
                       k1b -> HashModified(h1, lm),
                       k2  -> HashModified(h2, lm))
         ))
-      new S3ClientTest {
-        (amazonS3Client.listObjectsV2 _)
+      new AmazonS3ClientTestFixture {
+        (fixture.amazonS3Client.listObjectsV2 _)
           .when()
           .returns(_ => myFakeResponse)
-        val result = invoke(storageService)
+        val result = invoke(fixture.storageService)
         assertResult(expected)(result)
       }
     }
