@@ -2,7 +2,7 @@ package net.kemitix.thorp.console
 
 import java.io.PrintStream
 
-import zio.{IO, ZIO}
+import zio.{UIO, ZIO}
 
 trait MyConsole {
   val console: MyConsole.Service
@@ -23,9 +23,7 @@ object MyConsole {
         putStrLn(Console.out)(line)
       final def putStrLn(stream: PrintStream)(
           line: String): ZIO[MyConsole, Nothing, Unit] =
-        IO.effectTotal(Console.withOut(stream) {
-          Console.println(line)
-        })
+        UIO(Console.withOut(stream)(Console.println(line)))
     }
   }
 
