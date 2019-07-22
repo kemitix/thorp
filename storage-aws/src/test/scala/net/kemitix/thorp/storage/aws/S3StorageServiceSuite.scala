@@ -9,13 +9,21 @@ import net.kemitix.thorp.console.MyConsole
 import net.kemitix.thorp.core.Resource
 import net.kemitix.thorp.domain._
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.{FreeSpec, FunSpec}
+import org.scalatest.FreeSpec
 import zio.Runtime
 import zio.internal.PlatformLive
 
 class S3StorageServiceSuite extends FreeSpec with MockFactory {
 
   private val runtime = Runtime(MyConsole.Live, PlatformLive.Default)
+
+  trait S3ClientTest {
+    val amazonS3Client: AmazonS3.Client = stub[AmazonS3.Client]
+    val amazonS3TransferManager: AmazonTransferManager =
+      stub[AmazonTransferManager]
+    val storageService: S3StorageService =
+      new S3StorageService(amazonS3Client, amazonS3TransferManager)
+  }
 
   "listObjects" - {
     def objectSummary(hash: MD5Hash,
@@ -32,27 +40,20 @@ class S3StorageServiceSuite extends FreeSpec with MockFactory {
     val prefix     = RemoteKey("prefix")
     implicit val config: Config =
       Config(Bucket("bucket"), prefix, sources = Sources(List(sourcePath)))
-    val lm                      = LastModified(Instant.now.truncatedTo(ChronoUnit.MILLIS))
-    val h1                      = MD5Hash("hash1")
-    val k1a                     = RemoteKey("key1a")
-    val o1a                     = objectSummary(h1, k1a, lm)
-    val k1b                     = RemoteKey("key1b")
-    val o1b                     = objectSummary(h1, k1b, lm)
-    val h2                      = MD5Hash("hash2")
-    val k2                      = RemoteKey("key2")
-    val o2                      = objectSummary(h2, k2, lm)
-    val amazonS3Client          = stub[AmazonS3.Client]
-    val amazonS3TransferManager = stub[AmazonTransferManager]
-    val storageService =
-      new S3StorageService(amazonS3Client, amazonS3TransferManager)
+    val lm             = LastModified(Instant.now.truncatedTo(ChronoUnit.MILLIS))
+    val h1             = MD5Hash("hash1")
+    val k1a            = RemoteKey("key1a")
+    val o1a            = objectSummary(h1, k1a, lm)
+    val k1b            = RemoteKey("key1b")
+    val o1b            = objectSummary(h1, k1b, lm)
+    val h2             = MD5Hash("hash2")
+    val k2             = RemoteKey("key2")
+    val o2             = objectSummary(h2, k2, lm)
     val myFakeResponse = new ListObjectsV2Result()
     val summaries      = myFakeResponse.getObjectSummaries
     summaries.add(o1a)
     summaries.add(o1b)
     summaries.add(o2)
-    (amazonS3Client.listObjectsV2 _)
-      .when()
-      .returns(_ => myFakeResponse)
 
     "should build list of hash lookups, with duplicate objects grouped by hash" in {
       val expected = Right(
@@ -63,8 +64,13 @@ class S3StorageServiceSuite extends FreeSpec with MockFactory {
                       k1b -> HashModified(h1, lm),
                       k2  -> HashModified(h2, lm))
         ))
-      val result = invoke(storageService)
-      assertResult(expected)(result)
+      new S3ClientTest {
+        (amazonS3Client.listObjectsV2 _)
+          .when()
+          .returns(_ => myFakeResponse)
+        val result = invoke(storageService)
+        assertResult(expected)(result)
+      }
     }
   }
 
