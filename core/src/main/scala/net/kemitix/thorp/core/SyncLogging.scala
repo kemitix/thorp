@@ -17,16 +17,10 @@ trait SyncLogging {
       bucket: Bucket,
       prefix: RemoteKey,
       sources: Sources
-  ): ZIO[MyConsole, Nothing, Unit] = {
-    val sourcesList = sources.paths.mkString(", ")
+  ): ZIO[MyConsole, Nothing, Unit] =
     for {
-      _ <- putStrLn(
-        List(s"Bucket: ${bucket.name}",
-             s"Prefix: ${prefix.key}",
-             s"Source: $sourcesList")
-          .mkString(", "))
+      _ <- putStrLn(ConsoleOut.ValidConfig(bucket, prefix, sources))
     } yield ()
-  }
 
   def logFileScan(implicit c: Config): ZIO[MyConsole, Nothing, Unit] =
     putStrLn(s"Scanning local files: ${c.sources.paths.mkString(", ")}...")
