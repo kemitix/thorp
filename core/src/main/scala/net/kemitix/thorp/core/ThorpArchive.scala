@@ -1,8 +1,8 @@
 package net.kemitix.thorp.core
 
+import net.kemitix.thorp.console._
 import net.kemitix.thorp.domain.{LocalFile, StorageQueueEvent}
 import zio.TaskR
-import zio.console._
 
 trait ThorpArchive {
 
@@ -10,12 +10,12 @@ trait ThorpArchive {
       index: Int,
       action: Action,
       totalBytesSoFar: Long
-  ): TaskR[Console, StorageQueueEvent]
+  ): TaskR[MyConsole, StorageQueueEvent]
 
   def logFileUploaded(
       localFile: LocalFile,
       batchMode: Boolean
-  ): TaskR[Console, Unit] =
+  ): TaskR[MyConsole, Unit] =
     for {
       _ <- TaskR.when(batchMode)(
         putStrLn(s"Uploaded: ${localFile.remoteKey.key}"))

@@ -1,10 +1,10 @@
 package net.kemitix.thorp.core
 
+import net.kemitix.thorp.console._
 import net.kemitix.thorp.core.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.domain.StorageQueueEvent.DoNothingQueueEvent
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.StorageService
-import zio.console.Console
 import zio.{Task, TaskR}
 
 case class UnversionedMirrorArchive(
@@ -17,7 +17,7 @@ case class UnversionedMirrorArchive(
       index: Int,
       action: Action,
       totalBytesSoFar: Long
-  ): TaskR[Console, StorageQueueEvent] =
+  ): TaskR[MyConsole, StorageQueueEvent] =
     action match {
       case ToUpload(bucket, localFile, _) =>
         for {

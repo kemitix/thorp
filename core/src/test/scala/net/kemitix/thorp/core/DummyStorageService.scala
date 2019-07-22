@@ -2,9 +2,9 @@ package net.kemitix.thorp.core
 
 import java.io.File
 
+import net.kemitix.thorp.console._
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.StorageService
-import zio.console.Console
 import zio.{Task, TaskR}
 
 case class DummyStorageService(s3ObjectData: S3ObjectsData,
@@ -14,8 +14,10 @@ case class DummyStorageService(s3ObjectData: S3ObjectsData,
   override def shutdown: Task[StorageQueueEvent] =
     Task(StorageQueueEvent.ShutdownQueueEvent())
 
-  override def listObjects(bucket: Bucket,
-                           prefix: RemoteKey): TaskR[Console, S3ObjectsData] =
+  override def listObjects(
+      bucket: Bucket,
+      prefix: RemoteKey
+  ): TaskR[MyConsole, S3ObjectsData] =
     TaskR(s3ObjectData)
 
   override def upload(localFile: LocalFile,

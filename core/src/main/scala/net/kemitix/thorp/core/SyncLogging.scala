@@ -1,5 +1,7 @@
 package net.kemitix.thorp.core
 
+import net.kemitix.thorp.console._
+//import net.kemitix.thorp.console.MyConsole._
 import net.kemitix.thorp.domain.StorageQueueEvent.{
   CopyQueueEvent,
   DeleteQueueEvent,
@@ -8,7 +10,6 @@ import net.kemitix.thorp.domain.StorageQueueEvent.{
 }
 import net.kemitix.thorp.domain._
 import zio.ZIO
-import zio.console._
 
 trait SyncLogging {
 
@@ -16,7 +17,7 @@ trait SyncLogging {
       bucket: Bucket,
       prefix: RemoteKey,
       sources: Sources
-  ): ZIO[Console, Nothing, Unit] = {
+  ): ZIO[MyConsole, Nothing, Unit] = {
     val sourcesList = sources.paths.mkString(", ")
     for {
       _ <- putStrLn(
@@ -27,12 +28,12 @@ trait SyncLogging {
     } yield ()
   }
 
-  def logFileScan(implicit c: Config): ZIO[Console, Nothing, Unit] =
+  def logFileScan(implicit c: Config): ZIO[MyConsole, Nothing, Unit] =
     putStrLn(s"Scanning local files: ${c.sources.paths.mkString(", ")}...")
 
   def logRunFinished(
       actions: Stream[StorageQueueEvent]
-  ): ZIO[Console, Nothing, Unit] = {
+  ): ZIO[MyConsole, Nothing, Unit] = {
     val counters = actions.foldLeft(Counters())(countActivities)
     for {
       _ <- putStrLn(s"Uploaded ${counters.uploaded} files")
@@ -45,7 +46,7 @@ trait SyncLogging {
 
   def logErrors(
       actions: Stream[StorageQueueEvent]
-  ): ZIO[Console, Nothing, Unit] = {
+  ): ZIO[MyConsole, Nothing, Unit] = {
     ZIO.foldLeft(actions)(()) { (_, action) =>
       action match {
         case ErrorQueueEvent(k, e) =>

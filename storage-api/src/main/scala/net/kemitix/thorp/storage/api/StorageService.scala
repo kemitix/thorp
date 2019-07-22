@@ -1,7 +1,7 @@
 package net.kemitix.thorp.storage.api
 
+import net.kemitix.thorp.console.MyConsole
 import net.kemitix.thorp.domain._
-import zio.console.Console
 import zio.{Task, TaskR}
 
 trait StorageService {
@@ -11,7 +11,7 @@ trait StorageService {
   def listObjects(
       bucket: Bucket,
       prefix: RemoteKey
-  ): TaskR[Console, S3ObjectsData]
+  ): TaskR[MyConsole, S3ObjectsData]
 
   def upload(
       localFile: LocalFile,

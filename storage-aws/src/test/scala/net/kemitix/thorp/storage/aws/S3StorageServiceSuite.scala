@@ -10,15 +10,17 @@ import com.amazonaws.services.s3.model.{
   ListObjectsV2Result,
   S3ObjectSummary
 }
+import net.kemitix.thorp.console.MyConsole
 import net.kemitix.thorp.core.Resource
 import net.kemitix.thorp.domain._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.FunSpec
-import zio.DefaultRuntime
+import zio.Runtime
+import zio.internal.PlatformLive
 
 class S3StorageServiceSuite extends FunSpec with MockFactory {
 
-  private val runtime = new DefaultRuntime {}
+  private val runtime = Runtime(MyConsole.Live, PlatformLive.Default)
 
   describe("listObjectsInPrefix") {
     val source     = Resource(this, "upload")
