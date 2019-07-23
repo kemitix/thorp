@@ -10,7 +10,8 @@ The format is based on [[https://keepachangelog.com/en/1.0.0/][Keep a Changelog]
 
 ** Added
 
-   - Log copy and delete operations (#???)
+   - Log copy and delete operations (#119)
+   - Log errors with red label (#119)
 
 ** Changed
 
