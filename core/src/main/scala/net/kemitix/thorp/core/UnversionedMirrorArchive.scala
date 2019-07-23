@@ -27,10 +27,12 @@ case class UnversionedMirrorArchive(
       case ToCopy(bucket, sourceKey, hash, targetKey, _) =>
         for {
           event <- storageService.copy(bucket, sourceKey, hash, targetKey)
+          _     <- logFileCopied(sourceKey, targetKey, batchMode)
         } yield event
       case ToDelete(bucket, remoteKey, _) =>
         for {
           event <- storageService.delete(bucket, remoteKey)
+          _     <- logFileDeleted(remoteKey, batchMode)
         } yield event
       case DoNothing(_, remoteKey, _) =>
         Task(DoNothingQueueEvent(remoteKey))
