@@ -29,19 +29,20 @@ class Copier(amazonS3: AmazonS3.Client) {
     } yield result
 
   private def mapCopyResult(
-      copyResult: Try[CopyObjectResult],
+      copyResult: Try[Option[CopyObjectResult]],
       sourceKey: RemoteKey,
       targetKey: RemoteKey
   ) =
     copyResult match {
-      case Success(null) =>
+      case Success(None) =>
         Task.succeed(
           StorageQueueEvent
             .ErrorQueueEvent(
               Action.Copy(s"${sourceKey.key} => ${targetKey.key}"),
               targetKey,
               HashMatchError))
-      case Success(_) => Task.succeed(CopyQueueEvent(sourceKey, targetKey))
+      case Success(Some(_)) =>
+        Task.succeed(CopyQueueEvent(sourceKey, targetKey))
       case Failure(e: AmazonS3Exception) =>
         Task.succeed(
           StorageQueueEvent.ErrorQueueEvent(
@@ -65,7 +66,7 @@ class Copier(amazonS3: AmazonS3.Client) {
         bucket.name,
         targetKey.key
       ).withMatchingETagConstraint(hash.hash)
-    Task(Try(amazonS3.copyObject(request)))
+    Task(Try(Option(amazonS3.copyObject(request))))
   }
 
 }
