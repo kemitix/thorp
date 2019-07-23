@@ -19,7 +19,7 @@ trait UploadEventLogger {
     val remoteKey    = localFile.remoteKey.key
     val fileLength   = localFile.file.length
     val statusHeight = 7
-    if (bytesTransferred < fileLength) {
+    if (bytesTransferred < fileLength)
       println(
         s"${GREEN}Uploading:$RESET $remoteKey$eraseToEndOfScreen\n" +
           statusWithBar(" File", sizeInEnglish, bytesTransferred, fileLength) +
@@ -29,8 +29,6 @@ trait UploadEventLogger {
                         bytesTransferred + totalBytesSoFar,
                         syncTotals.totalSizeBytes) +
           s"${Terminal.cursorPrevLine(statusHeight)}")
-    } else
-      println(s"${GREEN}Uploaded:$RESET $remoteKey$eraseToEndOfScreen")
   }
 
   private def statusWithBar(
