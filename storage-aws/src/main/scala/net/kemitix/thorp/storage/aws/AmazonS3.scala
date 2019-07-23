@@ -17,7 +17,7 @@ object AmazonS3 {
 
     def deleteObject: DeleteObjectRequest => Unit
 
-    def copyObject: CopyObjectRequest => CopyObjectResult
+    def copyObject: CopyObjectRequest => Option[CopyObjectResult]
 
     def listObjectsV2: ListObjectsV2Request => ListObjectsV2Result
 
@@ -30,8 +30,8 @@ object AmazonS3 {
     def deleteObject: DeleteObjectRequest => Unit =
       request => amazonS3.deleteObject(request)
 
-    def copyObject: CopyObjectRequest => CopyObjectResult =
-      request => amazonS3.copyObject(request)
+    def copyObject: CopyObjectRequest => Option[CopyObjectResult] =
+      request => Option(amazonS3.copyObject(request))
 
     def listObjectsV2: ListObjectsV2Request => ListObjectsV2Result =
       request => amazonS3.listObjectsV2(request)

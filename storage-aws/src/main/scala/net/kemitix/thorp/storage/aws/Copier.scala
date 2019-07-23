@@ -66,7 +66,7 @@ class Copier(amazonS3: AmazonS3.Client) {
         bucket.name,
         targetKey.key
       ).withMatchingETagConstraint(hash.hash)
-    Task(Try(Option(amazonS3.copyObject(request))))
+    Task(Try(amazonS3.copyObject(request)))
   }
 
 }

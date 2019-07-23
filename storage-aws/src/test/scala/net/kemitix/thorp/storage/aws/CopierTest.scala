@@ -29,7 +29,7 @@ class CopierTest extends FreeSpec {
           new AmazonS3ClientTestFixture {
             (fixture.amazonS3Client.copyObject _)
               .when()
-              .returns(_ => new CopyObjectResult)
+              .returns(_ => Some(new CopyObjectResult))
             private val result =
               invoke(bucket, sourceKey, hash, targetKey, fixture.storageService)
             assertResult(expected)(result)
@@ -41,7 +41,7 @@ class CopierTest extends FreeSpec {
           new AmazonS3ClientTestFixture {
             (fixture.amazonS3Client.copyObject _)
               .when()
-              .returns(_ => null)
+              .returns(_ => None)
             private val result =
               invoke(bucket, sourceKey, hash, targetKey, fixture.storageService)
             result match {
