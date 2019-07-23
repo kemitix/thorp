@@ -55,7 +55,7 @@ trait ThorpArchive {
           _ <- TaskR.when(batchMode)(
             putStrLn(s"${action.name} failed: ${action.keys}: ${e.getMessage}"))
           _ <- TaskR.when(!batchMode)(putStrLn(
-            s"$GREEN${action.name} failed:$RESET ${action.keys}: ${e.getMessage}$eraseToEndOfScreen"))
+            s"${RED}ERROR:$RESET ${action.name} ${action.keys}: ${e.getMessage}$eraseToEndOfScreen"))
         } yield ()
       case DoNothingQueueEvent(_) => TaskR(())
       case ShutdownQueueEvent()   => TaskR(())
