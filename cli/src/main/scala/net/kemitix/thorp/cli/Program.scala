@@ -1,17 +1,17 @@
 package net.kemitix.thorp.cli
 
+import net.kemitix.thorp.console._
 import net.kemitix.thorp.core._
 import net.kemitix.thorp.domain.{StorageQueueEvent, SyncTotals}
 import net.kemitix.thorp.storage.aws.S3HashService.defaultHashService
 import net.kemitix.thorp.storage.aws.S3StorageServiceBuilder.defaultStorageService
-import zio.console._
 import zio.{Task, TaskR, ZIO}
 
 trait Program extends PlanBuilder {
 
   lazy val version = s"Thorp v${thorp.BuildInfo.version}"
 
-  def run(cliOptions: ConfigOptions): ZIO[Console, Nothing, Unit] = {
+  def run(cliOptions: ConfigOptions): ZIO[MyConsole, Nothing, Unit] = {
     val showVersion = ConfigQuery.showVersion(cliOptions)
     for {
       _ <- ZIO.when(showVersion)(putStrLn(version))
@@ -20,7 +20,7 @@ trait Program extends PlanBuilder {
   }
 
   private def execute(
-      cliOptions: ConfigOptions): ZIO[Console, Throwable, Unit] = {
+      cliOptions: ConfigOptions): ZIO[MyConsole, Throwable, Unit] = {
     for {
       plan    <- createPlan(defaultStorageService, defaultHashService, cliOptions)
       archive <- thorpArchive(cliOptions, plan.syncTotals)
@@ -30,7 +30,8 @@ trait Program extends PlanBuilder {
     } yield ()
   }
 
-  private def handleErrors(throwable: Throwable): ZIO[Console, Nothing, Unit] =
+  private def handleErrors(
+      throwable: Throwable): ZIO[MyConsole, Nothing, Unit] =
     for {
       _ <- putStrLn("There were errors:")
       _ <- throwable match {
@@ -54,21 +55,20 @@ trait Program extends PlanBuilder {
   private def handleActions(
       archive: ThorpArchive,
       syncPlan: SyncPlan
-  ): TaskR[Console, Stream[StorageQueueEvent]] = {
+  ): TaskR[MyConsole, Stream[StorageQueueEvent]] = {
     type Accumulator = (Stream[StorageQueueEvent], Long)
     val zero: Accumulator = (Stream(), syncPlan.syncTotals.totalSizeBytes)
     TaskR
-      .foldLeft(syncPlan.actions.reverse.zipWithIndex)(zero)(
-        (acc, indexedAction) => {
-          val (action, index)     = indexedAction
-          val (stream, bytesToDo) = acc
-          val remainingBytes      = bytesToDo - action.size
-          (for {
-            event <- archive.update(index, action, remainingBytes)
-            events = stream ++ Stream(event)
-          } yield events)
-            .map((_, remainingBytes))
-        })
+      .foldLeft(syncPlan.actions.zipWithIndex)(zero)((acc, indexedAction) => {
+        val (action, index)     = indexedAction
+        val (stream, bytesToDo) = acc
+        val remainingBytes      = bytesToDo - action.size
+        (for {
+          event <- archive.update(index, action, remainingBytes)
+          events = stream ++ Stream(event)
+        } yield events)
+          .map((_, remainingBytes))
+      })
       .map {
         case (events, _) => events
       }

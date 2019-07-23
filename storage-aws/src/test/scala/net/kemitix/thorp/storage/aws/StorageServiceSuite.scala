@@ -2,7 +2,6 @@ package net.kemitix.thorp.storage.aws
 
 import java.time.Instant
 
-import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.PutObjectRequest
 import com.amazonaws.services.s3.transfer.model.UploadResult
 import net.kemitix.thorp.core.{KeyGenerator, Resource, S3MetaDataEnricher}
@@ -122,10 +121,10 @@ class StorageServiceSuite extends FunSpec with MockFactory {
   describe("upload") {
 
     describe("when uploading a file") {
-      val amazonS3              = stub[AmazonS3]
+      val amazonS3Client        = stub[AmazonS3.Client]
       val amazonTransferManager = stub[AmazonTransferManager]
       val storageService =
-        new S3StorageService(amazonS3, amazonTransferManager)
+        new S3StorageService(amazonS3Client, amazonTransferManager)
 
       val prefix = RemoteKey("prefix")
       val localFile =

@@ -1,12 +1,21 @@
 package net.kemitix.thorp.storage.aws
 
-import com.amazonaws.services.s3.AmazonS3
-import com.amazonaws.services.s3.model.CopyObjectRequest
-import net.kemitix.thorp.domain.StorageQueueEvent.CopyQueueEvent
+import com.amazonaws.services.s3.model.{
+  AmazonS3Exception,
+  CopyObjectRequest,
+  CopyObjectResult
+}
+import net.kemitix.thorp.domain.StorageQueueEvent.{Action, CopyQueueEvent}
 import net.kemitix.thorp.domain._
+import net.kemitix.thorp.storage.aws.S3ClientException.{
+  HashMatchError,
+  S3Exception
+}
 import zio.Task
 
-class Copier(amazonS3: AmazonS3) {
+import scala.util.{Failure, Success, Try}
+
+class Copier(amazonS3: AmazonS3.Client) {
 
   def copy(
       bucket: Bucket,
@@ -15,8 +24,34 @@ class Copier(amazonS3: AmazonS3) {
       targetKey: RemoteKey
   ): Task[StorageQueueEvent] =
     for {
-      _ <- copyObject(bucket, sourceKey, hash, targetKey)
-    } yield CopyQueueEvent(targetKey)
+      copyResult <- copyObject(bucket, sourceKey, hash, targetKey)
+      result     <- mapCopyResult(copyResult, sourceKey, targetKey)
+    } yield result
+
+  private def mapCopyResult(
+      copyResult: Try[Option[CopyObjectResult]],
+      sourceKey: RemoteKey,
+      targetKey: RemoteKey
+  ) =
+    copyResult match {
+      case Success(None) =>
+        Task.succeed(
+          StorageQueueEvent
+            .ErrorQueueEvent(
+              Action.Copy(s"${sourceKey.key} => ${targetKey.key}"),
+              targetKey,
+              HashMatchError))
+      case Success(Some(_)) =>
+        Task.succeed(CopyQueueEvent(sourceKey, targetKey))
+      case Failure(e: AmazonS3Exception) =>
+        Task.succeed(
+          StorageQueueEvent.ErrorQueueEvent(
+            Action.Copy(s"${sourceKey.key} => ${targetKey.key}"),
+            targetKey,
+            S3Exception(e.getMessage))
+        )
+      case Failure(e) => Task.fail(e)
+    }
 
   private def copyObject(
       bucket: Bucket,
@@ -31,7 +66,7 @@ class Copier(amazonS3: AmazonS3) {
         bucket.name,
         targetKey.key
       ).withMatchingETagConstraint(hash.hash)
-    Task(amazonS3.copyObject(request))
+    Task(Try(amazonS3.copyObject(request)))
   }
 
 }

@@ -4,6 +4,8 @@ import java.io.File
 import java.nio.file.Paths
 import java.time.Instant
 
+import net.kemitix.thorp.console
+import net.kemitix.thorp.console.MyConsole
 import net.kemitix.thorp.core.Action.{ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.domain.MD5HashData.{Leaf, Root}
 import net.kemitix.thorp.domain.StorageQueueEvent.{
@@ -15,12 +17,12 @@ import net.kemitix.thorp.domain.StorageQueueEvent.{
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.{HashService, StorageService}
 import org.scalatest.FunSpec
-import zio.console.Console
-import zio.{DefaultRuntime, Task, TaskR}
+import zio.internal.PlatformLive
+import zio.{Runtime, Task, TaskR}
 
 class SyncSuite extends FunSpec {
 
-  private val runtime = new DefaultRuntime {}
+  private val runtime = Runtime(MyConsole.Live, PlatformLive.Default)
 
   private val testBucket = Bucket("bucket")
   private val source     = Resource(this, "upload")
@@ -195,8 +197,9 @@ class SyncSuite extends FunSpec {
                                 s3ObjectsData: S3ObjectsData)
       extends StorageService {
 
-    override def listObjects(bucket: Bucket,
-                             prefix: RemoteKey): TaskR[Console, S3ObjectsData] =
+    override def listObjects(
+        bucket: Bucket,
+        prefix: RemoteKey): TaskR[console.MyConsole, S3ObjectsData] =
       TaskR(s3ObjectsData)
 
     override def upload(localFile: LocalFile,
@@ -210,7 +213,7 @@ class SyncSuite extends FunSpec {
                       sourceKey: RemoteKey,
                       hashes: MD5Hash,
                       targetKey: RemoteKey): Task[CopyQueueEvent] =
-      Task(CopyQueueEvent(targetKey))
+      Task(CopyQueueEvent(sourceKey, targetKey))
 
     override def delete(bucket: Bucket,
                         remoteKey: RemoteKey): Task[DeleteQueueEvent] =

@@ -1,9 +1,9 @@
 package net.kemitix.thorp.core
 
-import net.kemitix.thorp.core.Action.DoNothing
+import net.kemitix.thorp.console._
+import net.kemitix.thorp.core.Action._
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.{HashService, StorageService}
-import zio.console._
 import zio.{Task, TaskR}
 
 trait PlanBuilder {
@@ -12,7 +12,7 @@ trait PlanBuilder {
       storageService: StorageService,
       hashService: HashService,
       configOptions: ConfigOptions
-  ): TaskR[Console, SyncPlan] =
+  ): TaskR[MyConsole, SyncPlan] =
     ConfigurationBuilder
       .buildConfig(configOptions)
       .catchAll(errors => TaskR.fail(ConfigValidationException(errors)))
@@ -21,7 +21,7 @@ trait PlanBuilder {
   def useValidConfig(
       storageService: StorageService,
       hashService: HashService
-  )(implicit c: Config): TaskR[Console, SyncPlan] = {
+  )(implicit c: Config): TaskR[MyConsole, SyncPlan] = {
     for {
       _       <- SyncLogging.logRunStart(c.bucket, c.prefix, c.sources)
       actions <- buildPlan(storageService, hashService)
@@ -31,7 +31,7 @@ trait PlanBuilder {
   private def buildPlan(
       storageService: StorageService,
       hashService: HashService
-  )(implicit c: Config): TaskR[Console, SyncPlan] =
+  )(implicit c: Config): TaskR[MyConsole, SyncPlan] =
     for {
       metadata <- gatherMetadata(storageService, hashService)
     } yield assemblePlan(c)(metadata)
@@ -40,7 +40,9 @@ trait PlanBuilder {
       implicit c: Config): ((S3ObjectsData, LocalFiles)) => SyncPlan = {
     case (remoteData, localData) =>
       SyncPlan(
-        actions = createActions(remoteData, localData).filter(doesSomething),
+        actions = createActions(remoteData, localData)
+          .filter(doesSomething)
+          .sortBy(SequencePlan.order),
         syncTotals = SyncTotals(count = localData.count,
                                 totalSizeBytes = localData.totalSizeBytes)
       )
@@ -89,7 +91,7 @@ trait PlanBuilder {
   private def gatherMetadata(
       storageService: StorageService,
       hashService: HashService
-  )(implicit c: Config): TaskR[Console, (S3ObjectsData, LocalFiles)] =
+  )(implicit c: Config): TaskR[MyConsole, (S3ObjectsData, LocalFiles)] =
     for {
       remoteData <- fetchRemoteData(storageService)
       localData  <- findLocalFiles(hashService)
@@ -97,12 +99,12 @@ trait PlanBuilder {
 
   private def fetchRemoteData(
       storageService: StorageService
-  )(implicit c: Config): TaskR[Console, S3ObjectsData] =
+  )(implicit c: Config): TaskR[MyConsole, S3ObjectsData] =
     storageService.listObjects(c.bucket, c.prefix)
 
   private def findLocalFiles(
       hashService: HashService
-  )(implicit config: Config): TaskR[Console, LocalFiles] =
+  )(implicit config: Config): TaskR[MyConsole, LocalFiles] =
     for {
       _          <- SyncLogging.logFileScan
       localFiles <- findFiles(hashService)

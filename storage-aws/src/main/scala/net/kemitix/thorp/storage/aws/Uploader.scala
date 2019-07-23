@@ -3,6 +3,7 @@ package net.kemitix.thorp.storage.aws
 import com.amazonaws.event.{ProgressEvent, ProgressEventType, ProgressListener}
 import com.amazonaws.services.s3.model.{ObjectMetadata, PutObjectRequest}
 import net.kemitix.thorp.domain.StorageQueueEvent.{
+  Action,
   ErrorQueueEvent,
   UploadQueueEvent
 }
@@ -39,7 +40,12 @@ class Uploader(transferManager: => AmazonTransferManager) {
       .map(_.waitForUploadResult)
       .map(upload =>
         UploadQueueEvent(RemoteKey(upload.getKey), MD5Hash(upload.getETag)))
-      .catchAll(e => Task.succeed(ErrorQueueEvent(localFile.remoteKey, e)))
+      .catchAll(
+        e =>
+          Task.succeed(
+            ErrorQueueEvent(Action.Upload(localFile.remoteKey.key),
+                            localFile.remoteKey,
+                            e)))
   }
 
   private def request(

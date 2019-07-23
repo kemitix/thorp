@@ -3,15 +3,17 @@ package net.kemitix.thorp.core
 import java.io.File
 import java.nio.file.Path
 
+import net.kemitix.thorp.console._
 import net.kemitix.thorp.core.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.{HashService, StorageService}
 import org.scalatest.FreeSpec
-import zio.DefaultRuntime
+import zio.Runtime
+import zio.internal.PlatformLive
 
 class PlanBuilderTest extends FreeSpec with TemporaryFolder {
 
-  private val runtime = new DefaultRuntime {}
+  private val runtime = Runtime(MyConsole.Live, PlatformLive.Default)
 
   private val lastModified: LastModified = LastModified()
   private val planBuilder                = new PlanBuilder {}
@@ -464,7 +466,7 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
       storageService: StorageService,
       hashService: HashService,
       configOptions: ConfigOptions
-  ): Either[Any, List[(String, String, String, String, String)]] =
+  ): Either[Any, List[(String, String, String, String, String)]] = {
     runtime
       .unsafeRunSync {
         planBuilder
@@ -485,5 +487,6 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
           ("do-nothing", remoteKey.key, "", "", "")
         case x => ("other", x.toString, "", "", "")
       }))
+  }
 
 }

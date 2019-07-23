@@ -1,12 +1,11 @@
 package net.kemitix.thorp.storage.aws
 
-import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.DeleteObjectRequest
 import net.kemitix.thorp.domain.StorageQueueEvent.DeleteQueueEvent
 import net.kemitix.thorp.domain.{Bucket, RemoteKey, StorageQueueEvent}
 import zio.Task
 
-class Deleter(amazonS3: AmazonS3) {
+class Deleter(amazonS3: AmazonS3.Client) {
 
   def delete(
       bucket: Bucket,

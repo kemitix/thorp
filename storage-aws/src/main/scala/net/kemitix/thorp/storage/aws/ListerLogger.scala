@@ -1,10 +1,10 @@
 package net.kemitix.thorp.storage.aws
 
+import net.kemitix.thorp.console._
 import zio.TaskR
-import zio.console._
 
 trait ListerLogger {
-  def logFetchBatch: TaskR[Console, Unit] =
+  def logFetchBatch: TaskR[MyConsole, Unit] =
     putStrLn("Fetching remote summaries...")
 }
 object ListerLogger extends ListerLogger

@@ -1,5 +1,7 @@
 package net.kemitix.thorp.core
 
+import net.kemitix.thorp.console._
+//import net.kemitix.thorp.console.MyConsole._
 import net.kemitix.thorp.domain.StorageQueueEvent.{
   CopyQueueEvent,
   DeleteQueueEvent,
@@ -7,8 +9,8 @@ import net.kemitix.thorp.domain.StorageQueueEvent.{
   UploadQueueEvent
 }
 import net.kemitix.thorp.domain._
+import net.kemitix.thorp.domain.Terminal.eraseToEndOfScreen
 import zio.ZIO
-import zio.console._
 
 trait SyncLogging {
 
@@ -16,43 +18,25 @@ trait SyncLogging {
       bucket: Bucket,
       prefix: RemoteKey,
       sources: Sources
-  ): ZIO[Console, Nothing, Unit] = {
-    val sourcesList = sources.paths.mkString(", ")
+  ): ZIO[MyConsole, Nothing, Unit] =
     for {
-      _ <- putStrLn(
-        List(s"Bucket: ${bucket.name}",
-             s"Prefix: ${prefix.key}",
-             s"Source: $sourcesList")
-          .mkString(", "))
+      _ <- putStrLn(ConsoleOut.ValidConfig(bucket, prefix, sources))
     } yield ()
-  }
 
-  def logFileScan(implicit c: Config): ZIO[Console, Nothing, Unit] =
+  def logFileScan(implicit c: Config): ZIO[MyConsole, Nothing, Unit] =
     putStrLn(s"Scanning local files: ${c.sources.paths.mkString(", ")}...")
 
   def logRunFinished(
       actions: Stream[StorageQueueEvent]
-  ): ZIO[Console, Nothing, Unit] = {
+  ): ZIO[MyConsole, Nothing, Unit] = {
     val counters = actions.foldLeft(Counters())(countActivities)
     for {
+      _ <- putStrLn(eraseToEndOfScreen)
       _ <- putStrLn(s"Uploaded ${counters.uploaded} files")
       _ <- putStrLn(s"Copied   ${counters.copied} files")
       _ <- putStrLn(s"Deleted  ${counters.deleted} files")
       _ <- putStrLn(s"Errors   ${counters.errors}")
-      _ <- logErrors(actions)
     } yield ()
-  }
-
-  def logErrors(
-      actions: Stream[StorageQueueEvent]
-  ): ZIO[Console, Nothing, Unit] = {
-    ZIO.foldLeft(actions)(()) { (_, action) =>
-      action match {
-        case ErrorQueueEvent(k, e) =>
-          putStrLn(s"${k.key}: ${e.getMessage}")
-        case _ => ZIO.unit
-      }
-    }
   }
 
   private def countActivities: (Counters, StorageQueueEvent) => Counters =

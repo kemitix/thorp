@@ -1,14 +1,13 @@
 package net.kemitix.thorp.storage.aws
 
-import com.amazonaws.services.s3.AmazonS3
+import net.kemitix.thorp.console.MyConsole
 import net.kemitix.thorp.domain.StorageQueueEvent.ShutdownQueueEvent
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.StorageService
-import zio.console.Console
 import zio.{Task, TaskR}
 
 class S3StorageService(
-    amazonS3Client: => AmazonS3,
+    amazonS3Client: => AmazonS3.Client,
     amazonTransferManager: => AmazonTransferManager
 ) extends StorageService {
 
@@ -20,7 +19,7 @@ class S3StorageService(
   override def listObjects(
       bucket: Bucket,
       prefix: RemoteKey
-  ): TaskR[Console, S3ObjectsData] =
+  ): TaskR[MyConsole, S3ObjectsData] =
     objectLister.listObjects(bucket, prefix)
 
   override def copy(

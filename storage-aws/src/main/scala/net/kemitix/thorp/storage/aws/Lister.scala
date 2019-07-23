@@ -1,17 +1,16 @@
 package net.kemitix.thorp.storage.aws
 
-import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.{ListObjectsV2Request, S3ObjectSummary}
+import net.kemitix.thorp.console._
 import net.kemitix.thorp.domain
 import net.kemitix.thorp.domain.{Bucket, RemoteKey, S3ObjectsData}
 import net.kemitix.thorp.storage.aws.S3ObjectsByHash.byHash
 import net.kemitix.thorp.storage.aws.S3ObjectsByKey.byKey
-import zio.console.Console
-import zio.{IO, Task, TaskR, ZIO}
+import zio.{Task, TaskR}
 
 import scala.collection.JavaConverters._
 
-class Lister(amazonS3: AmazonS3) {
+class Lister(amazonS3: AmazonS3.Client) {
 
   private type Token = String
   private type Batch = (Stream[S3ObjectSummary], Option[Token])
@@ -19,7 +18,7 @@ class Lister(amazonS3: AmazonS3) {
   def listObjects(
       bucket: Bucket,
       prefix: RemoteKey
-  ): TaskR[Console, S3ObjectsData] = {
+  ): TaskR[MyConsole, S3ObjectsData] = {
 
     val requestMore = (token: Token) =>
       new ListObjectsV2Request()
@@ -27,7 +26,7 @@ class Lister(amazonS3: AmazonS3) {
         .withPrefix(prefix.key)
         .withContinuationToken(token)
 
-    def fetchBatch: ListObjectsV2Request => TaskR[Console, Batch] =
+    def fetchBatch: ListObjectsV2Request => TaskR[MyConsole, Batch] =
       request =>
         for {
           _     <- ListerLogger.logFetchBatch
@@ -36,14 +35,15 @@ class Lister(amazonS3: AmazonS3) {
 
     def fetchMore(
         more: Option[Token]
-    ): TaskR[Console, Stream[S3ObjectSummary]] = {
+    ): TaskR[MyConsole, Stream[S3ObjectSummary]] = {
       more match {
-        case None        => ZIO.succeed(Stream.empty)
+        case None        => TaskR.succeed(Stream.empty)
         case Some(token) => fetch(requestMore(token))
       }
     }
 
-    def fetch: ListObjectsV2Request => TaskR[Console, Stream[S3ObjectSummary]] =
+    def fetch
+      : ListObjectsV2Request => TaskR[MyConsole, Stream[S3ObjectSummary]] =
       request => {
         for {
           batch <- fetchBatch(request)
@@ -63,7 +63,7 @@ class Lister(amazonS3: AmazonS3) {
   private def tryFetchBatch(
       request: ListObjectsV2Request
   ): Task[(Stream[S3ObjectSummary], Option[Token])] =
-    IO(amazonS3.listObjectsV2(request))
+    Task(amazonS3.listObjectsV2(request))
       .map { result =>
         val more: Option[Token] =
           if (result.isTruncated) Some(result.getNextContinuationToken)
