@@ -1,17 +1,7 @@
 package net.kemitix.thorp.cli
 
-import net.kemitix.thorp.console.MyConsole
 import net.kemitix.thorp.console._
-import net.kemitix.thorp.core.{
-  ConfigOptions,
-  ConfigQuery,
-  ConfigValidationException,
-  PlanBuilder,
-  SyncLogging,
-  SyncPlan,
-  ThorpArchive,
-  UnversionedMirrorArchive
-}
+import net.kemitix.thorp.core._
 import net.kemitix.thorp.domain.{StorageQueueEvent, SyncTotals}
 import net.kemitix.thorp.storage.aws.S3HashService.defaultHashService
 import net.kemitix.thorp.storage.aws.S3StorageServiceBuilder.defaultStorageService
