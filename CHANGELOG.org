@@ -17,6 +17,10 @@ The format is based on [[https://keepachangelog.com/en/1.0.0/][Keep a Changelog]
 
    - Replace cats-effect with zio (#117)
 
+** Dependencies
+
+   - Upgrade ~aws-java-sdk-s3~ from ~1.11.587~ to ~1.11.596~ (#118)
+
 * [0.7.2] - 2019-07-19
 
 ** Changed
