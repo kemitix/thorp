@@ -5,7 +5,7 @@ import com.amazonaws.services.s3.model.{
   CopyObjectRequest,
   CopyObjectResult
 }
-import net.kemitix.thorp.domain.StorageQueueEvent.CopyQueueEvent
+import net.kemitix.thorp.domain.StorageQueueEvent.{Action, CopyQueueEvent}
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.aws.S3ClientException.{
   HashMatchError,
@@ -25,22 +25,29 @@ class Copier(amazonS3: AmazonS3.Client) {
   ): Task[StorageQueueEvent] =
     for {
       copyResult <- copyObject(bucket, sourceKey, hash, targetKey)
-      result     <- mapCopyResult(copyResult, targetKey)
+      result     <- mapCopyResult(copyResult, sourceKey, targetKey)
     } yield result
 
   private def mapCopyResult(
       copyResult: Try[CopyObjectResult],
+      sourceKey: RemoteKey,
       targetKey: RemoteKey
   ) =
     copyResult match {
-      case Success(_) => Task.succeed(CopyQueueEvent(targetKey))
+      case Success(_) => Task.succeed(CopyQueueEvent(sourceKey, targetKey))
       case Failure(_: NullPointerException) =>
         Task.succeed(
-          StorageQueueEvent.ErrorQueueEvent(targetKey, HashMatchError))
+          StorageQueueEvent
+            .ErrorQueueEvent(
+              Action.Copy(s"${sourceKey.key} => ${targetKey.key}"),
+              targetKey,
+              HashMatchError))
       case Failure(e: AmazonS3Exception) =>
         Task.succeed(
-          StorageQueueEvent.ErrorQueueEvent(targetKey,
-                                            S3Exception(e.getMessage))
+          StorageQueueEvent.ErrorQueueEvent(
+            Action.Copy(s"${sourceKey.key} => ${targetKey.key}"),
+            targetKey,
+            S3Exception(e.getMessage))
         )
       case Failure(e) => Task.fail(e)
     }

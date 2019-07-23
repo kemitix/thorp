@@ -9,6 +9,7 @@ import net.kemitix.thorp.domain.StorageQueueEvent.{
   UploadQueueEvent
 }
 import net.kemitix.thorp.domain._
+import net.kemitix.thorp.domain.Terminal.eraseToEndOfScreen
 import zio.ZIO
 
 trait SyncLogging {
@@ -30,24 +31,12 @@ trait SyncLogging {
   ): ZIO[MyConsole, Nothing, Unit] = {
     val counters = actions.foldLeft(Counters())(countActivities)
     for {
+      _ <- putStrLn(eraseToEndOfScreen)
       _ <- putStrLn(s"Uploaded ${counters.uploaded} files")
       _ <- putStrLn(s"Copied   ${counters.copied} files")
       _ <- putStrLn(s"Deleted  ${counters.deleted} files")
       _ <- putStrLn(s"Errors   ${counters.errors}")
-      _ <- logErrors(actions)
     } yield ()
-  }
-
-  def logErrors(
-      actions: Stream[StorageQueueEvent]
-  ): ZIO[MyConsole, Nothing, Unit] = {
-    ZIO.foldLeft(actions)(()) { (_, action) =>
-      action match {
-        case ErrorQueueEvent(k, e) =>
-          putStrLn(s"${k.key}: ${e.getMessage}")
-        case _ => ZIO.unit
-      }
-    }
   }
 
   private def countActivities: (Counters, StorageQueueEvent) => Counters =

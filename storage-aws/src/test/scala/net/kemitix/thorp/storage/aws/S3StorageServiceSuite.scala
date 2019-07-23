@@ -13,6 +13,7 @@ import com.amazonaws.services.s3.model.{
 import net.kemitix.thorp.console.MyConsole
 import net.kemitix.thorp.core.Resource
 import net.kemitix.thorp.domain.StorageQueueEvent.{
+  Action,
   DoNothingQueueEvent,
   ErrorQueueEvent
 }
@@ -89,7 +90,7 @@ class S3StorageServiceSuite extends FreeSpec with MockFactory {
     "when source exists" - {
       "when source hash matches" - {
         "copies from source to target" in {
-          val event    = StorageQueueEvent.CopyQueueEvent(targetKey)
+          val event    = StorageQueueEvent.CopyQueueEvent(sourceKey, targetKey)
           val expected = Right(event)
           new AmazonS3ClientTestFixture {
             (fixture.amazonS3Client.copyObject _)
@@ -125,7 +126,10 @@ class S3StorageServiceSuite extends FreeSpec with MockFactory {
             private val result =
               invoke(bucket, sourceKey, hash, targetKey, fixture.storageService)
             result match {
-              case Right(ErrorQueueEvent(RemoteKey("targetKey"), e)) =>
+              case Right(
+                  ErrorQueueEvent(Action.Copy("sourceKey => targetKey"),
+                                  RemoteKey("targetKey"),
+                                  e)) =>
                 e match {
                   case S3Exception(message) =>
                     assert(message.startsWith(expectedMessage))

@@ -13,7 +13,7 @@ class StorageQueueEventSuite extends FunSpec {
   describe("Ordering of types") {
     val remoteKey = RemoteKey("remote-key")
     val md5Hash   = MD5Hash("md5hash")
-    val copy      = CopyQueueEvent(remoteKey)
+    val copy      = CopyQueueEvent(remoteKey, remoteKey)
     val upload    = UploadQueueEvent(remoteKey, md5Hash)
     val delete    = DeleteQueueEvent(remoteKey)
     val unsorted  = List(delete, copy, upload)

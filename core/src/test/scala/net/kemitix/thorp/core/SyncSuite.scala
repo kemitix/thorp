@@ -213,7 +213,7 @@ class SyncSuite extends FunSpec {
                       sourceKey: RemoteKey,
                       hashes: MD5Hash,
                       targetKey: RemoteKey): Task[CopyQueueEvent] =
-      Task(CopyQueueEvent(targetKey))
+      Task(CopyQueueEvent(sourceKey, targetKey))
 
     override def delete(bucket: Bucket,
                         remoteKey: RemoteKey): Task[DeleteQueueEvent] =

@@ -33,7 +33,7 @@ case class DummyStorageService(s3ObjectData: S3ObjectsData,
                     sourceKey: RemoteKey,
                     hash: MD5Hash,
                     targetKey: RemoteKey): Task[StorageQueueEvent] =
-    Task(StorageQueueEvent.CopyQueueEvent(targetKey))
+    Task(StorageQueueEvent.CopyQueueEvent(sourceKey, targetKey))
 
   override def delete(bucket: Bucket,
                       remoteKey: RemoteKey): Task[StorageQueueEvent] =
