@@ -48,7 +48,8 @@ trait ThorpArchive {
         for {
           _ <- TaskR.when(batchMode)(putStrLn(s"Deleted: $remoteKey"))
           _ <- TaskR.when(!batchMode)(
-            putStrLn(s"${GREEN}Deleted:$RESET ${remoteKey.key}"))
+            putStrLn(
+              s"${GREEN}Deleted:$RESET ${remoteKey.key}$eraseToEndOfScreen"))
         } yield ()
       case ErrorQueueEvent(action, _, e) =>
         for {
