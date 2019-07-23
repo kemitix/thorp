@@ -1,7 +1,7 @@
 package net.kemitix.thorp.core
 
 import net.kemitix.thorp.console._
-import net.kemitix.thorp.core.Action.DoNothing
+import net.kemitix.thorp.core.Action._
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.{HashService, StorageService}
 import zio.{Task, TaskR}
@@ -40,7 +40,9 @@ trait PlanBuilder {
       implicit c: Config): ((S3ObjectsData, LocalFiles)) => SyncPlan = {
     case (remoteData, localData) =>
       SyncPlan(
-        actions = createActions(remoteData, localData).filter(doesSomething),
+        actions = createActions(remoteData, localData)
+          .filter(doesSomething)
+          .sortBy(SequencePlan.order),
         syncTotals = SyncTotals(count = localData.count,
                                 totalSizeBytes = localData.totalSizeBytes)
       )

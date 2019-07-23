@@ -40,7 +40,7 @@ class ProgramTest extends FunSpec {
     it("should be handled in correct order") {
       val expected = List(copyAction, uploadAction, deleteAction)
       invoke(configOptions)
-      val result = archive.actions
+      val result = archive.actions.reverse
       assertResult(expected)(result)
     }
   }
