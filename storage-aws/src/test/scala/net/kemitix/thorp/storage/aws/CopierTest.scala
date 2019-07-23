@@ -2,13 +2,12 @@ package net.kemitix.thorp.storage.aws
 
 import com.amazonaws.services.s3.model.{AmazonS3Exception, CopyObjectResult}
 import net.kemitix.thorp.console.MyConsole
-import net.kemitix.thorp.domain.StorageQueueEvent.{
-  Action,
-  DoNothingQueueEvent,
-  ErrorQueueEvent
-}
+import net.kemitix.thorp.domain.StorageQueueEvent.{Action, ErrorQueueEvent}
 import net.kemitix.thorp.domain._
-import net.kemitix.thorp.storage.aws.S3ClientException.S3Exception
+import net.kemitix.thorp.storage.aws.S3ClientException.{
+  HashMatchError,
+  S3Exception
+}
 import org.scalatest.FreeSpec
 import zio.Runtime
 import zio.internal.PlatformLive
@@ -39,15 +38,23 @@ class CopierTest extends FreeSpec {
       }
       "when source hash does not match" - {
         "skip the file with an error" in {
-          val event    = DoNothingQueueEvent(targetKey)
-          val expected = Right(event)
           new AmazonS3ClientTestFixture {
             (fixture.amazonS3Client.copyObject _)
               .when()
               .returns(_ => null)
             private val result =
               invoke(bucket, sourceKey, hash, targetKey, fixture.storageService)
-            assertResult(expected)(result)
+            result match {
+              case Right(
+                  ErrorQueueEvent(Action.Copy("sourceKey => targetKey"),
+                                  RemoteKey("targetKey"),
+                                  e)) =>
+                e match {
+                  case HashMatchError => assert(true)
+                  case _              => fail("Not a HashMatchError")
+                }
+              case e => fail("Not an ErrorQueueEvent: " + e)
+            }
           }
         }
       }
@@ -70,7 +77,7 @@ class CopierTest extends FreeSpec {
                     assert(message.startsWith(expectedMessage))
                   case _ => fail("Not an S3Exception")
                 }
-              case e => fail("Not an ErrorQueueEvent: " + e.toString)
+              case e => fail("Not an ErrorQueueEvent: " + e)
             }
           }
         }

@@ -34,14 +34,14 @@ class Copier(amazonS3: AmazonS3.Client) {
       targetKey: RemoteKey
   ) =
     copyResult match {
-      case Success(_) => Task.succeed(CopyQueueEvent(sourceKey, targetKey))
-      case Failure(_: NullPointerException) =>
+      case Success(null) =>
         Task.succeed(
           StorageQueueEvent
             .ErrorQueueEvent(
               Action.Copy(s"${sourceKey.key} => ${targetKey.key}"),
               targetKey,
               HashMatchError))
+      case Success(_) => Task.succeed(CopyQueueEvent(sourceKey, targetKey))
       case Failure(e: AmazonS3Exception) =>
         Task.succeed(
           StorageQueueEvent.ErrorQueueEvent(
