@@ -5,6 +5,7 @@ import java.nio.file.Path
 
 import net.kemitix.thorp.console._
 import net.kemitix.thorp.core.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
+import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.{HashService, StorageService}
 import org.scalatest.FreeSpec
@@ -433,7 +434,7 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
     def md5Hash(file: File) = {
       runtime
         .unsafeRunSync {
-          hashService.hashLocalObject(file.toPath).map(_.get("md5"))
+          hashService.hashLocalObject(file.toPath).map(_.get(MD5))
         }
         .toEither
         .toOption
@@ -477,7 +478,7 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
         case ToUpload(_, lf, _) =>
           ("upload",
            lf.remoteKey.key,
-           lf.hashes("md5").hash,
+           lf.hashes(MD5).hash,
            lf.source.toString,
            lf.file.toString)
         case ToDelete(_, remoteKey, _) => ("delete", remoteKey.key, "", "", "")

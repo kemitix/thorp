@@ -2,7 +2,7 @@ package net.kemitix.thorp.storage.api
 
 import java.nio.file.Path
 
-import net.kemitix.thorp.domain.MD5Hash
+import net.kemitix.thorp.domain.{HashType, MD5Hash}
 import zio.Task
 
 /**
@@ -10,6 +10,6 @@ import zio.Task
   */
 trait HashService {
 
-  def hashLocalObject(path: Path): Task[Map[String, MD5Hash]]
+  def hashLocalObject(path: Path): Task[Map[HashType, MD5Hash]]
 
 }

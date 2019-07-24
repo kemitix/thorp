@@ -3,6 +3,7 @@ package net.kemitix.thorp.core
 import java.time.Instant
 
 import net.kemitix.thorp.core.Action.{DoNothing, ToCopy, ToUpload}
+import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.domain._
 import org.scalatest.FunSpec
 
@@ -143,7 +144,7 @@ class ActionGeneratorSuite extends FunSpec {
     }
   }
 
-  private def md5HashMap(theHash: MD5Hash) = {
-    Map("md5" -> theHash)
+  private def md5HashMap(theHash: MD5Hash): Map[HashType, MD5Hash] = {
+    Map(MD5 -> theHash)
   }
 }

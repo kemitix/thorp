@@ -17,6 +17,7 @@ The format is based on [[https://keepachangelog.com/en/1.0.0/][Keep a Changelog]
 
    - Replace cats-effect with zio (#117)
    - Replace Monocle with local SimpleLens implementation (#121)
+   - Don't use String as key in Map for hashes (#124)
 
 ** Dependencies
 
