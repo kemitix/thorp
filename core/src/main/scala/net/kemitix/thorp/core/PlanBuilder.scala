@@ -3,13 +3,13 @@ package net.kemitix.thorp.core
 import net.kemitix.thorp.console._
 import net.kemitix.thorp.core.Action._
 import net.kemitix.thorp.domain._
-import net.kemitix.thorp.storage.api.{HashService, StorageService}
+import net.kemitix.thorp.storage.api.{HashService, Storage}
 import zio.{Task, TaskR}
 
 trait PlanBuilder {
 
   def createPlan(
-      storageService: StorageService,
+      storageService: Storage.Service,
       hashService: HashService,
       configOptions: ConfigOptions
   ): TaskR[Console, SyncPlan] =
@@ -19,7 +19,7 @@ trait PlanBuilder {
       .flatMap(config => useValidConfig(storageService, hashService)(config))
 
   def useValidConfig(
-      storageService: StorageService,
+      storageService: Storage.Service,
       hashService: HashService
   )(implicit c: Config): TaskR[Console, SyncPlan] = {
     for {
@@ -29,7 +29,7 @@ trait PlanBuilder {
   }
 
   private def buildPlan(
-      storageService: StorageService,
+      storageService: Storage.Service,
       hashService: HashService
   )(implicit c: Config): TaskR[Console, SyncPlan] =
     for {
@@ -89,7 +89,7 @@ trait PlanBuilder {
     else DoNothing(c.bucket, rk, 0L)
 
   private def gatherMetadata(
-      storageService: StorageService,
+      storageService: Storage.Service,
       hashService: HashService
   )(implicit c: Config): TaskR[Console, (S3ObjectsData, LocalFiles)] =
     for {
@@ -98,7 +98,7 @@ trait PlanBuilder {
     } yield (remoteData, localData)
 
   private def fetchRemoteData(
-      storageService: StorageService
+      storageService: Storage.Service
   )(implicit c: Config): TaskR[Console, S3ObjectsData] =
     storageService.listObjects(c.bucket, c.prefix)
 

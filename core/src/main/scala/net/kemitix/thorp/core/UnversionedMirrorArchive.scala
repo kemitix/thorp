@@ -4,11 +4,11 @@ import net.kemitix.thorp.console._
 import net.kemitix.thorp.core.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.domain.StorageQueueEvent.DoNothingQueueEvent
 import net.kemitix.thorp.domain._
-import net.kemitix.thorp.storage.api.StorageService
+import net.kemitix.thorp.storage.api.Storage
 import zio.{Task, TaskR}
 
 case class UnversionedMirrorArchive(
-    storageService: StorageService,
+    storageService: Storage.Service,
     batchMode: Boolean,
     syncTotals: SyncTotals
 ) extends ThorpArchive {
@@ -54,7 +54,7 @@ case class UnversionedMirrorArchive(
 
 object UnversionedMirrorArchive {
   def default(
-      storageService: StorageService,
+      storageService: Storage.Service,
       batchMode: Boolean,
       syncTotals: SyncTotals
   ): ThorpArchive =

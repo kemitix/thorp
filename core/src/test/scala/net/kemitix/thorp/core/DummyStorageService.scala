@@ -4,12 +4,12 @@ import java.io.File
 
 import net.kemitix.thorp.console._
 import net.kemitix.thorp.domain._
-import net.kemitix.thorp.storage.api.StorageService
+import net.kemitix.thorp.storage.api.Storage
 import zio.{Task, TaskR}
 
 case class DummyStorageService(s3ObjectData: S3ObjectsData,
                                uploadFiles: Map[File, (RemoteKey, MD5Hash)])
-    extends StorageService {
+    extends Storage.Service {
 
   override def shutdown: Task[StorageQueueEvent] =
     Task(StorageQueueEvent.ShutdownQueueEvent())

@@ -16,7 +16,7 @@ import net.kemitix.thorp.domain.StorageQueueEvent.{
   UploadQueueEvent
 }
 import net.kemitix.thorp.domain._
-import net.kemitix.thorp.storage.api.{HashService, StorageService}
+import net.kemitix.thorp.storage.api.{HashService, Storage}
 import org.scalatest.FunSpec
 import zio.internal.PlatformLive
 import zio.{Runtime, Task, TaskR}
@@ -196,7 +196,7 @@ class SyncSuite extends FunSpec {
 
   class RecordingStorageService(testBucket: Bucket,
                                 s3ObjectsData: S3ObjectsData)
-      extends StorageService {
+      extends Storage.Service {
 
     override def listObjects(
         bucket: Bucket,
@@ -225,14 +225,14 @@ class SyncSuite extends FunSpec {
   }
 
   def invokeSubjectForActions(
-      storageService: StorageService,
+      storageService: Storage.Service,
       hashService: HashService,
       configOptions: ConfigOptions): Either[Any, Stream[Action]] = {
     invoke(storageService, hashService, configOptions)
       .map(_.actions)
   }
 
-  def invoke(storageService: StorageService,
+  def invoke(storageService: Storage.Service,
              hashService: HashService,
              configOptions: ConfigOptions): Either[Any, SyncPlan] = {
     runtime.unsafeRunSync {

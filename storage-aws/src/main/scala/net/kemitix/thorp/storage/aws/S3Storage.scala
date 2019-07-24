@@ -3,13 +3,13 @@ package net.kemitix.thorp.storage.aws
 import net.kemitix.thorp.console.Console
 import net.kemitix.thorp.domain.StorageQueueEvent.ShutdownQueueEvent
 import net.kemitix.thorp.domain._
-import net.kemitix.thorp.storage.api.StorageService
+import net.kemitix.thorp.storage.api.Storage
 import zio.{Task, TaskR}
 
 class S3Storage(
     amazonS3Client: => AmazonS3.Client,
     amazonTransferManager: => AmazonTransferManager
-) extends StorageService {
+) extends Storage.Service {
 
   lazy val objectLister = new Lister(amazonS3Client)
   lazy val copier       = new Copier(amazonS3Client)

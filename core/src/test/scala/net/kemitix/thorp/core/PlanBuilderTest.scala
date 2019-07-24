@@ -7,7 +7,7 @@ import net.kemitix.thorp.console._
 import net.kemitix.thorp.core.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.domain._
-import net.kemitix.thorp.storage.api.{HashService, StorageService}
+import net.kemitix.thorp.storage.api.{HashService, Storage}
 import org.scalatest.FreeSpec
 import zio.Runtime
 import zio.internal.PlatformLive
@@ -464,7 +464,7 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
     ConfigOptions(List(configOptions: _*))
 
   private def invoke(
-      storageService: StorageService,
+      storageService: Storage.Service,
       hashService: HashService,
       configOptions: ConfigOptions
   ): Either[Any, List[(String, String, String, String, String)]] = {
