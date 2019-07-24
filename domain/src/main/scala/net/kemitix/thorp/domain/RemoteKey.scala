@@ -3,8 +3,6 @@ package net.kemitix.thorp.domain
 import java.io.File
 import java.nio.file.{Path, Paths}
 
-import monocle.macros.GenLens
-
 final case class RemoteKey(
     key: String
 ) {
@@ -39,5 +37,6 @@ final case class RemoteKey(
 }
 
 object RemoteKey {
-  val key = GenLens[RemoteKey](_.key)
+  val key: SimpleLens[RemoteKey, String] =
+    SimpleLens[RemoteKey, String](_.key, b => a => b.copy(key = a))
 }

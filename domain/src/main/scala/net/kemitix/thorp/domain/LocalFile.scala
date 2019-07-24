@@ -3,9 +3,6 @@ package net.kemitix.thorp.domain
 import java.io.File
 import java.nio.file.Path
 
-import monocle.Lens
-import monocle.macros.GenLens
-
 final case class LocalFile(
     file: File,
     source: File,
@@ -41,5 +38,7 @@ object LocalFile {
               pathToKey(resolvedPath))
   }
 
-  val remoteKey: Lens[LocalFile, RemoteKey] = GenLens[LocalFile](_.remoteKey)
+  val remoteKey: SimpleLens[LocalFile, RemoteKey] =
+    SimpleLens[LocalFile, RemoteKey](_.remoteKey,
+                                     b => a => b.copy(remoteKey = a))
 }

@@ -1,7 +1,6 @@
 package net.kemitix.thorp.core
 
-import monocle.Lens
-import monocle.macros.GenLens
+import net.kemitix.thorp.domain.SimpleLens
 
 case class ConfigOptions(
     options: List[ConfigOption] = List()
@@ -25,6 +24,7 @@ case class ConfigOptions(
 }
 
 object ConfigOptions {
-  val options: Lens[ConfigOptions, List[ConfigOption]] =
-    GenLens[ConfigOptions](_.options)
+  val options: SimpleLens[ConfigOptions, List[ConfigOption]] =
+    SimpleLens[ConfigOptions, List[ConfigOption]](_.options,
+                                                  c => a => c.copy(options = a))
 }

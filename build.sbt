@@ -38,12 +38,6 @@ val testDependencies = Seq(
     "org.scalamock" %% "scalamock" % "4.3.0" % Test
   )
 )
-val domainDependencies = Seq(
-  libraryDependencies ++= Seq(
-    "com.github.julien-truffaut"  %%  "monocle-core"    % "1.6.0",
-    "com.github.julien-truffaut"  %%  "monocle-macro"   % "1.6.0"
-  )
-)
 val commandLineParsing = Seq(
   libraryDependencies ++= Seq(
     "com.github.scopt" %% "scopt" % "4.0.0-RC2"
@@ -122,6 +116,5 @@ lazy val console = (project in file("console"))
 
 lazy val domain = (project in file("domain"))
   .settings(commonSettings)
-  .settings(domainDependencies)
   .settings(assemblyJarName in assembly := "domain.jar")
   .settings(testDependencies)
