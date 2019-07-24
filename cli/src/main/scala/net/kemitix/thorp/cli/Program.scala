@@ -7,7 +7,7 @@ import net.kemitix.thorp.storage.aws.S3HashService.defaultHashService
 import net.kemitix.thorp.storage.aws.S3StorageServiceBuilder.defaultStorageService
 import zio.{Task, TaskR, ZIO}
 
-trait Program extends PlanBuilder {
+trait Program {
 
   type Program[A] = ZIO[Console, Throwable, Unit]
 
@@ -25,7 +25,9 @@ trait Program extends PlanBuilder {
   private def execute(
       cliOptions: ConfigOptions): ZIO[Console, Throwable, Unit] = {
     for {
-      plan    <- createPlan(defaultStorageService, defaultHashService, cliOptions)
+      plan <- PlanBuilder.createPlan(defaultStorageService,
+                                     defaultHashService,
+                                     cliOptions)
       archive <- thorpArchive(cliOptions, plan.syncTotals)
       events  <- handleActions(archive, plan)
       _       <- defaultStorageService.shutdown
