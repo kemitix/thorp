@@ -88,7 +88,7 @@ class CopierTest extends FreeSpec {
         sourceKey: RemoteKey,
         hash: MD5Hash,
         targetKey: RemoteKey,
-        storageService: S3StorageService
+        storageService: S3Storage
     ) =
       runtime.unsafeRunSync {
         storageService.copy(bucket, sourceKey, hash, targetKey)

@@ -6,7 +6,7 @@ import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.StorageService
 import zio.{Task, TaskR}
 
-class S3StorageService(
+class S3Storage(
     amazonS3Client: => AmazonS3.Client,
     amazonTransferManager: => AmazonTransferManager
 ) extends StorageService {

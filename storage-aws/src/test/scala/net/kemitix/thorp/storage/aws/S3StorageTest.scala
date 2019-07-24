@@ -13,7 +13,7 @@ import org.scalatest.FreeSpec
 import zio.Runtime
 import zio.internal.PlatformLive
 
-class S3StorageServiceSuite extends FreeSpec with MockFactory {
+class S3StorageTest extends FreeSpec with MockFactory {
 
   private val runtime = Runtime(Console.Live, PlatformLive.Default)
 
@@ -64,7 +64,7 @@ class S3StorageServiceSuite extends FreeSpec with MockFactory {
         assertResult(expected)(result)
       }
     }
-    def invoke(storageService: S3StorageService) =
+    def invoke(storageService: S3Storage) =
       runtime.unsafeRunSync {
         storageService
           .listObjects(Bucket("bucket"), RemoteKey("prefix"))

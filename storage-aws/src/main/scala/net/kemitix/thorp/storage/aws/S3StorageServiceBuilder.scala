@@ -10,7 +10,7 @@ object S3StorageServiceBuilder {
       amazonS3Client: AmazonS3.Client,
       amazonTransferManager: AmazonTransferManager
   ): StorageService =
-    new S3StorageService(
+    new S3Storage(
       amazonS3Client,
       amazonTransferManager
     )

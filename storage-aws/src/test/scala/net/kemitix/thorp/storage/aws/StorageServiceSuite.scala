@@ -125,7 +125,7 @@ class StorageServiceSuite extends FunSpec with MockFactory {
       val amazonS3Client        = stub[AmazonS3.Client]
       val amazonTransferManager = stub[AmazonTransferManager]
       val storageService =
-        new S3StorageService(amazonS3Client, amazonTransferManager)
+        new S3Storage(amazonS3Client, amazonTransferManager)
 
       val prefix = RemoteKey("prefix")
       val localFile =

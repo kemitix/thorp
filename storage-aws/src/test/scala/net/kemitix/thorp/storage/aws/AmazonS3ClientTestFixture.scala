@@ -11,8 +11,8 @@ trait AmazonS3ClientTestFixture extends MockFactory {
       amazonS3Client: AmazonS3.Client,
       amazonS3TransferManager: AmazonTransferManager,
   ) {
-    lazy val storageService: S3StorageService =
-      new S3StorageService(amazonS3Client, amazonS3TransferManager)
+    lazy val storageService: S3Storage =
+      new S3Storage(amazonS3Client, amazonS3TransferManager)
   }
 
 }
