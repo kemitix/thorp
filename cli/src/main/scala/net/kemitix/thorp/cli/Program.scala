@@ -14,11 +14,11 @@ trait Program {
   lazy val version = s"Thorp v${thorp.BuildInfo.version}"
 
   def run(args: List[String]): Program[Unit] = {
+    def showVersion(cli: ConfigOptions) = ConfigQuery.showVersion(cli)
     for {
-      cliOptions <- ParseArgs(args)
-      showVersion = ConfigQuery.showVersion(cliOptions)
-      _ <- ZIO.when(showVersion)(putStrLn(version))
-      _ <- ZIO.when(!showVersion)(execute(cliOptions).catchAll(handleErrors))
+      cli <- ParseArgs(args)
+      _   <- ZIO.when(showVersion(cli))(putStrLn(version))
+      _   <- ZIO.when(!showVersion(cli))(execute(cli).catchAll(handleErrors))
     } yield ()
   }
 
