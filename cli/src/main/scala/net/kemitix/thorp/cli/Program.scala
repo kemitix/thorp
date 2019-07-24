@@ -9,11 +9,14 @@ import zio.{Task, TaskR, ZIO}
 
 trait Program extends PlanBuilder {
 
+  type Program[A] = ZIO[Console, Throwable, Unit]
+
   lazy val version = s"Thorp v${thorp.BuildInfo.version}"
 
-  def run(cliOptions: ConfigOptions): ZIO[Console, Nothing, Unit] = {
-    val showVersion = ConfigQuery.showVersion(cliOptions)
+  def run(args: List[String]): Program[Unit] = {
     for {
+      cliOptions <- ParseArgs(args)
+      showVersion = ConfigQuery.showVersion(cliOptions)
       _ <- ZIO.when(showVersion)(putStrLn(version))
       _ <- ZIO.when(!showVersion)(execute(cliOptions).catchAll(handleErrors))
     } yield ()

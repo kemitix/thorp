@@ -29,25 +29,21 @@ class ProgramTest extends FunSpec {
     23L)
   val deleteAction: Action = ToDelete(bucket, RemoteKey("delete-me"), 0L)
 
-  val configOptions: ConfigOptions = ConfigOptions(
-    options = List(
-      ConfigOption.IgnoreGlobalOptions,
-      ConfigOption.IgnoreUserOptions
-    ))
+  val args: List[String] = List("--no-global", "--no-user")
 
   describe("upload, copy and delete actions in plan") {
     val archive = TestProgram.thorpArchive
     it("should be handled in correct order") {
       val expected = List(copyAction, uploadAction, deleteAction)
-      invoke(configOptions)
+      invoke(args)
       val result = archive.actions.reverse
       assertResult(expected)(result)
     }
   }
 
-  private def invoke(configOptions: ConfigOptions) =
+  private def invoke(args: List[String]) =
     runtime.unsafeRunSync {
-      TestProgram.run(configOptions)
+      TestProgram.run(args)
     }.toEither
 
   trait TestPlanBuilder extends PlanBuilder {
