@@ -77,7 +77,7 @@ class CliArgsTest extends FunSpec {
   private def invoke(args: List[String]) =
     runtime
       .unsafeRunSync {
-        CliArgs(args)
+        CliArgs.parse(args)
       }
       .toEither
       .toOption

@@ -16,7 +16,7 @@ trait Program {
   def run(args: List[String]): Program[Unit] = {
     def showVersion(cli: ConfigOptions) = ConfigQuery.showVersion(cli)
     for {
-      cli <- CliArgs(args)
+      cli <- CliArgs.parse(args)
       _   <- ZIO.when(showVersion(cli))(putStrLn(version))
       _   <- ZIO.when(!showVersion(cli))(execute(cli).catchAll(handleErrors))
     } yield ()
