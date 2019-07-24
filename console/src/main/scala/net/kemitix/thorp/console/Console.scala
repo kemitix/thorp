@@ -19,7 +19,7 @@ object Console {
   trait Live extends Console {
     val console: Service = new Service {
       override def putStrLn(line: ConsoleOut): ZIO[Console, Nothing, Unit] =
-        putStrLn(line)
+        putStrLn(line.en)
       override def putStrLn(line: String): ZIO[Console, Nothing, Unit] =
         putStrLn(SConsole.out)(line)
       final def putStrLn(stream: PrintStream)(
