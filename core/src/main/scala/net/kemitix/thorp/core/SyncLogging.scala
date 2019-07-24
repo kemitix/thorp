@@ -1,7 +1,6 @@
 package net.kemitix.thorp.core
 
 import net.kemitix.thorp.console._
-//import net.kemitix.thorp.console.MyConsole._
 import net.kemitix.thorp.domain.StorageQueueEvent.{
   CopyQueueEvent,
   DeleteQueueEvent,
