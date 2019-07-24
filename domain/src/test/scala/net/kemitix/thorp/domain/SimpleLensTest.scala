@@ -4,60 +4,61 @@ import org.scalatest.FreeSpec
 
 class SimpleLensTest extends FreeSpec {
 
-  import Subject._
-
   "lens" - {
     val subject = Subject(0, "s")
     "modify" in {
       val expected = Subject(1, "s")
-      val result   = a.modify(_ + 1)(subject)
+      val result   = Subject.anIntLens.modify(_ + 1)(subject)
       assertResult(expected)(result)
     }
     "get" in {
       val expected = "s"
-      val result   = b.get(subject)
+      val result   = Subject.aStringLens.get(subject)
       assertResult(expected)(result)
     }
     "set" in {
       val expected = Subject(0, "k")
-      val result   = b.set("k")(subject)
+      val result   = Subject.aStringLens.set("k")(subject)
       assertResult(expected)(result)
     }
   }
 
   "lens composed" - {
-    val wrapper = Wrapper(1, Subject(2, "x"))
-    val sbLens  = Wrapper.s ^|-> Subject.b
+    val wrapper           = Wrapper(1, Subject(2, "x"))
+    val subjectStringLens = Wrapper.aSubjectLens ^|-> Subject.aStringLens
     "modify" in {
       val expected = Wrapper(1, Subject(2, "X"))
-      val result   = sbLens.modify(_.toUpperCase)(wrapper)
+      val result   = subjectStringLens.modify(_.toUpperCase)(wrapper)
       assertResult(expected)(result)
     }
     "get" in {
       val expected = "x"
-      val result   = sbLens.get(wrapper)
+      val result   = subjectStringLens.get(wrapper)
       assertResult(expected)(result)
     }
     "set" in {
       val expected = Wrapper(1, Subject(2, "k"))
-      val result   = sbLens.set("k")(wrapper)
+      val result   = subjectStringLens.set("k")(wrapper)
       assertResult(expected)(result)
     }
   }
 
-  case class Subject(a: Int, b: String)
+  case class Subject(anInt: Int, aString: String)
   object Subject {
-    val a: SimpleLens[Subject, Int] =
-      SimpleLens[Subject, Int](_.a, s => a => s.copy(a = a))
-    val b: SimpleLens[Subject, String] =
-      SimpleLens[Subject, String](_.b, s => b => s.copy(b = b))
+    val anIntLens: SimpleLens[Subject, Int] =
+      SimpleLens[Subject, Int](_.anInt, subject => i => subject.copy(anInt = i))
+    val aStringLens: SimpleLens[Subject, String] =
+      SimpleLens[Subject, String](_.aString,
+                                  subject => str => subject.copy(aString = str))
   }
-  case class Wrapper(a: Int, s: Subject)
+  case class Wrapper(anInt: Int, aSubject: Subject)
   object Wrapper {
-    val a: SimpleLens[Wrapper, Int] =
-      SimpleLens[Wrapper, Int](_.a, w => a => w.copy(a = a))
-    val s: SimpleLens[Wrapper, Subject] =
-      SimpleLens[Wrapper, Subject](_.s, w => s => w.copy(s = s))
+    val anIntLens: SimpleLens[Wrapper, Int] =
+      SimpleLens[Wrapper, Int](_.anInt, wrapper => i => wrapper.copy(anInt = i))
+    val aSubjectLens: SimpleLens[Wrapper, Subject] =
+      SimpleLens[Wrapper, Subject](
+        _.aSubject,
+        wrapper => subject => wrapper.copy(aSubject = subject))
   }
 
 }
