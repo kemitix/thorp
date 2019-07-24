@@ -3,6 +3,7 @@ package net.kemitix.thorp.core
 import java.time.Instant
 
 import net.kemitix.thorp.core.S3MetaDataEnricher.{getMetadata, getS3Status}
+import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.domain._
 import org.scalatest.FunSpec
 
@@ -171,8 +172,8 @@ class S3MetaDataEnricherSuite extends FunSpec {
     }
   }
 
-  private def md5HashMap(theHash: MD5Hash) = {
-    Map("md5" -> theHash)
+  private def md5HashMap(theHash: MD5Hash): Map[HashType, MD5Hash] = {
+    Map(MD5 -> theHash)
   }
 
   describe("getS3Status") {

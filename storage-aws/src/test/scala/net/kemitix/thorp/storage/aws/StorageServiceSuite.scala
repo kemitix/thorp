@@ -5,6 +5,7 @@ import java.time.Instant
 import com.amazonaws.services.s3.model.PutObjectRequest
 import com.amazonaws.services.s3.transfer.model.UploadResult
 import net.kemitix.thorp.core.{KeyGenerator, Resource, S3MetaDataEnricher}
+import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.domain.MD5HashData.Root
 import net.kemitix.thorp.domain.StorageQueueEvent.UploadQueueEvent
 import net.kemitix.thorp.domain._
@@ -113,8 +114,8 @@ class StorageServiceSuite extends FunSpec with MockFactory {
 
   }
 
-  private def md5HashMap(hash: MD5Hash) =
-    Map("md5" -> hash)
+  private def md5HashMap(hash: MD5Hash): Map[HashType, MD5Hash] =
+    Map(MD5 -> hash)
 
   val batchMode: Boolean = true
 

@@ -3,22 +3,28 @@ package net.kemitix.thorp.core
 import java.io.File
 
 import net.kemitix.thorp.core.Action._
-import net.kemitix.thorp.domain.{Bucket, LocalFile, MD5Hash, RemoteKey}
+import net.kemitix.thorp.domain.{
+  Bucket,
+  HashType,
+  LocalFile,
+  MD5Hash,
+  RemoteKey
+}
 import org.scalatest.FreeSpec
 
 class SequencePlanTest extends FreeSpec {
 
   "sort" - {
     "a list of assorted actions" - {
-      val bucket                       = Bucket("aBucket")
-      val remoteKey1                   = RemoteKey("remoteKey1")
-      val remoteKey2                   = RemoteKey("targetHash")
-      val hash                         = MD5Hash("aHash")
-      val hashes: Map[String, MD5Hash] = Map()
-      val size                         = 1024
-      val file1                        = new File("aFile")
-      val file2                        = new File("aFile")
-      val source                       = new File("source")
+      val bucket     = Bucket("aBucket")
+      val remoteKey1 = RemoteKey("remoteKey1")
+      val remoteKey2 = RemoteKey("targetHash")
+      val hash       = MD5Hash("aHash")
+      val hashes     = Map[HashType, MD5Hash]()
+      val size       = 1024
+      val file1      = new File("aFile")
+      val file2      = new File("aFile")
+      val source     = new File("source")
       val localFile1 =
         LocalFile(file1, source, hashes, remoteKey1)
       val localFile2 =

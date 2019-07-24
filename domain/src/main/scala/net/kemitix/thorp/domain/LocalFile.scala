@@ -3,10 +3,12 @@ package net.kemitix.thorp.domain
 import java.io.File
 import java.nio.file.Path
 
+import net.kemitix.thorp.domain.HashType.MD5
+
 final case class LocalFile(
     file: File,
     source: File,
-    hashes: Map[String, MD5Hash],
+    hashes: Map[HashType, MD5Hash],
     remoteKey: RemoteKey
 ) {
 
@@ -19,7 +21,7 @@ final case class LocalFile(
 
   def matches(other: MD5Hash): Boolean = hashes.values.exists(other equals _)
 
-  def md5base64: Option[String] = hashes.get("md5").map(_.hash64)
+  def md5base64: Option[String] = hashes.get(MD5).map(_.hash64)
 
 }
 
@@ -27,7 +29,7 @@ object LocalFile {
 
   def resolve(
       path: String,
-      md5Hashes: Map[String, MD5Hash],
+      md5Hashes: Map[HashType, MD5Hash],
       source: Path,
       pathToKey: Path => RemoteKey
   ): LocalFile = {

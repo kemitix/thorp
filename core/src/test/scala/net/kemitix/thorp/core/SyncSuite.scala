@@ -7,6 +7,7 @@ import java.time.Instant
 import net.kemitix.thorp.console
 import net.kemitix.thorp.console.MyConsole
 import net.kemitix.thorp.core.Action.{ToCopy, ToDelete, ToUpload}
+import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.domain.MD5HashData.{Leaf, Root}
 import net.kemitix.thorp.domain.StorageQueueEvent.{
   CopyQueueEvent,
@@ -43,8 +44,8 @@ class SyncSuite extends FunSpec {
   private val hashService =
     DummyHashService(
       Map(
-        file("root-file")        -> Map("md5" -> MD5HashData.Root.hash),
-        file("subdir/leaf-file") -> Map("md5" -> MD5HashData.Leaf.hash)
+        file("root-file")        -> Map(MD5 -> MD5HashData.Root.hash),
+        file("subdir/leaf-file") -> Map(MD5 -> MD5HashData.Leaf.hash)
       ))
   private val configOptions =
     ConfigOptions(
@@ -62,8 +63,8 @@ class SyncSuite extends FunSpec {
                        localFile: LocalFile): (String, String, File) =
     (bucket.name, remoteKey.key, localFile.file)
 
-  private def md5HashMap(md5Hash: MD5Hash): Map[String, MD5Hash] =
-    Map("md5" -> md5Hash)
+  private def md5HashMap(md5Hash: MD5Hash): Map[HashType, MD5Hash] =
+    Map(MD5 -> md5Hash)
 
   private def file(filename: String) =
     sourcePath.resolve(Paths.get(filename))
@@ -207,7 +208,7 @@ class SyncSuite extends FunSpec {
                         batchMode: Boolean,
                         uploadEventListener: UploadEventListener,
                         tryCount: Int): Task[UploadQueueEvent] =
-      Task(UploadQueueEvent(localFile.remoteKey, localFile.hashes("md5")))
+      Task(UploadQueueEvent(localFile.remoteKey, localFile.hashes(MD5)))
 
     override def copy(bucket: Bucket,
                       sourceKey: RemoteKey,

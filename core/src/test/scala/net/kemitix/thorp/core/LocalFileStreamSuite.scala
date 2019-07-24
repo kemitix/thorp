@@ -2,6 +2,7 @@ package net.kemitix.thorp.core
 
 import java.nio.file.Paths
 
+import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.HashService
 import org.scalatest.FunSpec
@@ -13,8 +14,8 @@ class LocalFileStreamSuite extends FunSpec {
   private val sourcePath = source.toPath
   private val hashService: HashService = DummyHashService(
     Map(
-      file("root-file")        -> Map("md5" -> MD5HashData.Root.hash),
-      file("subdir/leaf-file") -> Map("md5" -> MD5HashData.Leaf.hash)
+      file("root-file")        -> Map(MD5 -> MD5HashData.Root.hash),
+      file("subdir/leaf-file") -> Map(MD5 -> MD5HashData.Leaf.hash)
     ))
 
   private def file(filename: String) =
