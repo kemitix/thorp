@@ -12,6 +12,7 @@ The format is based on [[https://keepachangelog.com/en/1.0.0/][Keep a Changelog]
 
    - Log copy and delete operations (#119)
    - Log errors with red label (#119)
+   - Ensure file handles are always closed (#122)
 
 ** Changed
 
