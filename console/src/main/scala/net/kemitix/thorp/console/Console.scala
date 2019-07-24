@@ -24,7 +24,7 @@ object Console {
         putStrLn(SConsole.out)(line)
       final def putStrLn(stream: PrintStream)(
           line: String): ZIO[Console, Nothing, Unit] =
-        UIO(SConsole.withOut(stream)(Console.println(line)))
+        UIO(SConsole.withOut(stream)(SConsole.println(line)))
     }
   }
 
