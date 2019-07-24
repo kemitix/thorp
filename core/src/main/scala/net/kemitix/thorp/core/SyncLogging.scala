@@ -17,17 +17,17 @@ trait SyncLogging {
       bucket: Bucket,
       prefix: RemoteKey,
       sources: Sources
-  ): ZIO[MyConsole, Nothing, Unit] =
+  ): ZIO[Console, Nothing, Unit] =
     for {
       _ <- putStrLn(ConsoleOut.ValidConfig(bucket, prefix, sources))
     } yield ()
 
-  def logFileScan(implicit c: Config): ZIO[MyConsole, Nothing, Unit] =
+  def logFileScan(implicit c: Config): ZIO[Console, Nothing, Unit] =
     putStrLn(s"Scanning local files: ${c.sources.paths.mkString(", ")}...")
 
   def logRunFinished(
       actions: Stream[StorageQueueEvent]
-  ): ZIO[MyConsole, Nothing, Unit] = {
+  ): ZIO[Console, Nothing, Unit] = {
     val counters = actions.foldLeft(Counters())(countActivities)
     for {
       _ <- putStrLn(eraseToEndOfScreen)

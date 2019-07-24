@@ -18,7 +18,7 @@ class Lister(amazonS3: AmazonS3.Client) {
   def listObjects(
       bucket: Bucket,
       prefix: RemoteKey
-  ): TaskR[MyConsole, S3ObjectsData] = {
+  ): TaskR[Console, S3ObjectsData] = {
 
     val requestMore = (token: Token) =>
       new ListObjectsV2Request()
@@ -26,7 +26,7 @@ class Lister(amazonS3: AmazonS3.Client) {
         .withPrefix(prefix.key)
         .withContinuationToken(token)
 
-    def fetchBatch: ListObjectsV2Request => TaskR[MyConsole, Batch] =
+    def fetchBatch: ListObjectsV2Request => TaskR[Console, Batch] =
       request =>
         for {
           _     <- ListerLogger.logFetchBatch
@@ -35,15 +35,14 @@ class Lister(amazonS3: AmazonS3.Client) {
 
     def fetchMore(
         more: Option[Token]
-    ): TaskR[MyConsole, Stream[S3ObjectSummary]] = {
+    ): TaskR[Console, Stream[S3ObjectSummary]] = {
       more match {
         case None        => TaskR.succeed(Stream.empty)
         case Some(token) => fetch(requestMore(token))
       }
     }
 
-    def fetch
-      : ListObjectsV2Request => TaskR[MyConsole, Stream[S3ObjectSummary]] =
+    def fetch: ListObjectsV2Request => TaskR[Console, Stream[S3ObjectSummary]] =
       request => {
         for {
           batch <- fetchBatch(request)

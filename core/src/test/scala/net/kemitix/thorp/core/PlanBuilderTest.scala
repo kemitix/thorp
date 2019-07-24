@@ -14,7 +14,7 @@ import zio.internal.PlatformLive
 
 class PlanBuilderTest extends FreeSpec with TemporaryFolder {
 
-  private val runtime = Runtime(MyConsole.Live, PlatformLive.Default)
+  private val runtime = Runtime(Console.Live, PlatformLive.Default)
 
   private val lastModified: LastModified = LastModified()
   private val planBuilder                = new PlanBuilder {}

@@ -21,12 +21,12 @@ trait ThorpArchive {
       index: Int,
       action: Action,
       totalBytesSoFar: Long
-  ): TaskR[MyConsole, StorageQueueEvent]
+  ): TaskR[Console, StorageQueueEvent]
 
   def logEvent(
       event: StorageQueueEvent,
       batchMode: Boolean
-  ): TaskR[MyConsole, Unit] =
+  ): TaskR[Console, Unit] =
     event match {
       case UploadQueueEvent(remoteKey, _) =>
         for {

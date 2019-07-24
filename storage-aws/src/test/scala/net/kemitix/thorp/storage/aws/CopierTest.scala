@@ -1,7 +1,7 @@
 package net.kemitix.thorp.storage.aws
 
 import com.amazonaws.services.s3.model.{AmazonS3Exception, CopyObjectResult}
-import net.kemitix.thorp.console.MyConsole
+import net.kemitix.thorp.console.Console
 import net.kemitix.thorp.domain.StorageQueueEvent.{Action, ErrorQueueEvent}
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.aws.S3ClientException.{
@@ -14,7 +14,7 @@ import zio.internal.PlatformLive
 
 class CopierTest extends FreeSpec {
 
-  private val runtime = Runtime(MyConsole.Live, PlatformLive.Default)
+  private val runtime = Runtime(Console.Live, PlatformLive.Default)
 
   "copier" - {
     val bucket    = Bucket("aBucket")

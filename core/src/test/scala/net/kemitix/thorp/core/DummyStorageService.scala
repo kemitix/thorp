@@ -17,7 +17,7 @@ case class DummyStorageService(s3ObjectData: S3ObjectsData,
   override def listObjects(
       bucket: Bucket,
       prefix: RemoteKey
-  ): TaskR[MyConsole, S3ObjectsData] =
+  ): TaskR[Console, S3ObjectsData] =
     TaskR(s3ObjectData)
 
   override def upload(localFile: LocalFile,

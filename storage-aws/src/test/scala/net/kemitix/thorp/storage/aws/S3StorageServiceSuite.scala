@@ -5,7 +5,7 @@ import java.time.temporal.ChronoUnit
 import java.util.Date
 
 import com.amazonaws.services.s3.model.{ListObjectsV2Result, S3ObjectSummary}
-import net.kemitix.thorp.console.MyConsole
+import net.kemitix.thorp.console.Console
 import net.kemitix.thorp.core.Resource
 import net.kemitix.thorp.domain._
 import org.scalamock.scalatest.MockFactory
@@ -15,7 +15,7 @@ import zio.internal.PlatformLive
 
 class S3StorageServiceSuite extends FreeSpec with MockFactory {
 
-  private val runtime = Runtime(MyConsole.Live, PlatformLive.Default)
+  private val runtime = Runtime(Console.Live, PlatformLive.Default)
 
   "listObjects" - {
     def objectSummary(hash: MD5Hash,

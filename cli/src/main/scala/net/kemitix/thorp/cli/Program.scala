@@ -11,7 +11,7 @@ trait Program extends PlanBuilder {
 
   lazy val version = s"Thorp v${thorp.BuildInfo.version}"
 
-  def run(cliOptions: ConfigOptions): ZIO[MyConsole, Nothing, Unit] = {
+  def run(cliOptions: ConfigOptions): ZIO[Console, Nothing, Unit] = {
     val showVersion = ConfigQuery.showVersion(cliOptions)
     for {
       _ <- ZIO.when(showVersion)(putStrLn(version))
@@ -20,7 +20,7 @@ trait Program extends PlanBuilder {
   }
 
   private def execute(
-      cliOptions: ConfigOptions): ZIO[MyConsole, Throwable, Unit] = {
+      cliOptions: ConfigOptions): ZIO[Console, Throwable, Unit] = {
     for {
       plan    <- createPlan(defaultStorageService, defaultHashService, cliOptions)
       archive <- thorpArchive(cliOptions, plan.syncTotals)
@@ -30,8 +30,7 @@ trait Program extends PlanBuilder {
     } yield ()
   }
 
-  private def handleErrors(
-      throwable: Throwable): ZIO[MyConsole, Nothing, Unit] =
+  private def handleErrors(throwable: Throwable): ZIO[Console, Nothing, Unit] =
     for {
       _ <- putStrLn("There were errors:")
       _ <- throwable match {
@@ -55,7 +54,7 @@ trait Program extends PlanBuilder {
   private def handleActions(
       archive: ThorpArchive,
       syncPlan: SyncPlan
-  ): TaskR[MyConsole, Stream[StorageQueueEvent]] = {
+  ): TaskR[Console, Stream[StorageQueueEvent]] = {
     type Accumulator = (Stream[StorageQueueEvent], Long)
     val zero: Accumulator = (Stream(), syncPlan.syncTotals.totalSizeBytes)
     TaskR

@@ -5,7 +5,7 @@ import java.nio.file.Paths
 import java.time.Instant
 
 import net.kemitix.thorp.console
-import net.kemitix.thorp.console.MyConsole
+import net.kemitix.thorp.console.Console
 import net.kemitix.thorp.core.Action.{ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.domain.MD5HashData.{Leaf, Root}
@@ -23,7 +23,7 @@ import zio.{Runtime, Task, TaskR}
 
 class SyncSuite extends FunSpec {
 
-  private val runtime = Runtime(MyConsole.Live, PlatformLive.Default)
+  private val runtime = Runtime(Console.Live, PlatformLive.Default)
 
   private val testBucket = Bucket("bucket")
   private val source     = Resource(this, "upload")
@@ -200,7 +200,7 @@ class SyncSuite extends FunSpec {
 
     override def listObjects(
         bucket: Bucket,
-        prefix: RemoteKey): TaskR[console.MyConsole, S3ObjectsData] =
+        prefix: RemoteKey): TaskR[console.Console, S3ObjectsData] =
       TaskR(s3ObjectsData)
 
     override def upload(localFile: LocalFile,

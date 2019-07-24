@@ -17,7 +17,7 @@ case class UnversionedMirrorArchive(
       index: Int,
       action: Action,
       totalBytesSoFar: Long
-  ): TaskR[MyConsole, StorageQueueEvent] =
+  ): TaskR[Console, StorageQueueEvent] =
     action match {
       case ToUpload(bucket, localFile, _) =>
         for {

@@ -12,7 +12,7 @@ trait PlanBuilder {
       storageService: StorageService,
       hashService: HashService,
       configOptions: ConfigOptions
-  ): TaskR[MyConsole, SyncPlan] =
+  ): TaskR[Console, SyncPlan] =
     ConfigurationBuilder
       .buildConfig(configOptions)
       .catchAll(errors => TaskR.fail(ConfigValidationException(errors)))
@@ -21,7 +21,7 @@ trait PlanBuilder {
   def useValidConfig(
       storageService: StorageService,
       hashService: HashService
-  )(implicit c: Config): TaskR[MyConsole, SyncPlan] = {
+  )(implicit c: Config): TaskR[Console, SyncPlan] = {
     for {
       _       <- SyncLogging.logRunStart(c.bucket, c.prefix, c.sources)
       actions <- buildPlan(storageService, hashService)
@@ -31,7 +31,7 @@ trait PlanBuilder {
   private def buildPlan(
       storageService: StorageService,
       hashService: HashService
-  )(implicit c: Config): TaskR[MyConsole, SyncPlan] =
+  )(implicit c: Config): TaskR[Console, SyncPlan] =
     for {
       metadata <- gatherMetadata(storageService, hashService)
     } yield assemblePlan(c)(metadata)
@@ -91,7 +91,7 @@ trait PlanBuilder {
   private def gatherMetadata(
       storageService: StorageService,
       hashService: HashService
-  )(implicit c: Config): TaskR[MyConsole, (S3ObjectsData, LocalFiles)] =
+  )(implicit c: Config): TaskR[Console, (S3ObjectsData, LocalFiles)] =
     for {
       remoteData <- fetchRemoteData(storageService)
       localData  <- findLocalFiles(hashService)
@@ -99,12 +99,12 @@ trait PlanBuilder {
 
   private def fetchRemoteData(
       storageService: StorageService
-  )(implicit c: Config): TaskR[MyConsole, S3ObjectsData] =
+  )(implicit c: Config): TaskR[Console, S3ObjectsData] =
     storageService.listObjects(c.bucket, c.prefix)
 
   private def findLocalFiles(
       hashService: HashService
-  )(implicit config: Config): TaskR[MyConsole, LocalFiles] =
+  )(implicit config: Config): TaskR[Console, LocalFiles] =
     for {
       _          <- SyncLogging.logFileScan
       localFiles <- findFiles(hashService)

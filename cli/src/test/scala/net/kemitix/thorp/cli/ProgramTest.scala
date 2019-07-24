@@ -3,7 +3,7 @@ package net.kemitix.thorp.cli
 import java.io.File
 import java.nio.file.Path
 
-import net.kemitix.thorp.console.MyConsole
+import net.kemitix.thorp.console.Console
 import net.kemitix.thorp.core.Action.{ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.core._
 import net.kemitix.thorp.domain.StorageQueueEvent.DoNothingQueueEvent
@@ -15,7 +15,7 @@ import zio.{Runtime, Task, TaskR}
 
 class ProgramTest extends FunSpec {
 
-  private val runtime = Runtime(MyConsole.Live, PlatformLive.Default)
+  private val runtime = Runtime(Console.Live, PlatformLive.Default)
 
   val source: File     = Resource(this, ".")
   val sourcePath: Path = source.toPath
@@ -66,7 +66,7 @@ class ProgramTest extends FunSpec {
         index: Int,
         action: Action,
         totalBytesSoFar: Long
-    ): TaskR[MyConsole, StorageQueueEvent] = {
+    ): TaskR[Console, StorageQueueEvent] = {
       actions = action :: actions
       TaskR(DoNothingQueueEvent(RemoteKey("")))
     }

@@ -1,6 +1,6 @@
 package net.kemitix.thorp.storage.aws
 
-import net.kemitix.thorp.console.MyConsole
+import net.kemitix.thorp.console.Console
 import net.kemitix.thorp.domain.StorageQueueEvent.ShutdownQueueEvent
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.StorageService
@@ -19,7 +19,7 @@ class S3StorageService(
   override def listObjects(
       bucket: Bucket,
       prefix: RemoteKey
-  ): TaskR[MyConsole, S3ObjectsData] =
+  ): TaskR[Console, S3ObjectsData] =
     objectLister.listObjects(bucket, prefix)
 
   override def copy(
