@@ -11,8 +11,8 @@ case class DummyStorageService(s3ObjectData: S3ObjectsData,
                                uploadFiles: Map[File, (RemoteKey, MD5Hash)])
     extends Storage.Service {
 
-  override def shutdown: Task[StorageQueueEvent] =
-    Task(StorageQueueEvent.ShutdownQueueEvent())
+  override def shutdown: UIO[StorageQueueEvent] =
+    UIO(StorageQueueEvent.ShutdownQueueEvent())
 
   override def listObjects(
       bucket: Bucket,

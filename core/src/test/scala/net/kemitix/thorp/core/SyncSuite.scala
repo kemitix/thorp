@@ -220,8 +220,8 @@ class SyncSuite extends FunSpec {
                         remoteKey: RemoteKey): UIO[DeleteQueueEvent] =
       UIO(DeleteQueueEvent(remoteKey))
 
-    override def shutdown: Task[StorageQueueEvent] =
-      Task(ShutdownQueueEvent())
+    override def shutdown: UIO[StorageQueueEvent] =
+      UIO(ShutdownQueueEvent())
   }
 
   def invokeSubjectForActions(

@@ -36,7 +36,8 @@ class Uploader(transferManager: => AmazonTransferManager) {
   ): Task[StorageQueueEvent] = {
     val listener: ProgressListener = progressListener(uploadEventListener)
     val putObjectRequest           = request(localFile, bucket, batchMode, listener)
-    Task(transferManager.upload(putObjectRequest))
+    transferManager
+      .upload(putObjectRequest)
       .map(_.waitForUploadResult)
       .map(upload =>
         UploadQueueEvent(RemoteKey(upload.getKey), MD5Hash(upload.getETag)))

@@ -44,6 +44,6 @@ object Storage {
         remoteKey: RemoteKey
     ): UIO[StorageQueueEvent]
 
-    def shutdown: Task[StorageQueueEvent]
+    def shutdown: UIO[StorageQueueEvent]
   }
 }

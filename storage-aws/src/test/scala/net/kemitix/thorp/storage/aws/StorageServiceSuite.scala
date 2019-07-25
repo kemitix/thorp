@@ -11,6 +11,7 @@ import net.kemitix.thorp.domain.StorageQueueEvent.UploadQueueEvent
 import net.kemitix.thorp.domain._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.FunSpec
+import zio.Task
 
 class StorageServiceSuite extends FunSpec with MockFactory {
 
@@ -141,7 +142,7 @@ class StorageServiceSuite extends FunSpec with MockFactory {
       val upload = stub[AmazonUpload]
       (amazonTransferManager upload (_: PutObjectRequest))
         .when(*)
-        .returns(upload)
+        .returns(Task.succeed(upload))
       val uploadResult = stub[UploadResult]
       (upload.waitForUploadResult _).when().returns(uploadResult)
       (uploadResult.getETag _).when().returns(Root.hash.hash)

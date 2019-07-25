@@ -45,11 +45,9 @@ class S3Storage(
   ): UIO[StorageQueueEvent] =
     deleter.delete(bucket, remoteKey)
 
-  override def shutdown: Task[StorageQueueEvent] =
-    Task {
-      amazonTransferManager.shutdownNow(true)
-      amazonS3Client.shutdown()
-      ShutdownQueueEvent()
-    }
+  override def shutdown: UIO[StorageQueueEvent] = {
+    amazonTransferManager.shutdownNow(true)
+    amazonS3Client.shutdown().map(_ => ShutdownQueueEvent())
+  }
 
 }
