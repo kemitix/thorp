@@ -4,13 +4,10 @@ import com.amazonaws.services.s3.model.{AmazonS3Exception, CopyObjectResult}
 import net.kemitix.thorp.console.Console
 import net.kemitix.thorp.domain.StorageQueueEvent.{Action, ErrorQueueEvent}
 import net.kemitix.thorp.domain._
-import net.kemitix.thorp.storage.aws.S3ClientException.{
-  HashMatchError,
-  S3Exception
-}
+import net.kemitix.thorp.storage.aws.S3ClientException.{CopyError, HashError}
 import org.scalatest.FreeSpec
-import zio.Runtime
 import zio.internal.PlatformLive
+import zio.{Runtime, Task}
 
 class CopierTest extends FreeSpec {
 
@@ -29,7 +26,7 @@ class CopierTest extends FreeSpec {
           new AmazonS3ClientTestFixture {
             (fixture.amazonS3Client.copyObject _)
               .when()
-              .returns(_ => Some(new CopyObjectResult))
+              .returns(_ => Task.succeed(new CopyObjectResult))
             private val result =
               invoke(bucket, sourceKey, hash, targetKey, fixture.storageService)
             assertResult(expected)(result)
@@ -41,7 +38,7 @@ class CopierTest extends FreeSpec {
           new AmazonS3ClientTestFixture {
             (fixture.amazonS3Client.copyObject _)
               .when()
-              .returns(_ => None)
+              .returns(_ => Task.fail(HashError))
             private val result =
               invoke(bucket, sourceKey, hash, targetKey, fixture.storageService)
             result match {
@@ -50,8 +47,8 @@ class CopierTest extends FreeSpec {
                                   RemoteKey("targetKey"),
                                   e)) =>
                 e match {
-                  case HashMatchError => assert(true)
-                  case _              => fail("Not a HashMatchError")
+                  case HashError => assert(true)
+                  case _         => fail("Not a HashError: " + e)
                 }
               case e => fail("Not an ErrorQueueEvent: " + e)
             }
@@ -64,7 +61,8 @@ class CopierTest extends FreeSpec {
             private val expectedMessage = "The specified key does not exist"
             (fixture.amazonS3Client.copyObject _)
               .when()
-              .throws(new AmazonS3Exception(expectedMessage))
+              .returns(_ =>
+                Task.fail(CopyError(new AmazonS3Exception(expectedMessage))))
             private val result =
               invoke(bucket, sourceKey, hash, targetKey, fixture.storageService)
             result match {
@@ -73,9 +71,9 @@ class CopierTest extends FreeSpec {
                                   RemoteKey("targetKey"),
                                   e)) =>
                 e match {
-                  case S3Exception(message) =>
-                    assert(message.startsWith(expectedMessage))
-                  case _ => fail("Not an S3Exception")
+                  case CopyError(cause) =>
+                    assert(cause.getMessage.startsWith(expectedMessage))
+                  case _ => fail("Not a CopyError: " + e)
                 }
               case e => fail("Not an ErrorQueueEvent: " + e)
             }

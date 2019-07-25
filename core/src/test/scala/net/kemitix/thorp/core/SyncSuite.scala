@@ -19,7 +19,7 @@ import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.{HashService, Storage}
 import org.scalatest.FunSpec
 import zio.internal.PlatformLive
-import zio.{Runtime, Task, TaskR}
+import zio.{Runtime, Task, TaskR, UIO}
 
 class SyncSuite extends FunSpec {
 
@@ -213,8 +213,8 @@ class SyncSuite extends FunSpec {
     override def copy(bucket: Bucket,
                       sourceKey: RemoteKey,
                       hashes: MD5Hash,
-                      targetKey: RemoteKey): Task[CopyQueueEvent] =
-      Task(CopyQueueEvent(sourceKey, targetKey))
+                      targetKey: RemoteKey): UIO[CopyQueueEvent] =
+      UIO(CopyQueueEvent(sourceKey, targetKey))
 
     override def delete(bucket: Bucket,
                         remoteKey: RemoteKey): Task[DeleteQueueEvent] =

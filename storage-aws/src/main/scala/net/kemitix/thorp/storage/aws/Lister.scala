@@ -62,7 +62,8 @@ class Lister(amazonS3: AmazonS3.Client) {
   private def tryFetchBatch(
       request: ListObjectsV2Request
   ): Task[(Stream[S3ObjectSummary], Option[Token])] =
-    Task(amazonS3.listObjectsV2(request))
+    amazonS3
+      .listObjectsV2(request)
       .map { result =>
         val more: Option[Token] =
           if (result.isTruncated) Some(result.getNextContinuationToken)

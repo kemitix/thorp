@@ -5,7 +5,7 @@ import java.io.File
 import net.kemitix.thorp.console._
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.Storage
-import zio.{Task, TaskR}
+import zio.{Task, TaskR, UIO}
 
 case class DummyStorageService(s3ObjectData: S3ObjectsData,
                                uploadFiles: Map[File, (RemoteKey, MD5Hash)])
@@ -32,8 +32,8 @@ case class DummyStorageService(s3ObjectData: S3ObjectsData,
   override def copy(bucket: Bucket,
                     sourceKey: RemoteKey,
                     hash: MD5Hash,
-                    targetKey: RemoteKey): Task[StorageQueueEvent] =
-    Task(StorageQueueEvent.CopyQueueEvent(sourceKey, targetKey))
+                    targetKey: RemoteKey): UIO[StorageQueueEvent] =
+    UIO(StorageQueueEvent.CopyQueueEvent(sourceKey, targetKey))
 
   override def delete(bucket: Bucket,
                       remoteKey: RemoteKey): Task[StorageQueueEvent] =

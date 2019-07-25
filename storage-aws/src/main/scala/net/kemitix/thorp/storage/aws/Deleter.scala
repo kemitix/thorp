@@ -18,9 +18,9 @@ class Deleter(amazonS3: AmazonS3.Client) {
   private def deleteObject(
       bucket: Bucket,
       remoteKey: RemoteKey
-  ) = {
-    val request = new DeleteObjectRequest(bucket.name, remoteKey.key)
-    Task(amazonS3.deleteObject(request))
-  }
+  ): Task[Unit] =
+    Task {
+      amazonS3.deleteObject(new DeleteObjectRequest(bucket.name, remoteKey.key))
+    }
 
 }

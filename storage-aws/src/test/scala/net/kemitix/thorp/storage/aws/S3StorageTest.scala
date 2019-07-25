@@ -10,7 +10,7 @@ import net.kemitix.thorp.core.Resource
 import net.kemitix.thorp.domain._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.FreeSpec
-import zio.Runtime
+import zio.{Runtime, Task}
 import zio.internal.PlatformLive
 
 class S3StorageTest extends FreeSpec with MockFactory {
@@ -59,7 +59,7 @@ class S3StorageTest extends FreeSpec with MockFactory {
       new AmazonS3ClientTestFixture {
         (fixture.amazonS3Client.listObjectsV2 _)
           .when()
-          .returns(_ => myFakeResponse)
+          .returns(_ => Task.succeed(myFakeResponse))
         private val result = invoke(fixture.storageService)
         assertResult(expected)(result)
       }

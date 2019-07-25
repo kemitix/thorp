@@ -10,7 +10,7 @@ import net.kemitix.thorp.domain.{
   StorageQueueEvent,
   UploadEventListener
 }
-import zio.{Task, TaskR}
+import zio.{Task, TaskR, UIO}
 
 trait Storage {
   val storage: Storage.Service
@@ -37,7 +37,7 @@ object Storage {
         sourceKey: RemoteKey,
         hash: MD5Hash,
         targetKey: RemoteKey
-    ): Task[StorageQueueEvent]
+    ): UIO[StorageQueueEvent]
 
     def delete(
         bucket: Bucket,

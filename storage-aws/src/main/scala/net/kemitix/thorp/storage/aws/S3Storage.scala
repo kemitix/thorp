@@ -4,7 +4,7 @@ import net.kemitix.thorp.console.Console
 import net.kemitix.thorp.domain.StorageQueueEvent.ShutdownQueueEvent
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.Storage
-import zio.{Task, TaskR}
+import zio.{Task, TaskR, UIO}
 
 class S3Storage(
     amazonS3Client: => AmazonS3.Client,
@@ -27,7 +27,7 @@ class S3Storage(
       sourceKey: RemoteKey,
       hash: MD5Hash,
       targetKey: RemoteKey
-  ): Task[StorageQueueEvent] =
+  ): UIO[StorageQueueEvent] =
     copier.copy(bucket, sourceKey, hash, targetKey)
 
   override def upload(
