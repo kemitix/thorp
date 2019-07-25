@@ -36,7 +36,7 @@ case class DummyStorageService(s3ObjectData: S3ObjectsData,
     UIO(StorageQueueEvent.CopyQueueEvent(sourceKey, targetKey))
 
   override def delete(bucket: Bucket,
-                      remoteKey: RemoteKey): Task[StorageQueueEvent] =
-    Task(StorageQueueEvent.DeleteQueueEvent(remoteKey))
+                      remoteKey: RemoteKey): UIO[StorageQueueEvent] =
+    UIO(StorageQueueEvent.DeleteQueueEvent(remoteKey))
 
 }

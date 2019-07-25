@@ -42,7 +42,7 @@ class S3Storage(
   override def delete(
       bucket: Bucket,
       remoteKey: RemoteKey
-  ): Task[StorageQueueEvent] =
+  ): UIO[StorageQueueEvent] =
     deleter.delete(bucket, remoteKey)
 
   override def shutdown: Task[StorageQueueEvent] =

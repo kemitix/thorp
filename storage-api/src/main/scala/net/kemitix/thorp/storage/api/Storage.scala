@@ -42,7 +42,7 @@ object Storage {
     def delete(
         bucket: Bucket,
         remoteKey: RemoteKey
-    ): Task[StorageQueueEvent]
+    ): UIO[StorageQueueEvent]
 
     def shutdown: Task[StorageQueueEvent]
   }
