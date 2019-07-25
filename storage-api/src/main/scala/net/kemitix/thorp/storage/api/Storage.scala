@@ -1,16 +1,8 @@
 package net.kemitix.thorp.storage.api
 
 import net.kemitix.thorp.console.Console
-import net.kemitix.thorp.domain.{
-  Bucket,
-  LocalFile,
-  MD5Hash,
-  RemoteKey,
-  S3ObjectsData,
-  StorageQueueEvent,
-  UploadEventListener
-}
-import zio.{Task, TaskR, UIO}
+import net.kemitix.thorp.domain._
+import zio.{TaskR, UIO}
 
 trait Storage {
   val storage: Storage.Service
@@ -30,7 +22,7 @@ object Storage {
         batchMode: Boolean,
         uploadEventListener: UploadEventListener,
         tryCount: Int
-    ): Task[StorageQueueEvent]
+    ): UIO[StorageQueueEvent]
 
     def copy(
         bucket: Bucket,

@@ -19,7 +19,7 @@ import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.{HashService, Storage}
 import org.scalatest.FunSpec
 import zio.internal.PlatformLive
-import zio.{Runtime, Task, TaskR, UIO}
+import zio.{Runtime, TaskR, UIO}
 
 class SyncSuite extends FunSpec {
 
@@ -207,8 +207,8 @@ class SyncSuite extends FunSpec {
                         bucket: Bucket,
                         batchMode: Boolean,
                         uploadEventListener: UploadEventListener,
-                        tryCount: Int): Task[UploadQueueEvent] =
-      Task(UploadQueueEvent(localFile.remoteKey, localFile.hashes(MD5)))
+                        tryCount: Int): UIO[UploadQueueEvent] =
+      UIO(UploadQueueEvent(localFile.remoteKey, localFile.hashes(MD5)))
 
     override def copy(bucket: Bucket,
                       sourceKey: RemoteKey,

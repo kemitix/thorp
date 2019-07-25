@@ -4,7 +4,7 @@ import net.kemitix.thorp.console.Console
 import net.kemitix.thorp.domain.StorageQueueEvent.ShutdownQueueEvent
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.Storage
-import zio.{Task, TaskR, UIO}
+import zio.{TaskR, UIO}
 
 class S3Storage(
     amazonS3Client: => AmazonS3.Client,
@@ -36,7 +36,7 @@ class S3Storage(
       batchMode: Boolean,
       uploadEventListener: UploadEventListener,
       tryCount: Int
-  ): Task[StorageQueueEvent] =
+  ): UIO[StorageQueueEvent] =
     uploader.upload(localFile, bucket, batchMode, uploadEventListener, 1)
 
   override def delete(
