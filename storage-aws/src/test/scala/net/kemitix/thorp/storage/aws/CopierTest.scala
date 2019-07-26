@@ -28,7 +28,7 @@ class CopierTest extends FreeSpec {
               .when()
               .returns(_ => Task.succeed(Some(new CopyObjectResult)))
             private val result =
-              invoke(bucket, sourceKey, hash, targetKey, fixture.storageService)
+              invoke(bucket, sourceKey, hash, targetKey, fixture.amazonS3Client)
             assertResult(expected)(result)
           }
         }
@@ -40,7 +40,7 @@ class CopierTest extends FreeSpec {
               .when()
               .returns(_ => Task.succeed(None))
             private val result =
-              invoke(bucket, sourceKey, hash, targetKey, fixture.storageService)
+              invoke(bucket, sourceKey, hash, targetKey, fixture.amazonS3Client)
             result match {
               case Right(
                   ErrorQueueEvent(Action.Copy("sourceKey => targetKey"),
@@ -63,7 +63,7 @@ class CopierTest extends FreeSpec {
               .when()
               .returns(_ => Task.fail(new AmazonS3Exception(expectedMessage)))
             private val result =
-              invoke(bucket, sourceKey, hash, targetKey, fixture.storageService)
+              invoke(bucket, sourceKey, hash, targetKey, fixture.amazonS3Client)
             result match {
               case Right(
                   ErrorQueueEvent(Action.Copy("sourceKey => targetKey"),
@@ -85,10 +85,10 @@ class CopierTest extends FreeSpec {
         sourceKey: RemoteKey,
         hash: MD5Hash,
         targetKey: RemoteKey,
-        storageService: S3Storage
+        amazonS3Client: AmazonS3.Client
     ) =
       runtime.unsafeRunSync {
-        storageService.copy(bucket, sourceKey, hash, targetKey)
+        Copier.copy(amazonS3Client)(bucket, sourceKey, hash, targetKey)
       }.toEither
   }
 
