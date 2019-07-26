@@ -1,6 +1,10 @@
 package net.kemitix.thorp.storage.aws
 
-import com.amazonaws.services.s3.model.{ListObjectsV2Request, S3ObjectSummary}
+import com.amazonaws.services.s3.model.{
+  ListObjectsV2Request,
+  ListObjectsV2Result,
+  S3ObjectSummary
+}
 import net.kemitix.thorp.console._
 import net.kemitix.thorp.domain.{Bucket, RemoteKey, S3ObjectsData}
 import net.kemitix.thorp.storage.aws.S3ObjectsByHash.byHash
@@ -12,18 +16,20 @@ import scala.collection.JavaConverters._
 trait Lister {
 
   private type Token = String
-  private type Batch = (Stream[S3ObjectSummary], Option[Token])
+  case class Batch(summaries: Stream[S3ObjectSummary], more: Option[Token])
 
   def listObjects(amazonS3: AmazonS3.Client)(
       bucket: Bucket,
       prefix: RemoteKey
   ): TaskR[Console, S3ObjectsData] = {
 
-    val requestMore: Token => ListObjectsV2Request = (token: Token) =>
+    def request =
       new ListObjectsV2Request()
         .withBucketName(bucket.name)
         .withPrefix(prefix.key)
-        .withContinuationToken(token)
+
+    def requestMore: Token => ListObjectsV2Request =
+      token => request.withContinuationToken(token)
 
     def fetchBatch: ListObjectsV2Request => TaskR[Console, Batch] =
       request =>
@@ -38,33 +44,33 @@ trait Lister {
     }
 
     def fetch: ListObjectsV2Request => TaskR[Console, Stream[S3ObjectSummary]] =
-      request => {
+      request =>
         for {
           batch <- fetchBatch(request)
-          (summaries, more) = batch
-          rest <- fetchMore(more)
-        } yield summaries ++ rest
-      }
+          more  <- fetchMore(batch.more)
+        } yield batch.summaries ++ more
 
-    for {
-      summaries <- fetch(
-        new ListObjectsV2Request()
-          .withBucketName(bucket.name)
-          .withPrefix(prefix.key))
-    } yield S3ObjectsData(byHash(summaries), byKey(summaries))
+    fetch(request)
+      .map(summaries => {
+        S3ObjectsData(byHash(summaries), byKey(summaries))
+      })
   }
 
-  private def tryFetchBatch(amazonS3: AmazonS3.Client)
-    : ListObjectsV2Request => Task[(Stream[S3ObjectSummary], Option[Token])] =
+  private def tryFetchBatch(
+      amazonS3: AmazonS3.Client): ListObjectsV2Request => Task[Batch] =
     request =>
       amazonS3
         .listObjectsV2(request)
-        .map { result =>
-          val more: Option[Token] =
-            if (result.isTruncated) Some(result.getNextContinuationToken)
-            else None
-          (result.getObjectSummaries.asScala.toStream, more)
-      }
+        .map(result => Batch(objectSummaries(result), moreToken(result)))
+
+  private def objectSummaries(
+      result: ListObjectsV2Result): Stream[S3ObjectSummary] =
+    result.getObjectSummaries.asScala.toStream
+
+  private def moreToken(result: ListObjectsV2Result): Option[String] =
+    if (result.isTruncated) Some(result.getNextContinuationToken)
+    else None
+
 }
 
 object Lister extends Lister
