@@ -11,19 +11,19 @@ import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.aws.S3ClientException.HashError
 import zio.{IO, UIO}
 
-class Copier(amazonS3: AmazonS3.Client) {
+trait Copier {
 
-  def copy(
+  def copy(amazonS3: AmazonS3.Client)(
       bucket: Bucket,
       sourceKey: RemoteKey,
       hash: MD5Hash,
       targetKey: RemoteKey
   ): UIO[StorageQueueEvent] =
-    copyObject(bucket, sourceKey, hash, targetKey)
+    copyObject(amazonS3)(bucket, sourceKey, hash, targetKey)
       .fold(foldFailure(sourceKey, targetKey),
             foldSuccess(sourceKey, targetKey))
 
-  private def copyObject(
+  private def copyObject(amazonS3: AmazonS3.Client)(
       bucket: Bucket,
       sourceKey: RemoteKey,
       hash: MD5Hash,
@@ -66,3 +66,5 @@ class Copier(amazonS3: AmazonS3.Client) {
     Action.Copy(s"${sourceKey.key} => ${targetKey.key}")
 
 }
+
+object Copier extends Copier

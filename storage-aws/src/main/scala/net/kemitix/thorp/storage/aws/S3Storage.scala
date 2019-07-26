@@ -11,7 +11,6 @@ class S3Storage(
     amazonTransferManager: => AmazonTransferManager
 ) extends Storage.Service {
 
-  lazy val copier   = new Copier(amazonS3Client)
   lazy val uploader = new Uploader(amazonTransferManager)
   lazy val deleter  = new Deleter(amazonS3Client)
 
@@ -27,7 +26,7 @@ class S3Storage(
       hash: MD5Hash,
       targetKey: RemoteKey
   ): UIO[StorageQueueEvent] =
-    copier.copy(bucket, sourceKey, hash, targetKey)
+    Copier.copy(amazonS3Client)(bucket, sourceKey, hash, targetKey)
 
   override def upload(
       localFile: LocalFile,
