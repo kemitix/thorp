@@ -15,16 +15,16 @@ import net.kemitix.thorp.domain.UploadEvent.{
 import net.kemitix.thorp.domain.{StorageQueueEvent, _}
 import zio.{Task, UIO}
 
-class Uploader(transferManager: => AmazonTransferManager) {
+trait Uploader {
 
-  def upload(
+  def upload(transferManager: => AmazonTransferManager)(
       localFile: LocalFile,
       bucket: Bucket,
       batchMode: Boolean,
       uploadEventListener: UploadEventListener,
       tryCount: Int
   ): UIO[StorageQueueEvent] =
-    transfer(localFile, bucket, batchMode, uploadEventListener)
+    transfer(transferManager)(localFile, bucket, batchMode, uploadEventListener)
       .catchAll(
         e =>
           UIO.succeed(
@@ -32,7 +32,7 @@ class Uploader(transferManager: => AmazonTransferManager) {
                             localFile.remoteKey,
                             e)))
 
-  private def transfer(
+  private def transfer(transferManager: => AmazonTransferManager)(
       localFile: LocalFile,
       bucket: Bucket,
       batchMode: Boolean,
@@ -92,3 +92,5 @@ class Uploader(transferManager: => AmazonTransferManager) {
     e.getEventType equals ProgressEventType.RESPONSE_BYTE_TRANSFER_EVENT
 
 }
+
+object Uploader extends Uploader

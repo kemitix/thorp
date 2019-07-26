@@ -11,8 +11,6 @@ class S3Storage(
     amazonTransferManager: => AmazonTransferManager
 ) extends Storage.Service {
 
-  lazy val uploader = new Uploader(amazonTransferManager)
-
   override def listObjects(
       bucket: Bucket,
       prefix: RemoteKey
@@ -34,7 +32,11 @@ class S3Storage(
       uploadEventListener: UploadEventListener,
       tryCount: Int
   ): UIO[StorageQueueEvent] =
-    uploader.upload(localFile, bucket, batchMode, uploadEventListener, 1)
+    Uploader.upload(amazonTransferManager)(localFile,
+                                           bucket,
+                                           batchMode,
+                                           uploadEventListener,
+                                           1)
 
   override def delete(
       bucket: Bucket,
