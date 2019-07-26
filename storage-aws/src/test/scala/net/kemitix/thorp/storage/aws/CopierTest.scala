@@ -26,7 +26,7 @@ class CopierTest extends FreeSpec {
           new AmazonS3ClientTestFixture {
             (fixture.amazonS3Client.copyObject _)
               .when()
-              .returns(_ => Task.succeed(new CopyObjectResult))
+              .returns(_ => Task.succeed(Some(new CopyObjectResult)))
             private val result =
               invoke(bucket, sourceKey, hash, targetKey, fixture.storageService)
             assertResult(expected)(result)
@@ -38,7 +38,7 @@ class CopierTest extends FreeSpec {
           new AmazonS3ClientTestFixture {
             (fixture.amazonS3Client.copyObject _)
               .when()
-              .returns(_ => Task.fail(HashError))
+              .returns(_ => Task.succeed(None))
             private val result =
               invoke(bucket, sourceKey, hash, targetKey, fixture.storageService)
             result match {
@@ -61,8 +61,7 @@ class CopierTest extends FreeSpec {
             private val expectedMessage = "The specified key does not exist"
             (fixture.amazonS3Client.copyObject _)
               .when()
-              .returns(_ =>
-                Task.fail(CopyError(new AmazonS3Exception(expectedMessage))))
+              .returns(_ => Task.fail(new AmazonS3Exception(expectedMessage)))
             private val result =
               invoke(bucket, sourceKey, hash, targetKey, fixture.storageService)
             result match {

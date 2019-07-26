@@ -8,8 +8,8 @@ import net.kemitix.thorp.domain.StorageQueueEvent.{
   ErrorQueueEvent
 }
 import net.kemitix.thorp.domain._
-import net.kemitix.thorp.storage.aws.S3ClientException.HashError
-import zio.{IO, UIO}
+import net.kemitix.thorp.storage.aws.S3ClientException.{CopyError, HashError}
+import zio.{IO, Task, UIO}
 
 trait Copier {
 
@@ -29,6 +29,21 @@ trait Copier {
       hash: MD5Hash,
       targetKey: RemoteKey
   ): IO[S3ClientException, CopyObjectResult] = {
+
+    def handleResult
+      : Option[CopyObjectResult] => IO[S3ClientException, CopyObjectResult] =
+      maybeResult =>
+        IO.fromEither {
+          maybeResult
+            .toRight(HashError)
+      }
+
+    def handleError: Throwable => IO[S3ClientException, CopyObjectResult] =
+      error =>
+        Task.fail {
+          CopyError(error)
+      }
+
     val request =
       new CopyObjectRequest(
         bucket.name,
@@ -36,7 +51,10 @@ trait Copier {
         bucket.name,
         targetKey.key
       ).withMatchingETagConstraint(hash.hash)
-    amazonS3.copyObject(request)
+    amazonS3
+      .copyObject(request)
+      .fold(handleError, handleResult)
+      .flatten
   }
 
   private def foldFailure(
@@ -44,7 +62,8 @@ trait Copier {
       targetKey: RemoteKey): S3ClientException => StorageQueueEvent = {
     case error: SdkClientException =>
       errorEvent(sourceKey, targetKey, error)
-    case error => errorEvent(sourceKey, targetKey, error)
+    case error =>
+      errorEvent(sourceKey, targetKey, error)
 
   }
 
