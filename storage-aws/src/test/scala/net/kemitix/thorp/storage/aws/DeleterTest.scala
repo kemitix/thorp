@@ -1,0 +1,66 @@
+package net.kemitix.thorp.storage.aws
+
+import com.amazonaws.SdkClientException
+import com.amazonaws.services.s3.model.AmazonS3Exception
+import net.kemitix.thorp.console._
+import net.kemitix.thorp.domain.StorageQueueEvent.{
+  Action,
+  DeleteQueueEvent,
+  ErrorQueueEvent
+}
+import net.kemitix.thorp.domain.{Bucket, RemoteKey}
+import org.scalatest.FreeSpec
+import zio.internal.PlatformLive
+import zio.{Runtime, Task, UIO}
+
+class DeleterTest extends FreeSpec {
+
+  private val runtime = Runtime(Console.Live, PlatformLive.Default)
+
+  "delete" - {
+    val bucket    = Bucket("aBucket")
+    val remoteKey = RemoteKey("aRemoteKey")
+    "when no errors" in {
+      val expected = Right(DeleteQueueEvent(remoteKey))
+      new AmazonS3ClientTestFixture {
+        (fixture.amazonS3Client.deleteObject _)
+          .when()
+          .returns(_ => UIO.succeed(()))
+        private val result = invoke(fixture.storageService)(bucket, remoteKey)
+        assertResult(expected)(result)
+      }
+    }
+    "when Amazon Service Exception" in {
+      val exception = new AmazonS3Exception("message")
+      val expected =
+        Right(
+          ErrorQueueEvent(Action.Delete(remoteKey.key), remoteKey, exception))
+      new AmazonS3ClientTestFixture {
+        (fixture.amazonS3Client.deleteObject _)
+          .when()
+          .returns(_ => Task.fail(exception))
+        private val result = invoke(fixture.storageService)(bucket, remoteKey)
+        assertResult(expected)(result)
+      }
+    }
+    "when Amazon SDK Client Exception" in {
+      val exception = new SdkClientException("message")
+      val expected =
+        Right(
+          ErrorQueueEvent(Action.Delete(remoteKey.key), remoteKey, exception))
+      new AmazonS3ClientTestFixture {
+        (fixture.amazonS3Client.deleteObject _)
+          .when()
+          .returns(_ => Task.fail(exception))
+        private val result = invoke(fixture.storageService)(bucket, remoteKey)
+        assertResult(expected)(result)
+      }
+    }
+    def invoke(storageService: S3Storage)(bucket: Bucket,
+                                          remoteKey: RemoteKey) =
+      runtime.unsafeRunSync {
+        storageService.delete(bucket, remoteKey)
+      }.toEither
+
+  }
+}
