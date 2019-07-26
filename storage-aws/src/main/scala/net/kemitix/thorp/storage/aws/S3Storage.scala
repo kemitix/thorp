@@ -12,7 +12,6 @@ class S3Storage(
 ) extends Storage.Service {
 
   lazy val uploader = new Uploader(amazonTransferManager)
-  lazy val deleter  = new Deleter(amazonS3Client)
 
   override def listObjects(
       bucket: Bucket,
@@ -41,7 +40,7 @@ class S3Storage(
       bucket: Bucket,
       remoteKey: RemoteKey
   ): UIO[StorageQueueEvent] =
-    deleter.delete(bucket, remoteKey)
+    Deleter.delete(amazonS3Client)(bucket, remoteKey)
 
   override def shutdown: UIO[StorageQueueEvent] = {
     amazonTransferManager.shutdownNow(true)
