@@ -9,12 +9,12 @@ import zio.{Task, TaskR}
 
 import scala.collection.JavaConverters._
 
-class Lister(amazonS3: AmazonS3.Client) {
+trait Lister {
 
   private type Token = String
   private type Batch = (Stream[S3ObjectSummary], Option[Token])
 
-  def listObjects(
+  def listObjects(amazonS3: AmazonS3.Client)(
       bucket: Bucket,
       prefix: RemoteKey
   ): TaskR[Console, S3ObjectsData] = {
@@ -29,7 +29,7 @@ class Lister(amazonS3: AmazonS3.Client) {
       request =>
         for {
           _     <- ListerLogger.logFetchBatch
-          batch <- tryFetchBatch(request)
+          batch <- tryFetchBatch(amazonS3)(request)
         } yield batch
 
     def fetchMore: Option[Token] => TaskR[Console, Stream[S3ObjectSummary]] = {
@@ -54,7 +54,7 @@ class Lister(amazonS3: AmazonS3.Client) {
     } yield S3ObjectsData(byHash(summaries), byKey(summaries))
   }
 
-  private def tryFetchBatch
+  private def tryFetchBatch(amazonS3: AmazonS3.Client)
     : ListObjectsV2Request => Task[(Stream[S3ObjectSummary], Option[Token])] =
     request =>
       amazonS3
@@ -66,3 +66,5 @@ class Lister(amazonS3: AmazonS3.Client) {
           (result.getObjectSummaries.asScala.toStream, more)
       }
 }
+
+object Lister extends Lister

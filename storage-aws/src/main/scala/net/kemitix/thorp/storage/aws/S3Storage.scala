@@ -11,16 +11,15 @@ class S3Storage(
     amazonTransferManager: => AmazonTransferManager
 ) extends Storage.Service {
 
-  lazy val objectLister = new Lister(amazonS3Client)
-  lazy val copier       = new Copier(amazonS3Client)
-  lazy val uploader     = new Uploader(amazonTransferManager)
-  lazy val deleter      = new Deleter(amazonS3Client)
+  lazy val copier   = new Copier(amazonS3Client)
+  lazy val uploader = new Uploader(amazonTransferManager)
+  lazy val deleter  = new Deleter(amazonS3Client)
 
   override def listObjects(
       bucket: Bucket,
       prefix: RemoteKey
   ): TaskR[Console, S3ObjectsData] =
-    objectLister.listObjects(bucket, prefix)
+    Lister.listObjects(amazonS3Client)(bucket, prefix)
 
   override def copy(
       bucket: Bucket,
