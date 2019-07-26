@@ -41,7 +41,7 @@ class ListerTest extends FreeSpec {
             .returns(_ => {
               UIO.succeed(objectResults(nowDate, key, etag, false))
             })
-          private val result = invoke(fixture.storageService)(bucket, prefix)
+          private val result = invoke(fixture.amazonS3Client)(bucket, prefix)
           assertResult(expected)(result)
         }
       }
@@ -74,7 +74,7 @@ class ListerTest extends FreeSpec {
           (fixture.amazonS3Client.listObjectsV2 _)
             .when()
             .returns(_ => UIO(objectResults(nowDate, key2, etag2, false)))
-          private val result = invoke(fixture.storageService)(bucket, prefix)
+          private val result = invoke(fixture.amazonS3Client)(bucket, prefix)
           assertResult(expected)(result)
         }
       }
@@ -104,7 +104,7 @@ class ListerTest extends FreeSpec {
         (fixture.amazonS3Client.listObjectsV2 _)
           .when()
           .returns(_ => Task.fail(exception))
-        private val result = invoke(fixture.storageService)(bucket, prefix)
+        private val result = invoke(fixture.amazonS3Client)(bucket, prefix)
         assert(result.isLeft)
       }
     }
@@ -114,13 +114,14 @@ class ListerTest extends FreeSpec {
         (fixture.amazonS3Client.listObjectsV2 _)
           .when()
           .returns(_ => Task.fail(exception))
-        private val result = invoke(fixture.storageService)(bucket, prefix)
+        private val result = invoke(fixture.amazonS3Client)(bucket, prefix)
         assert(result.isLeft)
       }
     }
-    def invoke(storageService: S3Storage)(bucket: Bucket, prefix: RemoteKey) =
+    def invoke(amazonS3Client: AmazonS3.Client)(bucket: Bucket,
+                                                prefix: RemoteKey) =
       runtime.unsafeRunSync {
-        storageService.listObjects(bucket, prefix)
+        Lister.listObjects(amazonS3Client)(bucket, prefix)
       }.toEither
 
   }
