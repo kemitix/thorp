@@ -26,7 +26,7 @@ class DeleterTest extends FreeSpec {
         (fixture.amazonS3Client.deleteObject _)
           .when()
           .returns(_ => UIO.succeed(()))
-        private val result = invoke(fixture.storageService)(bucket, remoteKey)
+        private val result = invoke(fixture.amazonS3Client)(bucket, remoteKey)
         assertResult(expected)(result)
       }
     }
@@ -39,7 +39,7 @@ class DeleterTest extends FreeSpec {
         (fixture.amazonS3Client.deleteObject _)
           .when()
           .returns(_ => Task.fail(exception))
-        private val result = invoke(fixture.storageService)(bucket, remoteKey)
+        private val result = invoke(fixture.amazonS3Client)(bucket, remoteKey)
         assertResult(expected)(result)
       }
     }
@@ -52,14 +52,14 @@ class DeleterTest extends FreeSpec {
         (fixture.amazonS3Client.deleteObject _)
           .when()
           .returns(_ => Task.fail(exception))
-        private val result = invoke(fixture.storageService)(bucket, remoteKey)
+        private val result = invoke(fixture.amazonS3Client)(bucket, remoteKey)
         assertResult(expected)(result)
       }
     }
-    def invoke(storageService: S3Storage)(bucket: Bucket,
-                                          remoteKey: RemoteKey) =
+    def invoke(amazonS3Client: AmazonS3.Client)(bucket: Bucket,
+                                                remoteKey: RemoteKey) =
       runtime.unsafeRunSync {
-        storageService.delete(bucket, remoteKey)
+        Deleter.delete(amazonS3Client)(bucket, remoteKey)
       }.toEither
 
   }
