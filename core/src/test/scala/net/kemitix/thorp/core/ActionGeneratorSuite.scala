@@ -2,6 +2,7 @@ package net.kemitix.thorp.core
 
 import java.time.Instant
 
+import net.kemitix.thorp.config.LegacyConfig
 import net.kemitix.thorp.core.Action.{DoNothing, ToCopy, ToUpload}
 import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.domain._

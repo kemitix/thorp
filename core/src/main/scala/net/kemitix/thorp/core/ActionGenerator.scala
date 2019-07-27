@@ -1,5 +1,6 @@
 package net.kemitix.thorp.core
 
+import net.kemitix.thorp.config.LegacyConfig
 import net.kemitix.thorp.core.Action.{DoNothing, ToCopy, ToUpload}
 import net.kemitix.thorp.domain._
 

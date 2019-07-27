@@ -2,6 +2,7 @@ package net.kemitix.thorp.core
 
 import java.nio.file.Path
 
+import net.kemitix.thorp.config.LegacyConfig
 import net.kemitix.thorp.core.KeyGenerator.generateKey
 import net.kemitix.thorp.domain
 import net.kemitix.thorp.domain._

@@ -1,4 +1,6 @@
-package net.kemitix.thorp.domain
+package net.kemitix.thorp.config
+
+import net.kemitix.thorp.domain.{Bucket, Filter, RemoteKey, SimpleLens, Sources}
 
 final case class LegacyConfig(
     bucket: Bucket = Bucket(""),

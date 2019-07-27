@@ -2,7 +2,8 @@ package net.kemitix.thorp.core
 
 import java.nio.file.Path
 
-import net.kemitix.thorp.domain.{Bucket, LegacyConfig, Sources}
+import net.kemitix.thorp.config.LegacyConfig
+import net.kemitix.thorp.domain.{Bucket, Sources}
 import zio.IO
 
 sealed trait ConfigValidator {

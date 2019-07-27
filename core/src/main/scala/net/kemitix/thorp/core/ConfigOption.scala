@@ -2,9 +2,10 @@ package net.kemitix.thorp.core
 
 import java.nio.file.Path
 
+import net.kemitix.thorp.config.LegacyConfig
+import net.kemitix.thorp.config.LegacyConfig._
 import net.kemitix.thorp.domain
-import net.kemitix.thorp.domain.{LegacyConfig, RemoteKey}
-import net.kemitix.thorp.domain.LegacyConfig._
+import net.kemitix.thorp.domain.RemoteKey
 
 sealed trait ConfigOption {
   def update(config: LegacyConfig): LegacyConfig

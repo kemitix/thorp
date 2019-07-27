@@ -1,5 +1,6 @@
 package net.kemitix.thorp.core
 
+import net.kemitix.thorp.config.LegacyConfig
 import net.kemitix.thorp.console._
 import net.kemitix.thorp.core.Action._
 import net.kemitix.thorp.domain._

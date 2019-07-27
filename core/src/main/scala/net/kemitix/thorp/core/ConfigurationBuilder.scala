@@ -2,10 +2,10 @@ package net.kemitix.thorp.core
 
 import java.nio.file.Paths
 
+import net.kemitix.thorp.config.LegacyConfig
 import net.kemitix.thorp.core.ConfigOptions.options
 import net.kemitix.thorp.core.ConfigValidator.validateConfig
 import net.kemitix.thorp.core.ParseConfigFile.parseFile
-import net.kemitix.thorp.domain.LegacyConfig
 import zio.IO
 
 /**

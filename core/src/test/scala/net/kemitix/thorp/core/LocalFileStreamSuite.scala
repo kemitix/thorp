@@ -2,6 +2,7 @@ package net.kemitix.thorp.core
 
 import java.nio.file.Paths
 
+import net.kemitix.thorp.config.LegacyConfig
 import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.HashService
@@ -21,8 +22,8 @@ class LocalFileStreamSuite extends FunSpec {
   private def file(filename: String) =
     sourcePath.resolve(Paths.get(filename))
 
-  implicit private val config: LegacyConfig = LegacyConfig(
-    sources = Sources(List(sourcePath)))
+  implicit private val config: LegacyConfig =
+    LegacyConfig(sources = Sources(List(sourcePath)))
 
   describe("findFiles") {
     it("should find all files") {
