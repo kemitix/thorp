@@ -8,6 +8,7 @@ import com.amazonaws.services.s3.model.{ListObjectsV2Result, S3ObjectSummary}
 import net.kemitix.thorp.console.Console
 import net.kemitix.thorp.core.Resource
 import net.kemitix.thorp.domain._
+import net.kemitix.thorp.storage.api.Storage
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.FreeSpec
 import zio.{Runtime, Task}
@@ -64,7 +65,7 @@ class S3StorageTest extends FreeSpec with MockFactory {
         assertResult(expected)(result)
       }
     }
-    def invoke(storageService: S3Storage) =
+    def invoke(storageService: Storage.Service) =
       runtime.unsafeRunSync {
         storageService
           .listObjects(Bucket("bucket"), RemoteKey("prefix"))

@@ -1,52 +1,54 @@
 package net.kemitix.thorp.storage.aws
 
+import com.amazonaws.services.s3.AmazonS3ClientBuilder
+import com.amazonaws.services.s3.transfer.TransferManagerBuilder
 import net.kemitix.thorp.console.Console
 import net.kemitix.thorp.domain.StorageQueueEvent.ShutdownQueueEvent
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.Storage
+import net.kemitix.thorp.storage.api.Storage.Service
 import zio.{TaskR, UIO}
 
-class S3Storage(
-    amazonS3Client: => AmazonS3.Client,
-    amazonTransferManager: => AmazonTransferManager
-) extends Storage.Service {
+object S3Storage {
+  trait Live extends Storage {
+    val storage: Service = new Service {
 
-  override def listObjects(
-      bucket: Bucket,
-      prefix: RemoteKey
-  ): TaskR[Console, S3ObjectsData] =
-    Lister.listObjects(amazonS3Client)(bucket, prefix)
+      private val client: AmazonS3.Client =
+        AmazonS3.ClientImpl(AmazonS3ClientBuilder.defaultClient)
+      private val transferManager: AmazonTransferManager =
+        AmazonTransferManager(TransferManagerBuilder.defaultTransferManager)
 
-  override def copy(
-      bucket: Bucket,
-      sourceKey: RemoteKey,
-      hash: MD5Hash,
-      targetKey: RemoteKey
-  ): UIO[StorageQueueEvent] =
-    Copier.copy(amazonS3Client)(bucket, sourceKey, hash, targetKey)
+      override def listObjects(
+          bucket: Bucket,
+          prefix: RemoteKey): TaskR[Console, S3ObjectsData] =
+        Lister.listObjects(client)(bucket, prefix)
 
-  override def upload(
-      localFile: LocalFile,
-      bucket: Bucket,
-      batchMode: Boolean,
-      uploadEventListener: UploadEventListener,
-      tryCount: Int
-  ): UIO[StorageQueueEvent] =
-    Uploader.upload(amazonTransferManager)(localFile,
-                                           bucket,
-                                           batchMode,
-                                           uploadEventListener,
-                                           1)
+      override def upload(localFile: LocalFile,
+                          bucket: Bucket,
+                          batchMode: Boolean,
+                          uploadEventListener: UploadEventListener,
+                          tryCount: Int): UIO[StorageQueueEvent] =
+        Uploader.upload(transferManager)(localFile,
+                                         bucket,
+                                         batchMode,
+                                         uploadEventListener,
+                                         1)
 
-  override def delete(
-      bucket: Bucket,
-      remoteKey: RemoteKey
-  ): UIO[StorageQueueEvent] =
-    Deleter.delete(amazonS3Client)(bucket, remoteKey)
+      override def copy(bucket: Bucket,
+                        sourceKey: RemoteKey,
+                        hash: MD5Hash,
+                        targetKey: RemoteKey): UIO[StorageQueueEvent] =
+        Copier.copy(client)(bucket, sourceKey, hash, targetKey)
 
-  override def shutdown: UIO[StorageQueueEvent] = {
-    amazonTransferManager.shutdownNow(true)
-    amazonS3Client.shutdown().map(_ => ShutdownQueueEvent())
+      override def delete(bucket: Bucket,
+                          remoteKey: RemoteKey): UIO[StorageQueueEvent] =
+        Deleter.delete(client)(bucket, remoteKey)
+
+      override def shutdown: UIO[StorageQueueEvent] = {
+        transferManager.shutdownNow(true)
+        client.shutdown().map(_ => ShutdownQueueEvent())
+      }
+    }
   }
-
+  object Live extends Live
 }

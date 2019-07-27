@@ -3,8 +3,9 @@ package net.kemitix.thorp.cli
 import net.kemitix.thorp.console._
 import net.kemitix.thorp.core._
 import net.kemitix.thorp.domain.{StorageQueueEvent, SyncTotals}
+import net.kemitix.thorp.storage.api.Storage
 import net.kemitix.thorp.storage.aws.S3HashService.defaultHashService
-import net.kemitix.thorp.storage.aws.S3StorageServiceBuilder.defaultStorageService
+import net.kemitix.thorp.storage.aws.S3Storage
 import zio.{Task, TaskR, ZIO}
 
 trait Program {
@@ -24,13 +25,12 @@ trait Program {
 
   private def execute(
       cliOptions: ConfigOptions): ZIO[Console, Throwable, Unit] = {
+    val storage = S3Storage.Live.storage
     for {
-      plan <- PlanBuilder.createPlan(defaultStorageService,
-                                     defaultHashService,
-                                     cliOptions)
-      archive <- thorpArchive(cliOptions, plan.syncTotals)
+      plan    <- PlanBuilder.createPlan(storage, defaultHashService, cliOptions)
+      archive <- thorpArchive(cliOptions, plan.syncTotals, storage)
       events  <- handleActions(archive, plan)
-      _       <- defaultStorageService.shutdown
+      _       <- storage.shutdown
       _       <- SyncLogging.logRunFinished(events)
     } yield ()
   }
@@ -47,10 +47,11 @@ trait Program {
 
   def thorpArchive(
       cliOptions: ConfigOptions,
-      syncTotals: SyncTotals
+      syncTotals: SyncTotals,
+      storage: Storage.Service
   ): Task[ThorpArchive] = Task {
     UnversionedMirrorArchive.default(
-      defaultStorageService,
+      storage,
       ConfigQuery.batchMode(cliOptions),
       syncTotals
     )
