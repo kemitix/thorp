@@ -1,20 +1,17 @@
 package net.kemitix.thorp.cli
 
 import net.kemitix.thorp.console._
+import net.kemitix.thorp.core.CoreTypes.CoreProgram
 import net.kemitix.thorp.core._
-import net.kemitix.thorp.domain.{StorageQueueEvent, SyncTotals}
-import net.kemitix.thorp.storage.api.Storage
+import net.kemitix.thorp.domain.StorageQueueEvent
 import net.kemitix.thorp.storage.aws.S3HashService.defaultHashService
-import zio.{TaskR, ZIO}
+import zio.{UIO, ZIO}
 
 trait Program {
 
-  type Program[A] = ZIO[Console with Storage, Throwable, Unit]
-
   lazy val version = s"Thorp v${thorp.BuildInfo.version}"
 
-  def run(args: List[String]): Program[Unit] = {
-    def showVersion(cli: ConfigOptions) = ConfigQuery.showVersion(cli)
+  def run(args: List[String]): CoreProgram[Unit] = {
     for {
       cli <- CliArgs.parse(args)
       _   <- ZIO.when(showVersion(cli))(putStrLn(version))
@@ -22,57 +19,68 @@ trait Program {
     } yield ()
   }
 
-  private def execute(
-      cliOptions: ConfigOptions): ZIO[Storage with Console, Throwable, Unit] = {
+  private def showVersion: ConfigOptions => Boolean =
+    cli => ConfigQuery.showVersion(cli)
+
+  private def execute(cliOptions: ConfigOptions) = {
     for {
-      plan    <- PlanBuilder.createPlan(defaultHashService, cliOptions)
-      archive <- thorpArchive(cliOptions, plan.syncTotals)
-      events  <- handleActions(archive, plan)
-      _       <- SyncLogging.logRunFinished(events)
+      plan      <- PlanBuilder.createPlan(defaultHashService, cliOptions)
+      batchMode <- isBatchMode(cliOptions)
+      archive   <- UnversionedMirrorArchive.default(batchMode, plan.syncTotals)
+      events    <- applyPlan(archive, plan)
+      _         <- SyncLogging.logRunFinished(events)
     } yield ()
   }
 
-  private def handleErrors(throwable: Throwable): ZIO[Console, Nothing, Unit] =
+  private def isBatchMode(cliOptions: ConfigOptions) =
+    UIO(ConfigQuery.batchMode(cliOptions))
+
+  private def handleErrors(throwable: Throwable) =
     for {
       _ <- putStrLn("There were errors:")
       _ <- throwable match {
         case ConfigValidationException(errors) =>
           ZIO.foreach(errors)(error => putStrLn(s"- $error"))
-        case x => throw x
       }
     } yield ()
 
-  def thorpArchive(
-      cliOptions: ConfigOptions,
-      syncTotals: SyncTotals
-  ): TaskR[Storage, ThorpArchive] = TaskR {
-    UnversionedMirrorArchive.default(
-      ConfigQuery.batchMode(cliOptions),
-      syncTotals
-    )
-  }
-
-  private def handleActions(
+  private def applyPlan(
       archive: ThorpArchive,
       syncPlan: SyncPlan
-  ): TaskR[Storage with Console, Stream[StorageQueueEvent]] = {
-    type Accumulator = (Stream[StorageQueueEvent], Long)
-    val zero: Accumulator = (Stream(), syncPlan.syncTotals.totalSizeBytes)
-    TaskR
-      .foldLeft(syncPlan.actions.zipWithIndex)(zero)((acc, indexedAction) => {
-        val (action, index)     = indexedAction
-        val (stream, bytesToDo) = acc
-        val remainingBytes      = bytesToDo - action.size
-        (for {
-          event <- archive.update(index, action, remainingBytes)
-          events = stream ++ Stream(event)
-        } yield events)
-          .map((_, remainingBytes))
-      })
+  ) = {
+    val zero: (Stream[StorageQueueEvent], Long) =
+      (Stream(), syncPlan.syncTotals.totalSizeBytes)
+    val actions = syncPlan.actions.zipWithIndex
+    ZIO
+      .foldLeft(actions)(zero)((acc, action) =>
+        applyAction(archive, acc, action))
       .map {
         case (events, _) => events
       }
   }
+
+  private def applyAction(
+      archive: ThorpArchive,
+      acc: (Stream[StorageQueueEvent], Long),
+      indexedAction: (Action, Int)
+  ) = {
+    val (action, index)     = indexedAction
+    val (stream, bytesToDo) = acc
+    val remainingBytes      = bytesToDo - action.size
+    updateArchive(archive, action, index, stream, remainingBytes)
+      .map((_, remainingBytes))
+  }
+
+  private def updateArchive(
+      archive: ThorpArchive,
+      action: Action,
+      index: Int,
+      stream: Stream[StorageQueueEvent],
+      remainingBytes: Long
+  ) =
+    for {
+      event <- archive.update(index, action, remainingBytes)
+    } yield stream ++ Stream(event)
 
 }
 

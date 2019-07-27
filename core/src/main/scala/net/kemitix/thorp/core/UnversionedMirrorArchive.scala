@@ -55,6 +55,8 @@ object UnversionedMirrorArchive {
   def default(
       batchMode: Boolean,
       syncTotals: SyncTotals
-  ): ThorpArchive =
-    new UnversionedMirrorArchive(batchMode, syncTotals)
+  ): Task[ThorpArchive] =
+    Task {
+      new UnversionedMirrorArchive(batchMode, syncTotals)
+    }
 }
