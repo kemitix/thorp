@@ -14,8 +14,8 @@ class MD5HashGeneratorTest extends FunSpec {
   private val source     = Resource(this, "upload")
   private val sourcePath = source.toPath
   private val prefix     = RemoteKey("prefix")
-  implicit private val config: Config =
-    Config(Bucket("bucket"), prefix, sources = Sources(List(sourcePath)))
+  implicit private val config: LegacyConfig =
+    LegacyConfig(Bucket("bucket"), prefix, sources = Sources(List(sourcePath)))
 
   describe("md5File()") {
     describe("read a small file (smaller than buffer)") {

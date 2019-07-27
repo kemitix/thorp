@@ -14,7 +14,7 @@ object LocalFileStream {
       source: Path,
       hashService: HashService
   )(
-      implicit c: Config
+      implicit c: LegacyConfig
   ): Task[LocalFiles] = {
 
     val isIncluded: Path => Boolean = Filter.isIncluded(c.filters)
@@ -50,7 +50,7 @@ object LocalFileStream {
 
   def localFile(
       hashService: HashService,
-      c: Config
+      c: LegacyConfig
   ): Path => Task[LocalFiles] =
     path => {
       val file   = path.toFile

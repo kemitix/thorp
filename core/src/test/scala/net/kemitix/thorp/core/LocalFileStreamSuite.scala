@@ -21,7 +21,7 @@ class LocalFileStreamSuite extends FunSpec {
   private def file(filename: String) =
     sourcePath.resolve(Paths.get(filename))
 
-  implicit private val config: Config = Config(
+  implicit private val config: LegacyConfig = LegacyConfig(
     sources = Sources(List(sourcePath)))
 
   describe("findFiles") {

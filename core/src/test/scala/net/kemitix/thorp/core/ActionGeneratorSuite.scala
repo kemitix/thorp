@@ -13,8 +13,8 @@ class ActionGeneratorSuite extends FunSpec {
   private val sourcePath = source.toPath
   private val prefix     = RemoteKey("prefix")
   private val bucket     = Bucket("bucket")
-  implicit private val config: Config =
-    Config(bucket, prefix, sources = Sources(List(sourcePath)))
+  implicit private val config: LegacyConfig =
+    LegacyConfig(bucket, prefix, sources = Sources(List(sourcePath)))
   private val fileToKey =
     KeyGenerator.generateKey(config.sources, config.prefix) _
 

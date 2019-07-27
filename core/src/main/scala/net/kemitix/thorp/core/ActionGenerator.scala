@@ -8,7 +8,7 @@ object ActionGenerator {
   def createActions(
       s3MetaData: S3MetaData,
       previousActions: Stream[Action]
-  )(implicit c: Config): Stream[Action] =
+  )(implicit c: LegacyConfig): Stream[Action] =
     s3MetaData match {
       // #1 local exists, remote exists, remote matches - do nothing
       case S3MetaData(localFile, _, Some(RemoteMetaData(key, hash, _)))

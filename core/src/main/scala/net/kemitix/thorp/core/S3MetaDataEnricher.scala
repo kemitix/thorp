@@ -7,7 +7,7 @@ object S3MetaDataEnricher {
   def getMetadata(
       localFile: LocalFile,
       s3ObjectsData: S3ObjectsData
-  )(implicit c: Config): S3MetaData = {
+  )(implicit c: LegacyConfig): S3MetaData = {
     val (keyMatches, hashMatches) = getS3Status(localFile, s3ObjectsData)
     S3MetaData(
       localFile,

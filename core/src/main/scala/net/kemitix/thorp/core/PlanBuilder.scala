@@ -20,7 +20,7 @@ trait PlanBuilder {
 
   private def useValidConfig(
       hashService: HashService
-  )(implicit c: Config) = {
+  )(implicit c: LegacyConfig) = {
     for {
       _       <- SyncLogging.logRunStart(c.bucket, c.prefix, c.sources)
       actions <- buildPlan(hashService)
@@ -29,13 +29,13 @@ trait PlanBuilder {
 
   private def buildPlan(
       hashService: HashService
-  )(implicit c: Config) =
+  )(implicit c: LegacyConfig) =
     for {
       metadata <- gatherMetadata(hashService)
     } yield assemblePlan(c)(metadata)
 
   private def assemblePlan(
-      implicit c: Config): ((S3ObjectsData, LocalFiles)) => SyncPlan = {
+      implicit c: LegacyConfig): ((S3ObjectsData, LocalFiles)) => SyncPlan = {
     case (remoteData, localData) =>
       SyncPlan(
         actions = createActions(c)(remoteData)(localData)
@@ -47,7 +47,7 @@ trait PlanBuilder {
   }
 
   private def createActions
-    : Config => S3ObjectsData => LocalFiles => Stream[Action] =
+    : LegacyConfig => S3ObjectsData => LocalFiles => Stream[Action] =
     c =>
       remoteData =>
         localData =>
@@ -60,7 +60,7 @@ trait PlanBuilder {
   }
 
   private def actionsForLocalFiles
-    : Config => S3ObjectsData => LocalFiles => Stream[Action] =
+    : LegacyConfig => S3ObjectsData => LocalFiles => Stream[Action] =
     c =>
       remoteData =>
         localData =>
@@ -68,7 +68,8 @@ trait PlanBuilder {
             createActionFromLocalFile(c)(lf)(remoteData)(acc) ++ acc)
 
   private def createActionFromLocalFile
-    : Config => LocalFile => S3ObjectsData => Stream[Action] => Stream[Action] =
+    : LegacyConfig => LocalFile => S3ObjectsData => Stream[Action] => Stream[
+      Action] =
     c =>
       lf =>
         remoteData =>
@@ -77,13 +78,14 @@ trait PlanBuilder {
               S3MetaDataEnricher.getMetadata(lf, remoteData)(c),
               previousActions)(c)
 
-  private def actionsForRemoteKeys: Config => S3ObjectsData => Stream[Action] =
+  private def actionsForRemoteKeys
+    : LegacyConfig => S3ObjectsData => Stream[Action] =
     c =>
       remoteData =>
         remoteData.byKey.keys.foldLeft(Stream.empty[Action])((acc, rk) =>
           createActionFromRemoteKey(c)(rk) #:: acc)
 
-  private def createActionFromRemoteKey: Config => RemoteKey => Action =
+  private def createActionFromRemoteKey: LegacyConfig => RemoteKey => Action =
     c =>
       rk =>
         if (rk.isMissingLocally(c.sources, c.prefix))
@@ -92,18 +94,18 @@ trait PlanBuilder {
 
   private def gatherMetadata(
       hashService: HashService
-  )(implicit c: Config) =
+  )(implicit c: LegacyConfig) =
     for {
       remoteData <- fetchRemoteData
       localData  <- findLocalFiles(hashService)
     } yield (remoteData, localData)
 
-  private def fetchRemoteData(implicit c: Config) =
+  private def fetchRemoteData(implicit c: LegacyConfig) =
     listObjects(c.bucket, c.prefix)
 
   private def findLocalFiles(
       hashService: HashService
-  )(implicit config: Config) =
+  )(implicit config: LegacyConfig) =
     for {
       _          <- SyncLogging.logFileScan
       localFiles <- findFiles(hashService)
@@ -111,7 +113,7 @@ trait PlanBuilder {
 
   private def findFiles(
       hashService: HashService
-  )(implicit c: Config) = {
+  )(implicit c: LegacyConfig) = {
     Task
       .foreach(c.sources.paths)(LocalFileStream.findFiles(_, hashService))
       .map(_.foldLeft(LocalFiles())((acc, localFile) => acc ++ localFile))

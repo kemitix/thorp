@@ -5,7 +5,7 @@ import java.nio.file.Paths
 import net.kemitix.thorp.core.ConfigOptions.options
 import net.kemitix.thorp.core.ConfigValidator.validateConfig
 import net.kemitix.thorp.core.ParseConfigFile.parseFile
-import net.kemitix.thorp.domain.Config
+import net.kemitix.thorp.domain.LegacyConfig
 import zio.IO
 
 /**
@@ -19,7 +19,7 @@ trait ConfigurationBuilder {
   private val userHome           = Paths.get(System.getProperty("user.home"))
 
   def buildConfig(
-      priorityOpts: ConfigOptions): IO[List[ConfigValidation], Config] =
+      priorityOpts: ConfigOptions): IO[List[ConfigValidation], LegacyConfig] =
     for {
       config <- getConfigOptions(priorityOpts).map(collateOptions)
       valid  <- validateConfig(config)
@@ -46,10 +46,10 @@ trait ConfigurationBuilder {
     if (ConfigQuery.ignoreGlobalOptions(priorityOpts)) emptyConfig
     else parseFile(globalConfig)
 
-  private def collateOptions(configOptions: ConfigOptions): Config =
+  private def collateOptions(configOptions: ConfigOptions): LegacyConfig =
     options
       .get(configOptions)
-      .foldLeft(Config()) { (config, configOption) =>
+      .foldLeft(LegacyConfig()) { (config, configOption) =>
         configOption.update(config)
       }
 

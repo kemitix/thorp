@@ -22,7 +22,7 @@ trait SyncLogging {
       _ <- putStrLn(ConsoleOut.ValidConfig(bucket, prefix, sources))
     } yield ()
 
-  def logFileScan(implicit c: Config): ZIO[Console, Nothing, Unit] =
+  def logFileScan(implicit c: LegacyConfig): ZIO[Console, Nothing, Unit] =
     putStrLn(s"Scanning local files: ${c.sources.paths.mkString(", ")}...")
 
   def logRunFinished(

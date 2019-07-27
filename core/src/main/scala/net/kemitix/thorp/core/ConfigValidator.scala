@@ -2,14 +2,14 @@ package net.kemitix.thorp.core
 
 import java.nio.file.Path
 
-import net.kemitix.thorp.domain.{Bucket, Config, Sources}
+import net.kemitix.thorp.domain.{Bucket, LegacyConfig, Sources}
 import zio.IO
 
 sealed trait ConfigValidator {
 
   def validateConfig(
-      config: Config
-  ): IO[List[ConfigValidation], Config] = IO.fromEither {
+      config: LegacyConfig
+  ): IO[List[ConfigValidation], LegacyConfig] = IO.fromEither {
     for {
       _ <- validateSources(config.sources)
       _ <- validateBucket(config.bucket)
