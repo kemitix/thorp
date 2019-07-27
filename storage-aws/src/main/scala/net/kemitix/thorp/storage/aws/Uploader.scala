@@ -37,16 +37,18 @@ trait Uploader {
       bucket: Bucket,
       batchMode: Boolean,
       uploadEventListener: UploadEventListener
-  ): Task[StorageQueueEvent] =
+  ): Task[StorageQueueEvent] = {
+
+    val listener         = progressListener(uploadEventListener)
+    val putObjectRequest = request(localFile, bucket, batchMode, listener)
+
     transferManager
-      .upload(
-        request(localFile,
-                bucket,
-                batchMode,
-                progressListener(uploadEventListener)))
+      .upload(putObjectRequest)
       .map(_.waitForUploadResult)
-      .map(upload =>
-        UploadQueueEvent(RemoteKey(upload.getKey), MD5Hash(upload.getETag)))
+      .map(uploadResult =>
+        UploadQueueEvent(RemoteKey(uploadResult.getKey),
+                         MD5Hash(uploadResult.getETag)))
+  }
 
   private def request(
       localFile: LocalFile,

@@ -2,16 +2,11 @@ package net.kemitix.thorp.storage.aws
 
 import java.time.Instant
 
-import com.amazonaws.services.s3.model.PutObjectRequest
-import com.amazonaws.services.s3.transfer.model.UploadResult
 import net.kemitix.thorp.core.{KeyGenerator, Resource, S3MetaDataEnricher}
 import net.kemitix.thorp.domain.HashType.MD5
-import net.kemitix.thorp.domain.MD5HashData.Root
-import net.kemitix.thorp.domain.StorageQueueEvent.UploadQueueEvent
 import net.kemitix.thorp.domain._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.FunSpec
-import zio.Task
 
 class StorageServiceSuite extends FunSpec with MockFactory {
 
@@ -25,17 +20,18 @@ class StorageServiceSuite extends FunSpec with MockFactory {
     KeyGenerator.generateKey(config.sources, config.prefix) _
 
   describe("getS3Status") {
+
     val hash = MD5Hash("hash")
     val localFile =
-      LocalFile.resolve("the-file", md5HashMap(hash), sourcePath, fileToKey)
+      LocalFile.resolve("the-file", Map(MD5 -> hash), sourcePath, fileToKey)
     val key = localFile.remoteKey
     val keyOtherKey = LocalFile.resolve("other-key-same-hash",
-                                        md5HashMap(hash),
+                                        Map(MD5 -> hash),
                                         sourcePath,
                                         fileToKey)
     val diffHash = MD5Hash("diff")
     val keyDiffHash = LocalFile.resolve("other-key-diff-hash",
-                                        md5HashMap(diffHash),
+                                        Map(MD5 -> diffHash),
                                         sourcePath,
                                         fileToKey)
     val lastModified = LastModified(Instant.now)
@@ -86,7 +82,7 @@ class StorageServiceSuite extends FunSpec with MockFactory {
 
     describe("when remote key does not exist and no others matches hash") {
       val localFile = LocalFile.resolve("missing-file",
-                                        md5HashMap(MD5Hash("unique")),
+                                        Map(MD5 -> MD5Hash("unique")),
                                         sourcePath,
                                         fileToKey)
       it("should return no matches by key") {
@@ -115,51 +111,4 @@ class StorageServiceSuite extends FunSpec with MockFactory {
 
   }
 
-  private def md5HashMap(hash: MD5Hash): Map[HashType, MD5Hash] =
-    Map(MD5 -> hash)
-
-  val batchMode: Boolean = true
-
-  describe("upload") {
-
-    describe("when uploading a file") {
-      val amazonS3Client        = stub[AmazonS3.Client]
-      val amazonTransferManager = stub[AmazonTransferManager]
-      val storageService =
-        new S3Storage(amazonS3Client, amazonTransferManager)
-
-      val prefix = RemoteKey("prefix")
-      val localFile =
-        LocalFile.resolve("root-file",
-                          md5HashMap(Root.hash),
-                          sourcePath,
-                          KeyGenerator.generateKey(config.sources, prefix))
-      val bucket    = Bucket("a-bucket")
-      val remoteKey = RemoteKey("prefix/root-file")
-      val uploadEventListener =
-        UploadEventListener(localFile, 1, SyncTotals(), 0L)
-
-      val upload = stub[AmazonUpload]
-      (amazonTransferManager upload (_: PutObjectRequest))
-        .when(*)
-        .returns(Task.succeed(upload))
-      val uploadResult = stub[UploadResult]
-      (upload.waitForUploadResult _).when().returns(uploadResult)
-      (uploadResult.getETag _).when().returns(Root.hash.hash)
-      (uploadResult.getKey _).when().returns(remoteKey.key)
-
-      it("should return hash of uploaded file") {
-        pending
-        //FIXME: works okay on its own, but fails when run with others
-        val expected = UploadQueueEvent(remoteKey, Root.hash)
-        val result =
-          storageService.upload(localFile,
-                                bucket,
-                                batchMode,
-                                uploadEventListener,
-                                1)
-        assertResult(expected)(result)
-      }
-    }
-  }
 }

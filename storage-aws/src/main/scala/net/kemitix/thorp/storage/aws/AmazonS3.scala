@@ -20,16 +20,28 @@ object AmazonS3 {
 
   case class ClientImpl(amazonS3: AmazonS3Client) extends Client {
 
-    def shutdown(): UIO[Unit] = UIO(amazonS3.shutdown())
+    def shutdown(): UIO[Unit] =
+      UIO {
+        amazonS3.shutdown()
+      }
 
     def deleteObject: DeleteObjectRequest => Task[Unit] =
-      request => Task(amazonS3.deleteObject(request))
+      request =>
+        Task {
+          amazonS3.deleteObject(request)
+      }
 
     def copyObject: CopyObjectRequest => Task[Option[CopyObjectResult]] =
-      request => Task(Option(amazonS3.copyObject(request)))
+      request =>
+        Task {
+          amazonS3.copyObject(request)
+        }.map(Option(_))
 
     def listObjectsV2: ListObjectsV2Request => Task[ListObjectsV2Result] =
-      request => Task(amazonS3.listObjectsV2(request))
+      request =>
+        Task {
+          amazonS3.listObjectsV2(request)
+      }
 
   }
 
