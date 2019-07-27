@@ -5,12 +5,11 @@ import net.kemitix.thorp.core._
 import net.kemitix.thorp.domain.{StorageQueueEvent, SyncTotals}
 import net.kemitix.thorp.storage.api.Storage
 import net.kemitix.thorp.storage.aws.S3HashService.defaultHashService
-import net.kemitix.thorp.storage.aws.S3Storage
-import zio.{Task, TaskR, ZIO}
+import zio.{TaskR, ZIO}
 
 trait Program {
 
-  type Program[A] = ZIO[Console, Throwable, Unit]
+  type Program[A] = ZIO[Console with Storage, Throwable, Unit]
 
   lazy val version = s"Thorp v${thorp.BuildInfo.version}"
 
@@ -24,13 +23,11 @@ trait Program {
   }
 
   private def execute(
-      cliOptions: ConfigOptions): ZIO[Console, Throwable, Unit] = {
-    val storage = S3Storage.Live.storage
+      cliOptions: ConfigOptions): ZIO[Storage with Console, Throwable, Unit] = {
     for {
-      plan    <- PlanBuilder.createPlan(storage, defaultHashService, cliOptions)
-      archive <- thorpArchive(cliOptions, plan.syncTotals, storage)
+      plan    <- PlanBuilder.createPlan(defaultHashService, cliOptions)
+      archive <- thorpArchive(cliOptions, plan.syncTotals)
       events  <- handleActions(archive, plan)
-      _       <- storage.shutdown
       _       <- SyncLogging.logRunFinished(events)
     } yield ()
   }
@@ -47,11 +44,9 @@ trait Program {
 
   def thorpArchive(
       cliOptions: ConfigOptions,
-      syncTotals: SyncTotals,
-      storage: Storage.Service
-  ): Task[ThorpArchive] = Task {
+      syncTotals: SyncTotals
+  ): TaskR[Storage, ThorpArchive] = TaskR {
     UnversionedMirrorArchive.default(
-      storage,
       ConfigQuery.batchMode(cliOptions),
       syncTotals
     )
@@ -60,7 +55,7 @@ trait Program {
   private def handleActions(
       archive: ThorpArchive,
       syncPlan: SyncPlan
-  ): TaskR[Console, Stream[StorageQueueEvent]] = {
+  ): TaskR[Storage with Console, Stream[StorageQueueEvent]] = {
     type Accumulator = (Stream[StorageQueueEvent], Long)
     val zero: Accumulator = (Stream(), syncPlan.syncTotals.totalSizeBytes)
     TaskR

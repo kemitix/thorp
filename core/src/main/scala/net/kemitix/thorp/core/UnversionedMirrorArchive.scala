@@ -4,11 +4,11 @@ import net.kemitix.thorp.console._
 import net.kemitix.thorp.core.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.domain.StorageQueueEvent.DoNothingQueueEvent
 import net.kemitix.thorp.domain._
+import net.kemitix.thorp.storage._
 import net.kemitix.thorp.storage.api.Storage
 import zio.{Task, TaskR}
 
 case class UnversionedMirrorArchive(
-    storageService: Storage.Service,
     batchMode: Boolean,
     syncTotals: SyncTotals
 ) extends ThorpArchive {
@@ -17,7 +17,7 @@ case class UnversionedMirrorArchive(
       index: Int,
       action: Action,
       totalBytesSoFar: Long
-  ): TaskR[Console, StorageQueueEvent] =
+  ): TaskR[Storage with Console, StorageQueueEvent] =
     action match {
       case ToUpload(bucket, localFile, _) =>
         for {
@@ -26,12 +26,12 @@ case class UnversionedMirrorArchive(
         } yield event
       case ToCopy(bucket, sourceKey, hash, targetKey, _) =>
         for {
-          event <- storageService.copy(bucket, sourceKey, hash, targetKey)
+          event <- copyObject(bucket, sourceKey, hash, targetKey)
           _     <- logEvent(event, batchMode)
         } yield event
       case ToDelete(bucket, remoteKey, _) =>
         for {
-          event <- storageService.delete(bucket, remoteKey)
+          event <- deleteObject(bucket, remoteKey)
           _     <- logEvent(event, batchMode)
         } yield event
       case DoNothing(_, remoteKey, _) =>
@@ -44,19 +44,17 @@ case class UnversionedMirrorArchive(
       bucket: Bucket,
       localFile: LocalFile
   ) =
-    storageService.upload(
-      localFile,
-      bucket,
-      batchMode,
-      UploadEventListener(localFile, index, syncTotals, totalBytesSoFar),
-      1)
+    upload(localFile,
+           bucket,
+           batchMode,
+           UploadEventListener(localFile, index, syncTotals, totalBytesSoFar),
+           1)
 }
 
 object UnversionedMirrorArchive {
   def default(
-      storageService: Storage.Service,
       batchMode: Boolean,
       syncTotals: SyncTotals
   ): ThorpArchive =
-    new UnversionedMirrorArchive(storageService, batchMode, syncTotals)
+    new UnversionedMirrorArchive(batchMode, syncTotals)
 }

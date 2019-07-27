@@ -3,37 +3,35 @@ package net.kemitix.thorp.core
 import net.kemitix.thorp.console._
 import net.kemitix.thorp.core.Action._
 import net.kemitix.thorp.domain._
+import net.kemitix.thorp.storage._
 import net.kemitix.thorp.storage.api.{HashService, Storage}
 import zio.{Task, TaskR}
 
 trait PlanBuilder {
 
   def createPlan(
-      storageService: Storage.Service,
       hashService: HashService,
       configOptions: ConfigOptions
-  ): TaskR[Console, SyncPlan] =
+  ): TaskR[Storage with Console, SyncPlan] =
     ConfigurationBuilder
       .buildConfig(configOptions)
       .catchAll(errors => TaskR.fail(ConfigValidationException(errors)))
-      .flatMap(config => useValidConfig(storageService, hashService)(config))
+      .flatMap(config => useValidConfig(hashService)(config))
 
   def useValidConfig(
-      storageService: Storage.Service,
       hashService: HashService
-  )(implicit c: Config): TaskR[Console, SyncPlan] = {
+  )(implicit c: Config): TaskR[Storage with Console, SyncPlan] = {
     for {
       _       <- SyncLogging.logRunStart(c.bucket, c.prefix, c.sources)
-      actions <- buildPlan(storageService, hashService)
+      actions <- buildPlan(hashService)
     } yield actions
   }
 
   private def buildPlan(
-      storageService: Storage.Service,
       hashService: HashService
-  )(implicit c: Config): TaskR[Console, SyncPlan] =
+  )(implicit c: Config): TaskR[Storage with Console, SyncPlan] =
     for {
-      metadata <- gatherMetadata(storageService, hashService)
+      metadata <- gatherMetadata(hashService)
     } yield assemblePlan(c)(metadata)
 
   def assemblePlan(
@@ -89,18 +87,17 @@ trait PlanBuilder {
     else DoNothing(c.bucket, rk, 0L)
 
   private def gatherMetadata(
-      storageService: Storage.Service,
       hashService: HashService
-  )(implicit c: Config): TaskR[Console, (S3ObjectsData, LocalFiles)] =
+  )(implicit c: Config)
+    : TaskR[Storage with Console, (S3ObjectsData, LocalFiles)] =
     for {
-      remoteData <- fetchRemoteData(storageService)
+      remoteData <- fetchRemoteData
       localData  <- findLocalFiles(hashService)
     } yield (remoteData, localData)
 
   private def fetchRemoteData(
-      storageService: Storage.Service
-  )(implicit c: Config): TaskR[Console, S3ObjectsData] =
-    storageService.listObjects(c.bucket, c.prefix)
+      implicit c: Config): TaskR[Console with Storage, S3ObjectsData] =
+    listObjects(c.bucket, c.prefix)
 
   private def findLocalFiles(
       hashService: HashService
