@@ -1,4 +1,4 @@
-package net.kemitix.thorp.core
+package net.kemitix.thorp.config
 
 import net.kemitix.thorp.domain.Sources
 import zio.IO

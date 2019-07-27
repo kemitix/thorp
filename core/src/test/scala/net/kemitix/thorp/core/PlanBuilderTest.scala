@@ -3,6 +3,7 @@ package net.kemitix.thorp.core
 import java.io.File
 import java.nio.file.Path
 
+import net.kemitix.thorp.config.{ConfigOption, ConfigOptions}
 import net.kemitix.thorp.console._
 import net.kemitix.thorp.core.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.domain.HashType.MD5

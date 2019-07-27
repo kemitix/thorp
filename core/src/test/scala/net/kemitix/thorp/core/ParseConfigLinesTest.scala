@@ -2,6 +2,7 @@ package net.kemitix.thorp.core
 
 import java.nio.file.Paths
 
+import net.kemitix.thorp.config.{ConfigOption, ConfigOptions, ParseConfigLines}
 import org.scalatest.FunSpec
 
 class ParseConfigLinesTest extends FunSpec {

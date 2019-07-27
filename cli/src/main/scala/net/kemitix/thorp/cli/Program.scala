@@ -1,5 +1,11 @@
 package net.kemitix.thorp.cli
 
+import net.kemitix.thorp.config.{
+  CliArgs,
+  ConfigOptions,
+  ConfigQuery,
+  ConfigValidationException
+}
 import net.kemitix.thorp.console._
 import net.kemitix.thorp.core.CoreTypes.CoreProgram
 import net.kemitix.thorp.core._
@@ -11,6 +17,7 @@ trait Program {
 
   lazy val version = s"Thorp v${thorp.BuildInfo.version}"
 
+  //TODO: Remote args
   def run(args: List[String]): CoreProgram[Unit] = {
     for {
       cli <- CliArgs.parse(args)

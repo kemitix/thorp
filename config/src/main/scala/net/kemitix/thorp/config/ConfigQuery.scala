@@ -1,4 +1,4 @@
-package net.kemitix.thorp.core
+package net.kemitix.thorp.config
 
 import java.nio.file.Paths
 
@@ -21,11 +21,11 @@ trait ConfigQuery {
   def sources(configOptions: ConfigOptions): Sources = {
     val paths = configOptions.options.flatMap {
       case ConfigOption.Source(sourcePath) => Some(sourcePath)
-      case _ => None
+      case _                               => None
     }
     Sources(paths match {
       case List() => List(Paths.get(System.getenv("PWD")))
-      case _ => paths
+      case _      => paths
     })
   }
 

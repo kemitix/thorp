@@ -8,10 +8,11 @@ object Config {
 
   trait Service {}
 
-  trait Live extends Config {
+  class Live(args: List[String]) extends Config {
+
+    CliArgs.parse(args)
+
     val config: Service = new Service {}
   }
-
-  object Live extends Live
 
 }

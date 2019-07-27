@@ -1,8 +1,7 @@
-package net.kemitix.thorp.core
+package net.kemitix.thorp.config
 
 import java.nio.file.Path
 
-import net.kemitix.thorp.config.LegacyConfig
 import net.kemitix.thorp.config.LegacyConfig._
 import net.kemitix.thorp.domain
 import net.kemitix.thorp.domain.RemoteKey

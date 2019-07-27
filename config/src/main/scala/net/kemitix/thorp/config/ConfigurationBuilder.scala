@@ -1,11 +1,7 @@
-package net.kemitix.thorp.core
+package net.kemitix.thorp.config
 
 import java.nio.file.Paths
 
-import net.kemitix.thorp.config.LegacyConfig
-import net.kemitix.thorp.core.ConfigOptions.options
-import net.kemitix.thorp.core.ConfigValidator.validateConfig
-import net.kemitix.thorp.core.ParseConfigFile.parseFile
 import zio.IO
 
 /**
@@ -22,7 +18,7 @@ trait ConfigurationBuilder {
       priorityOpts: ConfigOptions): IO[List[ConfigValidation], LegacyConfig] =
     for {
       config <- getConfigOptions(priorityOpts).map(collateOptions)
-      valid  <- validateConfig(config)
+      valid  <- ConfigValidator.validateConfig(config)
     } yield valid
 
   private def getConfigOptions(
@@ -39,15 +35,15 @@ trait ConfigurationBuilder {
   private def userOptions(
       priorityOpts: ConfigOptions): IO[List[ConfigValidation], ConfigOptions] =
     if (ConfigQuery.ignoreUserOptions(priorityOpts)) emptyConfig
-    else parseFile(userHome.resolve(userConfigFilename))
+    else ParseConfigFile.parseFile(userHome.resolve(userConfigFilename))
 
   private def globalOptions(
       priorityOpts: ConfigOptions): IO[List[ConfigValidation], ConfigOptions] =
     if (ConfigQuery.ignoreGlobalOptions(priorityOpts)) emptyConfig
-    else parseFile(globalConfig)
+    else ParseConfigFile.parseFile(globalConfig)
 
   private def collateOptions(configOptions: ConfigOptions): LegacyConfig =
-    options
+    ConfigOptions.options
       .get(configOptions)
       .foldLeft(LegacyConfig()) { (config, configOption) =>
         configOption.update(config)
