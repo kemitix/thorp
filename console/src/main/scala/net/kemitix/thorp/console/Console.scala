@@ -1,9 +1,11 @@
 package net.kemitix.thorp.console
 
 import java.io.PrintStream
+import java.util.concurrent.atomic.AtomicReference
+
+import zio.{UIO, ZIO}
 
 import scala.{Console => SConsole}
-import zio.{Ref, UIO, ZIO}
 
 trait Console {
   val console: Console.Service
@@ -32,15 +34,17 @@ object Console {
 
   trait Test extends Console {
 
-    private val output: UIO[Ref[List[String]]] = Ref.make(List.empty[String])
-    def getOutput: UIO[List[String]]           = output.flatMap(ref => ref.get)
+    private val output          = new AtomicReference(List.empty[String])
+    def getOutput: List[String] = output.get
 
     val console: Service = new Service {
       override def putStrLn(line: ConsoleOut): ZIO[Console, Nothing, Unit] =
         putStrLn(line.en)
 
-      override def putStrLn(line: String): ZIO[Console, Nothing, Unit] =
-        output.map(_.modify(list => ((), line :: list)))
+      override def putStrLn(line: String): ZIO[Console, Nothing, Unit] = {
+        output.accumulateAndGet(List(line), (a, b) => a ++ b)
+        ZIO.succeed(())
+      }
 
     }
   }
