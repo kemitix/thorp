@@ -1,22 +1,17 @@
 package net.kemitix.thorp.cli
 
-import net.kemitix.thorp.console.MyConsole
-import zio.internal.PlatformLive
-import zio.{App, Runtime, UIO, ZIO}
+import net.kemitix.thorp.console.Console
+import net.kemitix.thorp.storage.aws.S3Storage
+import zio.{App, ZIO}
 
 object Main extends App {
 
-  private val runtime = Runtime(MyConsole.Live, PlatformLive.Default)
+  object LiveThorpApp extends S3Storage.Live with Console.Live
 
   override def run(args: List[String]): ZIO[Environment, Nothing, Int] =
-    runtime.unsafeRun {
-      appLogic(args).fold(_ => UIO(1), _ => UIO(0))
-    }
-
-  private def appLogic(args: List[String]): ZIO[MyConsole, Throwable, Unit] =
-    for {
-      cliOptions <- ParseArgs(args)
-      _          <- Program.run(cliOptions)
-    } yield ()
+    Program
+      .run(args)
+      .provide(LiveThorpApp)
+      .fold(_ => 1, _ => 0)
 
 }

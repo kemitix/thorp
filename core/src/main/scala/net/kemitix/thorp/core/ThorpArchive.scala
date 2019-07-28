@@ -11,6 +11,7 @@ import net.kemitix.thorp.domain.StorageQueueEvent.{
   UploadQueueEvent
 }
 import net.kemitix.thorp.domain.Terminal._
+import net.kemitix.thorp.storage.api.Storage
 import zio.TaskR
 
 import scala.io.AnsiColor._
@@ -21,12 +22,12 @@ trait ThorpArchive {
       index: Int,
       action: Action,
       totalBytesSoFar: Long
-  ): TaskR[MyConsole, StorageQueueEvent]
+  ): TaskR[Storage with Console, StorageQueueEvent]
 
   def logEvent(
       event: StorageQueueEvent,
       batchMode: Boolean
-  ): TaskR[MyConsole, Unit] =
+  ): TaskR[Console, Unit] =
     event match {
       case UploadQueueEvent(remoteKey, _) =>
         for {

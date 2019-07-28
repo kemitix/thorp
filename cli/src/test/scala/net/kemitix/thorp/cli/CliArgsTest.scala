@@ -9,7 +9,7 @@ import zio.DefaultRuntime
 
 import scala.util.Try
 
-class ParseArgsTest extends FunSpec {
+class CliArgsTest extends FunSpec {
 
   private val runtime = new DefaultRuntime {}
 
@@ -77,7 +77,7 @@ class ParseArgsTest extends FunSpec {
   private def invoke(args: List[String]) =
     runtime
       .unsafeRunSync {
-        ParseArgs(args)
+        CliArgs.parse(args)
       }
       .toEither
       .toOption

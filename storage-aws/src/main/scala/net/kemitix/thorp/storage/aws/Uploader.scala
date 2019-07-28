@@ -13,39 +13,41 @@ import net.kemitix.thorp.domain.UploadEvent.{
   TransferEvent
 }
 import net.kemitix.thorp.domain.{StorageQueueEvent, _}
-import zio.Task
+import zio.{Task, UIO}
 
-class Uploader(transferManager: => AmazonTransferManager) {
+trait Uploader {
 
-  def upload(
+  def upload(transferManager: => AmazonTransferManager)(
       localFile: LocalFile,
       bucket: Bucket,
       batchMode: Boolean,
       uploadEventListener: UploadEventListener,
       tryCount: Int
-  ): Task[StorageQueueEvent] =
-    for {
-      upload <- transfer(localFile, bucket, batchMode, uploadEventListener)
-    } yield upload
+  ): UIO[StorageQueueEvent] =
+    transfer(transferManager)(localFile, bucket, batchMode, uploadEventListener)
+      .catchAll(handleError(localFile.remoteKey))
 
-  private def transfer(
+  private def handleError(
+      remoteKey: RemoteKey): Throwable => UIO[ErrorQueueEvent] = { e =>
+    UIO.succeed(ErrorQueueEvent(Action.Upload(remoteKey.key), remoteKey, e))
+  }
+
+  private def transfer(transferManager: => AmazonTransferManager)(
       localFile: LocalFile,
       bucket: Bucket,
       batchMode: Boolean,
       uploadEventListener: UploadEventListener
   ): Task[StorageQueueEvent] = {
-    val listener: ProgressListener = progressListener(uploadEventListener)
-    val putObjectRequest           = request(localFile, bucket, batchMode, listener)
-    Task(transferManager.upload(putObjectRequest))
+
+    val listener         = progressListener(uploadEventListener)
+    val putObjectRequest = request(localFile, bucket, batchMode, listener)
+
+    transferManager
+      .upload(putObjectRequest)
       .map(_.waitForUploadResult)
-      .map(upload =>
-        UploadQueueEvent(RemoteKey(upload.getKey), MD5Hash(upload.getETag)))
-      .catchAll(
-        e =>
-          Task.succeed(
-            ErrorQueueEvent(Action.Upload(localFile.remoteKey.key),
-                            localFile.remoteKey,
-                            e)))
+      .map(uploadResult =>
+        UploadQueueEvent(RemoteKey(uploadResult.getKey),
+                         MD5Hash(uploadResult.getETag)))
   }
 
   private def request(
@@ -54,36 +56,45 @@ class Uploader(transferManager: => AmazonTransferManager) {
       batchMode: Boolean,
       listener: ProgressListener
   ): PutObjectRequest = {
-    val metadata = new ObjectMetadata()
-    localFile.md5base64.foreach(metadata.setContentMD5)
     val request =
       new PutObjectRequest(bucket.name, localFile.remoteKey.key, localFile.file)
-        .withMetadata(metadata)
+        .withMetadata(metadata(localFile))
     if (batchMode) request
     else request.withGeneralProgressListener(listener)
   }
 
-  private def progressListener(uploadEventListener: UploadEventListener) =
-    new ProgressListener {
-      override def progressChanged(progressEvent: ProgressEvent): Unit =
-        uploadEventListener.listener(eventHandler(progressEvent))
+  private def metadata: LocalFile => ObjectMetadata = localFile => {
+    val metadata = new ObjectMetadata()
+    localFile.md5base64.foreach(metadata.setContentMD5)
+    metadata
+  }
 
-      private def eventHandler(progressEvent: ProgressEvent) = {
-        progressEvent match {
-          case e: ProgressEvent if isTransfer(e) =>
-            TransferEvent(e.getEventType.name)
-          case e: ProgressEvent if isByteTransfer(e) =>
-            ByteTransferEvent(e.getEventType.name)
-          case e: ProgressEvent =>
-            RequestEvent(e.getEventType.name, e.getBytes, e.getBytesTransferred)
-        }
-      }
+  private def progressListener: UploadEventListener => ProgressListener =
+    uploadEventListener =>
+      new ProgressListener {
+        override def progressChanged(progressEvent: ProgressEvent): Unit =
+          uploadEventListener.listener(eventHandler(progressEvent))
+
+        private def eventHandler: ProgressEvent => UploadEvent =
+          progressEvent => {
+            def isTransfer: ProgressEvent => Boolean =
+              _.getEventType.isTransferEvent
+            def isByteTransfer: ProgressEvent => Boolean =
+              _.getEventType.equals(
+                ProgressEventType.RESPONSE_BYTE_TRANSFER_EVENT)
+            progressEvent match {
+              case e: ProgressEvent if isTransfer(e) =>
+                TransferEvent(e.getEventType.name)
+              case e: ProgressEvent if isByteTransfer(e) =>
+                ByteTransferEvent(e.getEventType.name)
+              case e: ProgressEvent =>
+                RequestEvent(e.getEventType.name,
+                             e.getBytes,
+                             e.getBytesTransferred)
+            }
+          }
     }
 
-  private def isTransfer(e: ProgressEvent) =
-    e.getEventType.isTransferEvent
-
-  private def isByteTransfer(e: ProgressEvent) =
-    e.getEventType equals ProgressEventType.RESPONSE_BYTE_TRANSFER_EVENT
-
 }
+
+object Uploader extends Uploader

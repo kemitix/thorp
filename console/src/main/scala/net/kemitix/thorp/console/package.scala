@@ -2,15 +2,15 @@ package net.kemitix.thorp
 
 import zio.ZIO
 
-package object console extends MyConsole.Service {
+package object console {
 
-  final val consoleService: ZIO[MyConsole, Nothing, MyConsole.Service] =
+  final val consoleService: ZIO[Console, Nothing, Console.Service] =
     ZIO.access(_.console)
 
-  final def putStrLn(line: String): ZIO[MyConsole, Nothing, Unit] =
+  final def putStrLn(line: String): ZIO[Console, Nothing, Unit] =
     ZIO.accessM(_.console putStrLn line)
 
-  override def putStrLn(line: ConsoleOut): ZIO[MyConsole, Nothing, Unit] =
-    putStrLn(line.en)
+  final def putStrLn(line: ConsoleOut): ZIO[Console, Nothing, Unit] =
+    ZIO.accessM(_.console putStrLn line)
 
 }

@@ -7,17 +7,13 @@ import net.kemitix.thorp.console._
 import net.kemitix.thorp.core.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.domain._
-import net.kemitix.thorp.storage.api.{HashService, StorageService}
+import net.kemitix.thorp.storage.api.{HashService, Storage}
 import org.scalatest.FreeSpec
-import zio.Runtime
-import zio.internal.PlatformLive
+import zio.{DefaultRuntime, Task, UIO}
 
 class PlanBuilderTest extends FreeSpec with TemporaryFolder {
 
-  private val runtime = Runtime(MyConsole.Live, PlatformLive.Default)
-
   private val lastModified: LastModified = LastModified()
-  private val planBuilder                = new PlanBuilder {}
   private val emptyS3ObjectData          = S3ObjectsData()
 
   "create a plan" - {
@@ -25,6 +21,10 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
     val hashService = SimpleHashService()
 
     "one source" - {
+      val options: Path => ConfigOptions =
+        source =>
+          configOptions(ConfigOption.Source(source),
+                        ConfigOption.Bucket("a-bucket"))
       "a file" - {
         val filename  = "aFile"
         val remoteKey = RemoteKey(filename)
@@ -34,24 +34,12 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
               withDirectory(source => {
                 val file = createFile(source, filename, "file-content")
                 val hash = md5Hash(file)
-
-                val expected = Right(
-                  List(
-                    toUpload(remoteKey, hash, source, file)
-                  ))
-
-                val storageService =
-                  DummyStorageService(emptyS3ObjectData,
-                                      Map(
-                                        file -> (remoteKey, hash)
-                                      ))
-
+                val expected =
+                  Right(List(toUpload(remoteKey, hash, source, file)))
                 val result =
-                  invoke(storageService,
-                         hashService,
-                         configOptions(ConfigOption.Source(source),
-                                       ConfigOption.Bucket("a-bucket")))
-
+                  invoke(hashService,
+                         options(source),
+                         UIO.succeed(emptyS3ObjectData))
                 assertResult(expected)(result)
               })
             }
@@ -64,32 +52,17 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
                 val aFile           = createFile(source, filename, content)
                 val anOtherFile     = createFile(source, anOtherFilename, content)
                 val aHash           = md5Hash(aFile)
-
-                val anOtherKey = RemoteKey("other")
-
-                val expected = Right(
-                  List(
-                    toCopy(anOtherKey, aHash, remoteKey)
-                  ))
-
+                val anOtherKey      = RemoteKey("other")
+                val expected        = Right(List(toCopy(anOtherKey, aHash, remoteKey)))
                 val s3ObjectsData = S3ObjectsData(
                   byHash =
                     Map(aHash            -> Set(KeyModified(anOtherKey, lastModified))),
                   byKey = Map(anOtherKey -> HashModified(aHash, lastModified))
                 )
-
-                val storageService =
-                  DummyStorageService(s3ObjectsData,
-                                      Map(
-                                        aFile -> (remoteKey, aHash)
-                                      ))
-
                 val result =
-                  invoke(storageService,
-                         hashService,
-                         configOptions(ConfigOption.Source(source),
-                                       ConfigOption.Bucket("a-bucket")))
-
+                  invoke(hashService,
+                         options(source),
+                         UIO.succeed(s3ObjectsData))
                 assertResult(expected)(result)
               })
             }
@@ -101,28 +74,17 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
               withDirectory(source => {
                 val file = createFile(source, filename, "file-content")
                 val hash = md5Hash(file)
-
                 // DoNothing actions should have been filtered out of the plan
                 val expected = Right(List())
-
                 val s3ObjectsData = S3ObjectsData(
                   byHash =
                     Map(hash            -> Set(KeyModified(remoteKey, lastModified))),
                   byKey = Map(remoteKey -> HashModified(hash, lastModified))
                 )
-
-                val storageService =
-                  DummyStorageService(s3ObjectsData,
-                                      Map(
-                                        file -> (remoteKey, hash)
-                                      ))
-
                 val result =
-                  invoke(storageService,
-                         hashService,
-                         configOptions(ConfigOption.Source(source),
-                                       ConfigOption.Bucket("a-bucket")))
-
+                  invoke(hashService,
+                         options(source),
+                         UIO.succeed(s3ObjectsData))
                 assertResult(expected)(result)
               })
             }
@@ -134,31 +96,18 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
                   val file         = createFile(source, filename, "file-content")
                   val currentHash  = md5Hash(file)
                   val originalHash = MD5Hash("original-file-content")
-
-                  val expected = Right(
-                    List(
-                      toUpload(remoteKey, currentHash, source, file)
-                    ))
-
+                  val expected =
+                    Right(List(toUpload(remoteKey, currentHash, source, file)))
                   val s3ObjectsData = S3ObjectsData(
                     byHash = Map(originalHash -> Set(
                       KeyModified(remoteKey, lastModified))),
                     byKey =
                       Map(remoteKey -> HashModified(originalHash, lastModified))
                   )
-
-                  val storageService =
-                    DummyStorageService(s3ObjectsData,
-                                        Map(
-                                          file -> (remoteKey, currentHash)
-                                        ))
-
                   val result =
-                    invoke(storageService,
-                           hashService,
-                           configOptions(ConfigOption.Source(source),
-                                         ConfigOption.Bucket("a-bucket")))
-
+                    invoke(hashService,
+                           options(source),
+                           UIO.succeed(s3ObjectsData))
                   assertResult(expected)(result)
                 })
               }
@@ -169,30 +118,16 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
                   val file      = createFile(source, filename, "file-content")
                   val hash      = md5Hash(file)
                   val sourceKey = RemoteKey("other-key")
-
-                  val expected = Right(
-                    List(
-                      toCopy(sourceKey, hash, remoteKey)
-                    ))
-
+                  val expected  = Right(List(toCopy(sourceKey, hash, remoteKey)))
                   val s3ObjectsData = S3ObjectsData(
                     byHash =
                       Map(hash -> Set(KeyModified(sourceKey, lastModified))),
                     byKey = Map()
                   )
-
-                  val storageService =
-                    DummyStorageService(s3ObjectsData,
-                                        Map(
-                                          file -> (remoteKey, hash)
-                                        ))
-
                   val result =
-                    invoke(storageService,
-                           hashService,
-                           configOptions(ConfigOption.Source(source),
-                                         ConfigOption.Bucket("a-bucket")))
-
+                    invoke(hashService,
+                           options(source),
+                           UIO.succeed(s3ObjectsData))
                   assertResult(expected)(result)
                 })
               }
@@ -208,54 +143,29 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
             withDirectory(source => {
               val file = createFile(source, filename, "file-content")
               val hash = md5Hash(file)
-
               // DoNothing actions should have been filtered out of the plan
               val expected = Right(List())
-
               val s3ObjectsData = S3ObjectsData(
                 byHash = Map(hash     -> Set(KeyModified(remoteKey, lastModified))),
                 byKey = Map(remoteKey -> HashModified(hash, lastModified))
               )
-
-              val storageService =
-                DummyStorageService(s3ObjectsData,
-                                    Map(
-                                      file -> (remoteKey, hash)
-                                    ))
-
               val result =
-                invoke(storageService,
-                       hashService,
-                       configOptions(ConfigOption.Source(source),
-                                     ConfigOption.Bucket("a-bucket")))
-
+                invoke(hashService, options(source), UIO.succeed(s3ObjectsData))
               assertResult(expected)(result)
             })
           }
         }
         "with no matching local file" - {
-          "delete remote key" ignore {
+          "delete remote key" in {
             withDirectory(source => {
-              val hash = MD5Hash("file-content")
-
-              val expected = Right(
-                List(
-                  toDelete(remoteKey)
-                ))
-
+              val hash     = MD5Hash("file-content")
+              val expected = Right(List(toDelete(remoteKey)))
               val s3ObjectsData = S3ObjectsData(
                 byHash = Map(hash     -> Set(KeyModified(remoteKey, lastModified))),
                 byKey = Map(remoteKey -> HashModified(hash, lastModified))
               )
-
-              val storageService = DummyStorageService(s3ObjectsData, Map.empty)
-
               val result =
-                invoke(storageService,
-                       hashService,
-                       configOptions(ConfigOption.Source(source),
-                                     ConfigOption.Bucket("a-bucket")))
-
+                invoke(hashService, options(source), UIO.succeed(s3ObjectsData))
               assertResult(expected)(result)
             })
           }
@@ -268,36 +178,31 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
       val filename2  = "file-2"
       val remoteKey1 = RemoteKey(filename1)
       val remoteKey2 = RemoteKey(filename2)
+      val options: Path => Path => ConfigOptions =
+        source1 =>
+          source2 =>
+            configOptions(ConfigOption.Source(source1),
+                          ConfigOption.Source(source2),
+                          ConfigOption.Bucket("a-bucket"))
       "unique files in both" - {
         "upload all files" in {
           withDirectory(firstSource => {
             val fileInFirstSource =
               createFile(firstSource, filename1, "file-1-content")
             val hash1 = md5Hash(fileInFirstSource)
-
             withDirectory(secondSource => {
               val fileInSecondSource =
                 createFile(secondSource, filename2, "file-2-content")
               val hash2 = md5Hash(fileInSecondSource)
-
               val expected = Right(
                 List(
                   toUpload(remoteKey2, hash2, secondSource, fileInSecondSource),
                   toUpload(remoteKey1, hash1, firstSource, fileInFirstSource)
                 ))
-
-              val storageService = DummyStorageService(
-                emptyS3ObjectData,
-                Map(fileInFirstSource  -> (remoteKey1, hash1),
-                    fileInSecondSource -> (remoteKey2, hash2)))
-
               val result =
-                invoke(storageService,
-                       hashService,
-                       configOptions(ConfigOption.Source(firstSource),
-                                     ConfigOption.Source(secondSource),
-                                     ConfigOption.Bucket("a-bucket")))
-
+                invoke(hashService,
+                       options(firstSource)(secondSource),
+                       UIO.succeed(emptyS3ObjectData))
               assertResult(expected)(result)
             })
           })
@@ -309,29 +214,16 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
             val fileInFirstSource: File =
               createFile(firstSource, filename1, "file-1-content")
             val hash1 = md5Hash(fileInFirstSource)
-
             withDirectory(secondSource => {
               val fileInSecondSource: File =
                 createFile(secondSource, filename1, "file-2-content")
               val hash2 = md5Hash(fileInSecondSource)
-
-              val expected = Right(
-                List(
-                  toUpload(remoteKey1, hash1, firstSource, fileInFirstSource)
-                ))
-
-              val storageService = DummyStorageService(
-                emptyS3ObjectData,
-                Map(fileInFirstSource  -> (remoteKey1, hash1),
-                    fileInSecondSource -> (remoteKey2, hash2)))
-
+              val expected = Right(List(
+                toUpload(remoteKey1, hash1, firstSource, fileInFirstSource)))
               val result =
-                invoke(storageService,
-                       hashService,
-                       configOptions(ConfigOption.Source(firstSource),
-                                     ConfigOption.Source(secondSource),
-                                     ConfigOption.Bucket("a-bucket")))
-
+                invoke(hashService,
+                       options(firstSource)(secondSource),
+                       UIO.succeed(emptyS3ObjectData))
               assertResult(expected)(result)
             })
           })
@@ -340,30 +232,19 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
       "with a remote file only present in second source" - {
         "do not delete it " in {
           withDirectory(firstSource => {
-
             withDirectory(secondSource => {
               val fileInSecondSource =
                 createFile(secondSource, filename2, "file-2-content")
-              val hash2 = md5Hash(fileInSecondSource)
-
+              val hash2    = md5Hash(fileInSecondSource)
               val expected = Right(List())
-
               val s3ObjectData = S3ObjectsData(
                 byHash =
                   Map(hash2            -> Set(KeyModified(remoteKey2, lastModified))),
                 byKey = Map(remoteKey2 -> HashModified(hash2, lastModified)))
-
-              val storageService = DummyStorageService(
-                s3ObjectData,
-                Map(fileInSecondSource -> (remoteKey2, hash2)))
-
               val result =
-                invoke(storageService,
-                       hashService,
-                       configOptions(ConfigOption.Source(firstSource),
-                                     ConfigOption.Source(secondSource),
-                                     ConfigOption.Bucket("a-bucket")))
-
+                invoke(hashService,
+                       options(firstSource)(secondSource),
+                       UIO.succeed(s3ObjectData))
               assertResult(expected)(result)
             })
           })
@@ -375,27 +256,16 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
             val fileInFirstSource: File =
               createFile(firstSource, filename1, "file-1-content")
             val hash1 = md5Hash(fileInFirstSource)
-
             withDirectory(secondSource => {
-
               val expected = Right(List())
-
               val s3ObjectData = S3ObjectsData(
                 byHash =
                   Map(hash1            -> Set(KeyModified(remoteKey1, lastModified))),
                 byKey = Map(remoteKey1 -> HashModified(hash1, lastModified)))
-
-              val storageService = DummyStorageService(
-                s3ObjectData,
-                Map(fileInFirstSource -> (remoteKey1, hash1)))
-
               val result =
-                invoke(storageService,
-                       hashService,
-                       configOptions(ConfigOption.Source(firstSource),
-                                     ConfigOption.Source(secondSource),
-                                     ConfigOption.Bucket("a-bucket")))
-
+                invoke(hashService,
+                       options(firstSource)(secondSource),
+                       UIO.succeed(s3ObjectData))
               assertResult(expected)(result)
             })
           })
@@ -404,26 +274,14 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
       "with remote file not present in either source" - {
         "delete from remote" in {
           withDirectory(firstSource => {
-
             withDirectory(secondSource => {
-
-              val expected = Right(
-                List(
-                  toDelete(remoteKey1)
-                ))
-
+              val expected = Right(List(toDelete(remoteKey1)))
               val s3ObjectData = S3ObjectsData(byKey =
                 Map(remoteKey1 -> HashModified(MD5Hash(""), lastModified)))
-
-              val storageService = DummyStorageService(s3ObjectData, Map())
-
               val result =
-                invoke(storageService,
-                       hashService,
-                       configOptions(ConfigOption.Source(firstSource),
-                                     ConfigOption.Source(secondSource),
-                                     ConfigOption.Bucket("a-bucket")))
-
+                invoke(hashService,
+                       options(firstSource)(secondSource),
+                       UIO.succeed(s3ObjectData))
               assertResult(expected)(result)
             })
           })
@@ -431,8 +289,8 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
       }
     }
 
-    def md5Hash(file: File) = {
-      runtime
+    def md5Hash(file: File): MD5Hash = {
+      new DefaultRuntime {}
         .unsafeRunSync {
           hashService.hashLocalObject(file.toPath).map(_.get(MD5))
         }
@@ -464,30 +322,47 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
     ConfigOptions(List(configOptions: _*))
 
   private def invoke(
-      storageService: StorageService,
       hashService: HashService,
-      configOptions: ConfigOptions
+      configOptions: ConfigOptions,
+      result: Task[S3ObjectsData]
   ): Either[Any, List[(String, String, String, String, String)]] = {
-    runtime
+    type TestEnv = Storage.Test with Console.Test
+    val testEnv: TestEnv = new Storage.Test with Console.Test {
+      override def listResult: Task[S3ObjectsData] = result
+      override def uploadResult: UIO[StorageQueueEvent] =
+        Task.die(new NotImplementedError)
+      override def copyResult: UIO[StorageQueueEvent] =
+        Task.die(new NotImplementedError)
+      override def deleteResult: UIO[StorageQueueEvent] =
+        Task.die(new NotImplementedError)
+      override def shutdownResult: UIO[StorageQueueEvent] =
+        Task.die(new NotImplementedError)
+    }
+
+    new DefaultRuntime {}
       .unsafeRunSync {
-        planBuilder
-          .createPlan(storageService, hashService, configOptions)
+        PlanBuilder
+          .createPlan(hashService, configOptions)
+          .provide(testEnv)
       }
       .toEither
-      .map(_.actions.toList.map({
-        case ToUpload(_, lf, _) =>
-          ("upload",
-           lf.remoteKey.key,
-           lf.hashes(MD5).hash,
-           lf.source.toString,
-           lf.file.toString)
-        case ToDelete(_, remoteKey, _) => ("delete", remoteKey.key, "", "", "")
-        case ToCopy(_, sourceKey, hash, targetKey, _) =>
-          ("copy", sourceKey.key, hash.hash, targetKey.key, "")
-        case DoNothing(_, remoteKey, _) =>
-          ("do-nothing", remoteKey.key, "", "", "")
-        case x => ("other", x.toString, "", "", "")
-      }))
+      .map(convertResult)
   }
 
+  private def convertResult
+    : SyncPlan => List[(String, String, String, String, String)] =
+    _.actions.toList.map({
+      case ToUpload(_, lf, _) =>
+        ("upload",
+         lf.remoteKey.key,
+         lf.hashes(MD5).hash,
+         lf.source.toString,
+         lf.file.toString)
+      case ToDelete(_, remoteKey, _) => ("delete", remoteKey.key, "", "", "")
+      case ToCopy(_, sourceKey, hash, targetKey, _) =>
+        ("copy", sourceKey.key, hash.hash, targetKey.key, "")
+      case DoNothing(_, remoteKey, _) =>
+        ("do-nothing", remoteKey.key, "", "", "")
+      case x => ("other", x.toString, "", "", "")
+    })
 }

@@ -6,9 +6,9 @@ import net.kemitix.thorp.core.{ConfigOption, ConfigOptions}
 import scopt.OParser
 import zio.Task
 
-object ParseArgs {
+object CliArgs {
 
-  def apply(args: List[String]): Task[ConfigOptions] = Task {
+  def parse(args: List[String]): Task[ConfigOptions] = Task {
     OParser
       .parse(configParser, args, List())
       .map(ConfigOptions(_))
