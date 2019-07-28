@@ -8,8 +8,8 @@ import zio.IO
 sealed trait ConfigValidator {
 
   def validateConfig(
-      config: LegacyConfig
-  ): IO[List[ConfigValidation], LegacyConfig] = IO.fromEither {
+      config: Configuration
+  ): IO[List[ConfigValidation], Configuration] = IO.fromEither {
     for {
       _ <- validateSources(config.sources)
       _ <- validateBucket(config.bucket)

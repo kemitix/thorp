@@ -15,7 +15,7 @@ trait ConfigurationBuilder {
   private val userHome           = Paths.get(System.getProperty("user.home"))
 
   def buildConfig(priorityOpts: ConfigOptions)
-    : IO[ConfigValidationException, LegacyConfig] =
+    : IO[ConfigValidationException, Configuration] =
     (for {
       config <- getConfigOptions(priorityOpts).map(collateOptions)
       valid  <- ConfigValidator.validateConfig(config)
@@ -43,10 +43,10 @@ trait ConfigurationBuilder {
     if (ConfigQuery.ignoreGlobalOptions(priorityOpts)) emptyConfig
     else ParseConfigFile.parseFile(globalConfig)
 
-  private def collateOptions(configOptions: ConfigOptions): LegacyConfig =
+  private def collateOptions(configOptions: ConfigOptions): Configuration =
     ConfigOptions.options
       .get(configOptions)
-      .foldLeft(LegacyConfig()) { (config, configOption) =>
+      .foldLeft(Configuration()) { (config, configOption) =>
         configOption.update(config)
       }
 
