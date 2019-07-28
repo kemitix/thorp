@@ -2,15 +2,7 @@ package net.kemitix.thorp.storage.aws
 
 import net.kemitix.thorp.console.Console
 import net.kemitix.thorp.domain.StorageQueueEvent.ShutdownQueueEvent
-import net.kemitix.thorp.domain.{
-  Bucket,
-  LocalFile,
-  MD5Hash,
-  RemoteKey,
-  S3ObjectsData,
-  StorageQueueEvent,
-  UploadEventListener
-}
+import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.Storage
 import org.scalamock.scalatest.MockFactory
 import zio.{TaskR, UIO}
