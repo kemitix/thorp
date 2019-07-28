@@ -2,7 +2,8 @@ package net.kemitix.thorp.storage.aws
 
 import java.time.Instant
 
-import net.kemitix.thorp.core.{KeyGenerator, Resource, S3MetaDataEnricher}
+import net.kemitix.thorp.config.Resource
+import net.kemitix.thorp.core.{KeyGenerator, S3MetaDataEnricher}
 import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.domain._
 import org.scalamock.scalatest.MockFactory
@@ -12,12 +13,10 @@ class StorageServiceSuite extends FunSpec with MockFactory {
 
   private val source     = Resource(this, "upload")
   private val sourcePath = source.toPath
-
-  private val prefix = RemoteKey("prefix")
-  implicit private val config: Config =
-    Config(Bucket("bucket"), prefix, sources = Sources(List(sourcePath)))
+  private val sources    = Sources(List(sourcePath))
+  private val prefix     = RemoteKey("prefix")
   private val fileToKey =
-    KeyGenerator.generateKey(config.sources, config.prefix) _
+    KeyGenerator.generateKey(sources, prefix) _
 
   describe("getS3Status") {
 

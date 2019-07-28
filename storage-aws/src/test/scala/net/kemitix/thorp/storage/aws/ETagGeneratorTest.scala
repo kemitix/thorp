@@ -3,7 +3,7 @@ package net.kemitix.thorp.storage.aws
 import java.nio.file.Path
 
 import com.amazonaws.services.s3.transfer.TransferManagerConfiguration
-import net.kemitix.thorp.core.Resource
+import net.kemitix.thorp.config.Resource
 import org.scalatest.FunSpec
 import zio.DefaultRuntime
 

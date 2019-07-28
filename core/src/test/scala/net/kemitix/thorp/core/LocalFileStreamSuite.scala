@@ -2,11 +2,13 @@ package net.kemitix.thorp.core
 
 import java.nio.file.Paths
 
+import net.kemitix.thorp.config._
+import net.kemitix.thorp.console._
 import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.domain._
-import net.kemitix.thorp.storage.api.HashService
+import net.kemitix.thorp.storage.api.{HashService, Storage}
 import org.scalatest.FunSpec
-import zio.DefaultRuntime
+import zio.{DefaultRuntime, Task, UIO}
 
 class LocalFileStreamSuite extends FunSpec {
 
@@ -21,8 +23,13 @@ class LocalFileStreamSuite extends FunSpec {
   private def file(filename: String) =
     sourcePath.resolve(Paths.get(filename))
 
-  implicit private val config: Config = Config(
-    sources = Sources(List(sourcePath)))
+  private val configOptions = ConfigOptions(
+    List(
+      ConfigOption.IgnoreGlobalOptions,
+      ConfigOption.IgnoreUserOptions,
+      ConfigOption.Source(sourcePath),
+      ConfigOption.Bucket("aBucket")
+    ))
 
   describe("findFiles") {
     it("should find all files") {
@@ -47,9 +54,29 @@ class LocalFileStreamSuite extends FunSpec {
   }
 
   private def invoke() = {
-    val runtime = new DefaultRuntime {}
-    runtime.unsafeRunSync {
-      LocalFileStream.findFiles(sourcePath, hashService)
+    type TestEnv = Storage with Console with Config
+    val testEnv: TestEnv = new Storage.Test with Console.Test with Config.Live {
+      override def listResult: Task[S3ObjectsData] =
+        Task.die(new NotImplementedError)
+      override def uploadResult: UIO[StorageQueueEvent] =
+        Task.die(new NotImplementedError)
+      override def copyResult: UIO[StorageQueueEvent] =
+        Task.die(new NotImplementedError)
+      override def deleteResult: UIO[StorageQueueEvent] =
+        Task.die(new NotImplementedError)
+      override def shutdownResult: UIO[StorageQueueEvent] =
+        Task.die(new NotImplementedError)
+    }
+
+    def testProgram =
+      for {
+        config <- ConfigurationBuilder.buildConfig(configOptions)
+        _      <- setConfiguration(config)
+        files  <- LocalFileStream.findFiles(hashService)(sourcePath)
+      } yield files
+
+    new DefaultRuntime {}.unsafeRunSync {
+      testProgram.provide(testEnv)
     }.toEither
   }
 

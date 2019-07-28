@@ -5,8 +5,8 @@ import java.io.File
 import com.amazonaws.SdkClientException
 import com.amazonaws.services.s3.model.AmazonS3Exception
 import com.amazonaws.services.s3.transfer.model.UploadResult
+import net.kemitix.thorp.config.Resource
 import net.kemitix.thorp.console._
-import net.kemitix.thorp.core.Resource
 import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.domain.StorageQueueEvent.{
   Action,

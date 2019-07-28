@@ -58,6 +58,7 @@ val zioDependencies = Seq(
 )
 
 // cli -> thorp-lib -> storage-aws -> core -> storage-api -> console -> domain
+//                                    core -> config -> domain
 
 lazy val thorp = (project in file("."))
   .settings(commonSettings)
@@ -67,7 +68,6 @@ lazy val cli = (project in file("cli"))
   .settings(commonSettings)
   .settings(mainClass in assembly := Some("net.kemitix.thorp.cli.Main"))
   .settings(applicationSettings)
-  .settings(commandLineParsing)
   .settings(testDependencies)
   .enablePlugins(BuildInfoPlugin)
   .settings(
@@ -101,6 +101,7 @@ lazy val core = (project in file("core"))
   .settings(testDependencies)
   .dependsOn(`storage-api`)
   .dependsOn(domain % "compile->compile;test->test")
+  .dependsOn(config)
 
 lazy val `storage-api` = (project in file("storage-api"))
   .settings(commonSettings)
@@ -112,6 +113,14 @@ lazy val console = (project in file("console"))
   .settings(commonSettings)
   .settings(zioDependencies)
   .settings(assemblyJarName in assembly := "console.jar")
+  .dependsOn(domain)
+
+lazy val config = (project in file("config"))
+  .settings(commonSettings)
+  .settings(zioDependencies)
+  .settings(testDependencies)
+  .settings(commandLineParsing)
+  .settings(assemblyJarName in assembly := "config.jar")
   .dependsOn(domain)
 
 lazy val domain = (project in file("domain"))

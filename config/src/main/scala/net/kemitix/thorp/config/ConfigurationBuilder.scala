@@ -1,12 +1,8 @@
-package net.kemitix.thorp.core
+package net.kemitix.thorp.config
 
 import java.nio.file.Paths
 
-import net.kemitix.thorp.core.ConfigOptions.options
-import net.kemitix.thorp.core.ConfigValidator.validateConfig
-import net.kemitix.thorp.core.ParseConfigFile.parseFile
-import net.kemitix.thorp.domain.Config
-import zio.IO
+import zio.{IO, TaskR}
 
 /**
   * Builds a configuration from settings in a file within the
@@ -18,12 +14,13 @@ trait ConfigurationBuilder {
   private val globalConfig       = Paths.get("/etc/thorp.conf")
   private val userHome           = Paths.get(System.getProperty("user.home"))
 
-  def buildConfig(
-      priorityOpts: ConfigOptions): IO[List[ConfigValidation], Config] =
-    for {
+  def buildConfig(priorityOpts: ConfigOptions)
+    : IO[ConfigValidationException, Configuration] =
+    (for {
       config <- getConfigOptions(priorityOpts).map(collateOptions)
-      valid  <- validateConfig(config)
-    } yield valid
+      valid  <- ConfigValidator.validateConfig(config)
+    } yield valid)
+      .catchAll(errors => TaskR.fail(ConfigValidationException(errors)))
 
   private def getConfigOptions(
       priorityOpts: ConfigOptions): IO[List[ConfigValidation], ConfigOptions] =
@@ -39,17 +36,17 @@ trait ConfigurationBuilder {
   private def userOptions(
       priorityOpts: ConfigOptions): IO[List[ConfigValidation], ConfigOptions] =
     if (ConfigQuery.ignoreUserOptions(priorityOpts)) emptyConfig
-    else parseFile(userHome.resolve(userConfigFilename))
+    else ParseConfigFile.parseFile(userHome.resolve(userConfigFilename))
 
   private def globalOptions(
       priorityOpts: ConfigOptions): IO[List[ConfigValidation], ConfigOptions] =
     if (ConfigQuery.ignoreGlobalOptions(priorityOpts)) emptyConfig
-    else parseFile(globalConfig)
+    else ParseConfigFile.parseFile(globalConfig)
 
-  private def collateOptions(configOptions: ConfigOptions): Config =
-    options
+  private def collateOptions(configOptions: ConfigOptions): Configuration =
+    ConfigOptions.options
       .get(configOptions)
-      .foldLeft(Config()) { (config, configOption) =>
+      .foldLeft(Configuration()) { (config, configOption) =>
         configOption.update(config)
       }
 

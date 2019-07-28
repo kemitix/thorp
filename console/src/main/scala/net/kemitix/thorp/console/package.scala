@@ -10,7 +10,7 @@ package object console {
   final def putStrLn(line: String): ZIO[Console, Nothing, Unit] =
     ZIO.accessM(_.console putStrLn line)
 
-  final def putStrLn(line: ConsoleOut): ZIO[Console, Nothing, Unit] =
+  final def putMessageLn(line: ConsoleOut): ZIO[Console, Nothing, Unit] =
     ZIO.accessM(_.console putStrLn line)
 
 }

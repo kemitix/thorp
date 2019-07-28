@@ -1,8 +1,7 @@
-package net.kemitix.thorp.cli
+package net.kemitix.thorp.config
 
 import java.nio.file.Paths
 
-import net.kemitix.thorp.core.{ConfigOption, ConfigOptions}
 import scopt.OParser
 import zio.Task
 

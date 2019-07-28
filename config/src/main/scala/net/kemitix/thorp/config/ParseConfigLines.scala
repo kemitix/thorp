@@ -1,9 +1,16 @@
-package net.kemitix.thorp.core
+package net.kemitix.thorp.config
 
 import java.nio.file.Paths
 import java.util.regex.Pattern
 
-import net.kemitix.thorp.core.ConfigOption._
+import net.kemitix.thorp.config.ConfigOption.{
+  Bucket,
+  Debug,
+  Exclude,
+  Include,
+  Prefix,
+  Source
+}
 
 trait ParseConfigLines {
 

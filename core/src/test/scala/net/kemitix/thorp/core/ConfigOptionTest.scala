@@ -1,5 +1,11 @@
 package net.kemitix.thorp.core
 
+import net.kemitix.thorp.config.{
+  ConfigOption,
+  ConfigOptions,
+  ConfigQuery,
+  ConfigurationBuilder
+}
 import net.kemitix.thorp.domain.Sources
 import org.scalatest.FunSpec
 import zio.DefaultRuntime

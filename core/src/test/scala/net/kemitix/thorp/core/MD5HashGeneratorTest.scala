@@ -2,8 +2,8 @@ package net.kemitix.thorp.core
 
 import java.nio.file.Path
 
+import net.kemitix.thorp.config.Resource
 import net.kemitix.thorp.domain.MD5HashData.{BigFile, Root}
-import net.kemitix.thorp.domain._
 import org.scalatest.FunSpec
 import zio.DefaultRuntime
 
@@ -11,11 +11,7 @@ class MD5HashGeneratorTest extends FunSpec {
 
   private val runtime = new DefaultRuntime {}
 
-  private val source     = Resource(this, "upload")
-  private val sourcePath = source.toPath
-  private val prefix     = RemoteKey("prefix")
-  implicit private val config: Config =
-    Config(Bucket("bucket"), prefix, sources = Sources(List(sourcePath)))
+  private val source = Resource(this, "upload")
 
   describe("md5File()") {
     describe("read a small file (smaller than buffer)") {

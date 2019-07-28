@@ -2,28 +2,34 @@ package net.kemitix.thorp.core
 
 import java.time.Instant
 
+import net.kemitix.thorp.config._
 import net.kemitix.thorp.core.Action.{DoNothing, ToCopy, ToUpload}
 import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.domain._
 import org.scalatest.FunSpec
+import zio.DefaultRuntime
 
 class ActionGeneratorSuite extends FunSpec {
   val lastModified       = LastModified(Instant.now())
   private val source     = Resource(this, "upload")
   private val sourcePath = source.toPath
+  private val sources    = Sources(List(sourcePath))
   private val prefix     = RemoteKey("prefix")
   private val bucket     = Bucket("bucket")
-  implicit private val config: Config =
-    Config(bucket, prefix, sources = Sources(List(sourcePath)))
+  private val configOptions = ConfigOptions(
+    List(
+      ConfigOption.Bucket("bucket"),
+      ConfigOption.Prefix("prefix"),
+      ConfigOption.Source(sourcePath),
+      ConfigOption.IgnoreUserOptions,
+      ConfigOption.IgnoreGlobalOptions
+    ))
   private val fileToKey =
-    KeyGenerator.generateKey(config.sources, config.prefix) _
+    KeyGenerator.generateKey(sources, prefix) _
 
   describe("create actions") {
 
     val previousActions = Stream.empty[Action]
-
-    def invoke(input: S3MetaData) =
-      ActionGenerator.createActions(input, previousActions).toList
 
     describe("#1 local exists, remote exists, remote matches - do nothing") {
       val theHash = MD5Hash("the-hash")
@@ -40,8 +46,9 @@ class ActionGeneratorSuite extends FunSpec {
         )
       it("do nothing") {
         val expected =
-          List(DoNothing(bucket, theFile.remoteKey, theFile.file.length))
-        val result = invoke(input)
+          Right(
+            Stream(DoNothing(bucket, theFile.remoteKey, theFile.file.length)))
+        val result = invoke(input, previousActions)
         assertResult(expected)(result)
       }
     }
@@ -60,13 +67,14 @@ class ActionGeneratorSuite extends FunSpec {
                    matchByHash = Set(otherRemoteMetadata), // other matches
                    matchByKey = None) // remote is missing
       it("copy from other key") {
-        val expected = List(
-          ToCopy(bucket,
-                 otherRemoteKey,
-                 theHash,
-                 theRemoteKey,
-                 theFile.file.length)) // copy
-        val result = invoke(input)
+        val expected = Right(
+          Stream(
+            ToCopy(bucket,
+                   otherRemoteKey,
+                   theHash,
+                   theRemoteKey,
+                   theFile.file.length))) // copy
+        val result = invoke(input, previousActions)
         assertResult(expected)(result)
       }
     }
@@ -80,8 +88,9 @@ class ActionGeneratorSuite extends FunSpec {
                              matchByHash = Set.empty, // other no matches
                              matchByKey = None) // remote is missing
       it("upload") {
-        val expected = List(ToUpload(bucket, theFile, theFile.file.length)) // upload
-        val result   = invoke(input)
+        val expected = Right(
+          Stream(ToUpload(bucket, theFile, theFile.file.length))) // upload
+        val result = invoke(input, previousActions)
         assertResult(expected)(result)
       }
     }
@@ -105,13 +114,14 @@ class ActionGeneratorSuite extends FunSpec {
                    matchByHash = Set(otherRemoteMetadata), // other matches
                    matchByKey = Some(oldRemoteMetadata)) // remote exists
       it("copy from other key") {
-        val expected = List(
-          ToCopy(bucket,
-                 otherRemoteKey,
-                 theHash,
-                 theRemoteKey,
-                 theFile.file.length)) // copy
-        val result = invoke(input)
+        val expected = Right(
+          Stream(
+            ToCopy(bucket,
+                   otherRemoteKey,
+                   theHash,
+                   theRemoteKey,
+                   theFile.file.length))) // copy
+        val result = invoke(input, previousActions)
         assertResult(expected)(result)
       }
     }
@@ -132,8 +142,9 @@ class ActionGeneratorSuite extends FunSpec {
                    matchByKey = Some(theRemoteMetadata) // remote exists
         )
       it("upload") {
-        val expected = List(ToUpload(bucket, theFile, theFile.file.length)) // upload
-        val result   = invoke(input)
+        val expected = Right(
+          Stream(ToUpload(bucket, theFile, theFile.file.length))) // upload
+        val result = invoke(input, previousActions)
         assertResult(expected)(result)
       }
     }
@@ -146,5 +157,24 @@ class ActionGeneratorSuite extends FunSpec {
 
   private def md5HashMap(theHash: MD5Hash): Map[HashType, MD5Hash] = {
     Map(MD5 -> theHash)
+  }
+
+  private def invoke(
+      input: S3MetaData,
+      previousActions: Stream[Action]
+  ) = {
+    type TestEnv = Config
+    val testEnv: TestEnv = new Config.Live {}
+
+    def testProgram =
+      for {
+        config  <- ConfigurationBuilder.buildConfig(configOptions)
+        _       <- setConfiguration(config)
+        actions <- ActionGenerator.createActions(input, previousActions)
+      } yield actions
+
+    new DefaultRuntime {}.unsafeRunSync {
+      testProgram.provide(testEnv)
+    }.toEither
   }
 }

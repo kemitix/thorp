@@ -1,9 +1,8 @@
-package net.kemitix.thorp.cli
+package net.kemitix.thorp.config
 
 import java.nio.file.Paths
 
-import net.kemitix.thorp.core.ConfigOption.Debug
-import net.kemitix.thorp.core.{ConfigOptions, ConfigQuery, Resource}
+import net.kemitix.thorp.config.ConfigOption.Debug
 import org.scalatest.FunSpec
 import zio.DefaultRuntime
 

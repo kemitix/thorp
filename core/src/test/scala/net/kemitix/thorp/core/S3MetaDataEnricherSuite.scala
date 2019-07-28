@@ -2,6 +2,7 @@ package net.kemitix.thorp.core
 
 import java.time.Instant
 
+import net.kemitix.thorp.config.Resource
 import net.kemitix.thorp.core.S3MetaDataEnricher.{getMetadata, getS3Status}
 import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.domain._
@@ -11,11 +12,10 @@ class S3MetaDataEnricherSuite extends FunSpec {
   val lastModified       = LastModified(Instant.now())
   private val source     = Resource(this, "upload")
   private val sourcePath = source.toPath
+  private val sources    = Sources(List(sourcePath))
   private val prefix     = RemoteKey("prefix")
-  implicit private val config: Config =
-    Config(Bucket("bucket"), prefix, sources = Sources(List(sourcePath)))
   private val fileToKey =
-    KeyGenerator.generateKey(config.sources, config.prefix) _
+    KeyGenerator.generateKey(sources, prefix) _
 
   def getMatchesByKey(
       status: (Option[HashModified], Set[(MD5Hash, KeyModified)]))

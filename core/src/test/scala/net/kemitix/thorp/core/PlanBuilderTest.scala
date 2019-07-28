@@ -3,6 +3,7 @@ package net.kemitix.thorp.core
 import java.io.File
 import java.nio.file.Path
 
+import net.kemitix.thorp.config._
 import net.kemitix.thorp.console._
 import net.kemitix.thorp.core.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.domain.HashType.MD5
@@ -24,7 +25,9 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
       val options: Path => ConfigOptions =
         source =>
           configOptions(ConfigOption.Source(source),
-                        ConfigOption.Bucket("a-bucket"))
+                        ConfigOption.Bucket("a-bucket"),
+                        ConfigOption.IgnoreUserOptions,
+                        ConfigOption.IgnoreGlobalOptions)
       "a file" - {
         val filename  = "aFile"
         val remoteKey = RemoteKey(filename)
@@ -325,9 +328,9 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
       hashService: HashService,
       configOptions: ConfigOptions,
       result: Task[S3ObjectsData]
-  ): Either[Any, List[(String, String, String, String, String)]] = {
-    type TestEnv = Storage.Test with Console.Test
-    val testEnv: TestEnv = new Storage.Test with Console.Test {
+  ) = {
+    type TestEnv = Storage with Console with Config
+    val testEnv: TestEnv = new Storage.Test with Console.Test with Config.Live {
       override def listResult: Task[S3ObjectsData] = result
       override def uploadResult: UIO[StorageQueueEvent] =
         Task.die(new NotImplementedError)
@@ -339,12 +342,15 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
         Task.die(new NotImplementedError)
     }
 
+    def testProgram =
+      for {
+        config <- ConfigurationBuilder.buildConfig(configOptions)
+        _      <- setConfiguration(config)
+        plan   <- PlanBuilder.createPlan(hashService)
+      } yield plan
+
     new DefaultRuntime {}
-      .unsafeRunSync {
-        PlanBuilder
-          .createPlan(hashService, configOptions)
-          .provide(testEnv)
-      }
+      .unsafeRunSync(testProgram.provide(testEnv))
       .toEither
       .map(convertResult)
   }
