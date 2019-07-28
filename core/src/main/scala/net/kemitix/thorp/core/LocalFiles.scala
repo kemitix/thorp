@@ -15,3 +15,10 @@ case class LocalFiles(
     )
 
 }
+
+object LocalFiles {
+
+  def reduce: Stream[LocalFiles] => LocalFiles =
+    list => list.foldLeft(LocalFiles())((acc, lf) => acc ++ lf)
+
+}

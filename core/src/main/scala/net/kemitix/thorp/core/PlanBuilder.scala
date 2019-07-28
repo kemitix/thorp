@@ -1,129 +1,111 @@
 package net.kemitix.thorp.core
 
-import net.kemitix.thorp.config.{
-  ConfigOptions,
-  ConfigValidationException,
-  ConfigurationBuilder,
-  LegacyConfig
-}
+import net.kemitix.thorp.config._
 import net.kemitix.thorp.console._
 import net.kemitix.thorp.core.Action._
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage._
 import net.kemitix.thorp.storage.api.{HashService, Storage}
-import zio.{Task, TaskR}
+import zio.{TaskR, ZIO}
 
 trait PlanBuilder {
 
-  def createPlan(
-      hashService: HashService,
-      configOptions: ConfigOptions
-  ): TaskR[Storage with Console, SyncPlan] =
-    ConfigurationBuilder
-      .buildConfig(configOptions)
-      .catchAll(errors => TaskR.fail(ConfigValidationException(errors)))
-      .flatMap(config => useValidConfig(hashService)(config))
-
-  private def useValidConfig(
-      hashService: HashService
-  )(implicit c: LegacyConfig) = {
+  def createPlan(hashService: HashService)
+    : TaskR[Storage with Console with Config, SyncPlan] =
     for {
-      _       <- SyncLogging.logRunStart(c.bucket, c.prefix, c.sources)
+      _       <- SyncLogging.logRunStart
       actions <- buildPlan(hashService)
     } yield actions
-  }
 
-  private def buildPlan(
-      hashService: HashService
-  )(implicit c: LegacyConfig) =
+  private def buildPlan(hashService: HashService) =
     for {
       metadata <- gatherMetadata(hashService)
-    } yield assemblePlan(c)(metadata)
+      plan     <- assemblePlan(metadata)
+    } yield plan
 
-  private def assemblePlan(
-      implicit c: LegacyConfig): ((S3ObjectsData, LocalFiles)) => SyncPlan = {
-    case (remoteData, localData) =>
-      SyncPlan(
-        actions = createActions(c)(remoteData)(localData)
-          .filter(doesSomething)
-          .sortBy(SequencePlan.order),
-        syncTotals = SyncTotals(count = localData.count,
-                                totalSizeBytes = localData.totalSizeBytes)
-      )
-  }
+  private def assemblePlan(metadata: (S3ObjectsData, LocalFiles)) =
+    metadata match {
+      case (remoteData, localData) =>
+        createActions(remoteData, localData)
+          .map(_.filter(doesSomething).sortBy(SequencePlan.order))
+          .map(
+            SyncPlan(_, SyncTotals(localData.count, localData.totalSizeBytes)))
+    }
 
-  private def createActions
-    : LegacyConfig => S3ObjectsData => LocalFiles => Stream[Action] =
-    c =>
-      remoteData =>
-        localData =>
-          actionsForLocalFiles(c)(remoteData)(localData) ++
-            actionsForRemoteKeys(c)(remoteData)
+  private def createActions(
+      remoteData: S3ObjectsData,
+      localData: LocalFiles
+  ) =
+    for {
+      fileActions   <- actionsForLocalFiles(remoteData, localData)
+      remoteActions <- actionsForRemoteKeys(remoteData)
+    } yield fileActions ++ remoteActions
 
   private def doesSomething: Action => Boolean = {
     case _: DoNothing => false
     case _            => true
   }
 
-  private def actionsForLocalFiles
-    : LegacyConfig => S3ObjectsData => LocalFiles => Stream[Action] =
-    c =>
-      remoteData =>
-        localData =>
-          localData.localFiles.foldLeft(Stream.empty[Action])((acc, lf) =>
-            createActionFromLocalFile(c)(lf)(remoteData)(acc) ++ acc)
+  private def actionsForLocalFiles(
+      remoteData: S3ObjectsData,
+      localData: LocalFiles
+  ) =
+    ZIO.foldLeft(localData.localFiles)(Stream.empty[Action])(
+      (acc, localFile) =>
+        createActionFromLocalFile(remoteData, acc, localFile)
+          .map(actions => actions ++ acc))
 
-  private def createActionFromLocalFile
-    : LegacyConfig => LocalFile => S3ObjectsData => Stream[Action] => Stream[
-      Action] =
-    c =>
-      lf =>
-        remoteData =>
-          previousActions =>
-            ActionGenerator.createActions(
-              S3MetaDataEnricher.getMetadata(lf, remoteData)(c),
-              previousActions)(c)
+  private def createActionFromLocalFile(
+      remoteData: S3ObjectsData,
+      previousActions: Stream[Action],
+      localFile: LocalFile
+  ) =
+    ActionGenerator.createActions(
+      S3MetaDataEnricher.getMetadata(localFile, remoteData),
+      previousActions)
 
-  private def actionsForRemoteKeys
-    : LegacyConfig => S3ObjectsData => Stream[Action] =
-    c =>
-      remoteData =>
-        remoteData.byKey.keys.foldLeft(Stream.empty[Action])((acc, rk) =>
-          createActionFromRemoteKey(c)(rk) #:: acc)
+  private def actionsForRemoteKeys(remoteData: S3ObjectsData) =
+    ZIO.foldLeft(remoteData.byKey.keys)(Stream.empty[Action]) {
+      (acc, remoteKey) =>
+        createActionFromRemoteKey(remoteKey).map(action => action #:: acc)
+    }
 
-  private def createActionFromRemoteKey: LegacyConfig => RemoteKey => Action =
-    c =>
-      rk =>
-        if (rk.isMissingLocally(c.sources, c.prefix))
-          Action.ToDelete(c.bucket, rk, 0L)
-        else DoNothing(c.bucket, rk, 0L)
+  private def createActionFromRemoteKey(remoteKey: RemoteKey) =
+    for {
+      bucket  <- getBucket
+      prefix  <- getPrefix
+      sources <- getSources
+      needsDeleted = remoteKey.isMissingLocally(sources, prefix)
+    } yield
+      if (needsDeleted) ToDelete(bucket, remoteKey, 0L)
+      else DoNothing(bucket, remoteKey, 0L)
 
-  private def gatherMetadata(
-      hashService: HashService
-  )(implicit c: LegacyConfig) =
+  private def gatherMetadata(hashService: HashService) =
     for {
       remoteData <- fetchRemoteData
       localData  <- findLocalFiles(hashService)
     } yield (remoteData, localData)
 
-  private def fetchRemoteData(implicit c: LegacyConfig) =
-    listObjects(c.bucket, c.prefix)
+  private def fetchRemoteData =
+    for {
+      bucket  <- getBucket
+      prefix  <- getPrefix
+      objects <- listObjects(bucket, prefix)
+    } yield objects
 
-  private def findLocalFiles(
-      hashService: HashService
-  )(implicit config: LegacyConfig) =
+  private def findLocalFiles(hashService: HashService) =
     for {
       _          <- SyncLogging.logFileScan
       localFiles <- findFiles(hashService)
     } yield localFiles
 
-  private def findFiles(
-      hashService: HashService
-  )(implicit c: LegacyConfig) = {
-    Task
-      .foreach(c.sources.paths)(LocalFileStream.findFiles(_, hashService))
-      .map(_.foldLeft(LocalFiles())((acc, localFile) => acc ++ localFile))
-  }
+  private def findFiles(hashService: HashService) =
+    for {
+      sources <- getSources
+      paths = sources.paths
+      found <- ZIO.foreach(paths)(path =>
+        LocalFileStream.findFiles(hashService)(path))
+    } yield LocalFiles.reduce(found.toStream)
 
 }
 

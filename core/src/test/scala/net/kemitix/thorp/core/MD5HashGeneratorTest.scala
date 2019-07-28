@@ -2,7 +2,7 @@ package net.kemitix.thorp.core
 
 import java.nio.file.Path
 
-import net.kemitix.thorp.config.LegacyConfig
+import net.kemitix.thorp.config.{LegacyConfig, Resource}
 import net.kemitix.thorp.domain.MD5HashData.{BigFile, Root}
 import net.kemitix.thorp.domain._
 import org.scalatest.FunSpec

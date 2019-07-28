@@ -2,7 +2,7 @@ package net.kemitix.thorp.core
 
 import java.time.Instant
 
-import net.kemitix.thorp.config.LegacyConfig
+import net.kemitix.thorp.config.{LegacyConfig, Resource}
 import net.kemitix.thorp.core.S3MetaDataEnricher.{getMetadata, getS3Status}
 import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.domain._

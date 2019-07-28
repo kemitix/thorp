@@ -7,12 +7,12 @@ import zio.{App, ZIO}
 
 object Main extends App {
 
-  trait LiveThorpApp extends S3Storage.Live with Console.Live
+  object LiveThorpApp extends S3Storage.Live with Console.Live with Config.Live
 
   override def run(args: List[String]): ZIO[Environment, Nothing, Int] =
     Program
       .run(args)
-      .provide(new Config.Live(args) with LiveThorpApp)
+      .provide(LiveThorpApp)
       .fold(_ => 1, _ => 0)
 
 }

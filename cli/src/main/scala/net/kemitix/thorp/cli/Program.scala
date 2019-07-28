@@ -1,46 +1,39 @@
 package net.kemitix.thorp.cli
 
-import net.kemitix.thorp.config.{
-  CliArgs,
-  ConfigOptions,
-  ConfigQuery,
-  ConfigValidationException
-}
+import net.kemitix.thorp.config._
 import net.kemitix.thorp.console._
 import net.kemitix.thorp.core.CoreTypes.CoreProgram
 import net.kemitix.thorp.core._
 import net.kemitix.thorp.domain.StorageQueueEvent
 import net.kemitix.thorp.storage.aws.S3HashService.defaultHashService
-import zio.{UIO, ZIO}
+import zio.ZIO
 
 trait Program {
 
   lazy val version = s"Thorp v${thorp.BuildInfo.version}"
 
-  //TODO: Remote args
   def run(args: List[String]): CoreProgram[Unit] = {
     for {
-      cli <- CliArgs.parse(args)
-      _   <- ZIO.when(showVersion(cli))(putStrLn(version))
-      _   <- ZIO.when(!showVersion(cli))(execute(cli).catchAll(handleErrors))
+      cli    <- CliArgs.parse(args)
+      config <- ConfigurationBuilder.buildConfig(cli)
+      _      <- setConfig(config)
+      _      <- ZIO.when(showVersion(cli))(putStrLn(version))
+      _      <- ZIO.when(!showVersion(cli))(execute.catchAll(handleErrors))
     } yield ()
   }
 
   private def showVersion: ConfigOptions => Boolean =
     cli => ConfigQuery.showVersion(cli)
 
-  private def execute(cliOptions: ConfigOptions) = {
+  private def execute = {
     for {
-      plan      <- PlanBuilder.createPlan(defaultHashService, cliOptions)
-      batchMode <- isBatchMode(cliOptions)
+      plan      <- PlanBuilder.createPlan(defaultHashService)
+      batchMode <- isBatchMode
       archive   <- UnversionedMirrorArchive.default(batchMode, plan.syncTotals)
       events    <- applyPlan(archive, plan)
       _         <- SyncLogging.logRunFinished(events)
     } yield ()
   }
-
-  private def isBatchMode(cliOptions: ConfigOptions) =
-    UIO(ConfigQuery.batchMode(cliOptions))
 
   private def handleErrors(throwable: Throwable) =
     for {

@@ -2,43 +2,57 @@ package net.kemitix.thorp.core
 
 import java.nio.file.Path
 
-import net.kemitix.thorp.config.LegacyConfig
+import net.kemitix.thorp.config._
 import net.kemitix.thorp.core.KeyGenerator.generateKey
-import net.kemitix.thorp.domain
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.HashService
-import zio.Task
+import zio.{Task, TaskR, ZIO}
 
 object LocalFileStream {
 
-  def findFiles(
-      source: Path,
-      hashService: HashService
-  )(
-      implicit c: LegacyConfig
-  ): Task[LocalFiles] = {
+  def findFiles(hashService: HashService)(
+      source: Path
+  ): TaskR[Config, LocalFiles] = {
 
-    val isIncluded: Path => Boolean = Filter.isIncluded(c.filters)
+    val isIncluded: Path => TaskR[Config, Boolean] =
+      path =>
+        for {
+          filters <- getFilters
+        } yield Filter.isIncluded(filters)(path)
 
-    val pathToLocalFile: Path => Task[LocalFiles] = path =>
-      localFile(hashService, c)(path)
+    val pathToLocalFile: Path => TaskR[Config, LocalFiles] =
+      path => localFile(hashService)(path)
 
-    def loop(path: Path): Task[LocalFiles] = {
+    def loop(path: Path): TaskR[Config, LocalFiles] = {
 
-      def dirPaths(path: Path): Task[Stream[Path]] =
-        listFiles(path)
-          .map(_.filter(isIncluded))
+      def dirPaths(path: Path): TaskR[Config, Stream[Path]] =
+        for {
+          paths    <- listFiles(path)
+          filtered <- includedDirPaths(paths)
+        } yield filtered
 
-      def recurseIntoSubDirectories(path: Path): Task[LocalFiles] =
+      def includedDirPaths: Stream[Path] => TaskR[Config, Stream[Path]] =
+        paths => {
+          for {
+            flaggedPaths <- TaskR.foreach(paths)(path =>
+              isIncluded(path).map((path, _)))
+          } yield
+            flaggedPaths.toStream
+              .filter({ case (_, included) => included })
+              .map({ case (path, _) => path })
+        }
+
+      def recurseIntoSubDirectories(path: Path): TaskR[Config, LocalFiles] =
         path.toFile match {
           case f if f.isDirectory => loop(path)
           case _                  => pathToLocalFile(path)
         }
 
-      def recurse(paths: Stream[Path]): Task[LocalFiles] =
-        Task.foldLeft(paths)(LocalFiles())((acc, path) => {
-          recurseIntoSubDirectories(path).map(localFiles => acc ++ localFiles)
-        })
+      def recurse(paths: Stream[Path]): TaskR[Config, LocalFiles] =
+        for {
+          recursed <- ZIO.foreach(paths)(path =>
+            recurseIntoSubDirectories(path))
+        } yield LocalFiles.reduce(recursed.toStream)
 
       for {
         paths      <- dirPaths(path)
@@ -50,20 +64,20 @@ object LocalFileStream {
   }
 
   def localFile(
-      hashService: HashService,
-      c: LegacyConfig
-  ): Path => Task[LocalFiles] =
+      hashService: HashService
+  ): Path => TaskR[Config, LocalFiles] =
     path => {
-      val file   = path.toFile
-      val source = c.sources.forPath(path)
+      val file = path.toFile
       for {
-        hash <- hashService.hashLocalObject(path)
+        sources <- getSources
+        prefix  <- getPrefix
+        hash    <- hashService.hashLocalObject(path)
+        localFile = LocalFile(file,
+                              sources.forPath(path).toFile,
+                              hash,
+                              generateKey(sources, prefix)(path))
       } yield
-        LocalFiles(localFiles = Stream(
-                     domain.LocalFile(file,
-                                      source.toFile,
-                                      hash,
-                                      generateKey(c.sources, c.prefix)(path))),
+        LocalFiles(localFiles = Stream(localFile),
                    count = 1,
                    totalSizeBytes = file.length)
     }

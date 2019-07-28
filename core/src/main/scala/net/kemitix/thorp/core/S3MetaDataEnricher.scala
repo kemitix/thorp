@@ -1,6 +1,5 @@
 package net.kemitix.thorp.core
 
-import net.kemitix.thorp.config.LegacyConfig
 import net.kemitix.thorp.domain._
 
 object S3MetaDataEnricher {
@@ -8,7 +7,7 @@ object S3MetaDataEnricher {
   def getMetadata(
       localFile: LocalFile,
       s3ObjectsData: S3ObjectsData
-  )(implicit c: LegacyConfig): S3MetaData = {
+  ): S3MetaData = {
     val (keyMatches, hashMatches) = getS3Status(localFile, s3ObjectsData)
     S3MetaData(
       localFile,

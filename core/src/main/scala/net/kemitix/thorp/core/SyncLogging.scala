@@ -1,6 +1,6 @@
 package net.kemitix.thorp.core
 
-import net.kemitix.thorp.config.LegacyConfig
+import net.kemitix.thorp.config._
 import net.kemitix.thorp.console._
 import net.kemitix.thorp.domain.StorageQueueEvent.{
   CopyQueueEvent,
@@ -14,17 +14,19 @@ import zio.ZIO
 
 trait SyncLogging {
 
-  def logRunStart(
-      bucket: Bucket,
-      prefix: RemoteKey,
-      sources: Sources
-  ): ZIO[Console, Nothing, Unit] =
+  def logRunStart: ZIO[Console with Config, Nothing, Unit] =
     for {
-      _ <- putStrLn(ConsoleOut.ValidConfig(bucket, prefix, sources))
+      bucket  <- getBucket
+      prefix  <- getPrefix
+      sources <- getSources
+      _       <- putMessageLn(ConsoleOut.ValidConfig(bucket, prefix, sources))
     } yield ()
 
-  def logFileScan(implicit c: LegacyConfig): ZIO[Console, Nothing, Unit] =
-    putStrLn(s"Scanning local files: ${c.sources.paths.mkString(", ")}...")
+  def logFileScan: ZIO[Config with Console, Nothing, Unit] =
+    for {
+      sources <- getSources
+      _       <- putStrLn(s"Scanning local files: ${sources.paths.mkString(", ")}...")
+    } yield ()
 
   def logRunFinished(
       actions: Stream[StorageQueueEvent]

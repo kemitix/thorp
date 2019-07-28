@@ -2,7 +2,7 @@ package net.kemitix.thorp.config
 
 import java.nio.file.Paths
 
-import zio.IO
+import zio.{IO, TaskR}
 
 /**
   * Builds a configuration from settings in a file within the
@@ -14,12 +14,13 @@ trait ConfigurationBuilder {
   private val globalConfig       = Paths.get("/etc/thorp.conf")
   private val userHome           = Paths.get(System.getProperty("user.home"))
 
-  def buildConfig(
-      priorityOpts: ConfigOptions): IO[List[ConfigValidation], LegacyConfig] =
-    for {
+  def buildConfig(priorityOpts: ConfigOptions)
+    : IO[ConfigValidationException, LegacyConfig] =
+    (for {
       config <- getConfigOptions(priorityOpts).map(collateOptions)
       valid  <- ConfigValidator.validateConfig(config)
-    } yield valid
+    } yield valid)
+      .catchAll(errors => TaskR.fail(ConfigValidationException(errors)))
 
   private def getConfigOptions(
       priorityOpts: ConfigOptions): IO[List[ConfigValidation], ConfigOptions] =

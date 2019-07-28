@@ -2,8 +2,8 @@ package net.kemitix.thorp.storage.aws
 
 import java.time.Instant
 
-import net.kemitix.thorp.config.LegacyConfig
-import net.kemitix.thorp.core.{KeyGenerator, Resource, S3MetaDataEnricher}
+import net.kemitix.thorp.config.{LegacyConfig, Resource}
+import net.kemitix.thorp.core.{KeyGenerator, S3MetaDataEnricher}
 import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.domain._
 import org.scalamock.scalatest.MockFactory
