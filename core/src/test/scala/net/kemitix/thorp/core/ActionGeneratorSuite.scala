@@ -169,7 +169,7 @@ class ActionGeneratorSuite extends FunSpec {
     def testProgram =
       for {
         config  <- ConfigurationBuilder.buildConfig(configOptions)
-        _       <- setConfig(config)
+        _       <- setConfiguration(config)
         actions <- ActionGenerator.createActions(input, previousActions)
       } yield actions
 

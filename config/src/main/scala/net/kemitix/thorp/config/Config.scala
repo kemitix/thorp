@@ -12,11 +12,8 @@ trait Config {
 object Config {
 
   trait Service {
-
-    def setConfig(config: LegacyConfig): ZIO[Config, Nothing, Unit]
-
+    def setConfiguration(config: LegacyConfig): ZIO[Config, Nothing, Unit]
     def isBatchMode: ZIO[Config, Nothing, Boolean]
-
     def bucket: ZIO[Config, Nothing, Bucket]
     def prefix: ZIO[Config, Nothing, RemoteKey]
     def sources: ZIO[Config, Nothing, Sources]
@@ -27,7 +24,8 @@ object Config {
 
     val config: Service = new Service {
       private val configRef = new AtomicReference(LegacyConfig())
-      override def setConfig(config: LegacyConfig): ZIO[Config, Nothing, Unit] =
+      override def setConfiguration(
+          config: LegacyConfig): ZIO[Config, Nothing, Unit] =
         UIO(configRef.set(config))
 
       override def bucket: ZIO[Config, Nothing, Bucket] =

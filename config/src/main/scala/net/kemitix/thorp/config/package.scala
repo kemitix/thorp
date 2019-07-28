@@ -8,8 +8,8 @@ package object config {
   final val configService: ZIO[Config, Nothing, Config.Service] =
     ZIO.access(_.config)
 
-  final def setConfig(config: LegacyConfig): ZIO[Config, Nothing, Unit] =
-    ZIO.accessM(_.config setConfig config)
+  final def setConfiguration(config: LegacyConfig): ZIO[Config, Nothing, Unit] =
+    ZIO.accessM(_.config setConfiguration config)
 
   final def isBatchMode: ZIO[Config, Nothing, Boolean] =
     ZIO.accessM(_.config isBatchMode)

@@ -71,7 +71,7 @@ class LocalFileStreamSuite extends FunSpec {
     def testProgram =
       for {
         config <- ConfigurationBuilder.buildConfig(configOptions)
-        _      <- setConfig(config)
+        _      <- setConfiguration(config)
         files  <- LocalFileStream.findFiles(hashService)(sourcePath)
       } yield files
 

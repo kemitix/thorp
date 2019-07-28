@@ -345,7 +345,7 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
     def testProgram =
       for {
         config <- ConfigurationBuilder.buildConfig(configOptions)
-        _      <- setConfig(config)
+        _      <- setConfiguration(config)
         plan   <- PlanBuilder.createPlan(hashService)
       } yield plan
 

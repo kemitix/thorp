@@ -16,7 +16,7 @@ trait Program {
     for {
       cli    <- CliArgs.parse(args)
       config <- ConfigurationBuilder.buildConfig(cli)
-      _      <- setConfig(config)
+      _      <- setConfiguration(config)
       _      <- ZIO.when(showVersion(cli))(putStrLn(version))
       _      <- ZIO.when(!showVersion(cli))(execute.catchAll(handleErrors))
     } yield ()
