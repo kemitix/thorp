@@ -6,7 +6,8 @@ import net.kemitix.thorp.config._
 import net.kemitix.thorp.console._
 import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.domain._
-import net.kemitix.thorp.storage.api.{HashService, Storage}
+import net.kemitix.thorp.filesystem.FileSystem
+import net.kemitix.thorp.storage.api.Storage
 import org.scalatest.FunSpec
 import zio.{DefaultRuntime, Task, UIO}
 
@@ -54,8 +55,9 @@ class LocalFileStreamSuite extends FunSpec {
   }
 
   private def invoke() = {
-    type TestEnv = Storage with Console with Config
-    val testEnv: TestEnv = new Storage.Test with Console.Test with Config.Live {
+    type TestEnv = Storage with Console with Config with FileSystem
+    val testEnv: TestEnv = new Storage.Test with Console.Test with Config.Live
+    with FileSystem.Live {
       override def listResult: Task[S3ObjectsData] =
         Task.die(new NotImplementedError)
       override def uploadResult: UIO[StorageQueueEvent] =

@@ -8,8 +8,8 @@ import net.kemitix.thorp.console._
 import net.kemitix.thorp.core.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.domain._
-import net.kemitix.thorp.filesystem.FileSystem
-import net.kemitix.thorp.storage.api.{HashService, Storage}
+import net.kemitix.thorp.filesystem._
+import net.kemitix.thorp.storage.api.Storage
 import org.scalatest.FreeSpec
 import zio.{DefaultRuntime, Task, UIO}
 
@@ -323,7 +323,10 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
     def md5Hash(file: File): MD5Hash = {
       new DefaultRuntime {}
         .unsafeRunSync {
-          hashService.hashLocalObject(file.toPath).map(_.get(MD5))
+          hashService
+            .hashLocalObject(file.toPath)
+            .map(_.get(MD5))
+            .provide(FileSystem.Live)
         }
         .toEither
         .toOption
@@ -360,7 +363,7 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
   ) = {
     type TestEnv = Storage with Console with Config with FileSystem
     val testEnv: TestEnv = new Storage.Test with Console.Test with Config.Live
-    with FileSystem.Test {
+    with FileSystem.Live {
       override def listResult: Task[S3ObjectsData] = result
       override def uploadResult: UIO[StorageQueueEvent] =
         Task.die(new NotImplementedError)
@@ -370,8 +373,6 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
         Task.die(new NotImplementedError)
       override def shutdownResult: UIO[StorageQueueEvent] =
         Task.die(new NotImplementedError)
-
-      override def fileSystem: Task[Map[Path, File]] = files
     }
 
     def testProgram =

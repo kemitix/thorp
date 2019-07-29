@@ -4,14 +4,11 @@ import java.nio.file.Path
 
 import net.kemitix.thorp.config.Resource
 import net.kemitix.thorp.domain.MD5HashData.{BigFile, Root}
+import net.kemitix.thorp.filesystem.FileSystem
 import org.scalatest.FunSpec
 import zio.DefaultRuntime
 
 class MD5HashGeneratorTest extends FunSpec {
-
-  private val runtime = new DefaultRuntime {}
-
-  private val source = Resource(this, "upload")
 
   describe("md5File()") {
     describe("read a small file (smaller than buffer)") {
@@ -32,11 +29,12 @@ class MD5HashGeneratorTest extends FunSpec {
       }
     }
 
-    def invoke(path: Path) = {
-      runtime.unsafeRunSync {
-        MD5HashGenerator.md5File(path)
+    def invoke(path: Path) =
+      new DefaultRuntime {}.unsafeRunSync {
+        MD5HashGenerator
+          .md5File(path)
+          .provide(testEnv)
       }.toEither
-    }
   }
 
   describe("md5FileChunk") {
@@ -56,11 +54,15 @@ class MD5HashGeneratorTest extends FunSpec {
       }
     }
 
-    def invoke(path: Path, offset: Long, size: Long) = {
-      runtime.unsafeRunSync {
-        MD5HashGenerator.md5FileChunk(path, offset, size)
+    def invoke(path: Path, offset: Long, size: Long) =
+      new DefaultRuntime {}.unsafeRunSync {
+        MD5HashGenerator
+          .md5FileChunk(path, offset, size)
+          .provide(testEnv)
       }.toEither
-    }
   }
+
+  type TestEnv = FileSystem
+  val testEnv: TestEnv = new FileSystem.Live {}
 
 }
