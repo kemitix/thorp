@@ -8,6 +8,7 @@ import net.kemitix.thorp.console._
 import net.kemitix.thorp.core.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.domain._
+import net.kemitix.thorp.filesystem.FileSystem
 import net.kemitix.thorp.storage.api.{HashService, Storage}
 import org.scalatest.FreeSpec
 import zio.{DefaultRuntime, Task, UIO}
@@ -42,7 +43,8 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
                 val result =
                   invoke(hashService,
                          options(source),
-                         UIO.succeed(emptyS3ObjectData))
+                         UIO.succeed(emptyS3ObjectData),
+                         UIO.succeed(Map(file.toPath -> file)))
                 assertResult(expected)(result)
               })
             }
@@ -65,7 +67,9 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
                 val result =
                   invoke(hashService,
                          options(source),
-                         UIO.succeed(s3ObjectsData))
+                         UIO.succeed(s3ObjectsData),
+                         UIO.succeed(Map(aFile.toPath       -> aFile,
+                                         anOtherFile.toPath -> anOtherFile)))
                 assertResult(expected)(result)
               })
             }
@@ -87,7 +91,8 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
                 val result =
                   invoke(hashService,
                          options(source),
-                         UIO.succeed(s3ObjectsData))
+                         UIO.succeed(s3ObjectsData),
+                         UIO.succeed(Map(file.toPath -> file)))
                 assertResult(expected)(result)
               })
             }
@@ -110,7 +115,8 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
                   val result =
                     invoke(hashService,
                            options(source),
-                           UIO.succeed(s3ObjectsData))
+                           UIO.succeed(s3ObjectsData),
+                           UIO.succeed(Map(file.toPath -> file)))
                   assertResult(expected)(result)
                 })
               }
@@ -130,7 +136,8 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
                   val result =
                     invoke(hashService,
                            options(source),
-                           UIO.succeed(s3ObjectsData))
+                           UIO.succeed(s3ObjectsData),
+                           UIO.succeed(Map(file.toPath -> file)))
                   assertResult(expected)(result)
                 })
               }
@@ -153,7 +160,10 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
                 byKey = Map(remoteKey -> HashModified(hash, lastModified))
               )
               val result =
-                invoke(hashService, options(source), UIO.succeed(s3ObjectsData))
+                invoke(hashService,
+                       options(source),
+                       UIO.succeed(s3ObjectsData),
+                       UIO.succeed(Map(file.toPath -> file)))
               assertResult(expected)(result)
             })
           }
@@ -168,7 +178,10 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
                 byKey = Map(remoteKey -> HashModified(hash, lastModified))
               )
               val result =
-                invoke(hashService, options(source), UIO.succeed(s3ObjectsData))
+                invoke(hashService,
+                       options(source),
+                       UIO.succeed(s3ObjectsData),
+                       UIO.succeed(Map.empty))
               assertResult(expected)(result)
             })
           }
@@ -203,9 +216,14 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
                   toUpload(remoteKey1, hash1, firstSource, fileInFirstSource)
                 ))
               val result =
-                invoke(hashService,
-                       options(firstSource)(secondSource),
-                       UIO.succeed(emptyS3ObjectData))
+                invoke(
+                  hashService,
+                  options(firstSource)(secondSource),
+                  UIO.succeed(emptyS3ObjectData),
+                  UIO.succeed(
+                    Map(fileInFirstSource.toPath  -> fileInFirstSource,
+                        fileInSecondSource.toPath -> fileInSecondSource))
+                )
               assertResult(expected)(result)
             })
           })
@@ -224,9 +242,14 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
               val expected = Right(List(
                 toUpload(remoteKey1, hash1, firstSource, fileInFirstSource)))
               val result =
-                invoke(hashService,
-                       options(firstSource)(secondSource),
-                       UIO.succeed(emptyS3ObjectData))
+                invoke(
+                  hashService,
+                  options(firstSource)(secondSource),
+                  UIO.succeed(emptyS3ObjectData),
+                  UIO.succeed(
+                    Map(fileInFirstSource.toPath  -> fileInFirstSource,
+                        fileInSecondSource.toPath -> fileInSecondSource))
+                )
               assertResult(expected)(result)
             })
           })
@@ -247,7 +270,9 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
               val result =
                 invoke(hashService,
                        options(firstSource)(secondSource),
-                       UIO.succeed(s3ObjectData))
+                       UIO.succeed(s3ObjectData),
+                       UIO.succeed(
+                         Map(fileInSecondSource.toPath -> fileInSecondSource)))
               assertResult(expected)(result)
             })
           })
@@ -268,7 +293,9 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
               val result =
                 invoke(hashService,
                        options(firstSource)(secondSource),
-                       UIO.succeed(s3ObjectData))
+                       UIO.succeed(s3ObjectData),
+                       UIO.succeed(
+                         Map(fileInFirstSource.toPath -> fileInFirstSource)))
               assertResult(expected)(result)
             })
           })
@@ -284,7 +311,8 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
               val result =
                 invoke(hashService,
                        options(firstSource)(secondSource),
-                       UIO.succeed(s3ObjectData))
+                       UIO.succeed(s3ObjectData),
+                       UIO.succeed(Map.empty))
               assertResult(expected)(result)
             })
           })
@@ -327,10 +355,12 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
   private def invoke(
       hashService: HashService,
       configOptions: ConfigOptions,
-      result: Task[S3ObjectsData]
+      result: Task[S3ObjectsData],
+      files: Task[Map[Path, File]]
   ) = {
-    type TestEnv = Storage with Console with Config
-    val testEnv: TestEnv = new Storage.Test with Console.Test with Config.Live {
+    type TestEnv = Storage with Console with Config with FileSystem
+    val testEnv: TestEnv = new Storage.Test with Console.Test with Config.Live
+    with FileSystem.Test {
       override def listResult: Task[S3ObjectsData] = result
       override def uploadResult: UIO[StorageQueueEvent] =
         Task.die(new NotImplementedError)
@@ -340,6 +370,8 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
         Task.die(new NotImplementedError)
       override def shutdownResult: UIO[StorageQueueEvent] =
         Task.die(new NotImplementedError)
+
+      override def fileSystem: Task[Map[Path, File]] = files
     }
 
     def testProgram =
