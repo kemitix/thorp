@@ -12,4 +12,6 @@ package object filesystem {
   def openFile(file: File, offset: Long)
     : TaskR[FileSystem, ZManaged[FileSystem, Throwable, FileInputStream]] =
     ZIO.accessM(_.filesystem openManagedFileInputStream (file, offset))
+  def fileLines(file: File): TaskR[FileSystem, List[String]] =
+    ZIO.accessM(_.filesystem fileLines (file))
 }
