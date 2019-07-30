@@ -51,4 +51,13 @@ object Console {
 
   object Test extends Test
 
+  final val consoleService: ZIO[Console, Nothing, Console.Service] =
+    ZIO.access(_.console)
+
+  final def putStrLn(line: String): ZIO[Console, Nothing, Unit] =
+    ZIO.accessM(_.console putStrLn line)
+
+  final def putMessageLn(line: ConsoleOut): ZIO[Console, Nothing, Unit] =
+    ZIO.accessM(_.console putStrLn line)
+
 }

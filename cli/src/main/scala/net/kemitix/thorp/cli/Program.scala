@@ -17,7 +17,7 @@ trait Program {
       cli    <- CliArgs.parse(args)
       config <- ConfigurationBuilder.buildConfig(cli)
       _      <- setConfiguration(config)
-      _      <- ZIO.when(showVersion(cli))(putStrLn(version))
+      _      <- ZIO.when(showVersion(cli))(Console.putStrLn(version))
       _      <- ZIO.when(!showVersion(cli))(execute.catchAll(handleErrors))
     } yield ()
   }
@@ -37,10 +37,10 @@ trait Program {
 
   private def handleErrors(throwable: Throwable) =
     for {
-      _ <- putStrLn("There were errors:")
+      _ <- Console.putStrLn("There were errors:")
       _ <- throwable match {
         case ConfigValidationException(errors) =>
-          ZIO.foreach(errors)(error => putStrLn(s"- $error"))
+          ZIO.foreach(errors)(error => Console.putStrLn(s"- $error"))
       }
     } yield ()
 

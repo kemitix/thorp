@@ -19,13 +19,14 @@ trait SyncLogging {
       bucket  <- getBucket
       prefix  <- getPrefix
       sources <- getSources
-      _       <- putMessageLn(ConsoleOut.ValidConfig(bucket, prefix, sources))
+      _       <- Console.putMessageLn(ConsoleOut.ValidConfig(bucket, prefix, sources))
     } yield ()
 
   def logFileScan: ZIO[Config with Console, Nothing, Unit] =
     for {
       sources <- getSources
-      _       <- putStrLn(s"Scanning local files: ${sources.paths.mkString(", ")}...")
+      _ <- Console.putStrLn(
+        s"Scanning local files: ${sources.paths.mkString(", ")}...")
     } yield ()
 
   def logRunFinished(
@@ -33,11 +34,11 @@ trait SyncLogging {
   ): ZIO[Console, Nothing, Unit] = {
     val counters = actions.foldLeft(Counters())(countActivities)
     for {
-      _ <- putStrLn(eraseToEndOfScreen)
-      _ <- putStrLn(s"Uploaded ${counters.uploaded} files")
-      _ <- putStrLn(s"Copied   ${counters.copied} files")
-      _ <- putStrLn(s"Deleted  ${counters.deleted} files")
-      _ <- putStrLn(s"Errors   ${counters.errors}")
+      _ <- Console.putStrLn(eraseToEndOfScreen)
+      _ <- Console.putStrLn(s"Uploaded ${counters.uploaded} files")
+      _ <- Console.putStrLn(s"Copied   ${counters.copied} files")
+      _ <- Console.putStrLn(s"Deleted  ${counters.deleted} files")
+      _ <- Console.putStrLn(s"Errors   ${counters.errors}")
     } yield ()
   }
 
