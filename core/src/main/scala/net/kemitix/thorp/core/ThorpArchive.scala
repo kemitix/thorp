@@ -1,5 +1,6 @@
 package net.kemitix.thorp.core
 
+import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.console._
 import net.kemitix.thorp.domain.StorageQueueEvent
 import net.kemitix.thorp.domain.StorageQueueEvent.{
@@ -22,15 +23,15 @@ trait ThorpArchive {
       index: Int,
       action: Action,
       totalBytesSoFar: Long
-  ): TaskR[Storage with Console, StorageQueueEvent]
+  ): TaskR[Storage with Console with Config, StorageQueueEvent]
 
   def logEvent(
-      event: StorageQueueEvent,
-      batchMode: Boolean
-  ): TaskR[Console, Unit] =
+      event: StorageQueueEvent
+  ): TaskR[Console with Config, Unit] =
     event match {
       case UploadQueueEvent(remoteKey, _) =>
         for {
+          batchMode <- Config.batchMode
           _ <- TaskR.when(batchMode)(
             Console.putStrLn(s"Uploaded: ${remoteKey.key}"))
           _ <- TaskR.when(!batchMode)(
@@ -39,6 +40,7 @@ trait ThorpArchive {
         } yield ()
       case CopyQueueEvent(sourceKey, targetKey) =>
         for {
+          batchMode <- Config.batchMode
           _ <- TaskR.when(batchMode)(
             Console.putStrLn(s"Copied: ${sourceKey.key} => ${targetKey.key}"))
           _ <- TaskR.when(!batchMode)(
@@ -48,13 +50,15 @@ trait ThorpArchive {
         } yield ()
       case DeleteQueueEvent(remoteKey) =>
         for {
-          _ <- TaskR.when(batchMode)(Console.putStrLn(s"Deleted: $remoteKey"))
+          batchMode <- Config.batchMode
+          _         <- TaskR.when(batchMode)(Console.putStrLn(s"Deleted: $remoteKey"))
           _ <- TaskR.when(!batchMode)(
             Console.putStrLn(
               s"${GREEN}Deleted:$RESET ${remoteKey.key}$eraseToEndOfScreen"))
         } yield ()
       case ErrorQueueEvent(action, _, e) =>
         for {
+          batchMode <- Config.batchMode
           _ <- TaskR.when(batchMode)(
             Console.putStrLn(
               s"${action.name} failed: ${action.keys}: ${e.getMessage}"))

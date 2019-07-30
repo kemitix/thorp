@@ -27,11 +27,10 @@ trait Program {
 
   private def execute = {
     for {
-      plan      <- PlanBuilder.createPlan(defaultHashService)
-      batchMode <- Config.batchMode
-      archive   <- UnversionedMirrorArchive.default(batchMode, plan.syncTotals)
-      events    <- applyPlan(archive, plan)
-      _         <- SyncLogging.logRunFinished(events)
+      plan    <- PlanBuilder.createPlan(defaultHashService)
+      archive <- UnversionedMirrorArchive.default(plan.syncTotals)
+      events  <- applyPlan(archive, plan)
+      _       <- SyncLogging.logRunFinished(events)
     } yield ()
   }
 
