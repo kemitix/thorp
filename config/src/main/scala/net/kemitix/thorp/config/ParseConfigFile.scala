@@ -2,7 +2,7 @@ package net.kemitix.thorp.config
 
 import java.nio.file.Path
 
-import net.kemitix.thorp.filesystem.{FS, FileSystem}
+import net.kemitix.thorp.filesystem.FileSystem
 import zio.{IO, ZIO}
 
 trait ParseConfigFile {
@@ -16,9 +16,10 @@ trait ParseConfigFile {
           List(ConfigValidation.ErrorReadingFile(filename, h.getMessage))))
 
   private def readFile(filename: Path) =
-    FS.exists(filename.toFile)
+    FileSystem
+      .exists(filename.toFile)
       .flatMap(
-        if (_) FS.lines(filename.toFile)
+        if (_) FileSystem.lines(filename.toFile)
         else ZIO.succeed(List.empty))
 
 }
