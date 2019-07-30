@@ -8,7 +8,7 @@ import zio.ZIO
 
 object CoreTypes {
 
-  type CoreEnv        = Storage with Console with Config with FileSystem
+  type CoreEnv        = Storage with Console with Config with FileSystem with Hasher
   type CoreProgram[A] = ZIO[CoreEnv, Throwable, A]
 
 }

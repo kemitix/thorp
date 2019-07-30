@@ -10,24 +10,25 @@ import zio.{Task, TaskR, ZIO}
 
 object LocalFileStream {
 
-  def findFiles(hashService: HashService)(
+  def findFiles(
       source: Path
-  ): TaskR[Config with FileSystem, LocalFiles] = {
+  ): TaskR[Config with FileSystem with Hasher, LocalFiles] = {
 
     def recurseIntoSubDirectories(
-        path: Path): TaskR[Config with FileSystem, LocalFiles] =
+        path: Path): TaskR[Config with FileSystem with Hasher, LocalFiles] =
       path.toFile match {
         case f if f.isDirectory => loop(path)
-        case _                  => pathToLocalFile(hashService)(path)
+        case _                  => pathToLocalFile(path)
       }
 
-    def recurse(
-        paths: Stream[Path]): TaskR[Config with FileSystem, LocalFiles] =
+    def recurse(paths: Stream[Path])
+      : TaskR[Config with FileSystem with Hasher, LocalFiles] =
       for {
         recursed <- ZIO.foreach(paths)(path => recurseIntoSubDirectories(path))
       } yield LocalFiles.reduce(recursed.toStream)
 
-    def loop(path: Path): TaskR[Config with FileSystem, LocalFiles] = {
+    def loop(
+        path: Path): TaskR[Config with FileSystem with Hasher, LocalFiles] = {
 
       for {
         paths      <- dirPaths(path)
@@ -53,12 +54,12 @@ object LocalFileStream {
         .filter({ case (_, included) => included })
         .map({ case (path, _) => path })
 
-  private def localFile(hashService: HashService)(path: Path) = {
+  private def localFile(path: Path) = {
     val file = path.toFile
     for {
       sources <- Config.sources
       prefix  <- Config.prefix
-      hash    <- hashService.hashLocalObject(path)
+      hash    <- Hasher.hashObject(path)
       localFile = LocalFile(file,
                             sources.forPath(path).toFile,
                             hash,
@@ -81,7 +82,7 @@ object LocalFileStream {
       filters <- Config.filters
     } yield Filter.isIncluded(filters)(path)
 
-  private def pathToLocalFile(hashService: HashService)(path: Path) =
-    localFile(hashService)(path)
+  private def pathToLocalFile(path: Path) =
+    localFile(path)
 
 }

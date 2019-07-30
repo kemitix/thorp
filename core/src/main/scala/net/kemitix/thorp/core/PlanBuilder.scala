@@ -10,16 +10,17 @@ import zio.{TaskR, ZIO}
 
 trait PlanBuilder {
 
-  def createPlan(hashService: HashService)
-    : TaskR[Storage with Console with Config with FileSystem, SyncPlan] =
+  def createPlan
+    : TaskR[Storage with Console with Config with FileSystem with Hasher,
+            SyncPlan] =
     for {
       _       <- SyncLogging.logRunStart
-      actions <- buildPlan(hashService)
+      actions <- buildPlan
     } yield actions
 
-  private def buildPlan(hashService: HashService) =
+  private def buildPlan =
     for {
-      metadata <- gatherMetadata(hashService)
+      metadata <- gatherMetadata
       plan     <- assemblePlan(metadata)
     } yield plan
 
@@ -80,10 +81,10 @@ trait PlanBuilder {
       if (needsDeleted) ToDelete(bucket, remoteKey, 0L)
       else DoNothing(bucket, remoteKey, 0L)
 
-  private def gatherMetadata(hashService: HashService) =
+  private def gatherMetadata =
     for {
       remoteData <- fetchRemoteData
-      localData  <- findLocalFiles(hashService)
+      localData  <- findLocalFiles
     } yield (remoteData, localData)
 
   private def fetchRemoteData =
@@ -93,18 +94,17 @@ trait PlanBuilder {
       objects <- Storage.list(bucket, prefix)
     } yield objects
 
-  private def findLocalFiles(hashService: HashService) =
+  private def findLocalFiles =
     for {
       _          <- SyncLogging.logFileScan
-      localFiles <- findFiles(hashService)
+      localFiles <- findFiles
     } yield localFiles
 
-  private def findFiles(hashService: HashService) =
+  private def findFiles =
     for {
       sources <- Config.sources
       paths = sources.paths
-      found <- ZIO.foreach(paths)(path =>
-        LocalFileStream.findFiles(hashService)(path))
+      found <- ZIO.foreach(paths)(path => LocalFileStream.findFiles(path))
     } yield LocalFiles.reduce(found.toStream)
 
 }

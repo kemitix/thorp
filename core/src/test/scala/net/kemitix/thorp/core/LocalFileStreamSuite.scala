@@ -21,11 +21,6 @@ class LocalFileStreamSuite extends FunSpec {
 
   private val source     = Resource(this, "upload")
   private val sourcePath = source.toPath
-  private val hashService: HashService = DummyHashService(
-    Map(
-      file("root-file")        -> Map(MD5 -> MD5HashData.Root.hash),
-      file("subdir/leaf-file") -> Map(MD5 -> MD5HashData.Leaf.hash)
-    ))
 
   private def file(filename: String) =
     sourcePath.resolve(Paths.get(filename))
@@ -61,9 +56,9 @@ class LocalFileStreamSuite extends FunSpec {
   }
 
   private def invoke() = {
-    type TestEnv = Storage with Console with Config with FileSystem
+    type TestEnv = Storage with Console with Config with FileSystem with Hasher
     val testEnv: TestEnv = new Storage.Test with Console.Test with Config.Live
-    with FileSystem.Live {
+    with FileSystem.Live with Hasher.Test {
       override def listResult: Task[S3ObjectsData] =
         Task.die(new NotImplementedError)
       override def uploadResult: UIO[StorageQueueEvent] =
@@ -75,12 +70,17 @@ class LocalFileStreamSuite extends FunSpec {
       override def shutdownResult: UIO[StorageQueueEvent] =
         Task.die(new NotImplementedError)
     }
+    Hasher.Test.hashes.set(
+      Map(
+        file("root-file")        -> Map(MD5 -> MD5HashData.Root.hash),
+        file("subdir/leaf-file") -> Map(MD5 -> MD5HashData.Leaf.hash)
+      ))
 
     def testProgram =
       for {
         config <- ConfigurationBuilder.buildConfig(configOptions)
         _      <- Config.set(config)
-        files  <- LocalFileStream.findFiles(hashService)(sourcePath)
+        files  <- LocalFileStream.findFiles(sourcePath)
       } yield files
 
     new DefaultRuntime {}.unsafeRunSync {
