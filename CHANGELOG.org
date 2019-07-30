@@ -21,6 +21,7 @@ The format is based on [[https://keepachangelog.com/en/1.0.0/][Keep a Changelog]
    - [internal] Don't use String as key in Map for hashes (#124)
    - [internal] Convert Storage to full ZIO effect module (#133)
    - [internal] Convert Config to full ZIO effect module (#134)
+   - [internal] Create FileSystem ZIO effect module (#135)
 
 ** Dependencies
 

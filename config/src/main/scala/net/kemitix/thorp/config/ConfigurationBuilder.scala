@@ -2,7 +2,8 @@ package net.kemitix.thorp.config
 
 import java.nio.file.Paths
 
-import zio.{IO, TaskR}
+import net.kemitix.thorp.filesystem.FileSystem
+import zio.ZIO
 
 /**
   * Builds a configuration from settings in a file within the
@@ -15,15 +16,14 @@ trait ConfigurationBuilder {
   private val userHome           = Paths.get(System.getProperty("user.home"))
 
   def buildConfig(priorityOpts: ConfigOptions)
-    : IO[ConfigValidationException, Configuration] =
+    : ZIO[FileSystem, ConfigValidationException, Configuration] =
     (for {
       config <- getConfigOptions(priorityOpts).map(collateOptions)
       valid  <- ConfigValidator.validateConfig(config)
     } yield valid)
-      .catchAll(errors => TaskR.fail(ConfigValidationException(errors)))
+      .catchAll(errors => ZIO.fail(ConfigValidationException(errors)))
 
-  private def getConfigOptions(
-      priorityOpts: ConfigOptions): IO[List[ConfigValidation], ConfigOptions] =
+  private def getConfigOptions(priorityOpts: ConfigOptions) =
     for {
       sourceOpts <- SourceConfigLoader.loadSourceConfigs(
         ConfigQuery.sources(priorityOpts))
@@ -31,15 +31,13 @@ trait ConfigurationBuilder {
       globalOpts <- globalOptions(priorityOpts ++ sourceOpts ++ userOpts)
     } yield priorityOpts ++ sourceOpts ++ userOpts ++ globalOpts
 
-  private val emptyConfig = IO.succeed(ConfigOptions())
+  private val emptyConfig = ZIO.succeed(ConfigOptions())
 
-  private def userOptions(
-      priorityOpts: ConfigOptions): IO[List[ConfigValidation], ConfigOptions] =
+  private def userOptions(priorityOpts: ConfigOptions) =
     if (ConfigQuery.ignoreUserOptions(priorityOpts)) emptyConfig
     else ParseConfigFile.parseFile(userHome.resolve(userConfigFilename))
 
-  private def globalOptions(
-      priorityOpts: ConfigOptions): IO[List[ConfigValidation], ConfigOptions] =
+  private def globalOptions(priorityOpts: ConfigOptions) =
     if (ConfigQuery.ignoreGlobalOptions(priorityOpts)) emptyConfig
     else ParseConfigFile.parseFile(globalConfig)
 

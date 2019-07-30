@@ -7,16 +7,6 @@ final case class RemoteKey(
     key: String
 ) {
 
-  def isMissingLocally(
-      sources: Sources,
-      prefix: RemoteKey
-  ): Boolean =
-    !sources.paths.exists(source =>
-      asFile(source, prefix) match {
-        case Some(file) => file.exists
-        case None       => false
-    })
-
   def asFile(
       source: Path,
       prefix: RemoteKey
@@ -39,4 +29,5 @@ final case class RemoteKey(
 object RemoteKey {
   val key: SimpleLens[RemoteKey, String] =
     SimpleLens[RemoteKey, String](_.key, b => a => b.copy(key = a))
+
 }

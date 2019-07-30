@@ -5,27 +5,29 @@ import java.nio.file.Path
 import net.kemitix.thorp.config._
 import net.kemitix.thorp.core.KeyGenerator.generateKey
 import net.kemitix.thorp.domain._
-import net.kemitix.thorp.storage.api.HashService
+import net.kemitix.thorp.filesystem.FileSystem
 import zio.{Task, TaskR, ZIO}
 
 object LocalFileStream {
 
   def findFiles(hashService: HashService)(
       source: Path
-  ): TaskR[Config, LocalFiles] = {
+  ): TaskR[Config with FileSystem, LocalFiles] = {
 
-    def recurseIntoSubDirectories(path: Path): TaskR[Config, LocalFiles] =
+    def recurseIntoSubDirectories(
+        path: Path): TaskR[Config with FileSystem, LocalFiles] =
       path.toFile match {
         case f if f.isDirectory => loop(path)
         case _                  => pathToLocalFile(hashService)(path)
       }
 
-    def recurse(paths: Stream[Path]): TaskR[Config, LocalFiles] =
+    def recurse(
+        paths: Stream[Path]): TaskR[Config with FileSystem, LocalFiles] =
       for {
         recursed <- ZIO.foreach(paths)(path => recurseIntoSubDirectories(path))
       } yield LocalFiles.reduce(recursed.toStream)
 
-    def loop(path: Path): TaskR[Config, LocalFiles] = {
+    def loop(path: Path): TaskR[Config with FileSystem, LocalFiles] = {
 
       for {
         paths      <- dirPaths(path)

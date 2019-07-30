@@ -4,7 +4,6 @@ import net.kemitix.thorp.console._
 import net.kemitix.thorp.core.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.domain.StorageQueueEvent.DoNothingQueueEvent
 import net.kemitix.thorp.domain._
-import net.kemitix.thorp.storage._
 import net.kemitix.thorp.storage.api.Storage
 import zio.{Task, TaskR}
 
@@ -26,12 +25,12 @@ case class UnversionedMirrorArchive(
         } yield event
       case ToCopy(bucket, sourceKey, hash, targetKey, _) =>
         for {
-          event <- copyObject(bucket, sourceKey, hash, targetKey)
+          event <- Storage.copy(bucket, sourceKey, hash, targetKey)
           _     <- logEvent(event, batchMode)
         } yield event
       case ToDelete(bucket, remoteKey, _) =>
         for {
-          event <- deleteObject(bucket, remoteKey)
+          event <- Storage.delete(bucket, remoteKey)
           _     <- logEvent(event, batchMode)
         } yield event
       case DoNothing(_, remoteKey, _) =>
@@ -44,11 +43,12 @@ case class UnversionedMirrorArchive(
       bucket: Bucket,
       localFile: LocalFile
   ) =
-    upload(localFile,
-           bucket,
-           batchMode,
-           UploadEventListener(localFile, index, syncTotals, totalBytesSoFar),
-           1)
+    Storage.upload(
+      localFile,
+      bucket,
+      batchMode,
+      UploadEventListener(localFile, index, syncTotals, totalBytesSoFar),
+      1)
 }
 
 object UnversionedMirrorArchive {

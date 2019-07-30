@@ -8,6 +8,7 @@ import net.kemitix.thorp.config.{
   ParseConfigFile,
   Resource
 }
+import net.kemitix.thorp.filesystem.FileSystem
 import org.scalatest.FunSpec
 import zio.DefaultRuntime
 
@@ -44,9 +45,10 @@ class ParseConfigFileTest extends FunSpec {
   }
 
   private def invoke(filename: Path) = {
-    val runtime = new DefaultRuntime {}
-    runtime.unsafeRunSync {
-      ParseConfigFile.parseFile(filename)
+    new DefaultRuntime {}.unsafeRunSync {
+      ParseConfigFile
+        .parseFile(filename)
+        .provide(FileSystem.Live)
     }.toEither
   }
 }

@@ -1,13 +1,15 @@
 package net.kemitix.thorp.config
 
 import net.kemitix.thorp.domain.Sources
-import zio.IO
+import net.kemitix.thorp.filesystem.FileSystem
+import zio.ZIO
 
 trait SourceConfigLoader {
 
   val thorpConfigFileName = ".thorp.conf"
 
-  def loadSourceConfigs: Sources => IO[List[ConfigValidation], ConfigOptions] =
+  def loadSourceConfigs
+    : Sources => ZIO[FileSystem, List[ConfigValidation], ConfigOptions] =
     sources => {
 
       val sourceConfigOptions =
@@ -18,7 +20,8 @@ trait SourceConfigLoader {
           acc ++ co
         }
 
-      IO.foreach(sources.paths) { path =>
+      ZIO
+        .foreach(sources.paths) { path =>
           ParseConfigFile.parseFile(path.resolve(thorpConfigFileName))
         }
         .map(reduce)

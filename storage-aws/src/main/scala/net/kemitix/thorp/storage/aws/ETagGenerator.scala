@@ -7,20 +7,19 @@ import com.amazonaws.services.s3.transfer.TransferManagerConfiguration
 import com.amazonaws.services.s3.transfer.internal.TransferManagerUtils
 import net.kemitix.thorp.core.MD5HashGenerator
 import net.kemitix.thorp.domain.MD5Hash
-import zio.Task
+import net.kemitix.thorp.filesystem.FileSystem
+import zio.{TaskR, ZIO}
 
 trait ETagGenerator {
 
   def eTag(
       path: Path
-  ): Task[String] = {
+  ): TaskR[FileSystem, String] = {
     val partSize = calculatePartSize(path)
     val parts    = numParts(path.toFile.length, partSize)
-    Task
-      .foreach(partsIndex(parts)) { chunkNumber =>
-        digestChunk(path, partSize)(chunkNumber)
-      }
-      .map(parts => concatenateDigests(parts))
+    ZIO
+      .foreach(partsIndex(parts))(digestChunk(path, partSize))
+      .map(concatenateDigests)
       .map(MD5HashGenerator.hex)
       .map(hash => s"$hash-$parts")
   }
@@ -48,19 +47,17 @@ trait ETagGenerator {
     fullParts + incompletePart
   }
 
-  def digestChunk(
+  private def digestChunk(
       path: Path,
       chunkSize: Long
-  )(
-      chunkNumber: Long
-  ): Task[Array[Byte]] =
+  )(chunkNumber: Long) =
     hashChunk(path, chunkNumber, chunkSize).map(_.digest)
 
   def hashChunk(
       path: Path,
       chunkNumber: Long,
       chunkSize: Long
-  ): Task[MD5Hash] =
+  ): TaskR[FileSystem, MD5Hash] =
     MD5HashGenerator.md5FileChunk(path, chunkNumber * chunkSize, chunkSize)
 
   def offsets(

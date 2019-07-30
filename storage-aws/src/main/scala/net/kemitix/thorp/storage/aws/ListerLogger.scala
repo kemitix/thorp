@@ -5,6 +5,6 @@ import zio.TaskR
 
 trait ListerLogger {
   def logFetchBatch: TaskR[Console, Unit] =
-    putStrLn("Fetching remote summaries...")
+    Console.putStrLn("Fetching remote summaries...")
 }
 object ListerLogger extends ListerLogger

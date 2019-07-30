@@ -31,32 +31,34 @@ trait ThorpArchive {
     event match {
       case UploadQueueEvent(remoteKey, _) =>
         for {
-          _ <- TaskR.when(batchMode)(putStrLn(s"Uploaded: ${remoteKey.key}"))
+          _ <- TaskR.when(batchMode)(
+            Console.putStrLn(s"Uploaded: ${remoteKey.key}"))
           _ <- TaskR.when(!batchMode)(
-            putStrLn(
+            Console.putStrLn(
               s"${GREEN}Uploaded:$RESET ${remoteKey.key}$eraseToEndOfScreen"))
         } yield ()
       case CopyQueueEvent(sourceKey, targetKey) =>
         for {
           _ <- TaskR.when(batchMode)(
-            putStrLn(s"Copied: ${sourceKey.key} => ${targetKey.key}"))
+            Console.putStrLn(s"Copied: ${sourceKey.key} => ${targetKey.key}"))
           _ <- TaskR.when(!batchMode)(
-            putStrLn(
+            Console.putStrLn(
               s"${GREEN}Copied:$RESET ${sourceKey.key} => ${targetKey.key}$eraseToEndOfScreen")
           )
         } yield ()
       case DeleteQueueEvent(remoteKey) =>
         for {
-          _ <- TaskR.when(batchMode)(putStrLn(s"Deleted: $remoteKey"))
+          _ <- TaskR.when(batchMode)(Console.putStrLn(s"Deleted: $remoteKey"))
           _ <- TaskR.when(!batchMode)(
-            putStrLn(
+            Console.putStrLn(
               s"${GREEN}Deleted:$RESET ${remoteKey.key}$eraseToEndOfScreen"))
         } yield ()
       case ErrorQueueEvent(action, _, e) =>
         for {
           _ <- TaskR.when(batchMode)(
-            putStrLn(s"${action.name} failed: ${action.keys}: ${e.getMessage}"))
-          _ <- TaskR.when(!batchMode)(putStrLn(
+            Console.putStrLn(
+              s"${action.name} failed: ${action.keys}: ${e.getMessage}"))
+          _ <- TaskR.when(!batchMode)(Console.putStrLn(
             s"${RED}ERROR:$RESET ${action.name} ${action.keys}: ${e.getMessage}$eraseToEndOfScreen"))
         } yield ()
       case DoNothingQueueEvent(_) => TaskR(())

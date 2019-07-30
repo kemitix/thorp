@@ -4,14 +4,14 @@ import net.kemitix.thorp.config._
 import net.kemitix.thorp.console._
 import net.kemitix.thorp.core.Action._
 import net.kemitix.thorp.domain._
-import net.kemitix.thorp.storage._
-import net.kemitix.thorp.storage.api.{HashService, Storage}
+import net.kemitix.thorp.filesystem.FileSystem
+import net.kemitix.thorp.storage.api.Storage
 import zio.{TaskR, ZIO}
 
 trait PlanBuilder {
 
   def createPlan(hashService: HashService)
-    : TaskR[Storage with Console with Config, SyncPlan] =
+    : TaskR[Storage with Console with Config with FileSystem, SyncPlan] =
     for {
       _       <- SyncLogging.logRunStart
       actions <- buildPlan(hashService)
@@ -72,10 +72,10 @@ trait PlanBuilder {
 
   private def createActionFromRemoteKey(remoteKey: RemoteKey) =
     for {
-      bucket  <- getBucket
-      prefix  <- getPrefix
-      sources <- getSources
-      needsDeleted = remoteKey.isMissingLocally(sources, prefix)
+      bucket       <- getBucket
+      prefix       <- getPrefix
+      sources      <- getSources
+      needsDeleted <- Remote.isMissingLocally(sources, prefix)(remoteKey)
     } yield
       if (needsDeleted) ToDelete(bucket, remoteKey, 0L)
       else DoNothing(bucket, remoteKey, 0L)
@@ -90,7 +90,7 @@ trait PlanBuilder {
     for {
       bucket  <- getBucket
       prefix  <- getPrefix
-      objects <- listObjects(bucket, prefix)
+      objects <- Storage.list(bucket, prefix)
     } yield objects
 
   private def findLocalFiles(hashService: HashService) =

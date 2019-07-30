@@ -4,6 +4,7 @@ import java.nio.file.Path
 
 import com.amazonaws.services.s3.transfer.TransferManagerConfiguration
 import net.kemitix.thorp.config.Resource
+import net.kemitix.thorp.filesystem.FileSystem
 import org.scalatest.FunSpec
 import zio.DefaultRuntime
 
@@ -44,8 +45,10 @@ class ETagGeneratorTest extends FunSpec {
       }
     }
     def invoke(path: Path, index: Long, size: Long) =
-      runtime.unsafeRunSync {
-        ETagGenerator.hashChunk(path, index, size)
+      new DefaultRuntime {}.unsafeRunSync {
+        ETagGenerator
+          .hashChunk(path, index, size)
+          .provide(FileSystem.Live)
       }.toEither
   }
 
@@ -56,8 +59,10 @@ class ETagGeneratorTest extends FunSpec {
       assertResult(Right(expected))(result)
     }
     def invoke(path: Path) =
-      runtime.unsafeRunSync {
-        ETagGenerator.eTag(path)
+      new DefaultRuntime {}.unsafeRunSync {
+        ETagGenerator
+          .eTag(path)
+          .provide(FileSystem.Live)
       }.toEither
   }
 

@@ -9,6 +9,7 @@ import net.kemitix.thorp.config.{
 }
 import net.kemitix.thorp.domain.Filter.{Exclude, Include}
 import net.kemitix.thorp.domain._
+import net.kemitix.thorp.filesystem.FileSystem
 import org.scalatest.FunSpec
 import zio.DefaultRuntime
 
@@ -167,9 +168,10 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
   }
 
   private def invoke(configOptions: ConfigOptions) = {
-    val runtime = new DefaultRuntime {}
-    runtime.unsafeRunSync {
-      ConfigurationBuilder.buildConfig(configOptions)
+    new DefaultRuntime {}.unsafeRunSync {
+      ConfigurationBuilder
+        .buildConfig(configOptions)
+        .provide(FileSystem.Live)
     }.toEither
   }
 
