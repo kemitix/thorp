@@ -59,17 +59,21 @@ object FileSystem {
   object Live extends Live
   trait Test extends FileSystem {
 
-    def fileSystem: Task[Map[Path, File]]
+    val fileExistsResultMap: Task[Map[Path, File]]
+    val fileLinesResult: Task[List[String]]
+    val managedFileInputStream: Task[ZManaged[Any, Throwable, FileInputStream]]
 
     override val filesystem: Service = new Service {
 
       override def fileExists(file: File): ZIO[FileSystem, Throwable, Boolean] =
-        fileSystem.map(m => m.keys.exists(_ equals file.toPath))
+        fileExistsResultMap.map(m => m.keys.exists(_ equals file.toPath))
 
       override def openManagedFileInputStream(file: File, offset: Long)
-        : TaskR[FileSystem, ZManaged[Any, Throwable, FileInputStream]] = ???
+        : TaskR[FileSystem, ZManaged[Any, Throwable, FileInputStream]] =
+        managedFileInputStream
 
-      override def fileLines(file: File): TaskR[FileSystem, List[String]] = ???
+      override def fileLines(file: File): TaskR[FileSystem, List[String]] =
+        fileLinesResult
     }
   }
 }
