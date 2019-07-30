@@ -5,7 +5,6 @@ import net.kemitix.thorp.console._
 import net.kemitix.thorp.core.Action._
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.filesystem.FileSystem
-import net.kemitix.thorp.storage._
 import net.kemitix.thorp.storage.api.Storage
 import zio.{TaskR, ZIO}
 
@@ -91,7 +90,7 @@ trait PlanBuilder {
     for {
       bucket  <- getBucket
       prefix  <- getPrefix
-      objects <- listObjects(bucket, prefix)
+      objects <- Storage.list(bucket, prefix)
     } yield objects
 
   private def findLocalFiles(hashService: HashService) =
