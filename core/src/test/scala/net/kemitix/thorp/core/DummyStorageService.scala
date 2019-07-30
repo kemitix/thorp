@@ -22,7 +22,6 @@ case class DummyStorageService(s3ObjectData: S3ObjectsData,
 
   override def upload(localFile: LocalFile,
                       bucket: Bucket,
-                      batchMode: Boolean,
                       uploadEventListener: UploadEventListener,
                       tryCount: Int): UIO[StorageQueueEvent] = {
     val (remoteKey, md5Hash) = uploadFiles(localFile.file)

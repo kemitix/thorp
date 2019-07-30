@@ -1,6 +1,6 @@
 package net.kemitix.thorp.core
 
-import net.kemitix.thorp.config._
+import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.console._
 import net.kemitix.thorp.core.Action._
 import net.kemitix.thorp.domain._
@@ -72,9 +72,9 @@ trait PlanBuilder {
 
   private def createActionFromRemoteKey(remoteKey: RemoteKey) =
     for {
-      bucket       <- getBucket
-      prefix       <- getPrefix
-      sources      <- getSources
+      bucket       <- Config.bucket
+      prefix       <- Config.prefix
+      sources      <- Config.sources
       needsDeleted <- Remote.isMissingLocally(sources, prefix)(remoteKey)
     } yield
       if (needsDeleted) ToDelete(bucket, remoteKey, 0L)
@@ -88,8 +88,8 @@ trait PlanBuilder {
 
   private def fetchRemoteData =
     for {
-      bucket  <- getBucket
-      prefix  <- getPrefix
+      bucket  <- Config.bucket
+      prefix  <- Config.prefix
       objects <- Storage.list(bucket, prefix)
     } yield objects
 
@@ -101,7 +101,7 @@ trait PlanBuilder {
 
   private def findFiles(hashService: HashService) =
     for {
-      sources <- getSources
+      sources <- Config.sources
       paths = sources.paths
       found <- ZIO.foreach(paths)(path =>
         LocalFileStream.findFiles(hashService)(path))

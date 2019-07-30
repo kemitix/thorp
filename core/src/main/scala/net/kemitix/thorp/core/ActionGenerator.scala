@@ -1,6 +1,6 @@
 package net.kemitix.thorp.core
 
-import net.kemitix.thorp.config._
+import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.core.Action.{DoNothing, ToCopy, ToUpload}
 import net.kemitix.thorp.domain._
 import zio.ZIO
@@ -12,7 +12,7 @@ object ActionGenerator {
       previousActions: Stream[Action]
   ): ZIO[Config, Nothing, Stream[Action]] =
     for {
-      bucket <- getBucket
+      bucket <- Config.bucket
     } yield
       s3MetaData match {
         // #1 local exists, remote exists, remote matches - do nothing

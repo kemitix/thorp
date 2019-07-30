@@ -2,7 +2,13 @@ package net.kemitix.thorp.core
 
 import java.time.Instant
 
-import net.kemitix.thorp.config._
+import net.kemitix.thorp.config.{
+  Config,
+  ConfigOption,
+  ConfigOptions,
+  ConfigurationBuilder,
+  Resource
+}
 import net.kemitix.thorp.core.Action.{DoNothing, ToCopy, ToUpload}
 import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.domain._
@@ -170,7 +176,7 @@ class ActionGeneratorSuite extends FunSpec {
     def testProgram =
       for {
         config  <- ConfigurationBuilder.buildConfig(configOptions)
-        _       <- setConfiguration(config)
+        _       <- Config.set(config)
         actions <- ActionGenerator.createActions(input, previousActions)
       } yield actions
 

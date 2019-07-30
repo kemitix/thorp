@@ -3,7 +3,12 @@ package net.kemitix.thorp.core
 import java.io.File
 import java.nio.file.Path
 
-import net.kemitix.thorp.config._
+import net.kemitix.thorp.config.{
+  Config,
+  ConfigOption,
+  ConfigOptions,
+  ConfigurationBuilder
+}
 import net.kemitix.thorp.console._
 import net.kemitix.thorp.core.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.domain.HashType.MD5
@@ -378,7 +383,7 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
     def testProgram =
       for {
         config <- ConfigurationBuilder.buildConfig(configOptions)
-        _      <- setConfiguration(config)
+        _      <- Config.set(config)
         plan   <- PlanBuilder.createPlan(hashService)
       } yield plan
 

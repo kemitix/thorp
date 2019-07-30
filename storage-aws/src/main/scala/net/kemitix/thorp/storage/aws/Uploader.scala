@@ -2,6 +2,7 @@ package net.kemitix.thorp.storage.aws
 
 import com.amazonaws.event.{ProgressEvent, ProgressEventType, ProgressListener}
 import com.amazonaws.services.s3.model.{ObjectMetadata, PutObjectRequest}
+import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.domain.StorageQueueEvent.{
   Action,
   ErrorQueueEvent,
@@ -13,35 +14,38 @@ import net.kemitix.thorp.domain.UploadEvent.{
   TransferEvent
 }
 import net.kemitix.thorp.domain.{StorageQueueEvent, _}
-import zio.{Task, UIO}
+import zio.{UIO, ZIO}
 
 trait Uploader {
 
   def upload(transferManager: => AmazonTransferManager)(
       localFile: LocalFile,
       bucket: Bucket,
-      batchMode: Boolean,
       uploadEventListener: UploadEventListener,
       tryCount: Int
-  ): UIO[StorageQueueEvent] =
-    transfer(transferManager)(localFile, bucket, batchMode, uploadEventListener)
+  ): ZIO[Config, Nothing, StorageQueueEvent] =
+    transfer(transferManager)(localFile, bucket, uploadEventListener)
       .catchAll(handleError(localFile.remoteKey))
 
-  private def handleError(
-      remoteKey: RemoteKey): Throwable => UIO[ErrorQueueEvent] = { e =>
+  private def handleError(remoteKey: RemoteKey)(e: Throwable) =
     UIO.succeed(ErrorQueueEvent(Action.Upload(remoteKey.key), remoteKey, e))
-  }
 
   private def transfer(transferManager: => AmazonTransferManager)(
       localFile: LocalFile,
       bucket: Bucket,
-      batchMode: Boolean,
       uploadEventListener: UploadEventListener
-  ): Task[StorageQueueEvent] = {
+  ) = {
+    val listener = progressListener(uploadEventListener)
+    for {
+      putObjectRequest <- request(localFile, bucket, listener)
+      event            <- dispatch(transferManager, putObjectRequest)
+    } yield event
+  }
 
-    val listener         = progressListener(uploadEventListener)
-    val putObjectRequest = request(localFile, bucket, batchMode, listener)
-
+  private def dispatch(
+      transferManager: AmazonTransferManager,
+      putObjectRequest: PutObjectRequest
+  ) = {
     transferManager
       .upload(putObjectRequest)
       .map(_.waitForUploadResult)
@@ -53,14 +57,16 @@ trait Uploader {
   private def request(
       localFile: LocalFile,
       bucket: Bucket,
-      batchMode: Boolean,
       listener: ProgressListener
-  ): PutObjectRequest = {
+  ) = {
     val request =
       new PutObjectRequest(bucket.name, localFile.remoteKey.key, localFile.file)
         .withMetadata(metadata(localFile))
-    if (batchMode) request
-    else request.withGeneralProgressListener(listener)
+    for {
+      batchMode <- Config.batchMode
+      r = if (batchMode) request
+      else request.withGeneralProgressListener(listener)
+    } yield r
   }
 
   private def metadata: LocalFile => ObjectMetadata = localFile => {

@@ -1,5 +1,6 @@
 package net.kemitix.thorp.storage.api
 
+import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.console.Console
 import net.kemitix.thorp.domain._
 import zio.{Task, TaskR, UIO, ZIO}
@@ -19,10 +20,9 @@ object Storage {
     def upload(
         localFile: LocalFile,
         bucket: Bucket,
-        batchMode: Boolean,
         uploadEventListener: UploadEventListener,
         tryCount: Int
-    ): ZIO[Storage, Nothing, StorageQueueEvent]
+    ): ZIO[Storage with Config, Nothing, StorageQueueEvent]
 
     def copy(
         bucket: Bucket,
@@ -57,7 +57,6 @@ object Storage {
       override def upload(
           localFile: LocalFile,
           bucket: Bucket,
-          batchMode: Boolean,
           uploadEventListener: UploadEventListener,
           tryCount: Int): ZIO[Storage, Nothing, StorageQueueEvent] =
         uploadResult
@@ -100,12 +99,11 @@ object Storage {
   final def upload(
       localFile: LocalFile,
       bucket: Bucket,
-      batchMode: Boolean,
       uploadEventListener: UploadEventListener,
       tryCount: Int
-  ): ZIO[Storage, Nothing, StorageQueueEvent] =
+  ): ZIO[Storage with Config, Nothing, StorageQueueEvent] =
     ZIO.accessM(
-      _.storage upload (localFile, bucket, batchMode, uploadEventListener, tryCount))
+      _.storage upload (localFile, bucket, uploadEventListener, tryCount))
 
   final def copy(
       bucket: Bucket,
