@@ -47,4 +47,21 @@ object Config {
 
   object Live extends Live
 
+  final def set(config: Configuration): ZIO[Config, Nothing, Unit] =
+    ZIO.accessM(_.config setConfiguration config)
+
+  final def batchMode: ZIO[Config, Nothing, Boolean] =
+    ZIO.accessM(_.config isBatchMode)
+
+  final def bucket: ZIO[Config, Nothing, Bucket] =
+    ZIO.accessM(_.config bucket)
+
+  final def prefix: ZIO[Config, Nothing, RemoteKey] =
+    ZIO.accessM(_.config prefix)
+
+  final def sources: ZIO[Config, Nothing, Sources] =
+    ZIO.accessM(_.config sources)
+
+  final def filters: ZIO[Config, Nothing, List[Filter]] =
+    ZIO.accessM(_.config filters)
 }

@@ -2,7 +2,7 @@ package net.kemitix.thorp.core
 
 import java.nio.file.Path
 
-import net.kemitix.thorp.config._
+import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.core.KeyGenerator.generateKey
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.filesystem.FileSystem
@@ -56,8 +56,8 @@ object LocalFileStream {
   private def localFile(hashService: HashService)(path: Path) = {
     val file = path.toFile
     for {
-      sources <- getSources
-      prefix  <- getPrefix
+      sources <- Config.sources
+      prefix  <- Config.prefix
       hash    <- hashService.hashLocalObject(path)
       localFile = LocalFile(file,
                             sources.forPath(path).toFile,
@@ -78,7 +78,7 @@ object LocalFileStream {
 
   private def isIncluded(path: Path) =
     for {
-      filters <- getFilters
+      filters <- Config.filters
     } yield Filter.isIncluded(filters)(path)
 
   private def pathToLocalFile(hashService: HashService)(path: Path) =

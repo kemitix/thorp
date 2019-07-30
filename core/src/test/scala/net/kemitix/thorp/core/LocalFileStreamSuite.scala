@@ -2,7 +2,13 @@ package net.kemitix.thorp.core
 
 import java.nio.file.Paths
 
-import net.kemitix.thorp.config._
+import net.kemitix.thorp.config.{
+  Config,
+  ConfigOption,
+  ConfigOptions,
+  ConfigurationBuilder,
+  Resource
+}
 import net.kemitix.thorp.console._
 import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.domain._
@@ -73,7 +79,7 @@ class LocalFileStreamSuite extends FunSpec {
     def testProgram =
       for {
         config <- ConfigurationBuilder.buildConfig(configOptions)
-        _      <- setConfiguration(config)
+        _      <- Config.set(config)
         files  <- LocalFileStream.findFiles(hashService)(sourcePath)
       } yield files
 

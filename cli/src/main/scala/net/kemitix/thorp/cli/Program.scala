@@ -16,7 +16,7 @@ trait Program {
     for {
       cli    <- CliArgs.parse(args)
       config <- ConfigurationBuilder.buildConfig(cli)
-      _      <- setConfiguration(config)
+      _      <- Config.set(config)
       _      <- ZIO.when(showVersion(cli))(Console.putStrLn(version))
       _      <- ZIO.when(!showVersion(cli))(execute.catchAll(handleErrors))
     } yield ()
@@ -28,7 +28,7 @@ trait Program {
   private def execute = {
     for {
       plan      <- PlanBuilder.createPlan(defaultHashService)
-      batchMode <- isBatchMode
+      batchMode <- Config.batchMode
       archive   <- UnversionedMirrorArchive.default(batchMode, plan.syncTotals)
       events    <- applyPlan(archive, plan)
       _         <- SyncLogging.logRunFinished(events)
