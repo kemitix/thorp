@@ -3,7 +3,7 @@ package net.kemitix.thorp.core
 import java.nio.file.Path
 
 import net.kemitix.thorp.domain.{RemoteKey, Sources}
-import net.kemitix.thorp.filesystem._
+import net.kemitix.thorp.filesystem.{FS, FileSystem}
 import zio.{TaskR, ZIO}
 
 object Remote {
@@ -19,7 +19,7 @@ object Remote {
   ): TaskR[FileSystem, Boolean] = {
     def existsInSource(source: Path) =
       remoteKey.asFile(source, prefix) match {
-        case Some(file) => fileExists(file)
+        case Some(file) => FS.exists(file)
         case None       => ZIO.succeed(false)
       }
     ZIO

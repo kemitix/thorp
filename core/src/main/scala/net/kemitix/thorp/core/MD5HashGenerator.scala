@@ -5,7 +5,7 @@ import java.nio.file.Path
 import java.security.MessageDigest
 
 import net.kemitix.thorp.domain.MD5Hash
-import net.kemitix.thorp.filesystem._
+import net.kemitix.thorp.filesystem.{FS, FileSystem}
 import zio.{Task, TaskR}
 
 import scala.collection.immutable.NumericRange
@@ -48,7 +48,7 @@ object MD5HashGenerator {
       offset: Long,
       endOffset: Long
   ) =
-    openFile(file, offset)
+    FS.open(file, offset)
       .flatMap { managedFileInputStream =>
         managedFileInputStream.use { fileInputStream =>
           digestFile(fileInputStream, offset, endOffset)
