@@ -1,5 +1,6 @@
 package net.kemitix.thorp.core
 
+import java.io.File
 import java.nio.file.Path
 
 import net.kemitix.thorp.config.Config
@@ -66,13 +67,17 @@ object LocalFileStream {
   private def listFiles(path: Path) =
     for {
       files <- Task(path.toFile.listFiles)
-      _ <- Task.when(files == null)(
-        Task.fail(new IllegalArgumentException(s"Directory not found $path")))
+      _     <- filesMustExist(path, files)
     } yield Stream(files: _*).map(_.toPath)
+
+  private def filesMustExist(path: Path, files: Array[File]) = {
+    Task.when(files == null)(
+      Task.fail(new IllegalArgumentException(s"Directory not found $path")))
+  }
 
   private def isIncluded(path: Path) =
     for {
       filters <- Config.filters
-    } yield Filter.isIncluded(filters)(path)
+    } yield Filter.isIncluded(path)(filters)
 
 }

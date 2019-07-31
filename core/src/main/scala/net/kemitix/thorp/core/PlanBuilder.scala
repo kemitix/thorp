@@ -77,10 +77,7 @@ trait PlanBuilder {
       else DoNothing(bucket, remoteKey, 0L)
 
   private def gatherMetadata =
-    for {
-      remoteData <- fetchRemoteData
-      localData  <- findLocalFiles
-    } yield (remoteData, localData)
+    fetchRemoteData &&& findLocalFiles
 
   private def fetchRemoteData =
     for {
@@ -95,8 +92,7 @@ trait PlanBuilder {
   private def findFiles =
     for {
       sources <- Config.sources
-      paths = sources.paths
-      found <- ZIO.foreach(paths)(path => LocalFileStream.findFiles(path))
+      found   <- ZIO.foreach(sources.paths)(LocalFileStream.findFiles)
     } yield LocalFiles.reduce(found.toStream)
 
 }
