@@ -14,7 +14,7 @@ object ConfigOption {
 
   case class Source(path: Path) extends ConfigOption {
     override def update(config: Configuration): Configuration =
-      sources.modify(_ ++ path)(config)
+      sources.modify(_ + path)(config)
   }
 
   case class Bucket(name: String) extends ConfigOption {
