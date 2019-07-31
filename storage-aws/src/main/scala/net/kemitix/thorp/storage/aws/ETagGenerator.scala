@@ -5,8 +5,8 @@ import java.nio.file.Path
 import com.amazonaws.services.s3.model.PutObjectRequest
 import com.amazonaws.services.s3.transfer.TransferManagerConfiguration
 import com.amazonaws.services.s3.transfer.internal.TransferManagerUtils
-import net.kemitix.thorp.core.MD5HashGenerator
-import net.kemitix.thorp.domain.MD5Hash
+import net.kemitix.thorp.core.{Hasher, MD5HashGenerator}
+import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.filesystem.FileSystem
 import zio.{TaskR, ZIO}
 
@@ -14,7 +14,7 @@ trait ETagGenerator {
 
   def eTag(
       path: Path
-  ): TaskR[FileSystem, String] = {
+  ): TaskR[Hasher with FileSystem, String] = {
     val partSize = calculatePartSize(path)
     val parts    = numParts(path.toFile.length, partSize)
     ZIO
@@ -51,14 +51,10 @@ trait ETagGenerator {
       path: Path,
       chunkSize: Long
   )(chunkNumber: Long) =
-    hashChunk(path, chunkNumber, chunkSize).map(_.digest)
-
-  def hashChunk(
-      path: Path,
-      chunkNumber: Long,
-      chunkSize: Long
-  ): TaskR[FileSystem, MD5Hash] =
-    MD5HashGenerator.md5FileChunk(path, chunkNumber * chunkSize, chunkSize)
+    Hasher
+      .hashObjectChunk(path, chunkNumber, chunkSize)
+      .map(_(MD5))
+      .map(_.digest)
 
   def offsets(
       totalFileSizeBytes: Long,

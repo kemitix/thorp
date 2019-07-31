@@ -18,6 +18,10 @@ object Hasher {
   trait Service {
     def hashObject(
         path: Path): TaskR[Hasher with FileSystem, Map[HashType, MD5Hash]]
+    def hashObjectChunk(
+        path: Path,
+        chunkNumber: Long,
+        chunkSize: Long): TaskR[Hasher with FileSystem, Map[HashType, MD5Hash]]
   }
   trait Live extends Hasher {
     val hasher: Service = new Service {
@@ -26,6 +30,16 @@ object Hasher {
         for {
           md5 <- MD5HashGenerator.md5File(path)
         } yield Map(MD5 -> md5)
+
+      override def hashObjectChunk(path: Path,
+                                   chunkNumber: Long,
+                                   chunkSize: Long)
+        : TaskR[Hasher with FileSystem, Map[HashType, MD5Hash]] =
+        for {
+          md5 <- MD5HashGenerator.md5FileChunk(path,
+                                               chunkNumber * chunkSize,
+                                               chunkSize)
+        } yield Map(MD5 -> md5)
     }
   }
   object Live extends Live
@@ -33,10 +47,19 @@ object Hasher {
   trait Test extends Hasher {
     val hashes: AtomicReference[Map[Path, Map[HashType, MD5Hash]]] =
       new AtomicReference(Map.empty)
+    val hashChunks
+      : AtomicReference[Map[Path, Map[Long, Map[HashType, MD5Hash]]]] =
+      new AtomicReference(Map.empty)
     val hasher: Service = new Service {
       override def hashObject(
           path: Path): TaskR[Hasher with FileSystem, Map[HashType, MD5Hash]] =
         ZIO(hashes.get()(path))
+
+      override def hashObjectChunk(path: Path,
+                                   chunkNumber: Long,
+                                   chunkSize: Long)
+        : TaskR[Hasher with FileSystem, Map[HashType, MD5Hash]] =
+        ZIO(hashChunks.get()(path)(chunkNumber))
     }
   }
   object Test extends Test
@@ -44,4 +67,10 @@ object Hasher {
   final def hashObject(
       path: Path): TaskR[Hasher with FileSystem, Map[HashType, MD5Hash]] =
     ZIO.accessM(_.hasher hashObject path)
+
+  final def hashObjectChunk(
+      path: Path,
+      chunkNumber: Long,
+      chunkSize: Long): TaskR[Hasher with FileSystem, Map[HashType, MD5Hash]] =
+    ZIO.accessM(_.hasher hashObjectChunk (path, chunkNumber, chunkSize))
 }
