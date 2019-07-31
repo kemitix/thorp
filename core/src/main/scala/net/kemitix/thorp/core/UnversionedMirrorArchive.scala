@@ -18,20 +18,11 @@ case class UnversionedMirrorArchive(syncTotals: SyncTotals)
   ): TaskR[Storage with Console with Config, StorageQueueEvent] =
     action match {
       case ToUpload(bucket, localFile, _) =>
-        for {
-          event <- doUpload(index, totalBytesSoFar, bucket, localFile)
-          _     <- logEvent(event)
-        } yield event
+        doUpload(index, totalBytesSoFar, bucket, localFile) >>= logEvent
       case ToCopy(bucket, sourceKey, hash, targetKey, _) =>
-        for {
-          event <- Storage.copy(bucket, sourceKey, hash, targetKey)
-          _     <- logEvent(event)
-        } yield event
+        Storage.copy(bucket, sourceKey, hash, targetKey) >>= logEvent
       case ToDelete(bucket, remoteKey, _) =>
-        for {
-          event <- Storage.delete(bucket, remoteKey)
-          _     <- logEvent(event)
-        } yield event
+        Storage.delete(bucket, remoteKey) >>= logEvent
       case DoNothing(_, remoteKey, _) =>
         Task(DoNothingQueueEvent(remoteKey))
     }

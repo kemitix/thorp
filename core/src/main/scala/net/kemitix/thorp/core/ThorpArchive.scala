@@ -27,7 +27,7 @@ trait ThorpArchive {
 
   def logEvent(
       event: StorageQueueEvent
-  ): TaskR[Console with Config, Unit] =
+  ): TaskR[Console with Config, StorageQueueEvent] =
     event match {
       case UploadQueueEvent(remoteKey, _) =>
         for {
@@ -37,7 +37,7 @@ trait ThorpArchive {
           _ <- TaskR.when(!batchMode)(
             Console.putStrLn(
               s"${GREEN}Uploaded:$RESET ${remoteKey.key}$eraseToEndOfScreen"))
-        } yield ()
+        } yield event
       case CopyQueueEvent(sourceKey, targetKey) =>
         for {
           batchMode <- Config.batchMode
@@ -47,7 +47,7 @@ trait ThorpArchive {
             Console.putStrLn(
               s"${GREEN}Copied:$RESET ${sourceKey.key} => ${targetKey.key}$eraseToEndOfScreen")
           )
-        } yield ()
+        } yield event
       case DeleteQueueEvent(remoteKey) =>
         for {
           batchMode <- Config.batchMode
@@ -55,7 +55,7 @@ trait ThorpArchive {
           _ <- TaskR.when(!batchMode)(
             Console.putStrLn(
               s"${GREEN}Deleted:$RESET ${remoteKey.key}$eraseToEndOfScreen"))
-        } yield ()
+        } yield event
       case ErrorQueueEvent(action, _, e) =>
         for {
           batchMode <- Config.batchMode
@@ -64,9 +64,9 @@ trait ThorpArchive {
               s"${action.name} failed: ${action.keys}: ${e.getMessage}"))
           _ <- TaskR.when(!batchMode)(Console.putStrLn(
             s"${RED}ERROR:$RESET ${action.name} ${action.keys}: ${e.getMessage}$eraseToEndOfScreen"))
-        } yield ()
-      case DoNothingQueueEvent(_) => TaskR(())
-      case ShutdownQueueEvent()   => TaskR(())
+        } yield event
+      case DoNothingQueueEvent(_) => TaskR(event)
+      case ShutdownQueueEvent()   => TaskR(event)
     }
 
 }

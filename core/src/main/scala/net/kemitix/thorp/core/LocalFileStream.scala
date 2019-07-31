@@ -19,7 +19,7 @@ object LocalFileStream {
         path: Path): TaskR[Config with FileSystem with Hasher, LocalFiles] =
       path.toFile match {
         case f if f.isDirectory => loop(path)
-        case _                  => pathToLocalFile(path)
+        case _                  => localFile(path)
       }
 
     def recurse(paths: Stream[Path])
@@ -29,22 +29,14 @@ object LocalFileStream {
       } yield LocalFiles.reduce(recursed.toStream)
 
     def loop(
-        path: Path): TaskR[Config with FileSystem with Hasher, LocalFiles] = {
-
-      for {
-        paths      <- dirPaths(path)
-        localFiles <- recurse(paths)
-      } yield localFiles
-    }
+        path: Path): TaskR[Config with FileSystem with Hasher, LocalFiles] =
+      dirPaths(path) >>= recurse
 
     loop(source)
   }
 
   private def dirPaths(path: Path) =
-    for {
-      paths    <- listFiles(path)
-      filtered <- includedDirPaths(paths)
-    } yield filtered
+    listFiles(path) >>= includedDirPaths
 
   private def includedDirPaths(paths: Stream[Path]) =
     for {
@@ -82,8 +74,5 @@ object LocalFileStream {
     for {
       filters <- Config.filters
     } yield Filter.isIncluded(filters)(path)
-
-  private def pathToLocalFile(path: Path) =
-    localFile(path)
 
 }

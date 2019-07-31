@@ -33,13 +33,11 @@ trait SyncLogging {
       actions: Stream[StorageQueueEvent]
   ): ZIO[Console, Nothing, Unit] = {
     val counters = actions.foldLeft(Counters())(countActivities)
-    for {
-      _ <- Console.putStrLn(eraseToEndOfScreen)
-      _ <- Console.putStrLn(s"Uploaded ${counters.uploaded} files")
-      _ <- Console.putStrLn(s"Copied   ${counters.copied} files")
-      _ <- Console.putStrLn(s"Deleted  ${counters.deleted} files")
-      _ <- Console.putStrLn(s"Errors   ${counters.errors}")
-    } yield ()
+    Console.putStrLn(eraseToEndOfScreen) *>
+      Console.putStrLn(s"Uploaded ${counters.uploaded} files") *>
+      Console.putStrLn(s"Copied   ${counters.copied} files") *>
+      Console.putStrLn(s"Deleted  ${counters.deleted} files") *>
+      Console.putStrLn(s"Errors   ${counters.errors}")
   }
 
   private def countActivities: (Counters, StorageQueueEvent) => Counters =

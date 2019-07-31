@@ -14,16 +14,10 @@ trait PlanBuilder {
   def createPlan
     : TaskR[Storage with Console with Config with FileSystem with Hasher,
             SyncPlan] =
-    for {
-      _       <- SyncLogging.logRunStart
-      actions <- buildPlan
-    } yield actions
+    SyncLogging.logRunStart *> buildPlan
 
   private def buildPlan =
-    for {
-      metadata <- gatherMetadata
-      plan     <- assemblePlan(metadata)
-    } yield plan
+    gatherMetadata >>= assemblePlan
 
   private def assemblePlan(metadata: (S3ObjectsData, LocalFiles)) =
     metadata match {
@@ -96,10 +90,7 @@ trait PlanBuilder {
     } yield objects
 
   private def findLocalFiles =
-    for {
-      _          <- SyncLogging.logFileScan
-      localFiles <- findFiles
-    } yield localFiles
+    SyncLogging.logFileScan *> findFiles
 
   private def findFiles =
     for {
