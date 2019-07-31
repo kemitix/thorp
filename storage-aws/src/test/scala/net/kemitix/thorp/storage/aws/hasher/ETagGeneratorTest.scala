@@ -1,10 +1,10 @@
-package net.kemitix.thorp.storage.aws
+package net.kemitix.thorp.storage.aws.hasher
 
 import java.nio.file.Path
 
 import com.amazonaws.services.s3.transfer.TransferManagerConfiguration
 import net.kemitix.thorp.config.Resource
-import net.kemitix.thorp.core.Hasher
+import net.kemitix.thorp.core.hasher.Hasher
 import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.filesystem.FileSystem
 import org.scalatest.FunSpec
@@ -14,7 +14,7 @@ class ETagGeneratorTest extends FunSpec {
 
   object TestEnv extends Hasher.Live with FileSystem.Live
 
-  private val bigFile       = Resource(this, "big-file")
+  private val bigFile       = Resource(this, "../big-file")
   private val bigFilePath   = bigFile.toPath
   private val configuration = new TransferManagerConfiguration
   private val chunkSize     = 1200000

@@ -1,12 +1,13 @@
-package net.kemitix.thorp.storage.aws
+package net.kemitix.thorp.storage.aws.hasher
 
 import java.nio.file.Path
 
-import net.kemitix.thorp.core.Hasher
-import net.kemitix.thorp.core.Hasher.Live.{hasher => CoreHasher}
-import net.kemitix.thorp.core.Hasher.Service
+import net.kemitix.thorp.core.hasher.Hasher
+import net.kemitix.thorp.core.hasher.Hasher.Live.{hasher => CoreHasher}
+import net.kemitix.thorp.core.hasher.Hasher.Service
 import net.kemitix.thorp.domain.{HashType, MD5Hash}
 import net.kemitix.thorp.filesystem.FileSystem
+import net.kemitix.thorp.storage.aws.ETag
 import zio.TaskR
 
 object S3Hasher {
@@ -32,6 +33,12 @@ object S3Hasher {
                                    chunkSize: Long)
         : TaskR[Hasher with FileSystem, Map[HashType, MD5Hash]] =
         CoreHasher.hashObjectChunk(path, chunkNumber, chunkSize)
+
+      override def hex(in: Array[Byte]): TaskR[Hasher, String] =
+        CoreHasher.hex(in)
+
+      override def digest(in: String): TaskR[Hasher, Array[Byte]] =
+        CoreHasher.digest(in)
     }
 
   }

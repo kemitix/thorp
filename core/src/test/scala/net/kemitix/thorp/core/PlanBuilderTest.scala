@@ -11,6 +11,7 @@ import net.kemitix.thorp.config.{
 }
 import net.kemitix.thorp.console._
 import net.kemitix.thorp.core.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
+import net.kemitix.thorp.core.hasher.Hasher
 import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.filesystem._

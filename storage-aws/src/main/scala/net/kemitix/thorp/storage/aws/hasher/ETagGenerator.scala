@@ -1,16 +1,16 @@
-package net.kemitix.thorp.storage.aws
+package net.kemitix.thorp.storage.aws.hasher
 
 import java.nio.file.Path
 
 import com.amazonaws.services.s3.model.PutObjectRequest
 import com.amazonaws.services.s3.transfer.TransferManagerConfiguration
 import com.amazonaws.services.s3.transfer.internal.TransferManagerUtils
-import net.kemitix.thorp.core.{Hasher, MD5HashGenerator}
+import net.kemitix.thorp.core.hasher.Hasher
 import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.filesystem.FileSystem
 import zio.{TaskR, ZIO}
 
-trait ETagGenerator {
+private trait ETagGenerator {
 
   def eTag(
       path: Path
@@ -20,7 +20,7 @@ trait ETagGenerator {
     ZIO
       .foreach(partsIndex(parts))(digestChunk(path, partSize))
       .map(concatenateDigests)
-      .map(MD5HashGenerator.hex)
+      .flatMap(Hasher.hex)
       .map(hash => s"$hash-$parts")
   }
 
@@ -63,4 +63,4 @@ trait ETagGenerator {
     Range.Long(0, totalFileSizeBytes, optimalPartSize).toList
 }
 
-object ETagGenerator extends ETagGenerator
+private object ETagGenerator extends ETagGenerator

@@ -4,6 +4,7 @@ import java.nio.file.Path
 
 import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.core.KeyGenerator.generateKey
+import net.kemitix.thorp.core.hasher.Hasher
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.filesystem.FileSystem
 import zio.{Task, TaskR, ZIO}

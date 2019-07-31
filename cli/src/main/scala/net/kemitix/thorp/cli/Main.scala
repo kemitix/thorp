@@ -3,7 +3,8 @@ package net.kemitix.thorp.cli
 import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.console.Console
 import net.kemitix.thorp.filesystem.FileSystem
-import net.kemitix.thorp.storage.aws.{S3Hasher, S3Storage}
+import net.kemitix.thorp.storage.aws.S3Storage
+import net.kemitix.thorp.storage.aws.hasher.S3Hasher
 import zio.{App, ZIO}
 
 object Main extends App {

@@ -1,4 +1,4 @@
-package net.kemitix.thorp.core
+package net.kemitix.thorp.core.hasher
 
 import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicReference
@@ -22,6 +22,8 @@ object Hasher {
         path: Path,
         chunkNumber: Long,
         chunkSize: Long): TaskR[Hasher with FileSystem, Map[HashType, MD5Hash]]
+    def hex(in: Array[Byte]): TaskR[Hasher, String]
+    def digest(in: String): TaskR[Hasher, Array[Byte]]
   }
   trait Live extends Hasher {
     val hasher: Service = new Service {
@@ -40,6 +42,12 @@ object Hasher {
                                                chunkNumber * chunkSize,
                                                chunkSize)
         } yield Map(MD5 -> md5)
+
+      override def hex(in: Array[Byte]): TaskR[Hasher, String] =
+        ZIO(MD5HashGenerator.hex(in))
+
+      override def digest(in: String): TaskR[Hasher, Array[Byte]] =
+        ZIO(MD5HashGenerator.digest(in))
     }
   }
   object Live extends Live
@@ -60,6 +68,12 @@ object Hasher {
                                    chunkSize: Long)
         : TaskR[Hasher with FileSystem, Map[HashType, MD5Hash]] =
         ZIO(hashChunks.get()(path)(chunkNumber))
+
+      override def hex(in: Array[Byte]): TaskR[Hasher, String] =
+        ZIO(MD5HashGenerator.hex(in))
+
+      override def digest(in: String): TaskR[Hasher, Array[Byte]] =
+        ZIO(MD5HashGenerator.digest(in))
     }
   }
   object Test extends Test
@@ -73,4 +87,10 @@ object Hasher {
       chunkNumber: Long,
       chunkSize: Long): TaskR[Hasher with FileSystem, Map[HashType, MD5Hash]] =
     ZIO.accessM(_.hasher hashObjectChunk (path, chunkNumber, chunkSize))
+
+  final def hex(in: Array[Byte]): TaskR[Hasher, String] =
+    ZIO.accessM(_.hasher hex in)
+
+  final def digest(in: String): TaskR[Hasher, Array[Byte]] =
+    ZIO.accessM(_.hasher digest in)
 }
