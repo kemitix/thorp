@@ -1,11 +1,5 @@
-package net.kemitix.thorp.core
+package net.kemitix.thorp.config
 
-import net.kemitix.thorp.config.{
-  ConfigOption,
-  ConfigOptions,
-  ConfigQuery,
-  ConfigurationBuilder
-}
 import net.kemitix.thorp.domain.Sources
 import net.kemitix.thorp.filesystem.FileSystem
 import org.scalatest.FunSpec

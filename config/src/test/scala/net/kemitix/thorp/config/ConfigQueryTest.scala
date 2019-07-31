@@ -1,8 +1,7 @@
-package net.kemitix.thorp.core
+package net.kemitix.thorp.config
 
 import java.nio.file.Paths
 
-import net.kemitix.thorp.config.{ConfigOption, ConfigOptions, ConfigQuery}
 import net.kemitix.thorp.domain.Sources
 import org.scalatest.FreeSpec
 

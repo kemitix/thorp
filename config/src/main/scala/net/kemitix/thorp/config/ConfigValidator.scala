@@ -22,17 +22,15 @@ sealed trait ConfigValidator {
 
   def validateSources(
       sources: Sources): Either[List[ConfigValidation], Sources] =
-    (for {
-      x <- sources.paths.foldLeft(List[ConfigValidation]()) {
-        (acc: List[ConfigValidation], path) =>
-          {
-            validateSource(path) match {
-              case Left(errors) => acc ++ errors
-              case Right(_)     => acc
-            }
+    sources.paths.foldLeft(List[ConfigValidation]()) {
+      (acc: List[ConfigValidation], path) =>
+        {
+          validateSource(path) match {
+            case Left(errors) => acc ++ errors
+            case Right(_)     => acc
           }
-      }
-    } yield x) match {
+        }
+    } match {
       case Nil    => Right(sources)
       case errors => Left(errors)
     }

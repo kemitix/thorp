@@ -17,10 +17,8 @@ trait ConfigurationBuilder {
 
   def buildConfig(priorityOpts: ConfigOptions)
     : ZIO[FileSystem, ConfigValidationException, Configuration] =
-    (for {
-      config <- getConfigOptions(priorityOpts).map(collateOptions)
-      valid  <- ConfigValidator.validateConfig(config)
-    } yield valid)
+    (getConfigOptions(priorityOpts).map(collateOptions) >>=
+      ConfigValidator.validateConfig)
       .catchAll(errors => ZIO.fail(ConfigValidationException(errors)))
 
   private def getConfigOptions(priorityOpts: ConfigOptions) =

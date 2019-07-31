@@ -3,22 +3,16 @@ package net.kemitix.thorp.config
 import java.nio.file.Paths
 import java.util.regex.Pattern
 
-import net.kemitix.thorp.config.ConfigOption.{
-  Bucket,
-  Debug,
-  Exclude,
-  Include,
-  Prefix,
-  Source
-}
+import net.kemitix.thorp.config.ConfigOption._
+import zio.UIO
 
 trait ParseConfigLines {
 
   private val pattern = "^\\s*(?<key>\\S*)\\s*=\\s*(?<value>\\S*)\\s*$"
   private val format  = Pattern.compile(pattern)
 
-  def parseLines(lines: List[String]): ConfigOptions =
-    ConfigOptions(lines.flatMap(parseLine))
+  def parseLines(lines: List[String]): UIO[ConfigOptions] =
+    UIO(ConfigOptions(lines.flatMap(parseLine)))
 
   private def parseLine(str: String) =
     format.matcher(str) match {
@@ -40,7 +34,7 @@ trait ParseConfigLines {
       case _         => None
     }
 
-  def truthy(value: String): Boolean =
+  private def truthy(value: String): Boolean =
     value.toLowerCase match {
       case "true"    => true
       case "yes"     => true

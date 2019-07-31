@@ -8,24 +8,16 @@ trait SourceConfigLoader {
 
   val thorpConfigFileName = ".thorp.conf"
 
-  def loadSourceConfigs
-    : Sources => ZIO[FileSystem, List[ConfigValidation], ConfigOptions] =
-    sources => {
-
-      val sourceConfigOptions =
-        ConfigOptions(sources.paths.map(ConfigOption.Source))
-
-      val reduce: List[ConfigOptions] => ConfigOptions =
-        _.foldLeft(sourceConfigOptions) { (acc, co) =>
+  def loadSourceConfigs(sources: Sources)
+    : ZIO[FileSystem, List[ConfigValidation], ConfigOptions] =
+    ZIO
+      .foreach(sources.paths) { path =>
+        ParseConfigFile.parseFile(path.resolve(thorpConfigFileName))
+      }
+      .map(_.foldLeft(ConfigOptions(sources.paths.map(ConfigOption.Source))) {
+        (acc, co) =>
           acc ++ co
-        }
-
-      ZIO
-        .foreach(sources.paths) { path =>
-          ParseConfigFile.parseFile(path.resolve(thorpConfigFileName))
-        }
-        .map(reduce)
-    }
+      })
 
 }
 
