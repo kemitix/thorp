@@ -25,21 +25,13 @@ class LocalFileStreamSuite extends FunSpec {
   private def file(filename: String) =
     sourcePath.resolve(Paths.get(filename))
 
-  private val configOptions = ConfigOptions(
-    List(
-      ConfigOption.IgnoreGlobalOptions,
-      ConfigOption.IgnoreUserOptions,
-      ConfigOption.Source(sourcePath),
-      ConfigOption.Bucket("aBucket")
-    ))
-
   describe("findFiles") {
     it("should find all files") {
       val expected = Right(Set("subdir/leaf-file", "root-file"))
       val result =
         invoke()
           .map(_.localFiles)
-          .map(localFiles => localFiles.map(_.relative.toString))
+          .map(_.map(_.relative.toString))
           .map(_.toSet)
       assertResult(expected)(result)
     }
@@ -79,7 +71,13 @@ class LocalFileStreamSuite extends FunSpec {
         file("root-file")        -> Map(MD5 -> MD5HashData.Root.hash),
         file("subdir/leaf-file") -> Map(MD5 -> MD5HashData.Leaf.hash)
       ))
-
+    val configOptions = ConfigOptions(
+      List(
+        ConfigOption.IgnoreGlobalOptions,
+        ConfigOption.IgnoreUserOptions,
+        ConfigOption.Source(sourcePath),
+        ConfigOption.Bucket("aBucket")
+      ))
     def testProgram =
       for {
         config <- ConfigurationBuilder.buildConfig(configOptions)
