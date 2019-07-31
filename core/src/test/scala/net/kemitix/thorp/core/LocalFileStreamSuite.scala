@@ -56,7 +56,11 @@ class LocalFileStreamSuite extends FunSpec {
   }
 
   private def invoke() = {
-    type TestEnv = Storage with Console with Config with FileSystem with Hasher
+    type TestEnv = Storage
+      with Console
+      with Config
+      with FileSystem
+      with Hasher.Test
     val testEnv: TestEnv = new Storage.Test with Console.Test with Config.Live
     with FileSystem.Live with Hasher.Test {
       override def listResult: Task[S3ObjectsData] =
@@ -70,7 +74,7 @@ class LocalFileStreamSuite extends FunSpec {
       override def shutdownResult: UIO[StorageQueueEvent] =
         Task.die(new NotImplementedError)
     }
-    Hasher.Test.hashes.set(
+    testEnv.hashes.set(
       Map(
         file("root-file")        -> Map(MD5 -> MD5HashData.Root.hash),
         file("subdir/leaf-file") -> Map(MD5 -> MD5HashData.Leaf.hash)
