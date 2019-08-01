@@ -75,58 +75,66 @@ object Terminal {
     *
     * Stops at the edge of the screen.
     */
-  def cursorUp(lines: Int = 1): String = csi + lines + "A"
+  def cursorUp(lines: Int): String = s"${csi}${lines}A"
+  def cursorUp(): String           = cursorUp(1)
 
   /**
     * Move the cursor down, default 1 line.
     *
     * Stops at the edge of the screen.
     */
-  def cursorDown(lines: Int = 1): String = csi + lines + "B"
+  def cursorDown(lines: Int): String = s"${csi}${lines}B"
+  def cursorDown(): String           = cursorDown(1)
 
   /**
     * Move the cursor forward, default 1 column.
     *
     * Stops at the edge of the screen.
     */
-  def cursorForward(cols: Int = 1): String = csi + cols + "C"
+  def cursorForward(cols: Int): String = s"${csi}${cols}C"
+  def cursorForward(): String          = cursorForward(1)
 
   /**
     * Move the cursor back, default 1 column,
     *
     * Stops at the edge of the screen.
     */
-  def cursorBack(cols: Int = 1): String = csi + cols + "D"
+  def cursorBack(cols: Int): String = s"${csi}${cols}D"
+  def cursorBack(): String          = cursorBack(1)
 
   /**
     * Move the cursor to the beginning of the line, default 1, down.
     */
-  def cursorNextLine(lines: Int = 1): String = csi + lines + "E"
+  def cursorNextLine(lines: Int): String = s"${csi}${lines}E"
+  def cursorNextLine(): String           = cursorNextLine(1)
 
   /**
     * Move the cursor to the beginning of the line, default 1, up.
     */
-  def cursorPrevLine(lines: Int = 1): String = csi + lines + "F"
+  def cursorPrevLine(lines: Int): String = s"${csi}${lines}F"
+  def cursorPrevLine(): String           = cursorPrevLine(1)
 
   /**
     * Move the cursor to the column on the current line.
     */
-  def cursorHorizAbs(col: Int): String = csi + col + "G"
+  def cursorHorizAbs(col: Int): String = s"${csi}${col}G"
 
   /**
     * Move the cursor to the position on screen (1,1 is the top-left).
     */
-  def cursorPosition(row: Int, col: Int): String = csi + row + ";" + col + "H"
+  def cursorPosition(row: Int, col: Int): String = s"${csi}${row};${col}H"
 
   /**
     * Scroll page up, default 1, lines.
     */
-  def scrollUp(lines: Int = 1): String = csi + lines + "S"
+  def scrollUp(lines: Int): String = s"${csi}${lines}S"
+  def scrollUp(): String           = scrollUp(1)
 
   /**
     * Scroll page down, default 1, lines.
     */
-  def scrollDown(lines: Int = 1): String = csi + lines + "T"
+  def scrollDown(lines: Int): String = s"${csi}${lines}T"
+  def scrollDown(): String           = scrollDown(1)
 
   /**
     * The Width of the terminal, as reported by the COLUMNS environment variable.

@@ -128,7 +128,7 @@ class MatchedMetadataEnricherSuite extends FunSpec {
                                               sourcePath,
                                               sources,
                                               prefix)
-        remoteObjects = RemoteObjects()
+        remoteObjects = RemoteObjects.empty
       } yield (theFile, remoteObjects)
       it("generates valid metadata") {
         env.map({

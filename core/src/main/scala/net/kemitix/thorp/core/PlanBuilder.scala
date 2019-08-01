@@ -35,7 +35,10 @@ object PlanBuilder {
         createActions(remoteObjects, localData.localFiles)
           .map(_.filter(doesSomething).sortBy(SequencePlan.order))
           .map(
-            SyncPlan(_, SyncTotals(localData.count, localData.totalSizeBytes)))
+            SyncPlan
+              .create(_,
+                      SyncTotals
+                        .create(localData.count, localData.totalSizeBytes, 0L)))
     }
 
   private def createActions(

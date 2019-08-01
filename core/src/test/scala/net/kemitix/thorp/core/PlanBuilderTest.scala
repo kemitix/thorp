@@ -22,7 +22,7 @@ import zio.{DefaultRuntime, Task, UIO}
 class PlanBuilderTest extends FreeSpec with TemporaryFolder {
 
   private val lastModified: LastModified = LastModified()
-  private val emptyRemoteObjects         = RemoteObjects()
+  private val emptyRemoteObjects         = RemoteObjects.empty
 
   "create a plan" - {
 
@@ -299,8 +299,10 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
           withDirectory(firstSource => {
             withDirectory(secondSource => {
               val expected = Right(List(toDelete(remoteKey1)))
-              val remoteObjects = RemoteObjects(byKey =
-                Map(remoteKey1 -> HashModified(MD5Hash(""), lastModified)))
+              val remoteObjects = RemoteObjects(
+                byHash = Map.empty,
+                byKey =
+                  Map(remoteKey1 -> HashModified(MD5Hash(""), lastModified)))
               val result =
                 invoke(options(firstSource)(secondSource),
                        UIO.succeed(remoteObjects),

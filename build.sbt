@@ -26,6 +26,7 @@ val commonSettings = Seq(
     "-language:postfixOps",
     "-language:higherKinds",
     "-Ypartial-unification"),
+  wartremoverErrors ++= Warts.allBut(Wart.Any, Wart.Nothing, Wart.Serializable),
   test in assembly := {}
 )
 

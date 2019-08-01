@@ -16,8 +16,11 @@ object FileSystem {
 
   trait Service {
     def fileExists(file: File): ZIO[FileSystem, Throwable, Boolean]
-    def openManagedFileInputStream(file: File, offset: Long = 0L)
+    def openManagedFileInputStream(file: File, offset: Long)
       : RIO[FileSystem, ZManaged[Any, Throwable, FileInputStream]]
+    def openManagedFileInputStream(file: File)
+      : RIO[FileSystem, ZManaged[Any, Throwable, FileInputStream]] =
+      openManagedFileInputStream(file, 0L)
     def fileLines(file: File): RIO[FileSystem, Seq[String]]
   }
   trait Live extends FileSystem {
@@ -32,7 +35,7 @@ object FileSystem {
         def acquire =
           Task {
             val stream = new FileInputStream(file)
-            stream skip offset
+            val l      = stream.skip(offset)
             stream
           }
 
@@ -74,9 +77,13 @@ object FileSystem {
   final def exists(file: File): ZIO[FileSystem, Throwable, Boolean] =
     ZIO.accessM(_.filesystem fileExists file)
 
-  final def open(file: File, offset: Long = 0)
+  final def open(file: File, offset: Long)
     : RIO[FileSystem, ZManaged[FileSystem, Throwable, FileInputStream]] =
     ZIO.accessM(_.filesystem openManagedFileInputStream (file, offset))
+
+  final def open(file: File)
+    : RIO[FileSystem, ZManaged[FileSystem, Throwable, FileInputStream]] =
+    open(file, 0L)
 
   final def lines(file: File): RIO[FileSystem, Seq[String]] =
     ZIO.accessM(_.filesystem fileLines (file))
