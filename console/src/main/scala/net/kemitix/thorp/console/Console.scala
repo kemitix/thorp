@@ -61,7 +61,7 @@ object Console {
   final def putMessageLn(line: ConsoleOut): ZIO[Console, Nothing, Unit] =
     ZIO.accessM(_.console putStrLn line)
 
-  final def putMessageLnB(
+  final def putMessageLn(
       line: ConsoleOut.WithBatchMode): ZIO[Console with Config, Nothing, Unit] =
     ZIO.accessM(line() >>= _.console.putStrLn)
 

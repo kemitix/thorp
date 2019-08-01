@@ -25,13 +25,13 @@ trait ThorpArchive {
       event: StorageQueueEvent): TaskR[Console with Config, StorageQueueEvent] =
     event match {
       case UploadQueueEvent(remoteKey, _) =>
-        ZIO(event) <* Console.putMessageLnB(UploadComplete(remoteKey))
+        ZIO(event) <* Console.putMessageLn(UploadComplete(remoteKey))
       case CopyQueueEvent(sourceKey, targetKey) =>
-        ZIO(event) <* Console.putMessageLnB(CopyComplete(sourceKey, targetKey))
+        ZIO(event) <* Console.putMessageLn(CopyComplete(sourceKey, targetKey))
       case DeleteQueueEvent(remoteKey) =>
-        ZIO(event) <* Console.putMessageLnB(DeleteComplete(remoteKey))
+        ZIO(event) <* Console.putMessageLn(DeleteComplete(remoteKey))
       case ErrorQueueEvent(action, _, e) =>
-        ZIO(event) <* Console.putMessageLnB(ErrorQueueEventOccurred(action, e))
+        ZIO(event) <* Console.putMessageLn(ErrorQueueEventOccurred(action, e))
       case DoNothingQueueEvent(_) => ZIO(event)
       case ShutdownQueueEvent()   => ZIO(event)
     }
