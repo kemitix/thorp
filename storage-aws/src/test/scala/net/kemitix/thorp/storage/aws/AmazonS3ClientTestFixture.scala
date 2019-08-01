@@ -34,9 +34,8 @@ trait AmazonS3ClientTestFixture extends MockFactory {
             bucket: Bucket,
             uploadEventListener: UploadEventListener,
         ): ZIO[Config, Nothing, StorageQueueEvent] =
-          Uploader.upload(transferManager)(localFile,
-                                           bucket,
-                                           uploadEventListener)
+          Uploader.upload(transferManager)(
+            Uploader.Request(localFile, bucket, uploadEventListener))
 
         override def copy(
             bucket: Bucket,

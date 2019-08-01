@@ -96,7 +96,8 @@ class UploaderTest extends FreeSpec with MockFactory {
       val testEnv: TestEnv = Config.Live
       new DefaultRuntime {}.unsafeRunSync {
         Uploader
-          .upload(transferManager)(localFile, bucket, uploadEventListener)
+          .upload(transferManager)(
+            Uploader.Request(localFile, bucket, uploadEventListener))
           .provide(testEnv)
       }.toEither
     }

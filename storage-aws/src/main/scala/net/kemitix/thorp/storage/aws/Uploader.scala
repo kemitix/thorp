@@ -18,23 +18,24 @@ import zio.{UIO, ZIO}
 
 trait Uploader {
 
-  def upload(transferManager: => AmazonTransferManager)(
+  case class Request(
       localFile: LocalFile,
       bucket: Bucket,
       uploadEventListener: UploadEventListener
-  ): ZIO[Config, Nothing, StorageQueueEvent] =
-    transfer(transferManager)(localFile, bucket, uploadEventListener)
-      .catchAll(handleError(localFile.remoteKey))
+  )
+
+  def upload(transferManager: => AmazonTransferManager)(
+      request: Request): ZIO[Config, Nothing, StorageQueueEvent] =
+    transfer(transferManager)(request)
+      .catchAll(handleError(request.localFile.remoteKey))
 
   private def handleError(remoteKey: RemoteKey)(e: Throwable) =
     UIO(ErrorQueueEvent(Action.Upload(remoteKey.key), remoteKey, e))
 
   private def transfer(transferManager: => AmazonTransferManager)(
-      localFile: LocalFile,
-      bucket: Bucket,
-      uploadEventListener: UploadEventListener
+      request: Request
   ) =
-    request(localFile, bucket, progressListener(uploadEventListener)) >>=
+    putObjectRequest(request) >>=
       dispatch(transferManager)
 
   private def dispatch(transferManager: AmazonTransferManager)(
@@ -48,18 +49,20 @@ trait Uploader {
                          MD5Hash(uploadResult.getETag)))
   }
 
-  private def request(
-      localFile: LocalFile,
-      bucket: Bucket,
-      listener: ProgressListener
+  private def putObjectRequest(
+      request: Request
   ) = {
-    val request =
-      new PutObjectRequest(bucket.name, localFile.remoteKey.key, localFile.file)
-        .withMetadata(metadata(localFile))
+    val putRequest =
+      new PutObjectRequest(request.bucket.name,
+                           request.localFile.remoteKey.key,
+                           request.localFile.file)
+        .withMetadata(metadata(request.localFile))
     for {
       batchMode <- Config.batchMode
-      r = if (batchMode) request
-      else request.withGeneralProgressListener(listener)
+      r = if (batchMode) putRequest
+      else
+        putRequest.withGeneralProgressListener(
+          progressListener(request.uploadEventListener))
     } yield r
   }
 
