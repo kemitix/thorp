@@ -17,12 +17,14 @@ private trait ETagGenerator {
   ): TaskR[Hasher with FileSystem, String] = {
     val partSize = calculatePartSize(path)
     val parts    = numParts(path.toFile.length, partSize)
-    ZIO
-      .foreach(partsIndex(parts))(digestChunk(path, partSize))
-      .map(concatenateDigests)
-      .flatMap(Hasher.hex)
+    eTagHex(path, partSize, parts)
       .map(hash => s"$hash-$parts")
   }
+
+  private def eTagHex(path: Path, partSize: Long, parts: Long) =
+    ZIO
+      .foreach(partsIndex(parts))(digestChunk(path, partSize))
+      .map(concatenateDigests) >>= Hasher.hex
 
   private def partsIndex(parts: Long) =
     Range.Long(0, parts, 1).toList

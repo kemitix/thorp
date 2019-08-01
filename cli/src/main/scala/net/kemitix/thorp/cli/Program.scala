@@ -38,7 +38,7 @@ trait Program {
       _ <- Console.putStrLn("There were errors:")
       _ <- throwable match {
         case ConfigValidationException(errors) =>
-          ZIO.foreach(errors)(error => Console.putStrLn(s"- $error"))
+          ZIO.foreach_(errors)(error => Console.putStrLn(s"- $error"))
       }
     } yield ()
 

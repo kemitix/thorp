@@ -48,13 +48,11 @@ private object MD5HashGenerator {
       offset: Long,
       endOffset: Long
   ) =
-    FileSystem
-      .open(file, offset)
-      .flatMap { managedFileInputStream =>
-        managedFileInputStream.use { fileInputStream =>
-          digestFile(fileInputStream, offset, endOffset)
-        }
+    FileSystem.open(file, offset) >>= { managedFileInputStream =>
+      managedFileInputStream.use { fileInputStream =>
+        digestFile(fileInputStream, offset, endOffset)
       }
+    }
 
   private def digestFile(
       fis: FileInputStream,
