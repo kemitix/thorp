@@ -6,24 +6,27 @@ import net.kemitix.thorp.domain.UploadEventLogger.{
   logRequestCycle
 }
 
-case class UploadEventListener(
-    localFile: LocalFile,
-    index: Int,
-    syncTotals: SyncTotals,
-    totalBytesSoFar: Long
-) {
+object UploadEventListener {
+
+  case class Settings(
+      localFile: LocalFile,
+      index: Int,
+      syncTotals: SyncTotals,
+      totalBytesSoFar: Long
+  )
 
   var bytesTransferred = 0L
 
-  def listener: UploadEvent => Unit = {
+  def listener(settings: Settings): UploadEvent => Unit = {
     case e: RequestEvent =>
       bytesTransferred += e.transferred
       logRequestCycle(
-        RequestCycle(localFile,
+        RequestCycle(settings.localFile,
                      bytesTransferred,
-                     index,
-                     syncTotals,
-                     totalBytesSoFar))
+                     settings.index,
+                     settings.syncTotals,
+                     settings.totalBytesSoFar))
     case _ => ()
   }
+
 }

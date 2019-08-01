@@ -20,7 +20,7 @@ object Storage {
     def upload(
         localFile: LocalFile,
         bucket: Bucket,
-        uploadEventListener: UploadEventListener,
+        listenerSettings: UploadEventListener.Settings,
     ): ZIO[Storage with Config, Nothing, StorageQueueEvent]
 
     def copy(
@@ -56,7 +56,7 @@ object Storage {
       override def upload(
           localFile: LocalFile,
           bucket: Bucket,
-          uploadEventListener: UploadEventListener
+          listenerSettings: UploadEventListener.Settings
       ): ZIO[Storage, Nothing, StorageQueueEvent] =
         uploadResult
 
@@ -98,9 +98,9 @@ object Storage {
   final def upload(
       localFile: LocalFile,
       bucket: Bucket,
-      uploadEventListener: UploadEventListener
+      listenerSettings: UploadEventListener.Settings
   ): ZIO[Storage with Config, Nothing, StorageQueueEvent] =
-    ZIO.accessM(_.storage upload (localFile, bucket, uploadEventListener))
+    ZIO.accessM(_.storage upload (localFile, bucket, listenerSettings))
 
   final def copy(
       bucket: Bucket,

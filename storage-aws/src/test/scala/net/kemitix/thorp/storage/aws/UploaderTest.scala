@@ -33,8 +33,8 @@ class UploaderTest extends FreeSpec with MockFactory {
     val inProgress = new AmazonUpload.InProgress {
       override def waitForUploadResult: UploadResult = uploadResult
     }
-    val uploadEventListener =
-      UploadEventListener(localFile, 0, SyncTotals(1, 0, 0), 0)
+    val listenerSettings =
+      UploadEventListener.Settings(localFile, 0, SyncTotals(1, 0, 0), 0)
     "when no error" in {
       val expected =
         Right(UploadQueueEvent(remoteKey, aHash))
@@ -46,7 +46,7 @@ class UploaderTest extends FreeSpec with MockFactory {
           invoke(fixture.amazonS3TransferManager)(
             localFile,
             bucket,
-            uploadEventListener
+            listenerSettings
           )
         assertResult(expected)(result)
       }
@@ -64,7 +64,7 @@ class UploaderTest extends FreeSpec with MockFactory {
           invoke(fixture.amazonS3TransferManager)(
             localFile,
             bucket,
-            uploadEventListener
+            listenerSettings
           )
         assertResult(expected)(result)
       }
@@ -82,7 +82,7 @@ class UploaderTest extends FreeSpec with MockFactory {
           invoke(fixture.amazonS3TransferManager)(
             localFile,
             bucket,
-            uploadEventListener
+            listenerSettings
           )
         assertResult(expected)(result)
       }
@@ -90,14 +90,14 @@ class UploaderTest extends FreeSpec with MockFactory {
     def invoke(transferManager: AmazonTransferManager)(
         localFile: LocalFile,
         bucket: Bucket,
-        uploadEventListener: UploadEventListener
+        listenerSettings: UploadEventListener.Settings
     ) = {
       type TestEnv = Config
       val testEnv: TestEnv = Config.Live
       new DefaultRuntime {}.unsafeRunSync {
         Uploader
           .upload(transferManager)(
-            Uploader.Request(localFile, bucket, uploadEventListener))
+            Uploader.Request(localFile, bucket, listenerSettings))
           .provide(testEnv)
       }.toEither
     }
