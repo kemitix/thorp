@@ -19,8 +19,7 @@ trait ThorpArchive {
   ): TaskR[Storage with Console with Config, StorageQueueEvent]
 
   def logEvent(
-      event: StorageQueueEvent
-  ): TaskR[Console with Config, StorageQueueEvent] =
+      event: StorageQueueEvent): TaskR[Console with Config, StorageQueueEvent] =
     event match {
       case UploadQueueEvent(remoteKey, _) =>
         ZIO(event) <* logMessage(
