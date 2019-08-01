@@ -25,28 +25,32 @@ trait AmazonS3ClientTestFixture extends MockFactory {
 
         override def listObjects(
             bucket: Bucket,
-            prefix: RemoteKey): TaskR[Console, S3ObjectsData] =
+            prefix: RemoteKey
+        ): TaskR[Console, S3ObjectsData] =
           Lister.listObjects(client)(bucket, prefix)
 
         override def upload(
             localFile: LocalFile,
             bucket: Bucket,
             uploadEventListener: UploadEventListener,
-            tryCount: Int): ZIO[Config, Nothing, StorageQueueEvent] =
+        ): ZIO[Config, Nothing, StorageQueueEvent] =
           Uploader.upload(transferManager)(localFile,
                                            bucket,
-                                           uploadEventListener,
-                                           1)
+                                           uploadEventListener)
 
-        override def copy(bucket: Bucket,
-                          sourceKey: RemoteKey,
-                          hash: MD5Hash,
-                          targetKey: RemoteKey): UIO[StorageQueueEvent] =
+        override def copy(
+            bucket: Bucket,
+            sourceKey: RemoteKey,
+            hash: MD5Hash,
+            targetKey: RemoteKey
+        ): UIO[StorageQueueEvent] =
           Copier.copy(client)(
             Copier.Request(bucket, sourceKey, hash, targetKey))
 
-        override def delete(bucket: Bucket,
-                            remoteKey: RemoteKey): UIO[StorageQueueEvent] =
+        override def delete(
+            bucket: Bucket,
+            remoteKey: RemoteKey
+        ): UIO[StorageQueueEvent] =
           Deleter.delete(client)(bucket, remoteKey)
 
         override def shutdown: UIO[StorageQueueEvent] = {

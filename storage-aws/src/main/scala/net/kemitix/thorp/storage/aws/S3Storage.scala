@@ -28,11 +28,8 @@ object S3Storage {
           localFile: LocalFile,
           bucket: Bucket,
           uploadEventListener: UploadEventListener,
-          tryCount: Int): ZIO[Config, Nothing, StorageQueueEvent] =
-        Uploader.upload(transferManager)(localFile,
-                                         bucket,
-                                         uploadEventListener,
-                                         1)
+      ): ZIO[Config, Nothing, StorageQueueEvent] =
+        Uploader.upload(transferManager)(localFile, bucket, uploadEventListener)
 
       override def copy(bucket: Bucket,
                         sourceKey: RemoteKey,

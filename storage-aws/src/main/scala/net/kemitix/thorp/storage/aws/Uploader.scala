@@ -21,8 +21,7 @@ trait Uploader {
   def upload(transferManager: => AmazonTransferManager)(
       localFile: LocalFile,
       bucket: Bucket,
-      uploadEventListener: UploadEventListener,
-      tryCount: Int
+      uploadEventListener: UploadEventListener
   ): ZIO[Config, Nothing, StorageQueueEvent] =
     transfer(transferManager)(localFile, bucket, uploadEventListener)
       .catchAll(handleError(localFile.remoteKey))

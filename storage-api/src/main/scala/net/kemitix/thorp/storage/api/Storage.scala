@@ -21,7 +21,6 @@ object Storage {
         localFile: LocalFile,
         bucket: Bucket,
         uploadEventListener: UploadEventListener,
-        tryCount: Int
     ): ZIO[Storage with Config, Nothing, StorageQueueEvent]
 
     def copy(
@@ -57,8 +56,8 @@ object Storage {
       override def upload(
           localFile: LocalFile,
           bucket: Bucket,
-          uploadEventListener: UploadEventListener,
-          tryCount: Int): ZIO[Storage, Nothing, StorageQueueEvent] =
+          uploadEventListener: UploadEventListener
+      ): ZIO[Storage, Nothing, StorageQueueEvent] =
         uploadResult
 
       override def copy(
@@ -99,11 +98,9 @@ object Storage {
   final def upload(
       localFile: LocalFile,
       bucket: Bucket,
-      uploadEventListener: UploadEventListener,
-      tryCount: Int
+      uploadEventListener: UploadEventListener
   ): ZIO[Storage with Config, Nothing, StorageQueueEvent] =
-    ZIO.accessM(
-      _.storage upload (localFile, bucket, uploadEventListener, tryCount))
+    ZIO.accessM(_.storage upload (localFile, bucket, uploadEventListener))
 
   final def copy(
       bucket: Bucket,
