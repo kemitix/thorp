@@ -13,35 +13,37 @@ object ActionGenerator {
   ): ZIO[Config, Nothing, Stream[Action]] =
     for {
       bucket <- Config.bucket
-    } yield
-      s3MetaData match {
-        // #1 local exists, remote exists, remote matches - do nothing
-        case S3MetaData(localFile, _, Some(RemoteMetaData(key, hash, _)))
-            if localFile.matches(hash) =>
-          doNothing(bucket, key)
-        // #2 local exists, remote is missing, other matches - copy
-        case S3MetaData(localFile, matchByHash, None) if matchByHash.nonEmpty =>
-          copyFile(bucket, localFile, matchByHash)
-        // #3 local exists, remote is missing, other no matches - upload
-        case S3MetaData(localFile, matchByHash, None)
-            if matchByHash.isEmpty &&
-              isUploadAlreadyQueued(previousActions)(localFile) =>
-          uploadFile(bucket, localFile)
-        // #4 local exists, remote exists, remote no match, other matches - copy
-        case S3MetaData(localFile,
-                        matchByHash,
-                        Some(RemoteMetaData(_, hash, _)))
-            if !localFile.matches(hash) &&
-              matchByHash.nonEmpty =>
-          copyFile(bucket, localFile, matchByHash)
-        // #5 local exists, remote exists, remote no match, other no matches - upload
-        case S3MetaData(localFile, matchByHash, Some(_))
-            if matchByHash.isEmpty =>
-          uploadFile(bucket, localFile)
-        // fallback
-        case S3MetaData(localFile, _, _) =>
-          doNothing(bucket, localFile.remoteKey)
-      }
+    } yield genAction(s3MetaData, previousActions, bucket)
+
+  private def genAction(s3MetaData: S3MetaData,
+                        previousActions: Stream[Action],
+                        bucket: Bucket): Stream[Action] = {
+    s3MetaData match {
+      // #1 local exists, remote exists, remote matches - do nothing
+      case S3MetaData(localFile, _, Some(RemoteMetaData(key, hash, _)))
+          if localFile.matches(hash) =>
+        doNothing(bucket, key)
+      // #2 local exists, remote is missing, other matches - copy
+      case S3MetaData(localFile, matchByHash, None) if matchByHash.nonEmpty =>
+        copyFile(bucket, localFile, matchByHash)
+      // #3 local exists, remote is missing, other no matches - upload
+      case S3MetaData(localFile, matchByHash, None)
+          if matchByHash.isEmpty &&
+            isUploadAlreadyQueued(previousActions)(localFile) =>
+        uploadFile(bucket, localFile)
+      // #4 local exists, remote exists, remote no match, other matches - copy
+      case S3MetaData(localFile, matchByHash, Some(RemoteMetaData(_, hash, _)))
+          if !localFile.matches(hash) &&
+            matchByHash.nonEmpty =>
+        copyFile(bucket, localFile, matchByHash)
+      // #5 local exists, remote exists, remote no match, other no matches - upload
+      case S3MetaData(localFile, matchByHash, Some(_)) if matchByHash.isEmpty =>
+        uploadFile(bucket, localFile)
+      // fallback
+      case S3MetaData(localFile, _, _) =>
+        doNothing(bucket, localFile.remoteKey)
+    }
+  }
 
   private def key = LocalFile.remoteKey ^|-> RemoteKey.key
 

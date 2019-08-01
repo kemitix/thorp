@@ -5,7 +5,6 @@ import net.kemitix.thorp.console._
 import net.kemitix.thorp.core.CoreTypes.CoreProgram
 import net.kemitix.thorp.core._
 import net.kemitix.thorp.domain.StorageQueueEvent
-import net.kemitix.thorp.storage.aws.S3HashService.defaultHashService
 import zio.ZIO
 
 trait Program {
@@ -27,7 +26,7 @@ trait Program {
 
   private def execute = {
     for {
-      plan    <- PlanBuilder.createPlan(defaultHashService)
+      plan    <- PlanBuilder.createPlan
       archive <- UnversionedMirrorArchive.default(plan.syncTotals)
       events  <- applyPlan(archive, plan)
       _       <- SyncLogging.logRunFinished(events)
@@ -39,7 +38,7 @@ trait Program {
       _ <- Console.putStrLn("There were errors:")
       _ <- throwable match {
         case ConfigValidationException(errors) =>
-          ZIO.foreach(errors)(error => Console.putStrLn(s"- $error"))
+          ZIO.foreach_(errors)(error => Console.putStrLn(s"- $error"))
       }
     } yield ()
 

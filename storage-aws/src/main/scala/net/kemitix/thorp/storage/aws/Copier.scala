@@ -14,48 +14,34 @@ import zio.{IO, Task, UIO}
 trait Copier {
 
   def copy(amazonS3: AmazonS3.Client)(
+      request: Request): UIO[StorageQueueEvent] =
+    copyObject(amazonS3)(request)
+      .fold(foldFailure(request.sourceKey, request.targetKey),
+            foldSuccess(request.sourceKey, request.targetKey))
+
+  case class Request(
       bucket: Bucket,
       sourceKey: RemoteKey,
       hash: MD5Hash,
       targetKey: RemoteKey
-  ): UIO[StorageQueueEvent] =
-    copyObject(amazonS3)(bucket, sourceKey, hash, targetKey)
-      .fold(foldFailure(sourceKey, targetKey),
-            foldSuccess(sourceKey, targetKey))
+  )
 
-  private def copyObject(amazonS3: AmazonS3.Client)(
-      bucket: Bucket,
-      sourceKey: RemoteKey,
-      hash: MD5Hash,
-      targetKey: RemoteKey
-  ): IO[S3ClientException, CopyObjectResult] = {
-
-    def handleResult
-      : Option[CopyObjectResult] => IO[S3ClientException, CopyObjectResult] =
-      maybeResult =>
-        IO.fromEither {
-          maybeResult
-            .toRight(HashError)
-      }
-
-    def handleError: Throwable => IO[S3ClientException, CopyObjectResult] =
-      error =>
-        Task.fail {
-          CopyError(error)
-      }
-
-    val request =
-      new CopyObjectRequest(
-        bucket.name,
-        sourceKey.key,
-        bucket.name,
-        targetKey.key
-      ).withMatchingETagConstraint(hash.hash)
+  private def copyObject(amazonS3: AmazonS3.Client)(request: Request) =
     amazonS3
-      .copyObject(request)
-      .fold(handleError, handleResult)
+      .copyObject(copyObjectRequest(request))
+      .fold(
+        error => Task.fail(CopyError(error)),
+        result => IO.fromEither(result.toRight(HashError))
+      )
       .flatten
-  }
+
+  private def copyObjectRequest(copyRequest: Request) =
+    new CopyObjectRequest(
+      copyRequest.bucket.name,
+      copyRequest.sourceKey.key,
+      copyRequest.bucket.name,
+      copyRequest.targetKey.key
+    ).withMatchingETagConstraint(copyRequest.hash.hash)
 
   private def foldFailure(
       sourceKey: RemoteKey,

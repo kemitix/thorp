@@ -18,7 +18,7 @@ object FileSystem {
     def fileExists(file: File): ZIO[FileSystem, Throwable, Boolean]
     def openManagedFileInputStream(file: File, offset: Long = 0L)
       : TaskR[FileSystem, ZManaged[Any, Throwable, FileInputStream]]
-    def fileLines(file: File): TaskR[FileSystem, List[String]]
+    def fileLines(file: File): TaskR[FileSystem, Seq[String]]
   }
   trait Live extends FileSystem {
     override val filesystem: Service = new Service {
@@ -42,17 +42,11 @@ object FileSystem {
         ZIO(ZManaged.make(acquire)(release))
       }
 
-      override def fileLines(file: File): TaskR[FileSystem, List[String]] = {
-
+      override def fileLines(file: File): TaskR[FileSystem, Seq[String]] = {
         def acquire = ZIO(Files.lines(file.toPath))
-
-        def release(lines: stream.Stream[String]) =
-          ZIO.effectTotal(lines.close())
-
         def use(lines: stream.Stream[String]) =
           ZIO.effectTotal(lines.iterator.asScala.toList)
-
-        ZIO.bracket(acquire)(release)(use)
+        acquire.bracketAuto(use)
       }
     }
   }
@@ -84,6 +78,6 @@ object FileSystem {
     : TaskR[FileSystem, ZManaged[FileSystem, Throwable, FileInputStream]] =
     ZIO.accessM(_.filesystem openManagedFileInputStream (file, offset))
 
-  final def lines(file: File): TaskR[FileSystem, List[String]] =
+  final def lines(file: File): TaskR[FileSystem, Seq[String]] =
     ZIO.accessM(_.filesystem fileLines (file))
 }

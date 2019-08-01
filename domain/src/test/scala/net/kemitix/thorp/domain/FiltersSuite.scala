@@ -86,7 +86,7 @@ class FiltersSuite extends FunSpec {
   }
   describe("isIncluded") {
     def invoke(filters: List[Filter]) = {
-      paths.filter(path => Filter.isIncluded(filters)(path))
+      paths.filter(path => Filter.isIncluded(path)(filters))
     }
 
     describe("when there are no filters") {

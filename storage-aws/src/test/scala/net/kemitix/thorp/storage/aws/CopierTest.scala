@@ -88,7 +88,8 @@ class CopierTest extends FreeSpec {
         amazonS3Client: AmazonS3.Client
     ) =
       runtime.unsafeRunSync {
-        Copier.copy(amazonS3Client)(bucket, sourceKey, hash, targetKey)
+        Copier.copy(amazonS3Client)(
+          Copier.Request(bucket, sourceKey, hash, targetKey))
       }.toEither
   }
 

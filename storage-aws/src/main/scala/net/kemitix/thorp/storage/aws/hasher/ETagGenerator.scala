@@ -1,28 +1,30 @@
-package net.kemitix.thorp.storage.aws
+package net.kemitix.thorp.storage.aws.hasher
 
 import java.nio.file.Path
 
 import com.amazonaws.services.s3.model.PutObjectRequest
 import com.amazonaws.services.s3.transfer.TransferManagerConfiguration
 import com.amazonaws.services.s3.transfer.internal.TransferManagerUtils
-import net.kemitix.thorp.core.MD5HashGenerator
-import net.kemitix.thorp.domain.MD5Hash
+import net.kemitix.thorp.core.hasher.Hasher
+import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.filesystem.FileSystem
 import zio.{TaskR, ZIO}
 
-trait ETagGenerator {
+private trait ETagGenerator {
 
   def eTag(
       path: Path
-  ): TaskR[FileSystem, String] = {
+  ): TaskR[Hasher with FileSystem, String] = {
     val partSize = calculatePartSize(path)
     val parts    = numParts(path.toFile.length, partSize)
-    ZIO
-      .foreach(partsIndex(parts))(digestChunk(path, partSize))
-      .map(concatenateDigests)
-      .map(MD5HashGenerator.hex)
+    eTagHex(path, partSize, parts)
       .map(hash => s"$hash-$parts")
   }
+
+  private def eTagHex(path: Path, partSize: Long, parts: Long) =
+    ZIO
+      .foreach(partsIndex(parts))(digestChunk(path, partSize))
+      .map(concatenateDigests) >>= Hasher.hex
 
   private def partsIndex(parts: Long) =
     Range.Long(0, parts, 1).toList
@@ -51,14 +53,10 @@ trait ETagGenerator {
       path: Path,
       chunkSize: Long
   )(chunkNumber: Long) =
-    hashChunk(path, chunkNumber, chunkSize).map(_.digest)
-
-  def hashChunk(
-      path: Path,
-      chunkNumber: Long,
-      chunkSize: Long
-  ): TaskR[FileSystem, MD5Hash] =
-    MD5HashGenerator.md5FileChunk(path, chunkNumber * chunkSize, chunkSize)
+    Hasher
+      .hashObjectChunk(path, chunkNumber, chunkSize)
+      .map(_(MD5))
+      .map(_.digest)
 
   def offsets(
       totalFileSizeBytes: Long,
@@ -67,4 +65,4 @@ trait ETagGenerator {
     Range.Long(0, totalFileSizeBytes, optimalPartSize).toList
 }
 
-object ETagGenerator extends ETagGenerator
+private object ETagGenerator extends ETagGenerator

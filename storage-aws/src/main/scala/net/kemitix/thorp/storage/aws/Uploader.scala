@@ -28,22 +28,17 @@ trait Uploader {
       .catchAll(handleError(localFile.remoteKey))
 
   private def handleError(remoteKey: RemoteKey)(e: Throwable) =
-    UIO.succeed(ErrorQueueEvent(Action.Upload(remoteKey.key), remoteKey, e))
+    UIO(ErrorQueueEvent(Action.Upload(remoteKey.key), remoteKey, e))
 
   private def transfer(transferManager: => AmazonTransferManager)(
       localFile: LocalFile,
       bucket: Bucket,
       uploadEventListener: UploadEventListener
-  ) = {
-    val listener = progressListener(uploadEventListener)
-    for {
-      putObjectRequest <- request(localFile, bucket, listener)
-      event            <- dispatch(transferManager, putObjectRequest)
-    } yield event
-  }
+  ) =
+    request(localFile, bucket, progressListener(uploadEventListener)) >>=
+      dispatch(transferManager)
 
-  private def dispatch(
-      transferManager: AmazonTransferManager,
+  private def dispatch(transferManager: AmazonTransferManager)(
       putObjectRequest: PutObjectRequest
   ) = {
     transferManager

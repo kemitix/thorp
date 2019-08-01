@@ -1,4 +1,4 @@
-package net.kemitix.thorp.core
+package net.kemitix.thorp.core.hasher
 
 import java.io.{File, FileInputStream}
 import java.nio.file.Path
@@ -10,7 +10,7 @@ import zio.{Task, TaskR}
 
 import scala.collection.immutable.NumericRange
 
-object MD5HashGenerator {
+private object MD5HashGenerator {
 
   val maxBufferSize = 8048
   val defaultBuffer = new Array[Byte](maxBufferSize)
@@ -48,13 +48,11 @@ object MD5HashGenerator {
       offset: Long,
       endOffset: Long
   ) =
-    FileSystem
-      .open(file, offset)
-      .flatMap { managedFileInputStream =>
-        managedFileInputStream.use { fileInputStream =>
-          digestFile(fileInputStream, offset, endOffset)
-        }
+    FileSystem.open(file, offset) >>= { managedFileInputStream =>
+      managedFileInputStream.use { fileInputStream =>
+        digestFile(fileInputStream, offset, endOffset)
       }
+    }
 
   private def digestFile(
       fis: FileInputStream,

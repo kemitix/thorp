@@ -7,7 +7,7 @@ sealed trait Filter
 
 object Filter {
 
-  def isIncluded(filters: List[Filter])(p: Path): Boolean = {
+  def isIncluded(p: Path)(filters: List[Filter]): Boolean = {
     sealed trait State
     case class Unknown()   extends State
     case class Accepted()  extends State

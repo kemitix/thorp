@@ -1,13 +1,7 @@
-package net.kemitix.thorp.core
+package net.kemitix.thorp.config
 
 import java.nio.file.{Path, Paths}
 
-import net.kemitix.thorp.config.{
-  ConfigOption,
-  ConfigOptions,
-  ParseConfigFile,
-  Resource
-}
 import net.kemitix.thorp.filesystem.FileSystem
 import org.scalatest.FunSpec
 import zio.DefaultRuntime

@@ -32,11 +32,7 @@ trait Lister {
       token => request.withContinuationToken(token)
 
     def fetchBatch: ListObjectsV2Request => TaskR[Console, Batch] =
-      request =>
-        for {
-          _     <- ListerLogger.logFetchBatch
-          batch <- tryFetchBatch(amazonS3)(request)
-        } yield batch
+      request => ListerLogger.logFetchBatch *> tryFetchBatch(amazonS3)(request)
 
     def fetchMore: Option[Token] => TaskR[Console, Stream[S3ObjectSummary]] = {
       case None        => TaskR.succeed(Stream.empty)

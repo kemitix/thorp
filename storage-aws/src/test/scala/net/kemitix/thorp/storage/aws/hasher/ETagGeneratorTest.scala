@@ -1,18 +1,20 @@
-package net.kemitix.thorp.storage.aws
+package net.kemitix.thorp.storage.aws.hasher
 
 import java.nio.file.Path
 
 import com.amazonaws.services.s3.transfer.TransferManagerConfiguration
 import net.kemitix.thorp.config.Resource
+import net.kemitix.thorp.core.hasher.Hasher
+import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.filesystem.FileSystem
 import org.scalatest.FunSpec
 import zio.DefaultRuntime
 
 class ETagGeneratorTest extends FunSpec {
 
-  private val runtime = new DefaultRuntime {}
+  object TestEnv extends Hasher.Live with FileSystem.Live
 
-  private val bigFile       = Resource(this, "big-file")
+  private val bigFile       = Resource(this, "../big-file")
   private val bigFilePath   = bigFile.toPath
   private val configuration = new TransferManagerConfiguration
   private val chunkSize     = 1200000
@@ -41,14 +43,16 @@ class ETagGeneratorTest extends FunSpec {
       md5Hashes.foreach {
         case (hash, index) =>
           assertResult(Right(hash))(
-            invoke(bigFilePath, index, chunkSize).map(_.hash))
+            invoke(bigFilePath, index, chunkSize)
+              .map(_(MD5))
+              .map(_.hash))
       }
     }
     def invoke(path: Path, index: Long, size: Long) =
       new DefaultRuntime {}.unsafeRunSync {
-        ETagGenerator
-          .hashChunk(path, index, size)
-          .provide(FileSystem.Live)
+        Hasher
+          .hashObjectChunk(path, index, size)
+          .provide(TestEnv)
       }.toEither
   }
 
@@ -58,12 +62,13 @@ class ETagGeneratorTest extends FunSpec {
       val result = invoke(bigFilePath)
       assertResult(Right(expected))(result)
     }
-    def invoke(path: Path) =
+    def invoke(path: Path) = {
       new DefaultRuntime {}.unsafeRunSync {
         ETagGenerator
           .eTag(path)
-          .provide(FileSystem.Live)
+          .provide(TestEnv)
       }.toEither
+    }
   }
 
 }
