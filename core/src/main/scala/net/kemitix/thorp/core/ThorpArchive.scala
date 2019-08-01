@@ -37,8 +37,8 @@ trait ThorpArchive {
         ZIO(event) <* logMessage(
           s"${action.name} failed: ${action.keys}: ${e.getMessage}",
           s"${RED}ERROR:$RESET ${action.name} ${action.keys}: ${e.getMessage}$eraseToEndOfScreen")
-      case DoNothingQueueEvent(_) => TaskR(event)
-      case ShutdownQueueEvent()   => TaskR(event)
+      case DoNothingQueueEvent(_) => ZIO(event)
+      case ShutdownQueueEvent()   => ZIO(event)
     }
 
   private def logMessage(
@@ -47,18 +47,11 @@ trait ThorpArchive {
   ): ZIO[Console with Config, Nothing, Unit] = {
     for {
       batchMode <- Config.batchMode
-      _ <- alternative(batchMode)(
-        Console.putStrLn(batchModeMessage),
+      _ <- if (batchMode)
+        Console.putStrLn(batchModeMessage)
+      else
         Console.putStrLn(normalMessage)
-      )
     } yield ()
   }
-
-  private def alternative[R, E, A](b: Boolean)(
-      whenTrue: ZIO[R, E, A],
-      whenFalse: ZIO[R, E, A]
-  ) =
-    if (b) whenTrue.const(())
-    else whenFalse.const(())
 
 }
