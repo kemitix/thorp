@@ -8,7 +8,7 @@ import zio.{IO, TaskR, ZIO}
 trait ParseConfigFile {
 
   def parseFile(
-      filename: Path): ZIO[FileSystem, List[ConfigValidation], ConfigOptions] =
+      filename: Path): ZIO[FileSystem, Seq[ConfigValidation], ConfigOptions] =
     (readFile(filename) >>= ParseConfigLines.parseLines)
       .catchAll(
         h =>
@@ -19,9 +19,9 @@ trait ParseConfigFile {
     FileSystem.exists(filename.toFile) >>= readLines(filename)
 
   private def readLines(filename: Path)(
-      exists: Boolean): TaskR[FileSystem, List[String]] =
+      exists: Boolean): TaskR[FileSystem, Seq[String]] =
     if (exists) FileSystem.lines(filename.toFile)
-    else ZIO.succeed(List.empty)
+    else ZIO.succeed(Seq.empty)
 
 }
 

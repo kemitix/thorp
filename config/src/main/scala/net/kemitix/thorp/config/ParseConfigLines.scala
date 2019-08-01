@@ -11,8 +11,8 @@ trait ParseConfigLines {
   private val pattern = "^\\s*(?<key>\\S*)\\s*=\\s*(?<value>\\S*)\\s*$"
   private val format  = Pattern.compile(pattern)
 
-  def parseLines(lines: List[String]): UIO[ConfigOptions] =
-    UIO(ConfigOptions(lines.flatMap(parseLine)))
+  def parseLines(lines: Seq[String]): UIO[ConfigOptions] =
+    UIO(ConfigOptions(lines.flatMap(parseLine).toList))
 
   private def parseLine(str: String) =
     format.matcher(str) match {

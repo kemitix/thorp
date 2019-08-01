@@ -122,7 +122,7 @@ lazy val config = (project in file("config"))
   .settings(testDependencies)
   .settings(commandLineParsing)
   .settings(assemblyJarName in assembly := "config.jar")
-  .dependsOn(domain)
+  .dependsOn(domain % "compile->compile;test->test")
   .dependsOn(filesystem)
 
 lazy val filesystem = (project in file("filesystem"))
