@@ -1,14 +1,17 @@
 package net.kemitix.thorp.core
 
 import net.kemitix.thorp.config.Config
+import net.kemitix.thorp.console.ConsoleOut.{
+  CopyComplete,
+  DeleteComplete,
+  ErrorQueueEventOccurred,
+  UploadComplete
+}
 import net.kemitix.thorp.console._
 import net.kemitix.thorp.domain.StorageQueueEvent
 import net.kemitix.thorp.domain.StorageQueueEvent._
-import net.kemitix.thorp.domain.Terminal._
 import net.kemitix.thorp.storage.api.Storage
 import zio.{TaskR, ZIO}
-
-import scala.io.AnsiColor._
 
 trait ThorpArchive {
 
@@ -22,36 +25,15 @@ trait ThorpArchive {
       event: StorageQueueEvent): TaskR[Console with Config, StorageQueueEvent] =
     event match {
       case UploadQueueEvent(remoteKey, _) =>
-        ZIO(event) <* logMessage(
-          s"Uploaded: ${remoteKey.key}",
-          s"${GREEN}Uploaded:$RESET ${remoteKey.key}$eraseToEndOfScreen")
+        ZIO(event) <* Console.putMessageLnB(UploadComplete(remoteKey))
       case CopyQueueEvent(sourceKey, targetKey) =>
-        ZIO(event) <* logMessage(
-          s"Copied: ${sourceKey.key} => ${targetKey.key}",
-          s"${GREEN}Copied:$RESET ${sourceKey.key} => ${targetKey.key}$eraseToEndOfScreen")
+        ZIO(event) <* Console.putMessageLnB(CopyComplete(sourceKey, targetKey))
       case DeleteQueueEvent(remoteKey) =>
-        ZIO(event) <* logMessage(
-          s"Deleted: $remoteKey",
-          s"${GREEN}Deleted:$RESET ${remoteKey.key}$eraseToEndOfScreen")
+        ZIO(event) <* Console.putMessageLnB(DeleteComplete(remoteKey))
       case ErrorQueueEvent(action, _, e) =>
-        ZIO(event) <* logMessage(
-          s"${action.name} failed: ${action.keys}: ${e.getMessage}",
-          s"${RED}ERROR:$RESET ${action.name} ${action.keys}: ${e.getMessage}$eraseToEndOfScreen")
+        ZIO(event) <* Console.putMessageLnB(ErrorQueueEventOccurred(action, e))
       case DoNothingQueueEvent(_) => ZIO(event)
       case ShutdownQueueEvent()   => ZIO(event)
     }
-
-  private def logMessage(
-      batchModeMessage: String,
-      normalMessage: String
-  ): ZIO[Console with Config, Nothing, Unit] = {
-    for {
-      batchMode <- Config.batchMode
-      _ <- if (batchMode)
-        Console.putStrLn(batchModeMessage)
-      else
-        Console.putStrLn(normalMessage)
-    } yield ()
-  }
 
 }
