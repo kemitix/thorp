@@ -21,7 +21,7 @@ trait Uploader {
   case class Request(
       localFile: LocalFile,
       bucket: Bucket,
-      uploadEventListener: UploadEventListener
+      uploadEventListener: UploadEventListener.Settings
   )
 
   def upload(transferManager: => AmazonTransferManager)(
@@ -72,11 +72,13 @@ trait Uploader {
     metadata
   }
 
-  private def progressListener: UploadEventListener => ProgressListener =
-    uploadEventListener =>
+  private def progressListener
+    : UploadEventListener.Settings => ProgressListener =
+    listenerSettings =>
       new ProgressListener {
         override def progressChanged(progressEvent: ProgressEvent): Unit =
-          uploadEventListener.listener(eventHandler(progressEvent))
+          UploadEventListener.listener(listenerSettings)(
+            eventHandler(progressEvent))
 
         private def eventHandler: ProgressEvent => UploadEvent =
           progressEvent => {

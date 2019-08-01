@@ -33,10 +33,12 @@ case class UnversionedMirrorArchive(syncTotals: SyncTotals)
       bucket: Bucket,
       localFile: LocalFile
   ) =
-    Storage.upload(
-      localFile,
-      bucket,
-      UploadEventListener(localFile, index, syncTotals, totalBytesSoFar))
+    Storage.upload(localFile,
+                   bucket,
+                   UploadEventListener.Settings(localFile,
+                                                index,
+                                                syncTotals,
+                                                totalBytesSoFar))
 }
 
 object UnversionedMirrorArchive {
