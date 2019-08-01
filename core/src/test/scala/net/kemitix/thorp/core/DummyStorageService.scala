@@ -20,10 +20,11 @@ case class DummyStorageService(s3ObjectData: S3ObjectsData,
   ): TaskR[Console, S3ObjectsData] =
     TaskR(s3ObjectData)
 
-  override def upload(localFile: LocalFile,
-                      bucket: Bucket,
-                      uploadEventListener: UploadEventListener,
-                      tryCount: Int): UIO[StorageQueueEvent] = {
+  override def upload(
+      localFile: LocalFile,
+      bucket: Bucket,
+      uploadEventListener: UploadEventListener,
+  ): UIO[StorageQueueEvent] = {
     val (remoteKey, md5Hash) = uploadFiles(localFile.file)
     UIO(StorageQueueEvent.UploadQueueEvent(remoteKey, md5Hash))
   }

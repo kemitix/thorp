@@ -27,7 +27,6 @@ class UploaderTest extends FreeSpec with MockFactory {
     val remoteKey     = RemoteKey("aRemoteKey")
     val localFile     = LocalFile(aFile, aSource, hashes, remoteKey)
     val bucket        = Bucket("aBucket")
-    val tryCount      = 1
     val uploadResult  = new UploadResult
     uploadResult.setKey(remoteKey.key)
     uploadResult.setETag(aHash.hash)
@@ -47,8 +46,7 @@ class UploaderTest extends FreeSpec with MockFactory {
           invoke(fixture.amazonS3TransferManager)(
             localFile,
             bucket,
-            uploadEventListener,
-            tryCount
+            uploadEventListener
           )
         assertResult(expected)(result)
       }
@@ -66,8 +64,7 @@ class UploaderTest extends FreeSpec with MockFactory {
           invoke(fixture.amazonS3TransferManager)(
             localFile,
             bucket,
-            uploadEventListener,
-            tryCount
+            uploadEventListener
           )
         assertResult(expected)(result)
       }
@@ -85,8 +82,7 @@ class UploaderTest extends FreeSpec with MockFactory {
           invoke(fixture.amazonS3TransferManager)(
             localFile,
             bucket,
-            uploadEventListener,
-            tryCount
+            uploadEventListener
           )
         assertResult(expected)(result)
       }
@@ -94,19 +90,14 @@ class UploaderTest extends FreeSpec with MockFactory {
     def invoke(transferManager: AmazonTransferManager)(
         localFile: LocalFile,
         bucket: Bucket,
-        uploadEventListener: UploadEventListener,
-        tryCount: Int
+        uploadEventListener: UploadEventListener
     ) = {
       type TestEnv = Config
       val testEnv: TestEnv = Config.Live
       new DefaultRuntime {}.unsafeRunSync {
         Uploader
           .upload(transferManager)(
-            localFile,
-            bucket,
-            uploadEventListener,
-            tryCount
-          )
+            Uploader.Request(localFile, bucket, uploadEventListener))
           .provide(testEnv)
       }.toEither
     }
