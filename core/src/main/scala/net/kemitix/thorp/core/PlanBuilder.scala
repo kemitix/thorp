@@ -9,7 +9,7 @@ import net.kemitix.thorp.filesystem.FileSystem
 import net.kemitix.thorp.storage.api.Storage
 import zio.{TaskR, ZIO}
 
-trait PlanBuilder {
+object PlanBuilder {
 
   def createPlan
     : TaskR[Storage with Console with Config with FileSystem with Hasher,
@@ -92,5 +92,3 @@ trait PlanBuilder {
     } yield LocalFiles.reduce(found.toStream)
 
 }
-
-object PlanBuilder extends PlanBuilder
