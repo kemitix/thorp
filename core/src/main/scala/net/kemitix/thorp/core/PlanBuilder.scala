@@ -19,10 +19,20 @@ trait PlanBuilder {
   private def buildPlan =
     gatherMetadata >>= assemblePlan
 
+  private def gatherMetadata =
+    fetchRemoteData &&& findLocalFiles
+
+  private def fetchRemoteData =
+    for {
+      bucket  <- Config.bucket
+      prefix  <- Config.prefix
+      objects <- Storage.list(bucket, prefix)
+    } yield objects
+
   private def assemblePlan(metadata: (S3ObjectsData, LocalFiles)) =
     metadata match {
       case (remoteData, localData) =>
-        createActions(remoteData, localData)
+        createActions(remoteData, localData.localFiles)
           .map(_.filter(doesSomething).sortBy(SequencePlan.order))
           .map(
             SyncPlan(_, SyncTotals(localData.count, localData.totalSizeBytes)))
@@ -30,11 +40,11 @@ trait PlanBuilder {
 
   private def createActions(
       remoteData: S3ObjectsData,
-      localData: LocalFiles
+      localFiles: Stream[LocalFile]
   ) =
     for {
-      fileActions   <- actionsForLocalFiles(remoteData, localData)
-      remoteActions <- actionsForRemoteKeys(remoteData)
+      fileActions   <- actionsForLocalFiles(remoteData, localFiles)
+      remoteActions <- actionsForRemoteKeys(remoteData.byKey.keys)
     } yield fileActions ++ remoteActions
 
   private def doesSomething: Action => Boolean = {
@@ -44,12 +54,10 @@ trait PlanBuilder {
 
   private def actionsForLocalFiles(
       remoteData: S3ObjectsData,
-      localData: LocalFiles
+      localFiles: Stream[LocalFile]
   ) =
-    ZIO.foldLeft(localData.localFiles)(Stream.empty[Action])(
-      (acc, localFile) =>
-        createActionFromLocalFile(remoteData, acc, localFile)
-          .map(actions => actions ++ acc))
+    ZIO.foldLeft(localFiles)(Stream.empty[Action])((acc, localFile) =>
+      createActionFromLocalFile(remoteData, acc, localFile).map(_ ++ acc))
 
   private def createActionFromLocalFile(
       remoteData: S3ObjectsData,
@@ -60,11 +68,9 @@ trait PlanBuilder {
       S3MetaDataEnricher.getMetadata(localFile, remoteData),
       previousActions)
 
-  private def actionsForRemoteKeys(remoteData: S3ObjectsData) =
-    ZIO.foldLeft(remoteData.byKey.keys)(Stream.empty[Action]) {
-      (acc, remoteKey) =>
-        createActionFromRemoteKey(remoteKey).map(action => action #:: acc)
-    }
+  private def actionsForRemoteKeys(remoteKeys: Iterable[RemoteKey]) =
+    ZIO.foldLeft(remoteKeys)(Stream.empty[Action])((acc, remoteKey) =>
+      createActionFromRemoteKey(remoteKey).map(_ #:: acc))
 
   private def createActionFromRemoteKey(remoteKey: RemoteKey) =
     for {
@@ -75,16 +81,6 @@ trait PlanBuilder {
     } yield
       if (needsDeleted) ToDelete(bucket, remoteKey, 0L)
       else DoNothing(bucket, remoteKey, 0L)
-
-  private def gatherMetadata =
-    fetchRemoteData &&& findLocalFiles
-
-  private def fetchRemoteData =
-    for {
-      bucket  <- Config.bucket
-      prefix  <- Config.prefix
-      objects <- Storage.list(bucket, prefix)
-    } yield objects
 
   private def findLocalFiles =
     SyncLogging.logFileScan *> findFiles
