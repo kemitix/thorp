@@ -12,18 +12,17 @@ case class UnversionedMirrorArchive(syncTotals: SyncTotals)
     extends ThorpArchive {
 
   override def update(
-      index: Int,
-      action: Action,
+      sequencedAction: SequencedAction,
       totalBytesSoFar: Long
   ): TaskR[Storage with Console with Config, StorageQueueEvent] =
-    action match {
-      case ToUpload(bucket, localFile, _) =>
+    sequencedAction match {
+      case SequencedAction(ToUpload(bucket, localFile, _), index) =>
         doUpload(index, totalBytesSoFar, bucket, localFile) >>= logEvent
-      case ToCopy(bucket, sourceKey, hash, targetKey, _) =>
+      case SequencedAction(ToCopy(bucket, sourceKey, hash, targetKey, _), _) =>
         Storage.copy(bucket, sourceKey, hash, targetKey) >>= logEvent
-      case ToDelete(bucket, remoteKey, _) =>
+      case SequencedAction(ToDelete(bucket, remoteKey, _), _) =>
         Storage.delete(bucket, remoteKey) >>= logEvent
-      case DoNothing(_, remoteKey, _) =>
+      case SequencedAction(DoNothing(_, remoteKey, _), _) =>
         Task(DoNothingQueueEvent(remoteKey))
     }
 
@@ -33,12 +32,16 @@ case class UnversionedMirrorArchive(syncTotals: SyncTotals)
       bucket: Bucket,
       localFile: LocalFile
   ) =
-    Storage.upload(localFile,
-                   bucket,
-                   UploadEventListener.Settings(localFile,
-                                                index,
-                                                syncTotals,
-                                                totalBytesSoFar))
+    Storage.upload(
+      localFile,
+      bucket,
+      UploadEventListener.Settings(
+        localFile,
+        index,
+        syncTotals,
+        totalBytesSoFar
+      )
+    )
 }
 
 object UnversionedMirrorArchive {

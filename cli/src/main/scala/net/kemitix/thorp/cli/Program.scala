@@ -4,7 +4,6 @@ import net.kemitix.thorp.config._
 import net.kemitix.thorp.console._
 import net.kemitix.thorp.core.CoreTypes.CoreProgram
 import net.kemitix.thorp.core._
-import net.kemitix.thorp.domain.StorageQueueEvent
 import zio.ZIO
 
 trait Program {
@@ -24,50 +23,42 @@ trait Program {
   private def showVersion: ConfigOptions => Boolean =
     cli => ConfigQuery.showVersion(cli)
 
-  private def execute = {
+  private def execute =
     for {
       plan    <- PlanBuilder.createPlan
       archive <- UnversionedMirrorArchive.default(plan.syncTotals)
       events  <- applyPlan(archive, plan)
       _       <- SyncLogging.logRunFinished(events)
     } yield ()
-  }
 
   private def handleErrors(throwable: Throwable) =
-    for {
-      _ <- Console.putStrLn("There were errors:")
-      _ <- throwable match {
-        case ConfigValidationException(errors) =>
-          ZIO.foreach_(errors)(error => Console.putStrLn(s"- $error"))
-      }
-    } yield ()
+    Console.putStrLn("There were errors:") *> logValidationErrors(throwable)
 
-  private def applyPlan(
-      archive: ThorpArchive,
-      syncPlan: SyncPlan
-  ) = {
-    val zero: (Stream[StorageQueueEvent], Long) =
-      (Stream(), syncPlan.syncTotals.totalSizeBytes)
-    val actions = syncPlan.actions.zipWithIndex
+  private def logValidationErrors(throwable: Throwable) =
+    throwable match {
+      case ConfigValidationException(errors) =>
+        ZIO.foreach_(errors)(error => Console.putStrLn(s"- $error"))
+    }
+
+  private def applyPlan(archive: ThorpArchive, syncPlan: SyncPlan) =
     ZIO
-      .foldLeft(actions)(zero)((acc, action) =>
-        applyAction(archive, acc, action))
-      .map {
-        case (events, _) => events
-      }
-  }
+      .foldLeft(sequenceActions(syncPlan.actions))(
+        EventQueue(Stream.empty, syncPlan.syncTotals.totalSizeBytes))(
+        applyAction(archive)(_, _))
+      .map(_.events)
 
-  private def applyAction(
-      archive: ThorpArchive,
-      acc: (Stream[StorageQueueEvent], Long),
-      indexedAction: (Action, Int)
+  private def sequenceActions(actions: Stream[Action]) =
+    actions.zipWithIndex
+      .map({ case (a, i) => SequencedAction(a, i) })
+
+  private def applyAction(archive: ThorpArchive)(
+      queue: EventQueue,
+      action: SequencedAction
   ) = {
-    val (action, index)           = indexedAction
-    val (queuedEvents, bytesToDo) = acc
-    val remainingBytes            = bytesToDo - action.size
+    val remainingBytes = queue.bytesInQueue - action.action.size
     archive
-      .update(index, action, remainingBytes)
-      .map(events => (queuedEvents ++ Stream(events), remainingBytes))
+      .update(action, remainingBytes)
+      .map(events => EventQueue(queue.events ++ Stream(events), remainingBytes))
   }
 
 }
