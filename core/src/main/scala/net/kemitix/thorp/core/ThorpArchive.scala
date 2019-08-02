@@ -16,8 +16,7 @@ import zio.{TaskR, ZIO}
 trait ThorpArchive {
 
   def update(
-      index: Int,
-      action: Action,
+      sequencedAction: SequencedAction,
       totalBytesSoFar: Long
   ): TaskR[Storage with Console with Config, StorageQueueEvent]
 
