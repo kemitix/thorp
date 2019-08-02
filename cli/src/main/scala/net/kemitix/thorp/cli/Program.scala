@@ -62,23 +62,13 @@ trait Program {
       acc: (Stream[StorageQueueEvent], Long),
       indexedAction: (Action, Int)
   ) = {
-    val (action, index)     = indexedAction
-    val (stream, bytesToDo) = acc
-    val remainingBytes      = bytesToDo - action.size
-    updateArchive(archive, action, index, stream, remainingBytes)
-      .map((_, remainingBytes))
+    val (action, index)           = indexedAction
+    val (queuedEvents, bytesToDo) = acc
+    val remainingBytes            = bytesToDo - action.size
+    archive
+      .update(index, action, remainingBytes)
+      .map(events => (queuedEvents ++ Stream(events), remainingBytes))
   }
-
-  private def updateArchive(
-      archive: ThorpArchive,
-      action: Action,
-      index: Int,
-      stream: Stream[StorageQueueEvent],
-      remainingBytes: Long
-  ) =
-    for {
-      event <- archive.update(index, action, remainingBytes)
-    } yield stream ++ Stream(event)
 
 }
 
