@@ -7,6 +7,7 @@ import com.amazonaws.services.s3.transfer.TransferManagerConfiguration
 import com.amazonaws.services.s3.transfer.internal.TransferManagerUtils
 import net.kemitix.thorp.core.hasher.Hasher
 import net.kemitix.thorp.domain.HashType.MD5
+import net.kemitix.thorp.domain.MD5Hash
 import net.kemitix.thorp.filesystem.FileSystem
 import zio.{TaskR, ZIO}
 
@@ -56,7 +57,7 @@ private trait ETagGenerator {
     Hasher
       .hashObjectChunk(path, chunkNumber, chunkSize)
       .map(_(MD5))
-      .map(_.digest)
+      .map(MD5Hash.digest)
 
   def offsets(
       totalFileSizeBytes: Long,
