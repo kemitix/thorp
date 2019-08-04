@@ -10,11 +10,7 @@ final case class LocalFile private (
     source: File,
     hashes: Map[HashType, MD5Hash],
     remoteKey: RemoteKey
-) {
-
-  def md5base64: Option[String] = hashes.get(MD5).map(_.hash64)
-
-}
+)
 
 object LocalFile {
   val remoteKey: SimpleLens[LocalFile, RemoteKey] =
@@ -25,4 +21,6 @@ object LocalFile {
     localFile.source.toPath.relativize(localFile.file.toPath)
   def matchesHash(localFile: LocalFile)(other: MD5Hash): Boolean =
     localFile.hashes.values.exists(other equals _)
+  def md5base64(localFile: LocalFile): Option[String] =
+    localFile.hashes.get(MD5).map(_.hash64)
 }
