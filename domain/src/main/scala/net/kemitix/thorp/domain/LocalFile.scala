@@ -5,14 +5,12 @@ import java.nio.file.Path
 
 import net.kemitix.thorp.domain.HashType.MD5
 
-final case class LocalFile(
+final case class LocalFile private (
     file: File,
     source: File,
     hashes: Map[HashType, MD5Hash],
     remoteKey: RemoteKey
 ) {
-
-  require(!file.isDirectory, s"LocalFile must not be a directory: $file")
 
   def isDirectory: Boolean = file.isDirectory
 
@@ -26,20 +24,6 @@ final case class LocalFile(
 }
 
 object LocalFile {
-
-  def resolve(
-      path: String,
-      md5Hashes: Map[HashType, MD5Hash],
-      source: Path,
-      pathToKey: Path => RemoteKey
-  ): LocalFile = {
-    val resolvedPath = source.resolve(path)
-    LocalFile(resolvedPath.toFile,
-              source.toFile,
-              md5Hashes,
-              pathToKey(resolvedPath))
-  }
-
   val remoteKey: SimpleLens[LocalFile, RemoteKey] =
     SimpleLens[LocalFile, RemoteKey](_.remoteKey,
                                      b => a => b.copy(remoteKey = a))

@@ -38,11 +38,13 @@ trait TemporaryFolder {
     path.resolve(name).toFile
   }
 
-  def writeFile(directory: Path, name: String, contents: String*): Unit = {
+  def writeFile(directory: Path, name: String, contents: String*): File = {
     directory.toFile.mkdirs
-    val pw = new PrintWriter(directory.resolve(name).toFile, "UTF-8")
-    contents.foreach(pw.println)
-    pw.close()
+    val file   = directory.resolve(name).toFile
+    val writer = new PrintWriter(file, "UTF-8")
+    contents.foreach(writer.println)
+    writer.close()
+    file
   }
 
 }
