@@ -12,9 +12,6 @@ final case class LocalFile private (
     remoteKey: RemoteKey
 ) {
 
-  // the path of the file within the source
-  def relative: Path = source.toPath.relativize(file.toPath)
-
   def matches(other: MD5Hash): Boolean = hashes.values.exists(other equals _)
 
   def md5base64: Option[String] = hashes.get(MD5).map(_.hash64)
@@ -25,4 +22,7 @@ object LocalFile {
   val remoteKey: SimpleLens[LocalFile, RemoteKey] =
     SimpleLens[LocalFile, RemoteKey](_.remoteKey,
                                      b => a => b.copy(remoteKey = a))
+  // the path of the file within the source
+  def relativeToSource(localFile: LocalFile): Path =
+    localFile.source.toPath.relativize(localFile.file.toPath)
 }
