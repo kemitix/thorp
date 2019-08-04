@@ -6,6 +6,7 @@ import com.amazonaws.services.s3.transfer.TransferManagerConfiguration
 import net.kemitix.thorp.config.Resource
 import net.kemitix.thorp.core.hasher.Hasher
 import net.kemitix.thorp.domain.HashType.MD5
+import net.kemitix.thorp.domain.MD5Hash
 import net.kemitix.thorp.filesystem.FileSystem
 import org.scalatest.FunSpec
 import zio.DefaultRuntime
@@ -45,7 +46,7 @@ class ETagGeneratorTest extends FunSpec {
           assertResult(Right(hash))(
             invoke(bigFilePath, index, chunkSize)
               .map(_(MD5))
-              .map(_.hash))
+              .map(MD5Hash.hash))
       }
     }
     def invoke(path: Path, index: Long, size: Long) =
