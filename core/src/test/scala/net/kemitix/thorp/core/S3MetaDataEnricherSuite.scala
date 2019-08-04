@@ -68,7 +68,7 @@ class S3MetaDataEnricherSuite extends FunSpec {
                                               md5HashMap(theHash),
                                               sourcePath,
                                               fileToKey)
-        theRemoteKey: RemoteKey = prefix.resolve("the-file")
+        theRemoteKey: RemoteKey = RemoteKey.resolve("the-file")(prefix)
         s3: S3ObjectsData = S3ObjectsData(
           byHash = Map(theHash     -> Set(KeyModified(theRemoteKey, lastModified))),
           byKey = Map(theRemoteKey -> HashModified(theHash, lastModified))
@@ -148,7 +148,7 @@ class S3MetaDataEnricherSuite extends FunSpec {
                                               fileToKey)
         theRemoteKey   = theFile.remoteKey
         oldHash        = MD5Hash("old-hash")
-        otherRemoteKey = prefix.resolve("other-key")
+        otherRemoteKey = RemoteKey.resolve("other-key")(prefix)
         s3: S3ObjectsData = S3ObjectsData(
           byHash =
             Map(oldHash -> Set(KeyModified(theRemoteKey, lastModified)),

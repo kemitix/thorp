@@ -68,7 +68,7 @@ class ActionGeneratorSuite extends FunSpec {
                                               sourcePath,
                                               fileToKey)
         theRemoteKey   = theFile.remoteKey
-        otherRemoteKey = prefix.resolve("other-key")
+        otherRemoteKey = RemoteKey.resolve("other-key")(prefix)
         otherRemoteMetadata = RemoteMetaData(otherRemoteKey,
                                              theHash,
                                              lastModified)
@@ -125,7 +125,7 @@ class ActionGeneratorSuite extends FunSpec {
                                               fileToKey)
         theRemoteKey   = theFile.remoteKey
         oldHash        = MD5Hash("old-hash")
-        otherRemoteKey = prefix.resolve("other-key")
+        otherRemoteKey = RemoteKey.resolve("other-key")(prefix)
         otherRemoteMetadata = RemoteMetaData(otherRemoteKey,
                                              theHash,
                                              lastModified)
