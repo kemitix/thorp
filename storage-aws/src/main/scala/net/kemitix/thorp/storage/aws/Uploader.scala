@@ -77,8 +77,7 @@ trait Uploader {
     listenerSettings =>
       new ProgressListener {
         override def progressChanged(progressEvent: ProgressEvent): Unit =
-          UploadEventListener.listener(listenerSettings)(
-            eventHandler(progressEvent))
+          UploadEventListener(listenerSettings)(eventHandler(progressEvent))
 
         private def eventHandler: ProgressEvent => UploadEvent =
           progressEvent => {
