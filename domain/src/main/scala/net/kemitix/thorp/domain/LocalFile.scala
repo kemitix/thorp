@@ -12,8 +12,6 @@ final case class LocalFile private (
     remoteKey: RemoteKey
 ) {
 
-  def matches(other: MD5Hash): Boolean = hashes.values.exists(other equals _)
-
   def md5base64: Option[String] = hashes.get(MD5).map(_.hash64)
 
 }
@@ -25,4 +23,6 @@ object LocalFile {
   // the path of the file within the source
   def relativeToSource(localFile: LocalFile): Path =
     localFile.source.toPath.relativize(localFile.file.toPath)
+  def matchesHash(localFile: LocalFile)(other: MD5Hash): Boolean =
+    localFile.hashes.values.exists(other equals _)
 }
