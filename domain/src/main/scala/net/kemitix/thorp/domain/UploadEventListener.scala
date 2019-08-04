@@ -15,18 +15,20 @@ object UploadEventListener {
       totalBytesSoFar: Long
   )
 
-  var bytesTransferred = 0L
-
-  def listener(settings: Settings): UploadEvent => Unit = {
-    case e: RequestEvent =>
-      bytesTransferred += e.transferred
-      logRequestCycle(
-        RequestCycle(settings.localFile,
-                     bytesTransferred,
-                     settings.index,
-                     settings.syncTotals,
-                     settings.totalBytesSoFar))
-    case _ => ()
-  }
+  def apply(settings: Settings): UploadEvent => Unit =
+    uploadEvent => {
+      var bytesTransferred = 0L
+      uploadEvent match {
+        case e: RequestEvent =>
+          bytesTransferred += e.transferred
+          logRequestCycle(
+            RequestCycle(settings.localFile,
+                         bytesTransferred,
+                         settings.index,
+                         settings.syncTotals,
+                         settings.totalBytesSoFar))
+        case _ => ()
+      }
+    }
 
 }
