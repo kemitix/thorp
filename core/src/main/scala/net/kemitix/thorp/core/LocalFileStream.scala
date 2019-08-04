@@ -78,6 +78,6 @@ object LocalFileStream {
   private def isIncluded(path: Path) =
     for {
       filters <- Config.filters
-    } yield Filter.isIncluded(path)(filters)
+    } yield Filters.isIncluded(path)(filters)
 
 }
