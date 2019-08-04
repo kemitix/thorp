@@ -12,8 +12,6 @@ final case class LocalFile private (
     remoteKey: RemoteKey
 ) {
 
-  def isDirectory: Boolean = file.isDirectory
-
   // the path of the file within the source
   def relative: Path = source.toPath.relativize(file.toPath)
 
