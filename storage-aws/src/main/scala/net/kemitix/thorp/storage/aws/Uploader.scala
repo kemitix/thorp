@@ -68,7 +68,7 @@ trait Uploader {
 
   private def metadata: LocalFile => ObjectMetadata = localFile => {
     val metadata = new ObjectMetadata()
-    localFile.md5base64.foreach(metadata.setContentMD5)
+    LocalFile.md5base64(localFile).foreach(metadata.setContentMD5)
     metadata
   }
 

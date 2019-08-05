@@ -29,7 +29,7 @@ class UploaderTest extends FreeSpec with MockFactory {
     val bucket        = Bucket("aBucket")
     val uploadResult  = new UploadResult
     uploadResult.setKey(remoteKey.key)
-    uploadResult.setETag(aHash.hash)
+    uploadResult.setETag(MD5Hash.hash(aHash))
     val inProgress = new AmazonUpload.InProgress {
       override def waitForUploadResult: UploadResult = uploadResult
     }

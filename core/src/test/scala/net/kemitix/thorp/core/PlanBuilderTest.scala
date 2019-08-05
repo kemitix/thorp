@@ -333,13 +333,17 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
                        md5Hash: MD5Hash,
                        source: Path,
                        file: File): (String, String, String, String, String) =
-    ("upload", remoteKey.key, md5Hash.hash, source.toString, file.toString)
+    ("upload",
+     remoteKey.key,
+     MD5Hash.hash(md5Hash),
+     source.toString,
+     file.toString)
 
   private def toCopy(
       sourceKey: RemoteKey,
       md5Hash: MD5Hash,
       targetKey: RemoteKey): (String, String, String, String, String) =
-    ("copy", sourceKey.key, md5Hash.hash, targetKey.key, "")
+    ("copy", sourceKey.key, MD5Hash.hash(md5Hash), targetKey.key, "")
 
   private def toDelete(
       remoteKey: RemoteKey): (String, String, String, String, String) =
@@ -386,12 +390,12 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
       case ToUpload(_, lf, _) =>
         ("upload",
          lf.remoteKey.key,
-         lf.hashes(MD5).hash,
+         MD5Hash.hash(lf.hashes(MD5)),
          lf.source.toString,
          lf.file.toString)
       case ToDelete(_, remoteKey, _) => ("delete", remoteKey.key, "", "", "")
       case ToCopy(_, sourceKey, hash, targetKey, _) =>
-        ("copy", sourceKey.key, hash.hash, targetKey.key, "")
+        ("copy", sourceKey.key, MD5Hash.hash(hash), targetKey.key, "")
       case DoNothing(_, remoteKey, _) =>
         ("do-nothing", remoteKey.key, "", "", "")
       case x => ("other", x.toString, "", "", "")

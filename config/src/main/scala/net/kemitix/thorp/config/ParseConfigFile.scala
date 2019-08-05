@@ -1,6 +1,6 @@
 package net.kemitix.thorp.config
 
-import java.nio.file.Path
+import java.io.File
 
 import net.kemitix.thorp.filesystem.FileSystem
 import zio.{IO, TaskR, ZIO}
@@ -8,19 +8,14 @@ import zio.{IO, TaskR, ZIO}
 trait ParseConfigFile {
 
   def parseFile(
-      filename: Path): ZIO[FileSystem, Seq[ConfigValidation], ConfigOptions] =
-    (readFile(filename) >>= ParseConfigLines.parseLines)
-      .catchAll(
-        h =>
-          IO.fail(
-            List(ConfigValidation.ErrorReadingFile(filename, h.getMessage))))
+      file: File): ZIO[FileSystem, Seq[ConfigValidation], ConfigOptions] =
+    (FileSystem.exists(file) >>= readLines(file) >>= ParseConfigLines.parseLines)
+      .catchAll(h =>
+        IO.fail(List(ConfigValidation.ErrorReadingFile(file, h.getMessage))))
 
-  private def readFile(filename: Path) =
-    FileSystem.exists(filename.toFile) >>= readLines(filename)
-
-  private def readLines(filename: Path)(
+  private def readLines(file: File)(
       exists: Boolean): TaskR[FileSystem, Seq[String]] =
-    if (exists) FileSystem.lines(filename.toFile)
+    if (exists) FileSystem.lines(file)
     else ZIO.succeed(Seq.empty)
 
 }

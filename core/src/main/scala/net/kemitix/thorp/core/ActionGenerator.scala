@@ -21,7 +21,7 @@ object ActionGenerator {
     s3MetaData match {
       // #1 local exists, remote exists, remote matches - do nothing
       case S3MetaData(localFile, _, Some(RemoteMetaData(key, hash, _)))
-          if localFile.matches(hash) =>
+          if LocalFile.matchesHash(localFile)(hash) =>
         doNothing(bucket, key)
       // #2 local exists, remote is missing, other matches - copy
       case S3MetaData(localFile, matchByHash, None) if matchByHash.nonEmpty =>
@@ -33,7 +33,7 @@ object ActionGenerator {
         uploadFile(bucket, localFile)
       // #4 local exists, remote exists, remote no match, other matches - copy
       case S3MetaData(localFile, matchByHash, Some(RemoteMetaData(_, hash, _)))
-          if !localFile.matches(hash) &&
+          if !LocalFile.matchesHash(localFile)(hash) &&
             matchByHash.nonEmpty =>
         copyFile(bucket, localFile, matchByHash)
       // #5 local exists, remote exists, remote no match, other no matches - upload

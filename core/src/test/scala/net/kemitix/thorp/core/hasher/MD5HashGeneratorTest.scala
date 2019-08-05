@@ -3,6 +3,7 @@ package net.kemitix.thorp.core.hasher
 import java.nio.file.Path
 
 import net.kemitix.thorp.config.Resource
+import net.kemitix.thorp.domain.MD5Hash
 import net.kemitix.thorp.domain.MD5HashData.{BigFile, Root}
 import net.kemitix.thorp.filesystem.FileSystem
 import org.scalatest.FunSpec
@@ -42,14 +43,14 @@ class MD5HashGeneratorTest extends FunSpec {
       val path = Resource(this, "../big-file").toPath
       it("should generate the correct hash for first chunk of the file") {
         val part1    = BigFile.Part1
-        val expected = Right(part1.hash.hash)
-        val result   = invoke(path, part1.offset, part1.size).map(_.hash)
+        val expected = Right(MD5Hash.hash(part1.hash))
+        val result   = invoke(path, part1.offset, part1.size).map(MD5Hash.hash)
         assertResult(expected)(result)
       }
       it("should generate the correct hash for second chunk of the file") {
         val part2    = BigFile.Part2
-        val expected = Right(part2.hash.hash)
-        val result   = invoke(path, part2.offset, part2.size).map(_.hash)
+        val expected = Right(MD5Hash.hash(part2.hash))
+        val result   = invoke(path, part2.offset, part2.size).map(MD5Hash.hash)
         assertResult(expected)(result)
       }
     }

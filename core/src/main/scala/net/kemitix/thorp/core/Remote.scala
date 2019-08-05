@@ -18,7 +18,7 @@ object Remote {
       remoteKey: RemoteKey
   ): TaskR[FileSystem, Boolean] = {
     def existsInSource(source: Path) =
-      remoteKey.asFile(source, prefix) match {
+      RemoteKey.asFile(source, prefix)(remoteKey) match {
         case Some(file) => FileSystem.exists(file)
         case None       => ZIO.succeed(false)
       }

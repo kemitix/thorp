@@ -32,7 +32,7 @@ class S3ObjectsByHashSuite extends FunSpec {
                        remoteKey: RemoteKey,
                        lastModified: LastModified): S3ObjectSummary = {
     val summary = new S3ObjectSummary()
-    summary.setETag(md5Hash.hash)
+    summary.setETag(MD5Hash.hash(md5Hash))
     summary.setKey(remoteKey.key)
     summary.setLastModified(Date.from(lastModified.when))
     summary

@@ -14,7 +14,7 @@ object UploadEventLogger {
       totalBytesSoFar: Long
   )
 
-  def logRequestCycle(requestCycle: RequestCycle): Unit = {
+  def apply(requestCycle: RequestCycle): Unit = {
     val remoteKey    = requestCycle.localFile.remoteKey.key
     val fileLength   = requestCycle.localFile.file.length
     val statusHeight = 7
