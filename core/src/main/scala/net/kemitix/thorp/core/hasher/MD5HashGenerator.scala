@@ -6,7 +6,7 @@ import java.security.MessageDigest
 
 import net.kemitix.thorp.domain.MD5Hash
 import net.kemitix.thorp.filesystem.FileSystem
-import zio.{Task, TaskR}
+import zio.{Task, RIO}
 
 import scala.collection.immutable.NumericRange
 
@@ -27,14 +27,14 @@ private object MD5HashGenerator {
     md5.digest
   }
 
-  def md5File(path: Path): TaskR[FileSystem, MD5Hash] =
+  def md5File(path: Path): RIO[FileSystem, MD5Hash] =
     md5FileChunk(path, 0, path.toFile.length)
 
   def md5FileChunk(
       path: Path,
       offset: Long,
       size: Long
-  ): TaskR[FileSystem, MD5Hash] = {
+  ): RIO[FileSystem, MD5Hash] = {
     val file      = path.toFile
     val endOffset = Math.min(offset + size, file.length)
     for {

@@ -8,7 +8,7 @@ import net.kemitix.thorp.core.hasher.Hasher.Service
 import net.kemitix.thorp.domain.{HashType, MD5Hash}
 import net.kemitix.thorp.filesystem.FileSystem
 import net.kemitix.thorp.storage.aws.ETag
-import zio.TaskR
+import zio.RIO
 
 object S3Hasher {
 
@@ -22,7 +22,7 @@ object S3Hasher {
         * @return a set of hash values
         */
       override def hashObject(
-          path: Path): TaskR[Hasher with FileSystem, Map[HashType, MD5Hash]] =
+          path: Path): RIO[Hasher with FileSystem, Map[HashType, MD5Hash]] =
         for {
           base <- CoreHasher.hashObject(path)
           etag <- ETagGenerator.eTag(path).map(MD5Hash(_))
@@ -31,13 +31,13 @@ object S3Hasher {
       override def hashObjectChunk(path: Path,
                                    chunkNumber: Long,
                                    chunkSize: Long)
-        : TaskR[Hasher with FileSystem, Map[HashType, MD5Hash]] =
+        : RIO[Hasher with FileSystem, Map[HashType, MD5Hash]] =
         CoreHasher.hashObjectChunk(path, chunkNumber, chunkSize)
 
-      override def hex(in: Array[Byte]): TaskR[Hasher, String] =
+      override def hex(in: Array[Byte]): RIO[Hasher, String] =
         CoreHasher.hex(in)
 
-      override def digest(in: String): TaskR[Hasher, Array[Byte]] =
+      override def digest(in: String): RIO[Hasher, Array[Byte]] =
         CoreHasher.digest(in)
     }
 

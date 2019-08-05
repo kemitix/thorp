@@ -5,7 +5,7 @@ import java.io.File
 import net.kemitix.thorp.console._
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.Storage
-import zio.{TaskR, UIO}
+import zio.{RIO, UIO}
 
 case class DummyStorageService(s3ObjectData: S3ObjectsData,
                                uploadFiles: Map[File, (RemoteKey, MD5Hash)])
@@ -17,8 +17,8 @@ case class DummyStorageService(s3ObjectData: S3ObjectsData,
   override def listObjects(
       bucket: Bucket,
       prefix: RemoteKey
-  ): TaskR[Console, S3ObjectsData] =
-    TaskR(s3ObjectData)
+  ): RIO[Console, S3ObjectsData] =
+    RIO(s3ObjectData)
 
   override def upload(
       localFile: LocalFile,

@@ -6,7 +6,7 @@ import net.kemitix.thorp.core.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.domain.StorageQueueEvent.DoNothingQueueEvent
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.Storage
-import zio.{Task, TaskR}
+import zio.{Task, RIO}
 
 case class UnversionedMirrorArchive(syncTotals: SyncTotals)
     extends ThorpArchive {
@@ -14,7 +14,7 @@ case class UnversionedMirrorArchive(syncTotals: SyncTotals)
   override def update(
       sequencedAction: SequencedAction,
       totalBytesSoFar: Long
-  ): TaskR[Storage with Console with Config, StorageQueueEvent] =
+  ): RIO[Storage with Console with Config, StorageQueueEvent] =
     sequencedAction match {
       case SequencedAction(ToUpload(bucket, localFile, _), index) =>
         doUpload(index, totalBytesSoFar, bucket, localFile) >>= logEvent

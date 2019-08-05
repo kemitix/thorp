@@ -9,7 +9,7 @@ import net.kemitix.thorp.console._
 import net.kemitix.thorp.domain.{Bucket, RemoteKey, S3ObjectsData}
 import net.kemitix.thorp.storage.aws.S3ObjectsByHash.byHash
 import net.kemitix.thorp.storage.aws.S3ObjectsByKey.byKey
-import zio.{Task, TaskR}
+import zio.{Task, RIO}
 
 import scala.collection.JavaConverters._
 
@@ -21,7 +21,7 @@ trait Lister {
   def listObjects(amazonS3: AmazonS3.Client)(
       bucket: Bucket,
       prefix: RemoteKey
-  ): TaskR[Console, S3ObjectsData] = {
+  ): RIO[Console, S3ObjectsData] = {
 
     def request =
       new ListObjectsV2Request()
@@ -31,15 +31,15 @@ trait Lister {
     def requestMore: Token => ListObjectsV2Request =
       token => request.withContinuationToken(token)
 
-    def fetchBatch: ListObjectsV2Request => TaskR[Console, Batch] =
+    def fetchBatch: ListObjectsV2Request => RIO[Console, Batch] =
       request => ListerLogger.logFetchBatch *> tryFetchBatch(amazonS3)(request)
 
-    def fetchMore: Option[Token] => TaskR[Console, Stream[S3ObjectSummary]] = {
-      case None        => TaskR.succeed(Stream.empty)
+    def fetchMore: Option[Token] => RIO[Console, Stream[S3ObjectSummary]] = {
+      case None        => RIO.succeed(Stream.empty)
       case Some(token) => fetch(requestMore(token))
     }
 
-    def fetch: ListObjectsV2Request => TaskR[Console, Stream[S3ObjectSummary]] =
+    def fetch: ListObjectsV2Request => RIO[Console, Stream[S3ObjectSummary]] =
       request =>
         for {
           batch <- fetchBatch(request)

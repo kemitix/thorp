@@ -4,7 +4,7 @@ import java.io.{File, FileInputStream}
 import java.nio.file.{Files, Path}
 import java.util.stream
 
-import zio.{Task, TaskR, UIO, ZIO, ZManaged}
+import zio.{Task, RIO, UIO, ZIO, ZManaged}
 
 import scala.collection.JavaConverters._
 
@@ -17,8 +17,8 @@ object FileSystem {
   trait Service {
     def fileExists(file: File): ZIO[FileSystem, Throwable, Boolean]
     def openManagedFileInputStream(file: File, offset: Long = 0L)
-      : TaskR[FileSystem, ZManaged[Any, Throwable, FileInputStream]]
-    def fileLines(file: File): TaskR[FileSystem, Seq[String]]
+      : RIO[FileSystem, ZManaged[Any, Throwable, FileInputStream]]
+    def fileLines(file: File): RIO[FileSystem, Seq[String]]
   }
   trait Live extends FileSystem {
     override val filesystem: Service = new Service {
@@ -27,7 +27,7 @@ object FileSystem {
       ): ZIO[FileSystem, Throwable, Boolean] = ZIO(file.exists)
 
       override def openManagedFileInputStream(file: File, offset: Long)
-        : TaskR[FileSystem, ZManaged[Any, Throwable, FileInputStream]] = {
+        : RIO[FileSystem, ZManaged[Any, Throwable, FileInputStream]] = {
 
         def acquire =
           Task {
@@ -42,7 +42,7 @@ object FileSystem {
         ZIO(ZManaged.make(acquire)(release))
       }
 
-      override def fileLines(file: File): TaskR[FileSystem, Seq[String]] = {
+      override def fileLines(file: File): RIO[FileSystem, Seq[String]] = {
         def acquire = ZIO(Files.lines(file.toPath))
         def use(lines: stream.Stream[String]) =
           ZIO.effectTotal(lines.iterator.asScala.toList)
@@ -63,10 +63,10 @@ object FileSystem {
         fileExistsResultMap.map(m => m.keys.exists(_ equals file.toPath))
 
       override def openManagedFileInputStream(file: File, offset: Long)
-        : TaskR[FileSystem, ZManaged[Any, Throwable, FileInputStream]] =
+        : RIO[FileSystem, ZManaged[Any, Throwable, FileInputStream]] =
         managedFileInputStream
 
-      override def fileLines(file: File): TaskR[FileSystem, List[String]] =
+      override def fileLines(file: File): RIO[FileSystem, List[String]] =
         fileLinesResult
     }
   }
@@ -75,9 +75,9 @@ object FileSystem {
     ZIO.accessM(_.filesystem fileExists file)
 
   final def open(file: File, offset: Long = 0)
-    : TaskR[FileSystem, ZManaged[FileSystem, Throwable, FileInputStream]] =
+    : RIO[FileSystem, ZManaged[FileSystem, Throwable, FileInputStream]] =
     ZIO.accessM(_.filesystem openManagedFileInputStream (file, offset))
 
-  final def lines(file: File): TaskR[FileSystem, Seq[String]] =
+  final def lines(file: File): RIO[FileSystem, Seq[String]] =
     ZIO.accessM(_.filesystem fileLines (file))
 }

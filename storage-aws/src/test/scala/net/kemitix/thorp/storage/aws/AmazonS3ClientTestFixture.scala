@@ -6,7 +6,7 @@ import net.kemitix.thorp.domain.StorageQueueEvent.ShutdownQueueEvent
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.Storage
 import org.scalamock.scalatest.MockFactory
-import zio.{TaskR, UIO, ZIO}
+import zio.{RIO, UIO, ZIO}
 
 trait AmazonS3ClientTestFixture extends MockFactory {
 
@@ -26,7 +26,7 @@ trait AmazonS3ClientTestFixture extends MockFactory {
         override def listObjects(
             bucket: Bucket,
             prefix: RemoteKey
-        ): TaskR[Console, S3ObjectsData] =
+        ): RIO[Console, S3ObjectsData] =
           Lister.listObjects(client)(bucket, prefix)
 
         override def upload(

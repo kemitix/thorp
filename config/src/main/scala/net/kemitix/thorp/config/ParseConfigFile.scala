@@ -3,7 +3,7 @@ package net.kemitix.thorp.config
 import java.io.File
 
 import net.kemitix.thorp.filesystem.FileSystem
-import zio.{IO, TaskR, ZIO}
+import zio.{IO, RIO, ZIO}
 
 trait ParseConfigFile {
 
@@ -14,7 +14,7 @@ trait ParseConfigFile {
         IO.fail(List(ConfigValidation.ErrorReadingFile(file, h.getMessage))))
 
   private def readLines(file: File)(
-      exists: Boolean): TaskR[FileSystem, Seq[String]] =
+      exists: Boolean): RIO[FileSystem, Seq[String]] =
     if (exists) FileSystem.lines(file)
     else ZIO.succeed(Seq.empty)
 

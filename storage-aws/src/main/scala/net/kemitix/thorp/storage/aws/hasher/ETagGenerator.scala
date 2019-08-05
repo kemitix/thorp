@@ -9,13 +9,13 @@ import net.kemitix.thorp.core.hasher.Hasher
 import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.domain.MD5Hash
 import net.kemitix.thorp.filesystem.FileSystem
-import zio.{TaskR, ZIO}
+import zio.{RIO, ZIO}
 
 private trait ETagGenerator {
 
   def eTag(
       path: Path
-  ): TaskR[Hasher with FileSystem, String] = {
+  ): RIO[Hasher with FileSystem, String] = {
     val partSize = calculatePartSize(path)
     val parts    = numParts(path.toFile.length, partSize)
     eTagHex(path, partSize, parts)

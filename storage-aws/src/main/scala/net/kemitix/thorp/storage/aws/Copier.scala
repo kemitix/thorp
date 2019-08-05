@@ -45,7 +45,7 @@ trait Copier {
 
   private def foldFailure(
       sourceKey: RemoteKey,
-      targetKey: RemoteKey): S3ClientException => StorageQueueEvent = {
+      targetKey: RemoteKey): Throwable => StorageQueueEvent = {
     case error: SdkClientException =>
       errorEvent(sourceKey, targetKey, error)
     case error =>
