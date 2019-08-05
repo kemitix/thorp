@@ -26,7 +26,7 @@ trait AmazonS3ClientTestFixture extends MockFactory {
         override def listObjects(
             bucket: Bucket,
             prefix: RemoteKey
-        ): RIO[Console, S3ObjectsData] =
+        ): RIO[Console, RemoteObjects] =
           Lister.listObjects(client)(bucket, prefix)
 
         override def upload(

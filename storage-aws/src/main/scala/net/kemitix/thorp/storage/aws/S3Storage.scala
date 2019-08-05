@@ -20,7 +20,7 @@ object S3Storage {
         AmazonTransferManager(TransferManagerBuilder.defaultTransferManager)
 
       override def listObjects(bucket: Bucket,
-                               prefix: RemoteKey): RIO[Console, S3ObjectsData] =
+                               prefix: RemoteKey): RIO[Console, RemoteObjects] =
         Lister.listObjects(client)(bucket, prefix)
 
       override def upload(

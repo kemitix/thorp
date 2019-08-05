@@ -15,7 +15,7 @@ object Storage {
     def listObjects(
         bucket: Bucket,
         prefix: RemoteKey
-    ): RIO[Storage with Console, S3ObjectsData]
+    ): RIO[Storage with Console, RemoteObjects]
 
     def upload(
         localFile: LocalFile,
@@ -40,7 +40,7 @@ object Storage {
 
   trait Test extends Storage {
 
-    def listResult: Task[S3ObjectsData]
+    def listResult: Task[RemoteObjects]
     def uploadResult: UIO[StorageQueueEvent]
     def copyResult: UIO[StorageQueueEvent]
     def deleteResult: UIO[StorageQueueEvent]
@@ -50,7 +50,7 @@ object Storage {
 
       override def listObjects(
           bucket: Bucket,
-          prefix: RemoteKey): RIO[Storage with Console, S3ObjectsData] =
+          prefix: RemoteKey): RIO[Storage with Console, RemoteObjects] =
         listResult
 
       override def upload(
@@ -78,7 +78,7 @@ object Storage {
   }
 
   object Test extends Test {
-    override def listResult: Task[S3ObjectsData] =
+    override def listResult: Task[RemoteObjects] =
       Task.die(new NotImplementedError)
     override def uploadResult: UIO[StorageQueueEvent] =
       Task.die(new NotImplementedError)
@@ -91,7 +91,7 @@ object Storage {
   }
 
   final def list(bucket: Bucket,
-                 prefix: RemoteKey): RIO[Storage with Console, S3ObjectsData] =
+                 prefix: RemoteKey): RIO[Storage with Console, RemoteObjects] =
     ZIO.accessM(_.storage listObjects (bucket, prefix))
 
   final def upload(

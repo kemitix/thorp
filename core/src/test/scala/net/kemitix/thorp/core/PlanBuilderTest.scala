@@ -22,7 +22,7 @@ import zio.{DefaultRuntime, Task, UIO}
 class PlanBuilderTest extends FreeSpec with TemporaryFolder {
 
   private val lastModified: LastModified = LastModified()
-  private val emptyS3ObjectData          = S3ObjectsData()
+  private val emptyRemoteObjects         = RemoteObjects()
 
   "create a plan" - {
 
@@ -46,7 +46,7 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
                   Right(List(toUpload(remoteKey, hash, source, file)))
                 val result =
                   invoke(options(source),
-                         UIO.succeed(emptyS3ObjectData),
+                         UIO.succeed(emptyRemoteObjects),
                          UIO.succeed(Map(file.toPath -> file)))
                 assertResult(expected)(result)
               })
@@ -62,14 +62,14 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
                 val aHash           = md5Hash(aFile)
                 val anOtherKey      = RemoteKey("other")
                 val expected        = Right(List(toCopy(anOtherKey, aHash, remoteKey)))
-                val s3ObjectsData = S3ObjectsData(
+                val remoteObjects = RemoteObjects(
                   byHash =
                     Map(aHash            -> Set(KeyModified(anOtherKey, lastModified))),
                   byKey = Map(anOtherKey -> HashModified(aHash, lastModified))
                 )
                 val result =
                   invoke(options(source),
-                         UIO.succeed(s3ObjectsData),
+                         UIO.succeed(remoteObjects),
                          UIO.succeed(Map(aFile.toPath       -> aFile,
                                          anOtherFile.toPath -> anOtherFile)))
                 assertResult(expected)(result)
@@ -85,14 +85,14 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
                 val hash = md5Hash(file)
                 // DoNothing actions should have been filtered out of the plan
                 val expected = Right(List())
-                val s3ObjectsData = S3ObjectsData(
+                val remoteObjects = RemoteObjects(
                   byHash =
                     Map(hash            -> Set(KeyModified(remoteKey, lastModified))),
                   byKey = Map(remoteKey -> HashModified(hash, lastModified))
                 )
                 val result =
                   invoke(options(source),
-                         UIO.succeed(s3ObjectsData),
+                         UIO.succeed(remoteObjects),
                          UIO.succeed(Map(file.toPath -> file)))
                 assertResult(expected)(result)
               })
@@ -107,7 +107,7 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
                   val originalHash = MD5Hash("original-file-content")
                   val expected =
                     Right(List(toUpload(remoteKey, currentHash, source, file)))
-                  val s3ObjectsData = S3ObjectsData(
+                  val remoteObjects = RemoteObjects(
                     byHash = Map(originalHash -> Set(
                       KeyModified(remoteKey, lastModified))),
                     byKey =
@@ -115,7 +115,7 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
                   )
                   val result =
                     invoke(options(source),
-                           UIO.succeed(s3ObjectsData),
+                           UIO.succeed(remoteObjects),
                            UIO.succeed(Map(file.toPath -> file)))
                   assertResult(expected)(result)
                 })
@@ -128,14 +128,14 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
                   val hash      = md5Hash(file)
                   val sourceKey = RemoteKey("other-key")
                   val expected  = Right(List(toCopy(sourceKey, hash, remoteKey)))
-                  val s3ObjectsData = S3ObjectsData(
+                  val remoteObjects = RemoteObjects(
                     byHash =
                       Map(hash -> Set(KeyModified(sourceKey, lastModified))),
                     byKey = Map()
                   )
                   val result =
                     invoke(options(source),
-                           UIO.succeed(s3ObjectsData),
+                           UIO.succeed(remoteObjects),
                            UIO.succeed(Map(file.toPath -> file)))
                   assertResult(expected)(result)
                 })
@@ -154,13 +154,13 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
               val hash = md5Hash(file)
               // DoNothing actions should have been filtered out of the plan
               val expected = Right(List())
-              val s3ObjectsData = S3ObjectsData(
+              val remoteObjects = RemoteObjects(
                 byHash = Map(hash     -> Set(KeyModified(remoteKey, lastModified))),
                 byKey = Map(remoteKey -> HashModified(hash, lastModified))
               )
               val result =
                 invoke(options(source),
-                       UIO.succeed(s3ObjectsData),
+                       UIO.succeed(remoteObjects),
                        UIO.succeed(Map(file.toPath -> file)))
               assertResult(expected)(result)
             })
@@ -171,13 +171,13 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
             withDirectory(source => {
               val hash     = MD5Hash("file-content")
               val expected = Right(List(toDelete(remoteKey)))
-              val s3ObjectsData = S3ObjectsData(
+              val remoteObjects = RemoteObjects(
                 byHash = Map(hash     -> Set(KeyModified(remoteKey, lastModified))),
                 byKey = Map(remoteKey -> HashModified(hash, lastModified))
               )
               val result =
                 invoke(options(source),
-                       UIO.succeed(s3ObjectsData),
+                       UIO.succeed(remoteObjects),
                        UIO.succeed(Map.empty))
               assertResult(expected)(result)
             })
@@ -215,7 +215,7 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
               val result =
                 invoke(
                   options(firstSource)(secondSource),
-                  UIO.succeed(emptyS3ObjectData),
+                  UIO.succeed(emptyRemoteObjects),
                   UIO.succeed(
                     Map(fileInFirstSource.toPath  -> fileInFirstSource,
                         fileInSecondSource.toPath -> fileInSecondSource))
@@ -240,7 +240,7 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
               val result =
                 invoke(
                   options(firstSource)(secondSource),
-                  UIO.succeed(emptyS3ObjectData),
+                  UIO.succeed(emptyRemoteObjects),
                   UIO.succeed(
                     Map(fileInFirstSource.toPath  -> fileInFirstSource,
                         fileInSecondSource.toPath -> fileInSecondSource))
@@ -258,13 +258,13 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
                 createFile(secondSource, filename2, "file-2-content")
               val hash2    = md5Hash(fileInSecondSource)
               val expected = Right(List())
-              val s3ObjectData = S3ObjectsData(
+              val remoteObjects = RemoteObjects(
                 byHash =
                   Map(hash2            -> Set(KeyModified(remoteKey2, lastModified))),
                 byKey = Map(remoteKey2 -> HashModified(hash2, lastModified)))
               val result =
                 invoke(options(firstSource)(secondSource),
-                       UIO.succeed(s3ObjectData),
+                       UIO.succeed(remoteObjects),
                        UIO.succeed(
                          Map(fileInSecondSource.toPath -> fileInSecondSource)))
               assertResult(expected)(result)
@@ -280,13 +280,13 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
             val hash1 = md5Hash(fileInFirstSource)
             withDirectory(secondSource => {
               val expected = Right(List())
-              val s3ObjectData = S3ObjectsData(
+              val remoteObjects = RemoteObjects(
                 byHash =
                   Map(hash1            -> Set(KeyModified(remoteKey1, lastModified))),
                 byKey = Map(remoteKey1 -> HashModified(hash1, lastModified)))
               val result =
                 invoke(options(firstSource)(secondSource),
-                       UIO.succeed(s3ObjectData),
+                       UIO.succeed(remoteObjects),
                        UIO.succeed(
                          Map(fileInFirstSource.toPath -> fileInFirstSource)))
               assertResult(expected)(result)
@@ -299,11 +299,11 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
           withDirectory(firstSource => {
             withDirectory(secondSource => {
               val expected = Right(List(toDelete(remoteKey1)))
-              val s3ObjectData = S3ObjectsData(byKey =
+              val remoteObjects = RemoteObjects(byKey =
                 Map(remoteKey1 -> HashModified(MD5Hash(""), lastModified)))
               val result =
                 invoke(options(firstSource)(secondSource),
-                       UIO.succeed(s3ObjectData),
+                       UIO.succeed(remoteObjects),
                        UIO.succeed(Map.empty))
               assertResult(expected)(result)
             })
@@ -354,13 +354,13 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
 
   private def invoke(
       configOptions: ConfigOptions,
-      result: Task[S3ObjectsData],
+      result: Task[RemoteObjects],
       files: Task[Map[Path, File]]
   ) = {
     type TestEnv = Storage with Console with Config with FileSystem with Hasher
     val testEnv: TestEnv = new Storage.Test with Console.Test with Config.Live
     with FileSystem.Live with Hasher.Live {
-      override def listResult: Task[S3ObjectsData] = result
+      override def listResult: Task[RemoteObjects] = result
       override def uploadResult: UIO[StorageQueueEvent] =
         Task.die(new NotImplementedError)
       override def copyResult: UIO[StorageQueueEvent] =

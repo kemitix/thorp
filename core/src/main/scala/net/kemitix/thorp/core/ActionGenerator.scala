@@ -3,45 +3,53 @@ package net.kemitix.thorp.core
 import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.core.Action.{DoNothing, ToCopy, ToUpload}
 import net.kemitix.thorp.domain._
-import zio.ZIO
+import zio.RIO
 
 object ActionGenerator {
 
-  def createActions(
-      s3MetaData: S3MetaData,
+  def createAction(
+      matchedMetadata: MatchedMetadata,
       previousActions: Stream[Action]
-  ): ZIO[Config, Nothing, Stream[Action]] =
+  ): RIO[Config, Action] =
     for {
       bucket <- Config.bucket
-    } yield genAction(s3MetaData, previousActions, bucket)
+    } yield
+      genAction(formattedMetadata(matchedMetadata, previousActions), bucket)
 
-  private def genAction(s3MetaData: S3MetaData,
-                        previousActions: Stream[Action],
-                        bucket: Bucket): Stream[Action] = {
-    s3MetaData match {
-      // #1 local exists, remote exists, remote matches - do nothing
-      case S3MetaData(localFile, _, Some(RemoteMetaData(key, hash, _)))
-          if LocalFile.matchesHash(localFile)(hash) =>
-        doNothing(bucket, key)
-      // #2 local exists, remote is missing, other matches - copy
-      case S3MetaData(localFile, matchByHash, None) if matchByHash.nonEmpty =>
-        copyFile(bucket, localFile, matchByHash)
-      // #3 local exists, remote is missing, other no matches - upload
-      case S3MetaData(localFile, matchByHash, None)
-          if matchByHash.isEmpty &&
-            isUploadAlreadyQueued(previousActions)(localFile) =>
-        uploadFile(bucket, localFile)
-      // #4 local exists, remote exists, remote no match, other matches - copy
-      case S3MetaData(localFile, matchByHash, Some(RemoteMetaData(_, hash, _)))
-          if !LocalFile.matchesHash(localFile)(hash) &&
-            matchByHash.nonEmpty =>
-        copyFile(bucket, localFile, matchByHash)
-      // #5 local exists, remote exists, remote no match, other no matches - upload
-      case S3MetaData(localFile, matchByHash, Some(_)) if matchByHash.isEmpty =>
-        uploadFile(bucket, localFile)
-      // fallback
-      case S3MetaData(localFile, _, _) =>
-        doNothing(bucket, localFile.remoteKey)
+  private def formattedMetadata(
+      matchedMetadata: MatchedMetadata,
+      previousActions: Stream[Action]): TaggedMetadata = {
+    val remoteExists = matchedMetadata.matchByKey.nonEmpty
+    val remoteMatches = remoteExists && matchedMetadata.matchByKey.exists(m =>
+      LocalFile.matchesHash(matchedMetadata.localFile)(m.hash))
+    val anyMatches = matchedMetadata.matchByHash.nonEmpty
+    TaggedMetadata(matchedMetadata,
+                   previousActions,
+                   remoteExists,
+                   remoteMatches,
+                   anyMatches)
+  }
+
+  case class TaggedMetadata(
+      matchedMetadata: MatchedMetadata,
+      previousActions: Stream[Action],
+      remoteExists: Boolean,
+      remoteMatches: Boolean,
+      anyMatches: Boolean
+  )
+
+  private def genAction(taggedMetadata: TaggedMetadata,
+                        bucket: Bucket): Action = {
+    taggedMetadata match {
+      case TaggedMetadata(md, _, exists, matches, _) if exists && matches =>
+        doNothing(bucket, md.localFile.remoteKey)
+      case TaggedMetadata(md, _, _, _, any) if any =>
+        copyFile(bucket, md.localFile, md.matchByHash.head)
+      case TaggedMetadata(md, previous, _, _, _)
+          if isUploadAlreadyQueued(previous)(md.localFile) =>
+        uploadFile(bucket, md.localFile)
+      case TaggedMetadata(md, _, _, _, _) =>
+        doNothing(bucket, md.localFile.remoteKey)
     }
   }
 
@@ -59,29 +67,22 @@ object ActionGenerator {
   private def doNothing(
       bucket: Bucket,
       remoteKey: RemoteKey
-  ) =
-    Stream(DoNothing(bucket, remoteKey, 0L))
+  ) = DoNothing(bucket, remoteKey, 0L)
 
   private def uploadFile(
       bucket: Bucket,
       localFile: LocalFile
-  ) =
-    Stream(ToUpload(bucket, localFile, localFile.file.length))
+  ) = ToUpload(bucket, localFile, localFile.file.length)
 
   private def copyFile(
       bucket: Bucket,
       localFile: LocalFile,
-      matchByHash: Set[RemoteMetaData]
-  ): Stream[Action] =
-    matchByHash
-      .map { remoteMetaData =>
-        ToCopy(bucket,
-               remoteMetaData.remoteKey,
-               remoteMetaData.hash,
-               localFile.remoteKey,
-               localFile.file.length)
-      }
-      .toStream
-      .take(1)
+      remoteMetaData: RemoteMetaData
+  ): Action =
+    ToCopy(bucket,
+           remoteMetaData.remoteKey,
+           remoteMetaData.hash,
+           localFile.remoteKey,
+           localFile.file.length)
 
 }

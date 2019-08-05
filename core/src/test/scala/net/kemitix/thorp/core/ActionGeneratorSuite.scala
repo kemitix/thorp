@@ -41,7 +41,7 @@ class ActionGeneratorSuite extends FunSpec {
         theRemoteMetadata = RemoteMetaData(theFile.remoteKey,
                                            theHash,
                                            lastModified)
-        input = S3MetaData(
+        input = MatchedMetadata(
           theFile, // local exists
           matchByHash = Set(theRemoteMetadata), // remote matches
           matchByKey = Some(theRemoteMetadata) // remote exists
@@ -72,7 +72,7 @@ class ActionGeneratorSuite extends FunSpec {
         otherRemoteMetadata = RemoteMetaData(otherRemoteKey,
                                              theHash,
                                              lastModified)
-        input = S3MetaData(
+        input = MatchedMetadata(
           theFile, // local exists
           matchByHash = Set(otherRemoteMetadata), // other matches
           matchByKey = None) // remote is missing
@@ -100,9 +100,9 @@ class ActionGeneratorSuite extends FunSpec {
                                                 sourcePath,
                                                 sources,
                                                 prefix)
-          input = S3MetaData(theFile, // local exists
-                             matchByHash = Set.empty, // other no matches
-                             matchByKey = None) // remote is missing
+          input = MatchedMetadata(theFile, // local exists
+                                  matchByHash = Set.empty, // other no matches
+                                  matchByKey = None) // remote is missing
         } yield (theFile, input)
         it("upload") {
           env.map({
@@ -134,7 +134,7 @@ class ActionGeneratorSuite extends FunSpec {
         oldRemoteMetadata = RemoteMetaData(theRemoteKey,
                                            hash = oldHash, // remote no match
                                            lastModified = lastModified)
-        input = S3MetaData(
+        input = MatchedMetadata(
           theFile, // local exists
           matchByHash = Set(otherRemoteMetadata), // other matches
           matchByKey = Some(oldRemoteMetadata)) // remote exists
@@ -167,7 +167,7 @@ class ActionGeneratorSuite extends FunSpec {
         theRemoteKey      = theFile.remoteKey
         oldHash           = MD5Hash("old-hash")
         theRemoteMetadata = RemoteMetaData(theRemoteKey, oldHash, lastModified)
-        input = S3MetaData(
+        input = MatchedMetadata(
           theFile, // local exists
           matchByHash = Set.empty, // remote no match, other no match
           matchByKey = Some(theRemoteMetadata) // remote exists
@@ -196,7 +196,7 @@ class ActionGeneratorSuite extends FunSpec {
   }
 
   private def invoke(
-      input: S3MetaData,
+      input: MatchedMetadata,
       previousActions: Stream[Action]
   ) = {
     type TestEnv = Config with FileSystem
@@ -206,7 +206,7 @@ class ActionGeneratorSuite extends FunSpec {
       for {
         config  <- ConfigurationBuilder.buildConfig(configOptions)
         _       <- Config.set(config)
-        actions <- ActionGenerator.createActions(input, previousActions)
+        actions <- ActionGenerator.createAction(input, previousActions)
       } yield actions
 
     new DefaultRuntime {}.unsafeRunSync {

@@ -38,7 +38,7 @@ class StorageServiceSuite extends FunSpec with MockFactory {
                                                 sources,
                                                 prefix)
       lastModified = LastModified(Instant.now)
-      s3ObjectsData = S3ObjectsData(
+      s3ObjectsData = RemoteObjects(
         byHash = Map(
           hash -> Set(KeyModified(key, lastModified),
                       KeyModified(keyOtherKey.remoteKey, lastModified)),
@@ -59,7 +59,7 @@ class StorageServiceSuite extends FunSpec with MockFactory {
        diffHash,
        key)
 
-    def invoke(localFile: LocalFile, s3ObjectsData: S3ObjectsData) =
+    def invoke(localFile: LocalFile, s3ObjectsData: RemoteObjects) =
       S3MetaDataEnricher.getS3Status(localFile, s3ObjectsData)
 
     def getMatchesByKey(
