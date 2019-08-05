@@ -34,7 +34,7 @@ class ListerTest extends FreeSpec {
           RemoteKey(key) -> HashModified(MD5Hash(etag),
                                          LastModified(nowInstant))
         )
-        val expected = Right(S3ObjectsData(expectedHashMap, expectedKeyMap))
+        val expected = Right(RemoteObjects(expectedHashMap, expectedKeyMap))
         new AmazonS3ClientTestFixture {
           (fixture.amazonS3Client.listObjectsV2 _)
             .when()
@@ -65,7 +65,7 @@ class ListerTest extends FreeSpec {
           RemoteKey(key2) -> HashModified(MD5Hash(etag2),
                                           LastModified(nowInstant))
         )
-        val expected = Right(S3ObjectsData(expectedHashMap, expectedKeyMap))
+        val expected = Right(RemoteObjects(expectedHashMap, expectedKeyMap))
         new AmazonS3ClientTestFixture {
           (fixture.amazonS3Client.listObjectsV2 _)
             .when()

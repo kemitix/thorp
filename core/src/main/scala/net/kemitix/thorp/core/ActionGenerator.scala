@@ -3,7 +3,7 @@ package net.kemitix.thorp.core
 import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.core.Action.{DoNothing, ToCopy, ToUpload}
 import net.kemitix.thorp.domain._
-import zio.{RIO, ZIO}
+import zio.RIO
 
 object ActionGenerator {
 

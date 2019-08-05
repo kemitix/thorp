@@ -29,22 +29,22 @@ object PlanBuilder {
       objects <- Storage.list(bucket, prefix)
     } yield objects
 
-  private def assemblePlan(metadata: (S3ObjectsData, LocalFiles)) =
+  private def assemblePlan(metadata: (RemoteObjects, LocalFiles)) =
     metadata match {
-      case (remoteData, localData) =>
-        createActions(remoteData, localData.localFiles)
+      case (remoteObjects, localData) =>
+        createActions(remoteObjects, localData.localFiles)
           .map(_.filter(doesSomething).sortBy(SequencePlan.order))
           .map(
             SyncPlan(_, SyncTotals(localData.count, localData.totalSizeBytes)))
     }
 
   private def createActions(
-      remoteData: S3ObjectsData,
+      remoteObjects: RemoteObjects,
       localFiles: Stream[LocalFile]
   ) =
     for {
-      fileActions   <- actionsForLocalFiles(remoteData, localFiles)
-      remoteActions <- actionsForRemoteKeys(remoteData.byKey.keys)
+      fileActions   <- actionsForLocalFiles(remoteObjects, localFiles)
+      remoteActions <- actionsForRemoteKeys(remoteObjects.byKey.keys)
     } yield fileActions ++ remoteActions
 
   private def doesSomething: Action => Boolean = {
@@ -53,19 +53,19 @@ object PlanBuilder {
   }
 
   private def actionsForLocalFiles(
-      remoteData: S3ObjectsData,
+      remoteObjects: RemoteObjects,
       localFiles: Stream[LocalFile]
   ) =
     ZIO.foldLeft(localFiles)(Stream.empty[Action])((acc, localFile) =>
-      createActionFromLocalFile(remoteData, acc, localFile).map(_ ++ acc))
+      createActionFromLocalFile(remoteObjects, acc, localFile).map(_ ++ acc))
 
   private def createActionFromLocalFile(
-      remoteData: S3ObjectsData,
+      remoteObjects: RemoteObjects,
       previousActions: Stream[Action],
       localFile: LocalFile
   ) =
     ActionGenerator.createActions(
-      S3MetaDataEnricher.getMetadata(localFile, remoteData),
+      S3MetaDataEnricher.getMetadata(localFile, remoteObjects),
       previousActions)
 
   private def actionsForRemoteKeys(remoteKeys: Iterable[RemoteKey]) =

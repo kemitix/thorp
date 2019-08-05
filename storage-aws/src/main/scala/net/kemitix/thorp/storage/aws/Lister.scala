@@ -6,7 +6,7 @@ import com.amazonaws.services.s3.model.{
   S3ObjectSummary
 }
 import net.kemitix.thorp.console._
-import net.kemitix.thorp.domain.{Bucket, RemoteKey, S3ObjectsData}
+import net.kemitix.thorp.domain.{Bucket, RemoteKey, RemoteObjects}
 import net.kemitix.thorp.storage.aws.S3ObjectsByHash.byHash
 import net.kemitix.thorp.storage.aws.S3ObjectsByKey.byKey
 import zio.{Task, RIO}
@@ -21,7 +21,7 @@ trait Lister {
   def listObjects(amazonS3: AmazonS3.Client)(
       bucket: Bucket,
       prefix: RemoteKey
-  ): RIO[Console, S3ObjectsData] = {
+  ): RIO[Console, RemoteObjects] = {
 
     def request =
       new ListObjectsV2Request()
@@ -48,7 +48,7 @@ trait Lister {
 
     fetch(request)
       .map(summaries => {
-        S3ObjectsData(byHash(summaries), byKey(summaries))
+        RemoteObjects(byHash(summaries), byKey(summaries))
       })
   }
 

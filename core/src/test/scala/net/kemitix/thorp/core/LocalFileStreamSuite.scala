@@ -56,7 +56,7 @@ class LocalFileStreamSuite extends FunSpec {
       with Hasher.Test
     val testEnv: TestEnv = new Storage.Test with Console.Test with Config.Live
     with FileSystem.Live with Hasher.Test {
-      override def listResult: Task[S3ObjectsData] =
+      override def listResult: Task[RemoteObjects] =
         Task.die(new NotImplementedError)
       override def uploadResult: UIO[StorageQueueEvent] =
         Task.die(new NotImplementedError)

@@ -9,11 +9,11 @@ import net.kemitix.thorp.domain._
 import org.scalatest.FunSpec
 
 class MatchedMetadataEnricherSuite extends FunSpec {
-  val lastModified       = LastModified(Instant.now())
-  private val source     = Resource(this, "upload")
-  private val sourcePath = source.toPath
-  private val sources    = Sources(List(sourcePath))
-  private val prefix     = RemoteKey("prefix")
+  private val lastModified = LastModified(Instant.now())
+  private val source       = Resource(this, "upload")
+  private val sourcePath   = source.toPath
+  private val sources      = Sources(List(sourcePath))
+  private val prefix       = RemoteKey("prefix")
 
   def getMatchesByKey(
       status: (Option[HashModified], Set[(MD5Hash, KeyModified)]))
@@ -41,19 +41,19 @@ class MatchedMetadataEnricherSuite extends FunSpec {
                                               sources,
                                               prefix)
         theRemoteKey = theFile.remoteKey
-        s3 = S3ObjectsData(
+        remoteObjects = RemoteObjects(
           byHash = Map(theHash     -> Set(KeyModified(theRemoteKey, lastModified))),
           byKey = Map(theRemoteKey -> HashModified(theHash, lastModified))
         )
         theRemoteMetadata = RemoteMetaData(theRemoteKey, theHash, lastModified)
-      } yield (theFile, theRemoteMetadata, s3)
+      } yield (theFile, theRemoteMetadata, remoteObjects)
       it("generates valid metadata") {
         env.map({
-          case (theFile, theRemoteMetadata, s3) => {
+          case (theFile, theRemoteMetadata, remoteObjects) => {
             val expected = MatchedMetadata(theFile,
                                            matchByHash = Set(theRemoteMetadata),
                                            matchByKey = Some(theRemoteMetadata))
-            val result = getMetadata(theFile, s3)
+            val result = getMetadata(theFile, remoteObjects)
             assertResult(expected)(result)
           }
         })
@@ -69,19 +69,19 @@ class MatchedMetadataEnricherSuite extends FunSpec {
                                               sources,
                                               prefix)
         theRemoteKey: RemoteKey = RemoteKey.resolve("the-file")(prefix)
-        s3: S3ObjectsData = S3ObjectsData(
+        remoteObjects = RemoteObjects(
           byHash = Map(theHash     -> Set(KeyModified(theRemoteKey, lastModified))),
           byKey = Map(theRemoteKey -> HashModified(theHash, lastModified))
         )
         theRemoteMetadata = RemoteMetaData(theRemoteKey, theHash, lastModified)
-      } yield (theFile, theRemoteMetadata, s3)
+      } yield (theFile, theRemoteMetadata, remoteObjects)
       it("generates valid metadata") {
         env.map({
-          case (theFile, theRemoteMetadata, s3) => {
+          case (theFile, theRemoteMetadata, remoteObjects) => {
             val expected = MatchedMetadata(theFile,
                                            matchByHash = Set(theRemoteMetadata),
                                            matchByKey = Some(theRemoteMetadata))
-            val result = getMetadata(theFile, s3)
+            val result = getMetadata(theFile, remoteObjects)
             assertResult(expected)(result)
           }
         })
@@ -97,7 +97,7 @@ class MatchedMetadataEnricherSuite extends FunSpec {
                                               sources,
                                               prefix)
         otherRemoteKey = RemoteKey("other-key")
-        s3: S3ObjectsData = S3ObjectsData(
+        remoteObjects = RemoteObjects(
           byHash =
             Map(theHash              -> Set(KeyModified(otherRemoteKey, lastModified))),
           byKey = Map(otherRemoteKey -> HashModified(theHash, lastModified))
@@ -105,15 +105,15 @@ class MatchedMetadataEnricherSuite extends FunSpec {
         otherRemoteMetadata = RemoteMetaData(otherRemoteKey,
                                              theHash,
                                              lastModified)
-      } yield (theFile, otherRemoteMetadata, s3)
+      } yield (theFile, otherRemoteMetadata, remoteObjects)
       it("generates valid metadata") {
         env.map({
-          case (theFile, otherRemoteMetadata, s3) => {
+          case (theFile, otherRemoteMetadata, remoteObjects) => {
             val expected = MatchedMetadata(theFile,
                                            matchByHash =
                                              Set(otherRemoteMetadata),
                                            matchByKey = None)
-            val result = getMetadata(theFile, s3)
+            val result = getMetadata(theFile, remoteObjects)
             assertResult(expected)(result)
           }
         })
@@ -128,16 +128,16 @@ class MatchedMetadataEnricherSuite extends FunSpec {
                                               sourcePath,
                                               sources,
                                               prefix)
-        s3: S3ObjectsData = S3ObjectsData()
-      } yield (theFile, s3)
+        remoteObjects = RemoteObjects()
+      } yield (theFile, remoteObjects)
       it("generates valid metadata") {
         env.map({
-          case (theFile, s3) => {
+          case (theFile, remoteObjects) => {
             val expected =
               MatchedMetadata(theFile,
                               matchByHash = Set.empty,
                               matchByKey = None)
-            val result = getMetadata(theFile, s3)
+            val result = getMetadata(theFile, remoteObjects)
             assertResult(expected)(result)
           }
         })
@@ -155,7 +155,7 @@ class MatchedMetadataEnricherSuite extends FunSpec {
         theRemoteKey   = theFile.remoteKey
         oldHash        = MD5Hash("old-hash")
         otherRemoteKey = RemoteKey.resolve("other-key")(prefix)
-        s3: S3ObjectsData = S3ObjectsData(
+        remoteObjects = RemoteObjects(
           byHash =
             Map(oldHash -> Set(KeyModified(theRemoteKey, lastModified)),
                 theHash -> Set(KeyModified(otherRemoteKey, lastModified))),
@@ -168,15 +168,18 @@ class MatchedMetadataEnricherSuite extends FunSpec {
         otherRemoteMetadata = RemoteMetaData(otherRemoteKey,
                                              theHash,
                                              lastModified)
-      } yield (theFile, theRemoteMetadata, otherRemoteMetadata, s3)
+      } yield (theFile, theRemoteMetadata, otherRemoteMetadata, remoteObjects)
       it("generates valid metadata") {
         env.map({
-          case (theFile, theRemoteMetadata, otherRemoteMetadata, s3) => {
+          case (theFile,
+                theRemoteMetadata,
+                otherRemoteMetadata,
+                remoteObjects) => {
             val expected = MatchedMetadata(theFile,
                                            matchByHash =
                                              Set(otherRemoteMetadata),
                                            matchByKey = Some(theRemoteMetadata))
-            val result = getMetadata(theFile, s3)
+            val result = getMetadata(theFile, remoteObjects)
             assertResult(expected)(result)
           }
         })
@@ -193,7 +196,7 @@ class MatchedMetadataEnricherSuite extends FunSpec {
                                               prefix)
         theRemoteKey = theFile.remoteKey
         oldHash      = MD5Hash("old-hash")
-        s3: S3ObjectsData = S3ObjectsData(
+        remoteObjects = RemoteObjects(
           byHash = Map(oldHash -> Set(KeyModified(theRemoteKey, lastModified)),
                        theHash -> Set.empty),
           byKey = Map(
@@ -201,14 +204,14 @@ class MatchedMetadataEnricherSuite extends FunSpec {
           )
         )
         theRemoteMetadata = RemoteMetaData(theRemoteKey, oldHash, lastModified)
-      } yield (theFile, theRemoteMetadata, s3)
+      } yield (theFile, theRemoteMetadata, remoteObjects)
       it("generates valid metadata") {
         env.map({
-          case (theFile, theRemoteMetadata, s3) => {
+          case (theFile, theRemoteMetadata, remoteObjects) => {
             val expected = MatchedMetadata(theFile,
                                            matchByHash = Set.empty,
                                            matchByKey = Some(theRemoteMetadata))
-            val result = getMetadata(theFile, s3)
+            val result = getMetadata(theFile, remoteObjects)
             assertResult(expected)(result)
           }
         })
@@ -241,7 +244,7 @@ class MatchedMetadataEnricherSuite extends FunSpec {
                                                 sources,
                                                 prefix)
       lastModified = LastModified(Instant.now)
-      s3ObjectsData = S3ObjectsData(
+      remoteObjects = RemoteObjects(
         byHash = Map(
           hash -> Set(KeyModified(key, lastModified),
                       KeyModified(keyOtherKey.remoteKey, lastModified)),
@@ -253,17 +256,17 @@ class MatchedMetadataEnricherSuite extends FunSpec {
           keyDiffHash.remoteKey -> HashModified(diffHash, lastModified)
         )
       )
-    } yield (s3ObjectsData, localFile, keyDiffHash, diffHash)
+    } yield (remoteObjects, localFile, keyDiffHash, diffHash)
 
-    def invoke(localFile: LocalFile, s3ObjectsData: S3ObjectsData) = {
+    def invoke(localFile: LocalFile, s3ObjectsData: RemoteObjects) = {
       getS3Status(localFile, s3ObjectsData)
     }
 
     describe("when remote key exists") {
       it("should return a result for matching key") {
         env.map({
-          case (s3ObjectsData, localFile: LocalFile, _, _) =>
-            val result = getMatchesByKey(invoke(localFile, s3ObjectsData))
+          case (remoteObjects, localFile: LocalFile, _, _) =>
+            val result = getMatchesByKey(invoke(localFile, remoteObjects))
             assert(result.contains(HashModified(hash, lastModified)))
         })
       }
@@ -279,10 +282,10 @@ class MatchedMetadataEnricherSuite extends FunSpec {
       } yield (localFile)
       it("should return no matches by key") {
         env.map({
-          case (s3ObjectsData, _, _, _) => {
+          case (remoteObjects, _, _, _) => {
             env2.map({
               case (localFile) => {
-                val result = getMatchesByKey(invoke(localFile, s3ObjectsData))
+                val result = getMatchesByKey(invoke(localFile, remoteObjects))
                 assert(result.isEmpty)
               }
             })
@@ -291,10 +294,10 @@ class MatchedMetadataEnricherSuite extends FunSpec {
       }
       it("should return no matches by hash") {
         env.map({
-          case (s3ObjectsData, _, _, _) => {
+          case (remoteObjects, _, _, _) => {
             env2.map({
               case (localFile) => {
-                val result = getMatchesByHash(invoke(localFile, s3ObjectsData))
+                val result = getMatchesByHash(invoke(localFile, remoteObjects))
                 assert(result.isEmpty)
               }
             })
@@ -305,13 +308,13 @@ class MatchedMetadataEnricherSuite extends FunSpec {
 
     describe("when remote key exists and no others match hash") {
       env.map({
-        case (s3ObjectsData, _, keyDiffHash, diffHash) => {
+        case (remoteObjects, _, keyDiffHash, diffHash) => {
           it("should return match by key") {
-            val result = getMatchesByKey(invoke(keyDiffHash, s3ObjectsData))
+            val result = getMatchesByKey(invoke(keyDiffHash, remoteObjects))
             assert(result.contains(HashModified(diffHash, lastModified)))
           }
           it("should return only itself in match by hash") {
-            val result = getMatchesByHash(invoke(keyDiffHash, s3ObjectsData))
+            val result = getMatchesByHash(invoke(keyDiffHash, remoteObjects))
             assert(
               result.equals(Set(
                 (diffHash, KeyModified(keyDiffHash.remoteKey, lastModified)))))
