@@ -7,13 +7,13 @@ import net.kemitix.thorp.core.hasher.Hasher
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.filesystem.FileSystem
 import net.kemitix.thorp.storage.api.Storage
-import zio.{TaskR, ZIO}
+import zio.{RIO, ZIO}
 
 object PlanBuilder {
 
   def createPlan
-    : TaskR[Storage with Console with Config with FileSystem with Hasher,
-            SyncPlan] =
+    : RIO[Storage with Console with Config with FileSystem with Hasher,
+          SyncPlan] =
     SyncLogging.logRunStart *> buildPlan
 
   private def buildPlan =

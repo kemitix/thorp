@@ -7,29 +7,28 @@ import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.core.hasher.Hasher
 import net.kemitix.thorp.domain.Sources
 import net.kemitix.thorp.filesystem.FileSystem
-import zio.{Task, TaskR, ZIO}
+import zio.{Task, RIO, ZIO}
 
 object LocalFileStream {
 
   def findFiles(
       source: Path
-  ): TaskR[Config with FileSystem with Hasher, LocalFiles] = {
+  ): RIO[Config with FileSystem with Hasher, LocalFiles] = {
 
     def recurseIntoSubDirectories(
-        path: Path): TaskR[Config with FileSystem with Hasher, LocalFiles] =
+        path: Path): RIO[Config with FileSystem with Hasher, LocalFiles] =
       path.toFile match {
         case f if f.isDirectory => loop(path)
         case _                  => localFile(path)
       }
 
     def recurse(paths: Stream[Path])
-      : TaskR[Config with FileSystem with Hasher, LocalFiles] =
+      : RIO[Config with FileSystem with Hasher, LocalFiles] =
       for {
         recursed <- ZIO.foreach(paths)(path => recurseIntoSubDirectories(path))
       } yield LocalFiles.reduce(recursed.toStream)
 
-    def loop(
-        path: Path): TaskR[Config with FileSystem with Hasher, LocalFiles] =
+    def loop(path: Path): RIO[Config with FileSystem with Hasher, LocalFiles] =
       dirPaths(path) >>= recurse
 
     loop(source)
@@ -40,7 +39,7 @@ object LocalFileStream {
 
   private def includedDirPaths(paths: Stream[Path]) =
     for {
-      flaggedPaths <- TaskR.foreach(paths)(path =>
+      flaggedPaths <- RIO.foreach(paths)(path =>
         isIncluded(path).map((path, _)))
     } yield
       flaggedPaths.toStream

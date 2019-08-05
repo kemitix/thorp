@@ -11,17 +11,17 @@ import net.kemitix.thorp.console._
 import net.kemitix.thorp.domain.StorageQueueEvent
 import net.kemitix.thorp.domain.StorageQueueEvent._
 import net.kemitix.thorp.storage.api.Storage
-import zio.{TaskR, ZIO}
+import zio.{RIO, ZIO}
 
 trait ThorpArchive {
 
   def update(
       sequencedAction: SequencedAction,
       totalBytesSoFar: Long
-  ): TaskR[Storage with Console with Config, StorageQueueEvent]
+  ): RIO[Storage with Console with Config, StorageQueueEvent]
 
   def logEvent(
-      event: StorageQueueEvent): TaskR[Console with Config, StorageQueueEvent] =
+      event: StorageQueueEvent): RIO[Console with Config, StorageQueueEvent] =
     event match {
       case UploadQueueEvent(remoteKey, _) =>
         ZIO(event) <* Console.putMessageLn(UploadComplete(remoteKey))

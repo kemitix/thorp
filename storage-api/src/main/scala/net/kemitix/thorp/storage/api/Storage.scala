@@ -3,7 +3,7 @@ package net.kemitix.thorp.storage.api
 import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.console.Console
 import net.kemitix.thorp.domain._
-import zio.{Task, TaskR, UIO, ZIO}
+import zio.{Task, RIO, UIO, ZIO}
 
 trait Storage {
   val storage: Storage.Service
@@ -15,7 +15,7 @@ object Storage {
     def listObjects(
         bucket: Bucket,
         prefix: RemoteKey
-    ): TaskR[Storage with Console, S3ObjectsData]
+    ): RIO[Storage with Console, S3ObjectsData]
 
     def upload(
         localFile: LocalFile,
@@ -50,7 +50,7 @@ object Storage {
 
       override def listObjects(
           bucket: Bucket,
-          prefix: RemoteKey): TaskR[Storage with Console, S3ObjectsData] =
+          prefix: RemoteKey): RIO[Storage with Console, S3ObjectsData] =
         listResult
 
       override def upload(
@@ -90,9 +90,8 @@ object Storage {
       Task.die(new NotImplementedError)
   }
 
-  final def list(
-      bucket: Bucket,
-      prefix: RemoteKey): TaskR[Storage with Console, S3ObjectsData] =
+  final def list(bucket: Bucket,
+                 prefix: RemoteKey): RIO[Storage with Console, S3ObjectsData] =
     ZIO.accessM(_.storage listObjects (bucket, prefix))
 
   final def upload(

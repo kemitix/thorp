@@ -8,7 +8,7 @@ import net.kemitix.thorp.domain.StorageQueueEvent.ShutdownQueueEvent
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.Storage
 import net.kemitix.thorp.storage.api.Storage.Service
-import zio.{TaskR, UIO, ZIO}
+import zio.{RIO, UIO, ZIO}
 
 object S3Storage {
   trait Live extends Storage {
@@ -19,9 +19,8 @@ object S3Storage {
       private val transferManager: AmazonTransferManager =
         AmazonTransferManager(TransferManagerBuilder.defaultTransferManager)
 
-      override def listObjects(
-          bucket: Bucket,
-          prefix: RemoteKey): TaskR[Console, S3ObjectsData] =
+      override def listObjects(bucket: Bucket,
+                               prefix: RemoteKey): RIO[Console, S3ObjectsData] =
         Lister.listObjects(client)(bucket, prefix)
 
       override def upload(

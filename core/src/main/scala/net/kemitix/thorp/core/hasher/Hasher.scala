@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicReference
 import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.domain.{HashType, MD5Hash}
 import net.kemitix.thorp.filesystem.FileSystem
-import zio.{TaskR, ZIO}
+import zio.{RIO, ZIO}
 
 /**
   * Creates one, or more, hashes for local objects.
@@ -17,18 +17,18 @@ trait Hasher {
 object Hasher {
   trait Service {
     def hashObject(
-        path: Path): TaskR[Hasher with FileSystem, Map[HashType, MD5Hash]]
+        path: Path): RIO[Hasher with FileSystem, Map[HashType, MD5Hash]]
     def hashObjectChunk(
         path: Path,
         chunkNumber: Long,
-        chunkSize: Long): TaskR[Hasher with FileSystem, Map[HashType, MD5Hash]]
-    def hex(in: Array[Byte]): TaskR[Hasher, String]
-    def digest(in: String): TaskR[Hasher, Array[Byte]]
+        chunkSize: Long): RIO[Hasher with FileSystem, Map[HashType, MD5Hash]]
+    def hex(in: Array[Byte]): RIO[Hasher, String]
+    def digest(in: String): RIO[Hasher, Array[Byte]]
   }
   trait Live extends Hasher {
     val hasher: Service = new Service {
       override def hashObject(
-          path: Path): TaskR[FileSystem, Map[HashType, MD5Hash]] =
+          path: Path): RIO[FileSystem, Map[HashType, MD5Hash]] =
         for {
           md5 <- MD5HashGenerator.md5File(path)
         } yield Map(MD5 -> md5)
@@ -36,17 +36,17 @@ object Hasher {
       override def hashObjectChunk(path: Path,
                                    chunkNumber: Long,
                                    chunkSize: Long)
-        : TaskR[Hasher with FileSystem, Map[HashType, MD5Hash]] =
+        : RIO[Hasher with FileSystem, Map[HashType, MD5Hash]] =
         for {
           md5 <- MD5HashGenerator.md5FileChunk(path,
                                                chunkNumber * chunkSize,
                                                chunkSize)
         } yield Map(MD5 -> md5)
 
-      override def hex(in: Array[Byte]): TaskR[Hasher, String] =
+      override def hex(in: Array[Byte]): RIO[Hasher, String] =
         ZIO(MD5HashGenerator.hex(in))
 
-      override def digest(in: String): TaskR[Hasher, Array[Byte]] =
+      override def digest(in: String): RIO[Hasher, Array[Byte]] =
         ZIO(MD5HashGenerator.digest(in))
     }
   }
@@ -60,37 +60,37 @@ object Hasher {
       new AtomicReference(Map.empty)
     val hasher: Service = new Service {
       override def hashObject(
-          path: Path): TaskR[Hasher with FileSystem, Map[HashType, MD5Hash]] =
+          path: Path): RIO[Hasher with FileSystem, Map[HashType, MD5Hash]] =
         ZIO(hashes.get()(path))
 
       override def hashObjectChunk(path: Path,
                                    chunkNumber: Long,
                                    chunkSize: Long)
-        : TaskR[Hasher with FileSystem, Map[HashType, MD5Hash]] =
+        : RIO[Hasher with FileSystem, Map[HashType, MD5Hash]] =
         ZIO(hashChunks.get()(path)(chunkNumber))
 
-      override def hex(in: Array[Byte]): TaskR[Hasher, String] =
+      override def hex(in: Array[Byte]): RIO[Hasher, String] =
         ZIO(MD5HashGenerator.hex(in))
 
-      override def digest(in: String): TaskR[Hasher, Array[Byte]] =
+      override def digest(in: String): RIO[Hasher, Array[Byte]] =
         ZIO(MD5HashGenerator.digest(in))
     }
   }
   object Test extends Test
 
   final def hashObject(
-      path: Path): TaskR[Hasher with FileSystem, Map[HashType, MD5Hash]] =
+      path: Path): RIO[Hasher with FileSystem, Map[HashType, MD5Hash]] =
     ZIO.accessM(_.hasher hashObject path)
 
   final def hashObjectChunk(
       path: Path,
       chunkNumber: Long,
-      chunkSize: Long): TaskR[Hasher with FileSystem, Map[HashType, MD5Hash]] =
+      chunkSize: Long): RIO[Hasher with FileSystem, Map[HashType, MD5Hash]] =
     ZIO.accessM(_.hasher hashObjectChunk (path, chunkNumber, chunkSize))
 
-  final def hex(in: Array[Byte]): TaskR[Hasher, String] =
+  final def hex(in: Array[Byte]): RIO[Hasher, String] =
     ZIO.accessM(_.hasher hex in)
 
-  final def digest(in: String): TaskR[Hasher, Array[Byte]] =
+  final def digest(in: String): RIO[Hasher, Array[Byte]] =
     ZIO.accessM(_.hasher digest in)
 }
