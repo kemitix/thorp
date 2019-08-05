@@ -13,39 +13,44 @@ object ActionGenerator {
   ): RIO[Config, Action] =
     for {
       bucket <- Config.bucket
-    } yield genAction(matchedMetadata, previousActions, bucket)
+    } yield
+      genAction(formattedMetadata(matchedMetadata, previousActions), bucket)
 
-  private def genAction(matchedMetadata: MatchedMetadata,
-                        previousActions: Stream[Action],
+  private def formattedMetadata(
+      matchedMetadata: MatchedMetadata,
+      previousActions: Stream[Action]): TaggedMetadata = {
+    val remoteExists = matchedMetadata.matchByKey.nonEmpty
+    val remoteMatches = matchedMetadata.matchByKey.nonEmpty &&
+      LocalFile.matchesHash(matchedMetadata.localFile)(
+        matchedMetadata.matchByKey.head.hash)
+    val anyMatches = matchedMetadata.matchByHash.nonEmpty
+    TaggedMetadata(matchedMetadata,
+                   previousActions,
+                   remoteExists,
+                   remoteMatches,
+                   anyMatches)
+  }
+
+  case class TaggedMetadata(
+      matchedMetadata: MatchedMetadata,
+      previousActions: Stream[Action],
+      remoteExists: Boolean,
+      remoteMatches: Boolean,
+      anyMatches: Boolean
+  )
+
+  private def genAction(taggedMetadata: TaggedMetadata,
                         bucket: Bucket): Action = {
-    matchedMetadata match {
-      // #1 local exists, remote exists, remote matches - do nothing
-      case MatchedMetadata(localFile, _, Some(RemoteMetaData(key, hash, _)))
-          if LocalFile.matchesHash(localFile)(hash) =>
-        doNothing(bucket, key)
-      // #2 local exists, remote is missing, other matches - copy
-      case MatchedMetadata(localFile, matchByHash, None)
-          if matchByHash.nonEmpty =>
-        copyFile(bucket, localFile, matchByHash.head)
-      // #3 local exists, remote is missing, other no matches - upload
-      case MatchedMetadata(localFile, matchByHash, None)
-          if matchByHash.isEmpty &&
-            isUploadAlreadyQueued(previousActions)(localFile) =>
-        uploadFile(bucket, localFile)
-      // #4 local exists, remote exists, remote no match, other matches - copy
-      case MatchedMetadata(localFile,
-                           matchByHash,
-                           Some(RemoteMetaData(_, hash, _)))
-          if !LocalFile.matchesHash(localFile)(hash) &&
-            matchByHash.nonEmpty =>
-        copyFile(bucket, localFile, matchByHash.head)
-      // #5 local exists, remote exists, remote no match, other no matches - upload
-      case MatchedMetadata(localFile, matchByHash, Some(_))
-          if matchByHash.isEmpty =>
-        uploadFile(bucket, localFile)
-      // fallback
-      case MatchedMetadata(localFile, _, _) =>
-        doNothing(bucket, localFile.remoteKey)
+    taggedMetadata match {
+      case TaggedMetadata(md, _, exists, matches, _) if exists && matches =>
+        doNothing(bucket, md.localFile.remoteKey)
+      case TaggedMetadata(md, _, _, _, any) if any =>
+        copyFile(bucket, md.localFile, md.matchByHash.head)
+      case TaggedMetadata(md, previous, _, _, _)
+          if isUploadAlreadyQueued(previous)(md.localFile) =>
+        uploadFile(bucket, md.localFile)
+      case TaggedMetadata(md, _, _, _, _) =>
+        doNothing(bucket, md.localFile.remoteKey)
     }
   }
 
