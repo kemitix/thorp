@@ -20,9 +20,8 @@ object ActionGenerator {
       matchedMetadata: MatchedMetadata,
       previousActions: Stream[Action]): TaggedMetadata = {
     val remoteExists = matchedMetadata.matchByKey.nonEmpty
-    val remoteMatches = matchedMetadata.matchByKey.nonEmpty &&
-      LocalFile.matchesHash(matchedMetadata.localFile)(
-        matchedMetadata.matchByKey.head.hash)
+    val remoteMatches = remoteExists && matchedMetadata.matchByKey.exists(m =>
+      LocalFile.matchesHash(matchedMetadata.localFile)(m.hash))
     val anyMatches = matchedMetadata.matchByHash.nonEmpty
     TaggedMetadata(matchedMetadata,
                    previousActions,
