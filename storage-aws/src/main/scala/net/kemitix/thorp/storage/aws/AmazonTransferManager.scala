@@ -8,7 +8,7 @@ import net.kemitix.thorp.storage.aws.AmazonUpload.{
 }
 import zio.{Task, UIO}
 
-case class AmazonTransferManager(transferManager: TransferManager) {
+final case class AmazonTransferManager(transferManager: TransferManager) {
   def shutdownNow(now: Boolean): UIO[Unit] =
     UIO(transferManager.shutdownNow(now))
 

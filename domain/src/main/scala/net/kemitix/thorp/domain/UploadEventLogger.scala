@@ -6,7 +6,7 @@ import scala.io.AnsiColor._
 
 object UploadEventLogger {
 
-  case class RequestCycle(
+  final case class RequestCycle(
       localFile: LocalFile,
       bytesTransferred: Long,
       index: Int,

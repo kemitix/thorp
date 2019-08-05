@@ -1,5 +1,7 @@
 package net.kemitix.thorp.domain
 
+import Implicits._
+
 object Terminal {
 
   val esc: String = "\u001B"
@@ -76,7 +78,6 @@ object Terminal {
     * Stops at the edge of the screen.
     */
   def cursorUp(lines: Int): String = s"${csi}${lines}A"
-  def cursorUp(): String           = cursorUp(1)
 
   /**
     * Move the cursor down, default 1 line.
@@ -84,7 +85,6 @@ object Terminal {
     * Stops at the edge of the screen.
     */
   def cursorDown(lines: Int): String = s"${csi}${lines}B"
-  def cursorDown(): String           = cursorDown(1)
 
   /**
     * Move the cursor forward, default 1 column.
@@ -92,7 +92,6 @@ object Terminal {
     * Stops at the edge of the screen.
     */
   def cursorForward(cols: Int): String = s"${csi}${cols}C"
-  def cursorForward(): String          = cursorForward(1)
 
   /**
     * Move the cursor back, default 1 column,
@@ -100,19 +99,16 @@ object Terminal {
     * Stops at the edge of the screen.
     */
   def cursorBack(cols: Int): String = s"${csi}${cols}D"
-  def cursorBack(): String          = cursorBack(1)
 
   /**
     * Move the cursor to the beginning of the line, default 1, down.
     */
   def cursorNextLine(lines: Int): String = s"${csi}${lines}E"
-  def cursorNextLine(): String           = cursorNextLine(1)
 
   /**
     * Move the cursor to the beginning of the line, default 1, up.
     */
   def cursorPrevLine(lines: Int): String = s"${csi}${lines}F"
-  def cursorPrevLine(): String           = cursorPrevLine(1)
 
   /**
     * Move the cursor to the column on the current line.
@@ -128,13 +124,11 @@ object Terminal {
     * Scroll page up, default 1, lines.
     */
   def scrollUp(lines: Int): String = s"${csi}${lines}S"
-  def scrollUp(): String           = scrollUp(1)
 
   /**
     * Scroll page down, default 1, lines.
     */
   def scrollDown(lines: Int): String = s"${csi}${lines}T"
-  def scrollDown(): String           = scrollDown(1)
 
   /**
     * The Width of the terminal, as reported by the COLUMNS environment variable.
@@ -162,7 +156,7 @@ object Terminal {
     val pxDone            = pxWidth * ratio
     val fullHeadSize: Int = (pxDone / phases).toInt
     val part              = (pxDone % phases).toInt
-    val partial           = if (part != 0) subBars.getOrElse(part, "") else ""
+    val partial           = if (part =/= 0) subBars.getOrElse(part, "") else ""
     val head              = ("█" * fullHeadSize) + partial
     val tailSize          = barWidth - head.length
     val tail              = " " * tailSize

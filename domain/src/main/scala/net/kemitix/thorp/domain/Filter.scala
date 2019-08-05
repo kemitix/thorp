@@ -8,10 +8,13 @@ sealed trait Filter {
 }
 
 object Filter {
-  case class Include(include: String = ".*") extends Filter {
+  final case class Include(include: String) extends Filter {
     lazy val predicate: Predicate[String] = Pattern.compile(include).asPredicate
   }
-  case class Exclude(exclude: String) extends Filter {
+  object Include {
+    def all: Include = Include(".*")
+  }
+  final case class Exclude(exclude: String) extends Filter {
     lazy val predicate: Predicate[String] =
       Pattern.compile(exclude).asPredicate()
   }

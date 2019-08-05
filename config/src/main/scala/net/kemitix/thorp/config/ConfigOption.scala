@@ -12,12 +12,12 @@ sealed trait ConfigOption {
 
 object ConfigOption {
 
-  case class Source(path: Path) extends ConfigOption {
+  final case class Source(path: Path) extends ConfigOption {
     override def update(config: Configuration): Configuration =
       sources.modify(_ + path)(config)
   }
 
-  case class Bucket(name: String) extends ConfigOption {
+  final case class Bucket(name: String) extends ConfigOption {
     override def update(config: Configuration): Configuration =
       if (config.bucket.name.isEmpty)
         bucket.set(domain.Bucket(name))(config)
@@ -25,7 +25,7 @@ object ConfigOption {
         config
   }
 
-  case class Prefix(path: String) extends ConfigOption {
+  final case class Prefix(path: String) extends ConfigOption {
     override def update(config: Configuration): Configuration =
       if (config.prefix.key.isEmpty)
         prefix.set(RemoteKey(path))(config)
@@ -33,17 +33,17 @@ object ConfigOption {
         config
   }
 
-  case class Include(pattern: String) extends ConfigOption {
+  final case class Include(pattern: String) extends ConfigOption {
     override def update(config: Configuration): Configuration =
       filters.modify(domain.Filter.Include(pattern) :: _)(config)
   }
 
-  case class Exclude(pattern: String) extends ConfigOption {
+  final case class Exclude(pattern: String) extends ConfigOption {
     override def update(config: Configuration): Configuration =
       filters.modify(domain.Filter.Exclude(pattern) :: _)(config)
   }
 
-  case class Debug() extends ConfigOption {
+  final case class Debug() extends ConfigOption {
     override def update(config: Configuration): Configuration =
       debug.set(true)(config)
   }

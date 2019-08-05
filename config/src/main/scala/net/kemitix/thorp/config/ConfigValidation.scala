@@ -21,7 +21,7 @@ object ConfigValidation {
     override def errorMessage: String = "Bucket name is missing"
   }
 
-  case class ErrorReadingFile(
+  final case class ErrorReadingFile(
       file: File,
       message: String
   ) extends ConfigValidation {

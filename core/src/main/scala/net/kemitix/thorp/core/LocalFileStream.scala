@@ -65,10 +65,12 @@ object LocalFileStream {
       _     <- filesMustExist(path, files)
     } yield Stream(files: _*).map(_.toPath)
 
-  private def filesMustExist(path: Path, files: Array[File]) = {
-    Task.when(files == null)(
-      Task.fail(new IllegalArgumentException(s"Directory not found $path")))
-  }
+  private def filesMustExist(path: Path, files: Array[File]) =
+    Task {
+      Option(files)
+        .map(_ => ())
+        .getOrElse(new IllegalArgumentException(s"Directory not found $path"))
+    }
 
   private def isIncluded(path: Path) =
     for {

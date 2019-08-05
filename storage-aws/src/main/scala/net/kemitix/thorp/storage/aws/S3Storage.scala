@@ -42,8 +42,8 @@ object S3Storage {
         Deleter.delete(client)(bucket, remoteKey)
 
       override def shutdown: UIO[StorageQueueEvent] = {
-        transferManager.shutdownNow(true)
-        client.shutdown().map(_ => ShutdownQueueEvent())
+        transferManager.shutdownNow(true) *>
+          client.shutdown().map(_ => ShutdownQueueEvent())
       }
     }
   }

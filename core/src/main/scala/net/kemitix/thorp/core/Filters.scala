@@ -9,9 +9,9 @@ object Filters {
 
   def isIncluded(p: Path)(filters: List[Filter]): Boolean = {
     sealed trait State
-    case class Unknown()   extends State
-    case class Accepted()  extends State
-    case class Discarded() extends State
+    final case class Unknown()   extends State
+    final case class Accepted()  extends State
+    final case class Discarded() extends State
     val excluded = isExcludedByFilter(p)(_)
     val included = isIncludedByFilter(p)(_)
     filters.foldRight(Unknown(): State)((filter, state) =>
@@ -33,9 +33,9 @@ object Filters {
   }
 
   def isIncludedByFilter(path: Path)(filter: Filter): Boolean =
-    filter.predicate.test(path.toString)
+    filter.predicate.test(path.toFile.getPath)
 
   def isExcludedByFilter(path: Path)(filter: Filter): Boolean =
-    filter.predicate.test(path.toString)
+    filter.predicate.test(path.toFile.getPath)
 
 }

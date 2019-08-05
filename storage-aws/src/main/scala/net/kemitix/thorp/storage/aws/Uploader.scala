@@ -1,8 +1,10 @@
 package net.kemitix.thorp.storage.aws
 
-import com.amazonaws.event.{ProgressEvent, ProgressEventType, ProgressListener}
+import com.amazonaws.event.ProgressEventType.RESPONSE_BYTE_TRANSFER_EVENT
+import com.amazonaws.event.{ProgressEvent, ProgressListener}
 import com.amazonaws.services.s3.model.{ObjectMetadata, PutObjectRequest}
 import net.kemitix.thorp.config.Config
+import net.kemitix.thorp.domain.Implicits._
 import net.kemitix.thorp.domain.StorageQueueEvent.{
   Action,
   ErrorQueueEvent,
@@ -14,22 +16,18 @@ import net.kemitix.thorp.domain.UploadEvent.{
   TransferEvent
 }
 import net.kemitix.thorp.domain.{StorageQueueEvent, _}
+import net.kemitix.thorp.storage.aws.Uploader.Request
 import zio.{UIO, ZIO}
 
 trait Uploader {
-
-  case class Request(
-      localFile: LocalFile,
-      bucket: Bucket,
-      uploadEventListener: UploadEventListener.Settings
-  )
 
   def upload(transferManager: => AmazonTransferManager)(
       request: Request): ZIO[Config, Nothing, StorageQueueEvent] =
     transfer(transferManager)(request)
       .catchAll(handleError(request.localFile.remoteKey))
 
-  private def handleError(remoteKey: RemoteKey)(e: Throwable) =
+  private def handleError(remoteKey: RemoteKey)(
+      e: Throwable): UIO[StorageQueueEvent] =
     UIO(ErrorQueueEvent(Action.Upload(remoteKey.key), remoteKey, e))
 
   private def transfer(transferManager: => AmazonTransferManager)(
@@ -77,15 +75,15 @@ trait Uploader {
     listenerSettings =>
       new ProgressListener {
         override def progressChanged(progressEvent: ProgressEvent): Unit =
-          UploadEventListener(listenerSettings)(eventHandler(progressEvent))
+          UploadEventListener.listener(listenerSettings)(
+            eventHandler(progressEvent))
 
         private def eventHandler: ProgressEvent => UploadEvent =
           progressEvent => {
             def isTransfer: ProgressEvent => Boolean =
               _.getEventType.isTransferEvent
             def isByteTransfer: ProgressEvent => Boolean =
-              _.getEventType.equals(
-                ProgressEventType.RESPONSE_BYTE_TRANSFER_EVENT)
+              (_.getEventType === RESPONSE_BYTE_TRANSFER_EVENT)
             progressEvent match {
               case e: ProgressEvent if isTransfer(e) =>
                 TransferEvent(e.getEventType.name)
@@ -101,4 +99,10 @@ trait Uploader {
 
 }
 
-object Uploader extends Uploader
+object Uploader extends Uploader {
+  final case class Request(
+      localFile: LocalFile,
+      bucket: Bucket,
+      uploadEventListener: UploadEventListener.Settings
+  )
+}

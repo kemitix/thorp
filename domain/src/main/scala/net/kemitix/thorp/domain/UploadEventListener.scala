@@ -7,26 +7,24 @@ import net.kemitix.thorp.domain.UploadEventLogger.RequestCycle
 
 object UploadEventListener {
 
-  case class Settings(
+  final case class Settings(
       localFile: LocalFile,
       index: Int,
       syncTotals: SyncTotals,
       totalBytesSoFar: Long
   )
 
-  def apply(settings: Settings): UploadEvent => Unit =
-    uploadEvent => {
-      val bytesTransferred = new AtomicLong
-      uploadEvent match {
-        case e: RequestEvent =>
-          UploadEventLogger(
-            RequestCycle(settings.localFile,
-                         bytesTransferred.addAndGet(e.transferred),
-                         settings.index,
-                         settings.syncTotals,
-                         settings.totalBytesSoFar))
-        case _ => ()
-      }
-    }
+  private val bytesTransferred = new AtomicLong(0L)
+
+  def listener(settings: Settings): UploadEvent => Unit = {
+    case e: RequestEvent =>
+      UploadEventLogger(
+        RequestCycle(settings.localFile,
+                     bytesTransferred.addAndGet(e.transferred),
+                     settings.index,
+                     settings.syncTotals,
+                     settings.totalBytesSoFar))
+    case _ => ()
+  }
 
 }

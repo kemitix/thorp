@@ -23,7 +23,7 @@ object ConsoleOut {
       if (batchMode) UIO(enBatch) else UIO(en)
   }
 
-  case class ValidConfig(
+  final case class ValidConfig(
       bucket: Bucket,
       prefix: RemoteKey,
       sources: Sources
@@ -36,7 +36,7 @@ object ConsoleOut {
         .mkString(", ")
   }
 
-  case class UploadComplete(remoteKey: RemoteKey)
+  final case class UploadComplete(remoteKey: RemoteKey)
       extends ConsoleOut.WithBatchMode {
     override def en: String =
       s"${GREEN}Uploaded:$RESET ${remoteKey.key}$eraseToEndOfScreen"
@@ -44,7 +44,7 @@ object ConsoleOut {
       s"Uploaded: ${remoteKey.key}"
   }
 
-  case class CopyComplete(sourceKey: RemoteKey, targetKey: RemoteKey)
+  final case class CopyComplete(sourceKey: RemoteKey, targetKey: RemoteKey)
       extends ConsoleOut.WithBatchMode {
     override def en: String =
       s"${GREEN}Copied:$RESET ${sourceKey.key} => ${targetKey.key}$eraseToEndOfScreen"
@@ -52,7 +52,7 @@ object ConsoleOut {
       s"Copied: ${sourceKey.key} => ${targetKey.key}"
   }
 
-  case class DeleteComplete(remoteKey: RemoteKey)
+  final case class DeleteComplete(remoteKey: RemoteKey)
       extends ConsoleOut.WithBatchMode {
     override def en: String =
       s"${GREEN}Deleted:$RESET ${remoteKey.key}$eraseToEndOfScreen"
@@ -60,7 +60,7 @@ object ConsoleOut {
       s"Deleted: $remoteKey"
   }
 
-  case class ErrorQueueEventOccurred(action: Action, e: Throwable)
+  final case class ErrorQueueEventOccurred(action: Action, e: Throwable)
       extends ConsoleOut.WithBatchMode {
     override def en: String =
       s"${action.name} failed: ${action.keys}: ${e.getMessage}"

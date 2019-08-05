@@ -22,11 +22,11 @@ object LocalFileValidator {
       prefix: RemoteKey
   ): IO[Violation, LocalFile] =
     for {
-      vFile     <- validateFile(path.toFile)
+      file      <- validateFile(path.toFile)
       remoteKey <- validateRemoteKey(sources, prefix, path)
-    } yield LocalFile(vFile, source, hash, remoteKey)
+    } yield LocalFile(file, source, hash, remoteKey)
 
-  private def validateFile(file: File) =
+  private def validateFile(file: File): IO[Violation, File] =
     if (file.isDirectory)
       ZIO.fail(Violation.IsNotAFile(file))
     else
@@ -34,7 +34,7 @@ object LocalFileValidator {
 
   private def validateRemoteKey(sources: Sources,
                                 prefix: RemoteKey,
-                                path: Path) =
+                                path: Path): IO[Violation, RemoteKey] =
     KeyGenerator
       .generateKey(sources, prefix)(path)
       .mapError(e => Violation.InvalidRemoteKey(path, e))
@@ -43,10 +43,11 @@ object LocalFileValidator {
     def getMessage: String
   }
   object Violation {
-    case class IsNotAFile(file: File) extends Violation {
+    final case class IsNotAFile(file: File) extends Violation {
       override def getMessage: String = s"Local File must be a file: ${file}"
     }
-    case class InvalidRemoteKey(path: Path, e: Throwable) extends Violation {
+    final case class InvalidRemoteKey(path: Path, e: Throwable)
+        extends Violation {
       override def getMessage: String =
         s"Remote Key for '${path}' is invalid: ${e.getMessage}"
     }

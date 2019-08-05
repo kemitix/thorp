@@ -13,7 +13,8 @@ object KeyGenerator {
   )(path: Path): Task[RemoteKey] =
     Sources
       .forPath(path)(sources)
-      .map(p => p.relativize(path.toAbsolutePath).toString)
+      .map(_.relativize(path.toAbsolutePath))
+      .map(_.toFile.getPath)
       .map(RemoteKey.resolve(_)(prefix))
 
 }

@@ -18,7 +18,7 @@ object AmazonS3 {
 
   }
 
-  case class ClientImpl(amazonS3: AmazonS3Client) extends Client {
+  final case class ClientImpl(amazonS3: AmazonS3Client) extends Client {
 
     def shutdown(): UIO[Unit] =
       UIO {

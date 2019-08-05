@@ -9,7 +9,7 @@ final case class RemoteObjects private (
 )
 
 object RemoteObjects {
-  def empty: RemoteObjects = RemoteObjects(Map.empty, Map.empty)
+  val empty: RemoteObjects = RemoteObjects(Map.empty, Map.empty)
   def create(byHash: Map[MD5Hash, Set[KeyModified]],
              byKey: Map[RemoteKey, HashModified]): RemoteObjects =
     RemoteObjects(byHash, byKey)

@@ -60,14 +60,14 @@ object PlanBuilder {
       localFiles: Stream[LocalFile]
   ) =
     ZIO.foldLeft(localFiles)(Stream.empty[Action])((acc, localFile) =>
-      createActionFromLocalFile(remoteObjects, acc, localFile).map(_ #:: acc))
+      createActionsFromLocalFile(remoteObjects, acc, localFile).map(_ #::: acc))
 
-  private def createActionFromLocalFile(
+  private def createActionsFromLocalFile(
       remoteObjects: RemoteObjects,
       previousActions: Stream[Action],
       localFile: LocalFile
   ) =
-    ActionGenerator.createAction(
+    ActionGenerator.createActions(
       S3MetaDataEnricher.getMetadata(localFile, remoteObjects),
       previousActions)
 
@@ -75,12 +75,13 @@ object PlanBuilder {
     ZIO.foldLeft(remoteKeys)(Stream.empty[Action])((acc, remoteKey) =>
       createActionFromRemoteKey(remoteKey).map(_ #:: acc))
 
-  private def createActionFromRemoteKey(remoteKey: RemoteKey) =
+  private def createActionFromRemoteKey(
+      remoteKey: RemoteKey): ZIO[FileSystem with Config, Throwable, Action] =
     for {
       bucket       <- Config.bucket
       prefix       <- Config.prefix
       sources      <- Config.sources
-      needsDeleted <- Remote.isMissingLocally(sources, prefix)(remoteKey)
+      needsDeleted <- Remote.isMissingLocally(sources, prefix, remoteKey)
     } yield
       if (needsDeleted) ToDelete(bucket, remoteKey, 0L)
       else DoNothing(bucket, remoteKey, 0L)

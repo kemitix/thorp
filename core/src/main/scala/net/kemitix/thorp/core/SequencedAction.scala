@@ -1,6 +1,6 @@
 package net.kemitix.thorp.core
 
-case class SequencedAction(
+final case class SequencedAction(
     action: Action,
     index: Int
 )

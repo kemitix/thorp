@@ -14,7 +14,7 @@ import zio.{Task, ZIO}
   *
   * A path should only occur once in paths.
   */
-case class Sources(
+final case class Sources(
     paths: List[Path]
 ) {
   def +(path: Path)(implicit m: Monoid[Sources]): Sources = this ++ List(path)
@@ -23,7 +23,7 @@ case class Sources(
 }
 
 object Sources {
-  final val emptySources = Sources(List.empty)
+  val emptySources: Sources = Sources(List.empty)
   implicit def sourcesAppendMonoid: Monoid[Sources] = new Monoid[Sources] {
     override def zero: Sources = emptySources
     override def op(t1: Sources, t2: Sources): Sources =

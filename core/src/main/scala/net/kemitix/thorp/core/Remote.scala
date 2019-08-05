@@ -8,9 +8,9 @@ import zio.{RIO, ZIO}
 
 object Remote {
 
-  def isMissingLocally(sources: Sources, prefix: RemoteKey)(
-      remoteKey: RemoteKey
-  ): RIO[FileSystem, Boolean] =
+  def isMissingLocally(sources: Sources,
+                       prefix: RemoteKey,
+                       remoteKey: RemoteKey): RIO[FileSystem, Boolean] =
     existsLocally(sources, prefix)(remoteKey)
       .map(exists => !exists)
 

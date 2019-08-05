@@ -3,13 +3,14 @@ package net.kemitix.thorp.core
 import net.kemitix.thorp.domain.SimpleLens
 
 final case class Counters(
-    uploaded: Int = 0,
-    deleted: Int = 0,
-    copied: Int = 0,
-    errors: Int = 0
+    uploaded: Int,
+    deleted: Int,
+    copied: Int,
+    errors: Int
 )
 
 object Counters {
+  val empty: Counters = Counters(0, 0, 0, 0)
   val uploaded: SimpleLens[Counters, Int] =
     SimpleLens[Counters, Int](_.uploaded, b => a => b.copy(uploaded = a))
   val deleted: SimpleLens[Counters, Int] =

@@ -9,7 +9,7 @@ object AmazonUpload {
     def waitForUploadResult: UploadResult
   }
 
-  case class CompletableUpload(upload: Upload) extends InProgress {
+  final case class CompletableUpload(upload: Upload) extends InProgress {
     override def waitForUploadResult: UploadResult =
       upload.waitForUploadResult()
   }

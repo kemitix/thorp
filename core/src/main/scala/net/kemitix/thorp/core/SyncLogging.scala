@@ -32,7 +32,7 @@ trait SyncLogging {
   def logRunFinished(
       actions: Stream[StorageQueueEvent]
   ): ZIO[Console, Nothing, Unit] = {
-    val counters = actions.foldLeft(Counters())(countActivities)
+    val counters = actions.foldLeft(Counters.empty)(countActivities)
     Console.putStrLn(eraseToEndOfScreen) *>
       Console.putStrLn(s"Uploaded ${counters.uploaded} files") *>
       Console.putStrLn(s"Copied   ${counters.copied} files") *>

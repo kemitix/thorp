@@ -2,6 +2,7 @@ package net.kemitix.thorp.domain
 
 import java.io.File
 import java.nio.file.{Path, Paths}
+import Implicits._
 
 final case class RemoteKey(key: String)
 
@@ -10,7 +11,7 @@ object RemoteKey {
     SimpleLens[RemoteKey, String](_.key, b => a => b.copy(key = a))
   def asFile(source: Path, prefix: RemoteKey)(
       remoteKey: RemoteKey): Option[File] =
-    if (remoteKey.key.length == 0) None
+    if (remoteKey.key.length === 0) None
     else Some(source.resolve(RemoteKey.relativeTo(prefix)(remoteKey)).toFile)
   def relativeTo(prefix: RemoteKey)(remoteKey: RemoteKey): Path = {
     prefix match {

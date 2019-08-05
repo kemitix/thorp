@@ -29,7 +29,7 @@ trait ConfigurationBuilder {
       globalOpts <- globalOptions(priorityOpts ++ sourceOpts ++ userOpts)
     } yield priorityOpts ++ sourceOpts ++ userOpts ++ globalOpts
 
-  private val emptyConfig = ZIO.succeed(ConfigOptions())
+  private val emptyConfig = ZIO.succeed(ConfigOptions.empty)
 
   private def userOptions(priorityOpts: ConfigOptions) =
     if (ConfigQuery.ignoreUserOptions(priorityOpts)) emptyConfig
@@ -42,7 +42,7 @@ trait ConfigurationBuilder {
   private def collateOptions(configOptions: ConfigOptions): Configuration =
     ConfigOptions.options
       .get(configOptions)
-      .foldLeft(Configuration()) { (config, configOption) =>
+      .foldLeft(Configuration.empty) { (config, configOption) =>
         configOption.update(config)
       }
 

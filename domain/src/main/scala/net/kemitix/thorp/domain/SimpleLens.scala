@@ -1,6 +1,6 @@
 package net.kemitix.thorp.domain
 
-case class SimpleLens[A, B](field: A => B, update: A => B => A) {
+final case class SimpleLens[A, B](field: A => B, update: A => B => A) {
 
   def composeLens[C](other: SimpleLens[B, C]): SimpleLens[A, C] =
     SimpleLens[A, C](
