@@ -7,17 +7,17 @@ import zio.RIO
 
 object ActionGenerator {
 
-  def createActions(
+  def createAction(
       matchedMetadata: MatchedMetadata,
       previousActions: Stream[Action]
-  ): RIO[Config, Stream[Action]] =
+  ): RIO[Config, Action] =
     for {
       bucket <- Config.bucket
     } yield genAction(matchedMetadata, previousActions, bucket)
 
   private def genAction(matchedMetadata: MatchedMetadata,
                         previousActions: Stream[Action],
-                        bucket: Bucket): Stream[Action] = {
+                        bucket: Bucket): Action = {
     matchedMetadata match {
       // #1 local exists, remote exists, remote matches - do nothing
       case MatchedMetadata(localFile, _, Some(RemoteMetaData(key, hash, _)))
@@ -26,7 +26,7 @@ object ActionGenerator {
       // #2 local exists, remote is missing, other matches - copy
       case MatchedMetadata(localFile, matchByHash, None)
           if matchByHash.nonEmpty =>
-        copyFile(bucket, localFile, matchByHash)
+        copyFile(bucket, localFile, matchByHash.head)
       // #3 local exists, remote is missing, other no matches - upload
       case MatchedMetadata(localFile, matchByHash, None)
           if matchByHash.isEmpty &&
@@ -38,7 +38,7 @@ object ActionGenerator {
                            Some(RemoteMetaData(_, hash, _)))
           if !LocalFile.matchesHash(localFile)(hash) &&
             matchByHash.nonEmpty =>
-        copyFile(bucket, localFile, matchByHash)
+        copyFile(bucket, localFile, matchByHash.head)
       // #5 local exists, remote exists, remote no match, other no matches - upload
       case MatchedMetadata(localFile, matchByHash, Some(_))
           if matchByHash.isEmpty =>
@@ -63,29 +63,22 @@ object ActionGenerator {
   private def doNothing(
       bucket: Bucket,
       remoteKey: RemoteKey
-  ) =
-    Stream(DoNothing(bucket, remoteKey, 0L))
+  ) = DoNothing(bucket, remoteKey, 0L)
 
   private def uploadFile(
       bucket: Bucket,
       localFile: LocalFile
-  ) =
-    Stream(ToUpload(bucket, localFile, localFile.file.length))
+  ) = ToUpload(bucket, localFile, localFile.file.length)
 
   private def copyFile(
       bucket: Bucket,
       localFile: LocalFile,
-      matchByHash: Set[RemoteMetaData]
-  ): Stream[Action] =
-    matchByHash
-      .map { remoteMetaData =>
-        ToCopy(bucket,
-               remoteMetaData.remoteKey,
-               remoteMetaData.hash,
-               localFile.remoteKey,
-               localFile.file.length)
-      }
-      .toStream
-      .take(1)
+      remoteMetaData: RemoteMetaData
+  ): Action =
+    ToCopy(bucket,
+           remoteMetaData.remoteKey,
+           remoteMetaData.hash,
+           localFile.remoteKey,
+           localFile.file.length)
 
 }

@@ -206,7 +206,7 @@ class ActionGeneratorSuite extends FunSpec {
       for {
         config  <- ConfigurationBuilder.buildConfig(configOptions)
         _       <- Config.set(config)
-        actions <- ActionGenerator.createActions(input, previousActions)
+        actions <- ActionGenerator.createAction(input, previousActions)
       } yield actions
 
     new DefaultRuntime {}.unsafeRunSync {

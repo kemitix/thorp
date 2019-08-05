@@ -57,14 +57,14 @@ object PlanBuilder {
       localFiles: Stream[LocalFile]
   ) =
     ZIO.foldLeft(localFiles)(Stream.empty[Action])((acc, localFile) =>
-      createActionFromLocalFile(remoteObjects, acc, localFile).map(_ ++ acc))
+      createActionFromLocalFile(remoteObjects, acc, localFile).map(_ #:: acc))
 
   private def createActionFromLocalFile(
       remoteObjects: RemoteObjects,
       previousActions: Stream[Action],
       localFile: LocalFile
   ) =
-    ActionGenerator.createActions(
+    ActionGenerator.createAction(
       S3MetaDataEnricher.getMetadata(localFile, remoteObjects),
       previousActions)
 
