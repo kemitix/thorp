@@ -13,12 +13,11 @@ case class LocalFiles(
       count = count + append.count,
       totalSizeBytes = totalSizeBytes + append.totalSizeBytes
     )
-
 }
 
 object LocalFiles {
-
   def reduce: Stream[LocalFiles] => LocalFiles =
     list => list.foldLeft(LocalFiles())((acc, lf) => acc ++ lf)
-
+  def one(localFile: LocalFile): LocalFiles =
+    LocalFiles(Stream(localFile), 1, localFile.file.length)
 }

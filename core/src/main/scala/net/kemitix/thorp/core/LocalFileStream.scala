@@ -4,9 +4,8 @@ import java.io.File
 import java.nio.file.Path
 
 import net.kemitix.thorp.config.Config
-import net.kemitix.thorp.core.KeyGenerator.generateKey
 import net.kemitix.thorp.core.hasher.Hasher
-import net.kemitix.thorp.domain._
+import net.kemitix.thorp.domain.Sources
 import net.kemitix.thorp.filesystem.FileSystem
 import zio.{Task, TaskR, ZIO}
 
@@ -48,21 +47,18 @@ object LocalFileStream {
         .filter({ case (_, included) => included })
         .map({ case (path, _) => path })
 
-  private def localFile(path: Path) = {
-    val file = path.toFile
+  private def localFile(path: Path) =
     for {
       sources <- Config.sources
       prefix  <- Config.prefix
+      source  <- Sources.forPath(path)(sources)
       hash    <- Hasher.hashObject(path)
-      localFile = LocalFile(file,
-                            sources.forPath(path).toFile,
-                            hash,
-                            generateKey(sources, prefix)(path))
-    } yield
-      LocalFiles(localFiles = Stream(localFile),
-                 count = 1,
-                 totalSizeBytes = file.length)
-  }
+      localFile <- LocalFileValidator.validate(path,
+                                               source.toFile,
+                                               hash,
+                                               sources,
+                                               prefix)
+    } yield LocalFiles.one(localFile)
 
   private def listFiles(path: Path) =
     for {
@@ -78,6 +74,6 @@ object LocalFileStream {
   private def isIncluded(path: Path) =
     for {
       filters <- Config.filters
-    } yield Filter.isIncluded(path)(filters)
+    } yield Filters.isIncluded(path)(filters)
 
 }

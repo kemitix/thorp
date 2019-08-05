@@ -32,7 +32,7 @@ class LocalFileStreamSuite extends FunSpec {
       val result =
         invoke()
           .map(_.localFiles)
-          .map(_.map(_.relative.toString))
+          .map(_.map(LocalFile.relativeToSource(_).toString))
           .map(_.toSet)
       assertResult(expected)(result)
     }

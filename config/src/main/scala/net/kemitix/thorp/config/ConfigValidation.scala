@@ -1,6 +1,6 @@
 package net.kemitix.thorp.config
 
-import java.nio.file.Path
+import java.io.File
 
 sealed trait ConfigValidation {
 
@@ -22,10 +22,10 @@ object ConfigValidation {
   }
 
   case class ErrorReadingFile(
-      path: Path,
+      file: File,
       message: String
   ) extends ConfigValidation {
-    override def errorMessage: String = s"Error reading file '$path': $message"
+    override def errorMessage: String = s"Error reading file '$file': $message"
   }
 
 }

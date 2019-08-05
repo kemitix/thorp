@@ -1,6 +1,6 @@
 package net.kemitix.thorp.config
 
-import java.nio.file.Paths
+import java.io.File
 
 import net.kemitix.thorp.filesystem.FileSystem
 import zio.ZIO
@@ -11,9 +11,9 @@ import zio.ZIO
   */
 trait ConfigurationBuilder {
 
-  private val userConfigFilename = ".config/thorp.conf"
-  private val globalConfig       = Paths.get("/etc/thorp.conf")
-  private val userHome           = Paths.get(System.getProperty("user.home"))
+  private val userConfigFile = ".config/thorp.conf"
+  private val globalConfig   = new File("/etc/thorp.conf")
+  private val userHome       = new File(System.getProperty("user.home"))
 
   def buildConfig(priorityOpts: ConfigOptions)
     : ZIO[FileSystem, ConfigValidationException, Configuration] =
@@ -33,7 +33,7 @@ trait ConfigurationBuilder {
 
   private def userOptions(priorityOpts: ConfigOptions) =
     if (ConfigQuery.ignoreUserOptions(priorityOpts)) emptyConfig
-    else ParseConfigFile.parseFile(userHome.resolve(userConfigFilename))
+    else ParseConfigFile.parseFile(new File(userHome, userConfigFile))
 
   private def globalOptions(priorityOpts: ConfigOptions) =
     if (ConfigQuery.ignoreGlobalOptions(priorityOpts)) emptyConfig

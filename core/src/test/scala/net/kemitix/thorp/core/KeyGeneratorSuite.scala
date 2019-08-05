@@ -1,10 +1,12 @@
 package net.kemitix.thorp.core
 
 import java.io.File
+import java.nio.file.Path
 
 import net.kemitix.thorp.config.Resource
 import net.kemitix.thorp.domain.{RemoteKey, Sources}
 import org.scalatest.FunSpec
+import zio.DefaultRuntime
 
 class KeyGeneratorSuite extends FunSpec {
 
@@ -12,25 +14,31 @@ class KeyGeneratorSuite extends FunSpec {
   private val sourcePath   = source.toPath
   private val prefix       = RemoteKey("prefix")
   private val sources      = Sources(List(sourcePath))
-  private val fileToKey =
-    KeyGenerator.generateKey(sources, prefix) _
 
   describe("key generator") {
 
     describe("when file is within source") {
       it("has a valid key") {
-        val subdir = "subdir"
-        assertResult(RemoteKey(s"${prefix.key}/$subdir"))(
-          fileToKey(sourcePath.resolve(subdir)))
+        val subdir   = "subdir"
+        val expected = Right(RemoteKey(s"${prefix.key}/$subdir"))
+        val result   = invoke(sourcePath.resolve(subdir))
+        assertResult(expected)(result)
       }
     }
 
     describe("when file is deeper within source") {
       it("has a valid key") {
-        val subdir = "subdir/deeper/still"
-        assertResult(RemoteKey(s"${prefix.key}/$subdir"))(
-          fileToKey(sourcePath.resolve(subdir)))
+        val subdir   = "subdir/deeper/still"
+        val expected = Right(RemoteKey(s"${prefix.key}/$subdir"))
+        val result   = invoke(sourcePath.resolve(subdir))
+        assertResult(expected)(result)
       }
+    }
+
+    def invoke(path: Path) = {
+      new DefaultRuntime {}.unsafeRunSync {
+        KeyGenerator.generateKey(sources, prefix)(path)
+      }.toEither
     }
   }
 

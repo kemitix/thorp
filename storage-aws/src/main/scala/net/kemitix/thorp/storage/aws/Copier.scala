@@ -41,7 +41,7 @@ trait Copier {
       copyRequest.sourceKey.key,
       copyRequest.bucket.name,
       copyRequest.targetKey.key
-    ).withMatchingETagConstraint(copyRequest.hash.hash)
+    ).withMatchingETagConstraint(MD5Hash.hash(copyRequest.hash))
 
   private def foldFailure(
       sourceKey: RemoteKey,

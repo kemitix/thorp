@@ -2,6 +2,8 @@ package net.kemitix.thorp.domain
 
 import java.nio.file.Path
 
+import zio.{Task, ZIO}
+
 /**
   * The paths to synchronise with target.
   *
@@ -18,18 +20,10 @@ case class Sources(
   def +(path: Path)(implicit m: Monoid[Sources]): Sources = this ++ List(path)
   def ++(otherPaths: List[Path])(implicit m: Monoid[Sources]): Sources =
     m.op(this, Sources(otherPaths))
-
-  /**
-    * Returns the source path for the given path.
-    */
-  def forPath(path: Path): Path =
-    paths.find(source => path.startsWith(source)).get
 }
 
 object Sources {
-
   final val emptySources = Sources(List.empty)
-
   implicit def sourcesAppendMonoid: Monoid[Sources] = new Monoid[Sources] {
     override def zero: Sources = emptySources
     override def op(t1: Sources, t2: Sources): Sources =
@@ -38,4 +32,12 @@ object Sources {
         else acc ++ List(path)
       })
   }
+
+  /**
+    * Returns the source path for the given path.
+    */
+  def forPath(path: Path)(sources: Sources): Task[Path] =
+    ZIO
+      .fromOption(sources.paths.find(s => path.startsWith(s)))
+      .mapError(_ => new Exception("Path is not within any known source"))
 }

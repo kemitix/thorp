@@ -15,21 +15,21 @@ class RemoteKeyTest extends FreeSpec {
         val key      = emptyKey
         val path     = "path"
         val expected = RemoteKey("path")
-        val result   = key.resolve(path)
+        val result   = RemoteKey.resolve(path)(key)
         assertResult(expected)(result)
       }
       "when path is empty" in {
         val key      = RemoteKey("key")
         val path     = ""
         val expected = RemoteKey("key")
-        val result   = key.resolve(path)
+        val result   = RemoteKey.resolve(path)(key)
         assertResult(expected)(result)
       }
       "when key and path are empty" in {
         val key      = emptyKey
         val path     = ""
         val expected = emptyKey
-        val result   = key.resolve(path)
+        val result   = RemoteKey.resolve(path)(key)
         assertResult(expected)(result)
       }
     }
@@ -39,7 +39,7 @@ class RemoteKeyTest extends FreeSpec {
         val source   = Paths.get("source")
         val prefix   = RemoteKey("prefix")
         val expected = Some(new File("source/key"))
-        val result   = key.asFile(source, prefix)
+        val result   = RemoteKey.asFile(source, prefix)(key)
         assertResult(expected)(result)
       }
       "when prefix is empty" in {
@@ -47,7 +47,7 @@ class RemoteKeyTest extends FreeSpec {
         val source   = Paths.get("source")
         val prefix   = emptyKey
         val expected = Some(new File("source/key"))
-        val result   = key.asFile(source, prefix)
+        val result   = RemoteKey.asFile(source, prefix)(key)
         assertResult(expected)(result)
       }
       "when key is empty" in {
@@ -55,7 +55,7 @@ class RemoteKeyTest extends FreeSpec {
         val source   = Paths.get("source")
         val prefix   = RemoteKey("prefix")
         val expected = None
-        val result   = key.asFile(source, prefix)
+        val result   = RemoteKey.asFile(source, prefix)(key)
         assertResult(expected)(result)
       }
       "when key and prefix are empty" in {
@@ -63,7 +63,7 @@ class RemoteKeyTest extends FreeSpec {
         val source   = Paths.get("source")
         val prefix   = emptyKey
         val expected = None
-        val result   = key.asFile(source, prefix)
+        val result   = RemoteKey.asFile(source, prefix)(key)
         assertResult(expected)(result)
       }
     }
