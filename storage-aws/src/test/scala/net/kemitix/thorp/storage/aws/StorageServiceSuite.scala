@@ -3,11 +3,7 @@ package net.kemitix.thorp.storage.aws
 import java.time.Instant
 
 import net.kemitix.thorp.config.Resource
-import net.kemitix.thorp.core.{
-  KeyGenerator,
-  LocalFileValidator,
-  S3MetaDataEnricher
-}
+import net.kemitix.thorp.core.{LocalFileValidator, S3MetaDataEnricher}
 import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.domain._
 import org.scalamock.scalatest.MockFactory
@@ -19,8 +15,6 @@ class StorageServiceSuite extends FunSpec with MockFactory {
   private val sourcePath = source.toPath
   private val sources    = Sources(List(sourcePath))
   private val prefix     = RemoteKey("prefix")
-  private val fileToKey =
-    KeyGenerator.generateKey(sources, prefix) _
 
   describe("getS3Status") {
 
@@ -29,17 +23,20 @@ class StorageServiceSuite extends FunSpec with MockFactory {
       localFile <- LocalFileValidator.resolve("the-file",
                                               Map(MD5 -> hash),
                                               sourcePath,
-                                              fileToKey)
+                                              sources,
+                                              prefix)
       key = localFile.remoteKey
       keyOtherKey <- LocalFileValidator.resolve("other-key-same-hash",
                                                 Map(MD5 -> hash),
                                                 sourcePath,
-                                                fileToKey)
+                                                sources,
+                                                prefix)
       diffHash = MD5Hash("diff")
       keyDiffHash <- LocalFileValidator.resolve("other-key-diff-hash",
                                                 Map(MD5 -> diffHash),
                                                 sourcePath,
-                                                fileToKey)
+                                                sources,
+                                                prefix)
       lastModified = LastModified(Instant.now)
       s3ObjectsData = S3ObjectsData(
         byHash = Map(
@@ -113,7 +110,8 @@ class StorageServiceSuite extends FunSpec with MockFactory {
         .resolve("missing-file",
                  Map(MD5 -> MD5Hash("unique")),
                  sourcePath,
-                 fileToKey)
+                 sources,
+                 prefix)
       it("should return no matches by key") {
         env2.map(localFile => {
           env.map({

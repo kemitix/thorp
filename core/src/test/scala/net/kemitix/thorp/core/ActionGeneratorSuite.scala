@@ -25,8 +25,6 @@ class ActionGeneratorSuite extends FunSpec {
       ConfigOption.IgnoreUserOptions,
       ConfigOption.IgnoreGlobalOptions
     ))
-  private val fileToKey =
-    KeyGenerator.generateKey(sources, prefix) _
 
   describe("create actions") {
 
@@ -38,7 +36,8 @@ class ActionGeneratorSuite extends FunSpec {
         theFile <- LocalFileValidator.resolve("the-file",
                                               md5HashMap(theHash),
                                               sourcePath,
-                                              fileToKey)
+                                              sources,
+                                              prefix)
         theRemoteMetadata = RemoteMetaData(theFile.remoteKey,
                                            theHash,
                                            lastModified)
@@ -66,7 +65,8 @@ class ActionGeneratorSuite extends FunSpec {
         theFile <- LocalFileValidator.resolve("the-file",
                                               md5HashMap(theHash),
                                               sourcePath,
-                                              fileToKey)
+                                              sources,
+                                              prefix)
         theRemoteKey   = theFile.remoteKey
         otherRemoteKey = RemoteKey.resolve("other-key")(prefix)
         otherRemoteMetadata = RemoteMetaData(otherRemoteKey,
@@ -98,7 +98,8 @@ class ActionGeneratorSuite extends FunSpec {
           theFile <- LocalFileValidator.resolve("the-file",
                                                 md5HashMap(theHash),
                                                 sourcePath,
-                                                fileToKey)
+                                                sources,
+                                                prefix)
           input = S3MetaData(theFile, // local exists
                              matchByHash = Set.empty, // other no matches
                              matchByKey = None) // remote is missing
@@ -122,7 +123,8 @@ class ActionGeneratorSuite extends FunSpec {
         theFile <- LocalFileValidator.resolve("the-file",
                                               md5HashMap(theHash),
                                               sourcePath,
-                                              fileToKey)
+                                              sources,
+                                              prefix)
         theRemoteKey   = theFile.remoteKey
         oldHash        = MD5Hash("old-hash")
         otherRemoteKey = RemoteKey.resolve("other-key")(prefix)
@@ -160,7 +162,8 @@ class ActionGeneratorSuite extends FunSpec {
         theFile <- LocalFileValidator.resolve("the-file",
                                               md5HashMap(theHash),
                                               sourcePath,
-                                              fileToKey)
+                                              sources,
+                                              prefix)
         theRemoteKey      = theFile.remoteKey
         oldHash           = MD5Hash("old-hash")
         theRemoteMetadata = RemoteMetaData(theRemoteKey, oldHash, lastModified)

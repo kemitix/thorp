@@ -14,8 +14,6 @@ class S3MetaDataEnricherSuite extends FunSpec {
   private val sourcePath = source.toPath
   private val sources    = Sources(List(sourcePath))
   private val prefix     = RemoteKey("prefix")
-  private val fileToKey =
-    KeyGenerator.generateKey(sources, prefix) _
 
   def getMatchesByKey(
       status: (Option[HashModified], Set[(MD5Hash, KeyModified)]))
@@ -40,7 +38,8 @@ class S3MetaDataEnricherSuite extends FunSpec {
         theFile <- LocalFileValidator.resolve("the-file",
                                               md5HashMap(theHash),
                                               sourcePath,
-                                              fileToKey)
+                                              sources,
+                                              prefix)
         theRemoteKey = theFile.remoteKey
         s3 = S3ObjectsData(
           byHash = Map(theHash     -> Set(KeyModified(theRemoteKey, lastModified))),
@@ -67,7 +66,8 @@ class S3MetaDataEnricherSuite extends FunSpec {
         theFile <- LocalFileValidator.resolve("the-file",
                                               md5HashMap(theHash),
                                               sourcePath,
-                                              fileToKey)
+                                              sources,
+                                              prefix)
         theRemoteKey: RemoteKey = RemoteKey.resolve("the-file")(prefix)
         s3: S3ObjectsData = S3ObjectsData(
           byHash = Map(theHash     -> Set(KeyModified(theRemoteKey, lastModified))),
@@ -94,7 +94,8 @@ class S3MetaDataEnricherSuite extends FunSpec {
         theFile <- LocalFileValidator.resolve("the-file",
                                               md5HashMap(theHash),
                                               sourcePath,
-                                              fileToKey)
+                                              sources,
+                                              prefix)
         otherRemoteKey = RemoteKey("other-key")
         s3: S3ObjectsData = S3ObjectsData(
           byHash =
@@ -124,7 +125,8 @@ class S3MetaDataEnricherSuite extends FunSpec {
         theFile <- LocalFileValidator.resolve("the-file",
                                               md5HashMap(theHash),
                                               sourcePath,
-                                              fileToKey)
+                                              sources,
+                                              prefix)
         s3: S3ObjectsData = S3ObjectsData()
       } yield (theFile, s3)
       it("generates valid metadata") {
@@ -145,7 +147,8 @@ class S3MetaDataEnricherSuite extends FunSpec {
         theFile <- LocalFileValidator.resolve("the-file",
                                               md5HashMap(theHash),
                                               sourcePath,
-                                              fileToKey)
+                                              sources,
+                                              prefix)
         theRemoteKey   = theFile.remoteKey
         oldHash        = MD5Hash("old-hash")
         otherRemoteKey = RemoteKey.resolve("other-key")(prefix)
@@ -182,7 +185,8 @@ class S3MetaDataEnricherSuite extends FunSpec {
         theFile <- LocalFileValidator.resolve("the-file",
                                               md5HashMap(theHash),
                                               sourcePath,
-                                              fileToKey)
+                                              sources,
+                                              prefix)
         theRemoteKey = theFile.remoteKey
         oldHash      = MD5Hash("old-hash")
         s3: S3ObjectsData = S3ObjectsData(
@@ -218,17 +222,20 @@ class S3MetaDataEnricherSuite extends FunSpec {
       localFile <- LocalFileValidator.resolve("the-file",
                                               md5HashMap(hash),
                                               sourcePath,
-                                              fileToKey)
+                                              sources,
+                                              prefix)
       key = localFile.remoteKey
       keyOtherKey <- LocalFileValidator.resolve("other-key-same-hash",
                                                 md5HashMap(hash),
                                                 sourcePath,
-                                                fileToKey)
+                                                sources,
+                                                prefix)
       diffHash = MD5Hash("diff")
       keyDiffHash <- LocalFileValidator.resolve("other-key-diff-hash",
                                                 md5HashMap(diffHash),
                                                 sourcePath,
-                                                fileToKey)
+                                                sources,
+                                                prefix)
       lastModified = LastModified(Instant.now)
       s3ObjectsData = S3ObjectsData(
         byHash = Map(
@@ -263,7 +270,8 @@ class S3MetaDataEnricherSuite extends FunSpec {
         localFile <- LocalFileValidator.resolve("missing-remote",
                                                 md5HashMap(MD5Hash("unique")),
                                                 sourcePath,
-                                                fileToKey)
+                                                sources,
+                                                prefix)
       } yield (localFile)
       it("should return no matches by key") {
         env.map({
