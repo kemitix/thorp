@@ -1,10 +1,7 @@
 package net.kemitix.thorp.domain
 
 import net.kemitix.thorp.domain.UploadEvent.RequestEvent
-import net.kemitix.thorp.domain.UploadEventLogger.{
-  RequestCycle,
-  logRequestCycle
-}
+import net.kemitix.thorp.domain.UploadEventLogger.RequestCycle
 
 object UploadEventListener {
 
@@ -21,7 +18,7 @@ object UploadEventListener {
       uploadEvent match {
         case e: RequestEvent =>
           bytesTransferred += e.transferred
-          logRequestCycle(
+          UploadEventLogger(
             RequestCycle(settings.localFile,
                          bytesTransferred,
                          settings.index,
