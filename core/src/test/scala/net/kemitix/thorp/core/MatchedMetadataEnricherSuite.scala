@@ -8,7 +8,7 @@ import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.domain._
 import org.scalatest.FunSpec
 
-class S3MetaDataEnricherSuite extends FunSpec {
+class MatchedMetadataEnricherSuite extends FunSpec {
   val lastModified       = LastModified(Instant.now())
   private val source     = Resource(this, "upload")
   private val sourcePath = source.toPath
@@ -50,9 +50,9 @@ class S3MetaDataEnricherSuite extends FunSpec {
       it("generates valid metadata") {
         env.map({
           case (theFile, theRemoteMetadata, s3) => {
-            val expected = S3MetaData(theFile,
-                                      matchByHash = Set(theRemoteMetadata),
-                                      matchByKey = Some(theRemoteMetadata))
+            val expected = MatchedMetadata(theFile,
+                                           matchByHash = Set(theRemoteMetadata),
+                                           matchByKey = Some(theRemoteMetadata))
             val result = getMetadata(theFile, s3)
             assertResult(expected)(result)
           }
@@ -78,9 +78,9 @@ class S3MetaDataEnricherSuite extends FunSpec {
       it("generates valid metadata") {
         env.map({
           case (theFile, theRemoteMetadata, s3) => {
-            val expected = S3MetaData(theFile,
-                                      matchByHash = Set(theRemoteMetadata),
-                                      matchByKey = Some(theRemoteMetadata))
+            val expected = MatchedMetadata(theFile,
+                                           matchByHash = Set(theRemoteMetadata),
+                                           matchByKey = Some(theRemoteMetadata))
             val result = getMetadata(theFile, s3)
             assertResult(expected)(result)
           }
@@ -109,9 +109,10 @@ class S3MetaDataEnricherSuite extends FunSpec {
       it("generates valid metadata") {
         env.map({
           case (theFile, otherRemoteMetadata, s3) => {
-            val expected = S3MetaData(theFile,
-                                      matchByHash = Set(otherRemoteMetadata),
-                                      matchByKey = None)
+            val expected = MatchedMetadata(theFile,
+                                           matchByHash =
+                                             Set(otherRemoteMetadata),
+                                           matchByKey = None)
             val result = getMetadata(theFile, s3)
             assertResult(expected)(result)
           }
@@ -133,7 +134,9 @@ class S3MetaDataEnricherSuite extends FunSpec {
         env.map({
           case (theFile, s3) => {
             val expected =
-              S3MetaData(theFile, matchByHash = Set.empty, matchByKey = None)
+              MatchedMetadata(theFile,
+                              matchByHash = Set.empty,
+                              matchByKey = None)
             val result = getMetadata(theFile, s3)
             assertResult(expected)(result)
           }
@@ -169,9 +172,10 @@ class S3MetaDataEnricherSuite extends FunSpec {
       it("generates valid metadata") {
         env.map({
           case (theFile, theRemoteMetadata, otherRemoteMetadata, s3) => {
-            val expected = S3MetaData(theFile,
-                                      matchByHash = Set(otherRemoteMetadata),
-                                      matchByKey = Some(theRemoteMetadata))
+            val expected = MatchedMetadata(theFile,
+                                           matchByHash =
+                                             Set(otherRemoteMetadata),
+                                           matchByKey = Some(theRemoteMetadata))
             val result = getMetadata(theFile, s3)
             assertResult(expected)(result)
           }
@@ -201,9 +205,9 @@ class S3MetaDataEnricherSuite extends FunSpec {
       it("generates valid metadata") {
         env.map({
           case (theFile, theRemoteMetadata, s3) => {
-            val expected = S3MetaData(theFile,
-                                      matchByHash = Set.empty,
-                                      matchByKey = Some(theRemoteMetadata))
+            val expected = MatchedMetadata(theFile,
+                                           matchByHash = Set.empty,
+                                           matchByKey = Some(theRemoteMetadata))
             val result = getMetadata(theFile, s3)
             assertResult(expected)(result)
           }

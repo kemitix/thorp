@@ -7,9 +7,9 @@ object S3MetaDataEnricher {
   def getMetadata(
       localFile: LocalFile,
       s3ObjectsData: S3ObjectsData
-  ): S3MetaData = {
+  ): MatchedMetadata = {
     val (keyMatches, hashMatches) = getS3Status(localFile, s3ObjectsData)
-    S3MetaData(
+    MatchedMetadata(
       localFile,
       matchByKey = keyMatches.map { hm =>
         RemoteMetaData(localFile.remoteKey, hm.hash, hm.modified)
