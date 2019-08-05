@@ -8,17 +8,17 @@ import zio.RIO
 object ActionGenerator {
 
   def createActions(
-      s3MetaData: MatchedMetadata,
+      matchedMetadata: MatchedMetadata,
       previousActions: Stream[Action]
   ): RIO[Config, Stream[Action]] =
     for {
       bucket <- Config.bucket
-    } yield genAction(s3MetaData, previousActions, bucket)
+    } yield genAction(matchedMetadata, previousActions, bucket)
 
-  private def genAction(s3MetaData: MatchedMetadata,
+  private def genAction(matchedMetadata: MatchedMetadata,
                         previousActions: Stream[Action],
                         bucket: Bucket): Stream[Action] = {
-    s3MetaData match {
+    matchedMetadata match {
       // #1 local exists, remote exists, remote matches - do nothing
       case MatchedMetadata(localFile, _, Some(RemoteMetaData(key, hash, _)))
           if LocalFile.matchesHash(localFile)(hash) =>
