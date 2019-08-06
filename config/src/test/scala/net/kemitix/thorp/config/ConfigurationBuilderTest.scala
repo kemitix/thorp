@@ -3,6 +3,7 @@ package net.kemitix.thorp.config
 import java.nio.file.{Path, Paths}
 
 import net.kemitix.thorp.domain.Filter.{Exclude, Include}
+import net.kemitix.thorp.domain.NonUnit.~*
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.filesystem.FileSystem
 import org.scalatest.FunSpec
@@ -17,7 +18,7 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
 
   private def configOptions(options: ConfigOption*): ConfigOptions =
     ConfigOptions(
-      List(
+      List[ConfigOption](
         ConfigOption.IgnoreUserOptions,
         ConfigOption.IgnoreGlobalOptions
       ) ++ options)
@@ -34,12 +35,12 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
     describe("with .thorp.conf") {
       describe("with settings") {
         withDirectory(source => {
-          val configFileName = createFile(source,
-                                          thorpConfigFileName,
-                                          "bucket = a-bucket",
-                                          "prefix = a-prefix",
-                                          "include = an-inclusion",
-                                          "exclude = an-exclusion")
+          writeFile(source,
+                    thorpConfigFileName,
+                    "bucket = a-bucket",
+                    "prefix = a-prefix",
+                    "include = an-inclusion",
+                    "exclude = an-exclusion")
           val result = invoke(configOptions(ConfigOption.Source(source)))
           it("should have bucket") {
             val expected = Right(Bucket("a-bucket"))
@@ -51,7 +52,8 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
           }
           it("should have filters") {
             val expected =
-              Right(List(Exclude("an-exclusion"), Include("an-inclusion")))
+              Right(
+                List[Filter](Exclude("an-exclusion"), Include("an-inclusion")))
             assertResult(expected)(result.map(_.filters))
           }
         })
@@ -125,14 +127,14 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
             val expectedPrefixes = Right(RemoteKey("current-prefix"))
             // should have filters from both sources
             val expectedFilters = Right(
-              List(Filter.Exclude("current-exclude"),
-                   Filter.Include("current-include")))
+              List[Filter](Filter.Exclude("current-exclude"),
+                           Filter.Include("current-include")))
             val options = configOptions(ConfigOption.Source(currentSource))
             val result  = invoke(options)
-            assertResult(expectedSources)(result.map(_.sources))
-            assertResult(expectedBuckets)(result.map(_.bucket))
-            assertResult(expectedPrefixes)(result.map(_.prefix))
-            assertResult(expectedFilters)(result.map(_.filters))
+            ~*(assertResult(expectedSources)(result.map(_.sources)))
+            ~*(assertResult(expectedBuckets)(result.map(_.bucket)))
+            ~*(assertResult(expectedPrefixes)(result.map(_.prefix)))
+            ~*(assertResult(expectedFilters)(result.map(_.filters)))
           })
         })
       }

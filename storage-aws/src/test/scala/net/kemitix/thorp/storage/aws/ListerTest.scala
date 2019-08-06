@@ -9,6 +9,7 @@ import com.amazonaws.services.s3.model.{
   S3ObjectSummary
 }
 import net.kemitix.thorp.console._
+import net.kemitix.thorp.domain.NonUnit.~*
 import net.kemitix.thorp.domain._
 import org.scalatest.FreeSpec
 import zio.internal.PlatformLive
@@ -23,59 +24,51 @@ class ListerTest extends FreeSpec {
     val prefix = RemoteKey("aRemoteKey")
     "when no errors" - {
       "when single fetch required" in {
-        val nowDate    = new Date
-        val nowInstant = nowDate.toInstant
-        val key        = "key"
-        val etag       = "etag"
-        val expectedHashMap = Map(
-          MD5Hash(etag) -> Set(
-            KeyModified(RemoteKey(key), LastModified(nowInstant))))
-        val expectedKeyMap = Map(
-          RemoteKey(key) -> HashModified(MD5Hash(etag),
-                                         LastModified(nowInstant))
-        )
-        val expected = Right(RemoteObjects(expectedHashMap, expectedKeyMap))
+        val nowDate         = new Date
+        val key             = "key"
+        val etag            = "etag"
+        val expectedHashMap = Map(MD5Hash(etag) -> Set(RemoteKey(key)))
+        val expectedKeyMap  = Map(RemoteKey(key) -> MD5Hash(etag))
+        val expected        = Right(RemoteObjects(expectedHashMap, expectedKeyMap))
         new AmazonS3ClientTestFixture {
-          (fixture.amazonS3Client.listObjectsV2 _)
-            .when()
-            .returns(_ => {
-              UIO.succeed(objectResults(nowDate, key, etag, false))
-            })
+          ~*(
+            (fixture.amazonS3Client.listObjectsV2 _)
+              .when()
+              .returns(_ => {
+                UIO.succeed(objectResults(nowDate, key, etag, false))
+              }))
           private val result = invoke(fixture.amazonS3Client)(bucket, prefix)
-          assertResult(expected)(result)
+          ~*(assertResult(expected)(result))
         }
       }
 
       "when second fetch required" in {
-        val nowDate    = new Date
-        val nowInstant = nowDate.toInstant
-        val key1       = "key1"
-        val etag1      = "etag1"
-        val key2       = "key2"
-        val etag2      = "etag2"
+        val nowDate = new Date
+        val key1    = "key1"
+        val etag1   = "etag1"
+        val key2    = "key2"
+        val etag2   = "etag2"
         val expectedHashMap = Map(
-          MD5Hash(etag1) -> Set(
-            KeyModified(RemoteKey(key1), LastModified(nowInstant))),
-          MD5Hash(etag2) -> Set(
-            KeyModified(RemoteKey(key2), LastModified(nowInstant)))
+          MD5Hash(etag1) -> Set(RemoteKey(key1)),
+          MD5Hash(etag2) -> Set(RemoteKey(key2))
         )
         val expectedKeyMap = Map(
-          RemoteKey(key1) -> HashModified(MD5Hash(etag1),
-                                          LastModified(nowInstant)),
-          RemoteKey(key2) -> HashModified(MD5Hash(etag2),
-                                          LastModified(nowInstant))
+          RemoteKey(key1) -> MD5Hash(etag1),
+          RemoteKey(key2) -> MD5Hash(etag2)
         )
         val expected = Right(RemoteObjects(expectedHashMap, expectedKeyMap))
         new AmazonS3ClientTestFixture {
-          (fixture.amazonS3Client.listObjectsV2 _)
-            .when()
-            .returns(_ => UIO(objectResults(nowDate, key1, etag1, true)))
-            .noMoreThanOnce()
-          (fixture.amazonS3Client.listObjectsV2 _)
-            .when()
-            .returns(_ => UIO(objectResults(nowDate, key2, etag2, false)))
+          ~*(
+            (fixture.amazonS3Client.listObjectsV2 _)
+              .when()
+              .returns(_ => UIO(objectResults(nowDate, key1, etag1, true)))
+              .noMoreThanOnce())
+          ~*(
+            (fixture.amazonS3Client.listObjectsV2 _)
+              .when()
+              .returns(_ => UIO(objectResults(nowDate, key2, etag2, false))))
           private val result = invoke(fixture.amazonS3Client)(bucket, prefix)
-          assertResult(expected)(result)
+          ~*(assertResult(expected)(result))
         }
       }
 
@@ -92,7 +85,7 @@ class ListerTest extends FreeSpec {
                         etag: String,
                         truncated: Boolean) = {
         val result = new ListObjectsV2Result
-        result.getObjectSummaries.add(objectSummary(key, etag, nowDate))
+        ~*(result.getObjectSummaries.add(objectSummary(key, etag, nowDate)))
         result.setTruncated(truncated)
         result
       }
@@ -101,9 +94,10 @@ class ListerTest extends FreeSpec {
     "when Amazon Service Exception" in {
       val exception = new AmazonS3Exception("message")
       new AmazonS3ClientTestFixture {
-        (fixture.amazonS3Client.listObjectsV2 _)
-          .when()
-          .returns(_ => Task.fail(exception))
+        ~*(
+          (fixture.amazonS3Client.listObjectsV2 _)
+            .when()
+            .returns(_ => Task.fail(exception)))
         private val result = invoke(fixture.amazonS3Client)(bucket, prefix)
         assert(result.isLeft)
       }
@@ -111,9 +105,10 @@ class ListerTest extends FreeSpec {
     "when Amazon SDK Client Exception" in {
       val exception = new SdkClientException("message")
       new AmazonS3ClientTestFixture {
-        (fixture.amazonS3Client.listObjectsV2 _)
-          .when()
-          .returns(_ => Task.fail(exception))
+        ~*(
+          (fixture.amazonS3Client.listObjectsV2 _)
+            .when()
+            .returns(_ => Task.fail(exception)))
         private val result = invoke(fixture.amazonS3Client)(bucket, prefix)
         assert(result.isLeft)
       }

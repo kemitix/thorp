@@ -17,21 +17,21 @@ trait ParseConfigLines {
   private def parseLine(str: String) =
     format.matcher(str) match {
       case m if m.matches => parseKeyValue(m.group("key"), m.group("value"))
-      case _              => None
+      case _              => List.empty
     }
 
   private def parseKeyValue(
       key: String,
       value: String
-  ): Option[ConfigOption] =
+  ): List[ConfigOption] =
     key.toLowerCase match {
-      case "source"  => Some(Source(Paths.get(value)))
-      case "bucket"  => Some(Bucket(value))
-      case "prefix"  => Some(Prefix(value))
-      case "include" => Some(Include(value))
-      case "exclude" => Some(Exclude(value))
-      case "debug"   => if (truthy(value)) Some(Debug()) else None
-      case _         => None
+      case "source"  => List(Source(Paths.get(value)))
+      case "bucket"  => List(Bucket(value))
+      case "prefix"  => List(Prefix(value))
+      case "include" => List(Include(value))
+      case "exclude" => List(Exclude(value))
+      case "debug"   => if (truthy(value)) List(Debug()) else List.empty
+      case _         => List.empty
     }
 
   private def truthy(value: String): Boolean =

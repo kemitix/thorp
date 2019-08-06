@@ -35,13 +35,13 @@ object StorageQueueEvent {
     val keys: String
   }
   object Action {
-    case class Copy(keys: String) extends Action {
+    final case class Copy(keys: String) extends Action {
       override val name: String = "Copy"
     }
-    case class Upload(keys: String) extends Action {
+    final case class Upload(keys: String) extends Action {
       override val name: String = "Upload"
     }
-    case class Delete(keys: String) extends Action {
+    final case class Delete(keys: String) extends Action {
       override val name: String = "Delete"
     }
   }

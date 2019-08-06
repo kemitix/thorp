@@ -1,16 +1,11 @@
 package net.kemitix.thorp.config
 
-import java.io.{File, FileNotFoundException}
-
-import scala.util.Try
+import java.io.File
 
 object Resource {
 
   def apply(
       base: AnyRef,
       name: String
-  ): File =
-    Try {
-      new File(base.getClass.getResource(name).getPath)
-    }.getOrElse(throw new FileNotFoundException(name))
+  ): File = new File(base.getClass.getResource(name).getPath)
 }

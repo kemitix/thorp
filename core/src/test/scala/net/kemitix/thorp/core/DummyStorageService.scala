@@ -7,8 +7,9 @@ import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.Storage
 import zio.{RIO, UIO}
 
-case class DummyStorageService(remoteObjects: RemoteObjects,
-                               uploadFiles: Map[File, (RemoteKey, MD5Hash)])
+final case class DummyStorageService(
+    remoteObjects: RemoteObjects,
+    uploadFiles: Map[File, (RemoteKey, MD5Hash)])
     extends Storage.Service {
 
   override def shutdown: UIO[StorageQueueEvent] =

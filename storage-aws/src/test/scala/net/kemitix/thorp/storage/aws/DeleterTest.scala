@@ -12,6 +12,7 @@ import net.kemitix.thorp.domain.{Bucket, RemoteKey}
 import org.scalatest.FreeSpec
 import zio.internal.PlatformLive
 import zio.{Runtime, Task, UIO}
+import net.kemitix.thorp.domain.NonUnit.~*
 
 class DeleterTest extends FreeSpec {
 
@@ -23,11 +24,12 @@ class DeleterTest extends FreeSpec {
     "when no errors" in {
       val expected = Right(DeleteQueueEvent(remoteKey))
       new AmazonS3ClientTestFixture {
-        (fixture.amazonS3Client.deleteObject _)
-          .when()
-          .returns(_ => UIO.succeed(()))
+        ~*(
+          (fixture.amazonS3Client.deleteObject _)
+            .when()
+            .returns(_ => UIO.succeed(())))
         private val result = invoke(fixture.amazonS3Client)(bucket, remoteKey)
-        assertResult(expected)(result)
+        ~*(assertResult(expected)(result))
       }
     }
     "when Amazon Service Exception" in {
@@ -36,11 +38,12 @@ class DeleterTest extends FreeSpec {
         Right(
           ErrorQueueEvent(Action.Delete(remoteKey.key), remoteKey, exception))
       new AmazonS3ClientTestFixture {
-        (fixture.amazonS3Client.deleteObject _)
-          .when()
-          .returns(_ => Task.fail(exception))
+        ~*(
+          (fixture.amazonS3Client.deleteObject _)
+            .when()
+            .returns(_ => Task.fail(exception)))
         private val result = invoke(fixture.amazonS3Client)(bucket, remoteKey)
-        assertResult(expected)(result)
+        ~*(assertResult(expected)(result))
       }
     }
     "when Amazon SDK Client Exception" in {
@@ -49,11 +52,12 @@ class DeleterTest extends FreeSpec {
         Right(
           ErrorQueueEvent(Action.Delete(remoteKey.key), remoteKey, exception))
       new AmazonS3ClientTestFixture {
-        (fixture.amazonS3Client.deleteObject _)
-          .when()
-          .returns(_ => Task.fail(exception))
+        ~*(
+          (fixture.amazonS3Client.deleteObject _)
+            .when()
+            .returns(_ => Task.fail(exception)))
         private val result = invoke(fixture.amazonS3Client)(bucket, remoteKey)
-        assertResult(expected)(result)
+        ~*(assertResult(expected)(result))
       }
     }
     def invoke(amazonS3Client: AmazonS3.Client)(bucket: Bucket,

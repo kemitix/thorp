@@ -11,7 +11,7 @@ object CliArgs {
     OParser
       .parse(configParser, args, List())
       .map(ConfigOptions(_))
-      .getOrElse(ConfigOptions())
+      .getOrElse(ConfigOptions.empty)
   }
 
   val configParser: OParser[Unit, List[ConfigOption]] = {

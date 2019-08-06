@@ -7,26 +7,27 @@ import net.kemitix.thorp.domain.Sources
 trait ConfigQuery {
 
   def showVersion(configOptions: ConfigOptions): Boolean =
-    configOptions contains ConfigOption.Version
+    ConfigOptions.contains(ConfigOption.Version)(configOptions)
 
   def batchMode(configOptions: ConfigOptions): Boolean =
-    configOptions contains ConfigOption.BatchMode
+    ConfigOptions.contains(ConfigOption.BatchMode)(configOptions)
 
   def ignoreUserOptions(configOptions: ConfigOptions): Boolean =
-    configOptions contains ConfigOption.IgnoreUserOptions
+    ConfigOptions.contains(ConfigOption.IgnoreUserOptions)(configOptions)
 
   def ignoreGlobalOptions(configOptions: ConfigOptions): Boolean =
-    configOptions contains ConfigOption.IgnoreGlobalOptions
+    ConfigOptions.contains(ConfigOption.IgnoreGlobalOptions)(configOptions)
 
   def sources(configOptions: ConfigOptions): Sources = {
-    val paths = configOptions.options.flatMap {
-      case ConfigOption.Source(sourcePath) => Some(sourcePath)
-      case _                               => None
+    val explicitPaths = configOptions.options.flatMap {
+      case ConfigOption.Source(sourcePath) => List(sourcePath)
+      case _                               => List.empty
     }
-    Sources(paths match {
+    val paths = explicitPaths match {
       case List() => List(Paths.get(System.getenv("PWD")))
-      case _      => paths
-    })
+      case _      => explicitPaths
+    }
+    Sources(paths)
   }
 
 }

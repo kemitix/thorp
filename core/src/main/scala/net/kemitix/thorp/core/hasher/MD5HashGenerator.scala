@@ -48,7 +48,7 @@ private object MD5HashGenerator {
       offset: Long,
       endOffset: Long
   ) =
-    FileSystem.open(file, offset) >>= { managedFileInputStream =>
+    FileSystem.openAtOffset(file, offset) >>= { managedFileInputStream =>
       managedFileInputStream.use { fileInputStream =>
         digestFile(fileInputStream, offset, endOffset)
       }
@@ -76,7 +76,7 @@ private object MD5HashGenerator {
       if (nextBufferSize(currentOffset, endOffset) < maxBufferSize)
         new Array[Byte](nextBufferSize(currentOffset, endOffset))
       else defaultBuffer
-    fis read buffer
+    val _ = fis read buffer
     buffer
   }
 

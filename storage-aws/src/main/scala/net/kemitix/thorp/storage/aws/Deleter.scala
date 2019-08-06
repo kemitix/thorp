@@ -7,7 +7,7 @@ import net.kemitix.thorp.domain.StorageQueueEvent.{
   ErrorQueueEvent
 }
 import net.kemitix.thorp.domain.{Bucket, RemoteKey, StorageQueueEvent}
-import zio.{Task, UIO}
+import zio.{Task, UIO, ZIO}
 
 trait Deleter {
 
@@ -16,16 +16,15 @@ trait Deleter {
       remoteKey: RemoteKey
   ): UIO[StorageQueueEvent] =
     deleteObject(amazonS3)(bucket, remoteKey)
-      .map(_ => DeleteQueueEvent(remoteKey))
       .catchAll(e =>
         UIO(ErrorQueueEvent(Action.Delete(remoteKey.key), remoteKey, e)))
 
   private def deleteObject(amazonS3: AmazonS3.Client)(
       bucket: Bucket,
       remoteKey: RemoteKey
-  ): Task[Unit] =
-    amazonS3.deleteObject(new DeleteObjectRequest(bucket.name, remoteKey.key))
-
+  ): Task[StorageQueueEvent] =
+    (amazonS3.deleteObject(new DeleteObjectRequest(bucket.name, remoteKey.key))
+      *> ZIO(DeleteQueueEvent(remoteKey)))
 }
 
 object Deleter extends Deleter

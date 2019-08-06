@@ -1,7 +1,5 @@
 package net.kemitix.thorp.storage.aws
 
-import java.time.Instant
-
 import net.kemitix.thorp.config.Resource
 import net.kemitix.thorp.core.{LocalFileValidator, S3MetaDataEnricher}
 import net.kemitix.thorp.domain.HashType.MD5
@@ -37,23 +35,20 @@ class StorageServiceSuite extends FunSpec with MockFactory {
                                                 sourcePath,
                                                 sources,
                                                 prefix)
-      lastModified = LastModified(Instant.now)
       s3ObjectsData = RemoteObjects(
         byHash = Map(
-          hash -> Set(KeyModified(key, lastModified),
-                      KeyModified(keyOtherKey.remoteKey, lastModified)),
-          diffHash -> Set(KeyModified(keyDiffHash.remoteKey, lastModified))
+          hash     -> Set(key, keyOtherKey.remoteKey),
+          diffHash -> Set(keyDiffHash.remoteKey)
         ),
         byKey = Map(
-          key                   -> HashModified(hash, lastModified),
-          keyOtherKey.remoteKey -> HashModified(hash, lastModified),
-          keyDiffHash.remoteKey -> HashModified(diffHash, lastModified)
+          key                   -> hash,
+          keyOtherKey.remoteKey -> hash,
+          keyDiffHash.remoteKey -> diffHash
         )
       )
     } yield
       (s3ObjectsData,
        localFile: LocalFile,
-       lastModified,
        keyOtherKey,
        keyDiffHash,
        diffHash,
@@ -62,16 +57,14 @@ class StorageServiceSuite extends FunSpec with MockFactory {
     def invoke(localFile: LocalFile, s3ObjectsData: RemoteObjects) =
       S3MetaDataEnricher.getS3Status(localFile, s3ObjectsData)
 
-    def getMatchesByKey(
-        status: (Option[HashModified], Set[(MD5Hash, KeyModified)]))
-      : Option[HashModified] = {
+    def getMatchesByKey(status: (Option[MD5Hash], Set[(RemoteKey, MD5Hash)]))
+      : Option[MD5Hash] = {
       val (byKey, _) = status
       byKey
     }
 
-    def getMatchesByHash(
-        status: (Option[HashModified], Set[(MD5Hash, KeyModified)]))
-      : Set[(MD5Hash, KeyModified)] = {
+    def getMatchesByHash(status: (Option[MD5Hash], Set[(RemoteKey, MD5Hash)]))
+      : Set[(RemoteKey, MD5Hash)] = {
       val (_, byHash) = status
       byHash
     }
@@ -80,25 +73,18 @@ class StorageServiceSuite extends FunSpec with MockFactory {
       "when remote key exists, unmodified and other key matches the hash") {
       it("should return the match by key") {
         env.map({
-          case (s3ObjectsData, localFile, lastModified, _, _, _, _) => {
+          case (s3ObjectsData, localFile, _, _, _, _) => {
             val result = getMatchesByKey(invoke(localFile, s3ObjectsData))
-            assert(result.contains(HashModified(hash, lastModified)))
+            assert(result.contains(hash))
           }
         })
       }
       it("should return both matches for the hash") {
         env.map({
-          case (s3ObjectsData,
-                localFile,
-                lastModified,
-                keyOtherKey,
-                _,
-                _,
-                key) => {
+          case (s3ObjectsData, localFile, keyOtherKey, _, _, key) => {
             val result = getMatchesByHash(invoke(localFile, s3ObjectsData))
             assertResult(
-              Set((hash, KeyModified(key, lastModified)),
-                  (hash, KeyModified(keyOtherKey.remoteKey, lastModified)))
+              Set((hash, key), (hash, keyOtherKey.remoteKey))
             )(result)
           }
         })
@@ -115,7 +101,7 @@ class StorageServiceSuite extends FunSpec with MockFactory {
       it("should return no matches by key") {
         env2.map(localFile => {
           env.map({
-            case (s3ObjectsData, _, _, _, _, _, _) => {
+            case (s3ObjectsData, _, _, _, _, _) => {
               val result = getMatchesByKey(invoke(localFile, s3ObjectsData))
               assert(result.isEmpty)
             }
@@ -125,7 +111,7 @@ class StorageServiceSuite extends FunSpec with MockFactory {
       it("should return no matches by hash") {
         env2.map(localFile => {
           env.map({
-            case (s3ObjectsData, _, _, _, _, _, _) => {
+            case (s3ObjectsData, _, _, _, _, _) => {
               val result = getMatchesByHash(invoke(localFile, s3ObjectsData))
               assert(result.isEmpty)
             }
@@ -137,34 +123,21 @@ class StorageServiceSuite extends FunSpec with MockFactory {
     describe("when remote key exists and no others match hash") {
       it("should return the match by key") {
         env.map({
-            case (s3ObjectsData,
-                  _,
-                  lastModified,
-                  _,
-                  keyDiffHash,
-                  diffHash,
-                  _) => {
-              val result = getMatchesByKey(invoke(keyDiffHash, s3ObjectsData))
-              assert(result.contains(HashModified(diffHash, lastModified)))
-            }
-          })
+          case (s3ObjectsData, _, _, keyDiffHash, diffHash, _) => {
+            val result = getMatchesByKey(invoke(keyDiffHash, s3ObjectsData))
+            assert(result.contains(diffHash))
+          }
+        })
       }
       it("should return one match by hash") {
         env.map({
-            case (s3ObjectsData,
-                  _,
-                  lastModified,
-                  _,
-                  keyDiffHash,
-                  diffHash,
-                  _) => {
-              val result = getMatchesByHash(invoke(keyDiffHash, s3ObjectsData))
-              assertResult(
-                Set(
-                  (diffHash, KeyModified(keyDiffHash.remoteKey, lastModified)))
-              )(result)
-            }
-          })
+          case (s3ObjectsData, _, _, keyDiffHash, diffHash, _) => {
+            val result = getMatchesByHash(invoke(keyDiffHash, s3ObjectsData))
+            assertResult(
+              Set((diffHash, keyDiffHash.remoteKey))
+            )(result)
+          }
+        })
       }
     }
   }

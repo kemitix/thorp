@@ -2,29 +2,27 @@ package net.kemitix.thorp.config
 
 import net.kemitix.thorp.domain.SimpleLens
 
-case class ConfigOptions(
-    options: List[ConfigOption] = List()
-) {
-
-  def combine(
-      x: ConfigOptions,
-      y: ConfigOptions
-  ): ConfigOptions =
-    x ++ y
+final case class ConfigOptions(options: List[ConfigOption]) {
 
   def ++(other: ConfigOptions): ConfigOptions =
-    ConfigOptions(options ++ other.options)
+    ConfigOptions.combine(this, other)
 
   def ::(head: ConfigOption): ConfigOptions =
     ConfigOptions(head :: options)
 
-  def contains[A1 >: ConfigOption](elem: A1): Boolean =
-    options contains elem
-
 }
 
 object ConfigOptions {
+  val empty: ConfigOptions = ConfigOptions(List.empty)
   val options: SimpleLens[ConfigOptions, List[ConfigOption]] =
     SimpleLens[ConfigOptions, List[ConfigOption]](_.options,
                                                   c => a => c.copy(options = a))
+  def combine(
+      x: ConfigOptions,
+      y: ConfigOptions
+  ): ConfigOptions = ConfigOptions(x.options ++ y.options)
+
+  def contains[A1 >: ConfigOption](elem: A1)(
+      configOptions: ConfigOptions): Boolean =
+    configOptions.options.contains(elem)
 }

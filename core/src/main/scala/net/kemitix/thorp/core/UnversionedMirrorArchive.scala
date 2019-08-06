@@ -8,7 +8,7 @@ import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.api.Storage
 import zio.{Task, RIO}
 
-case class UnversionedMirrorArchive(syncTotals: SyncTotals)
+final case class UnversionedMirrorArchive(syncTotals: SyncTotals)
     extends ThorpArchive {
 
   override def update(

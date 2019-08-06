@@ -23,7 +23,7 @@ object Config {
   trait Live extends Config {
 
     val config: Service = new Service {
-      private val configRef = new AtomicReference(Configuration())
+      private val configRef = new AtomicReference(Configuration.empty)
       override def setConfiguration(
           config: Configuration): ZIO[Config, Nothing, Unit] =
         UIO(configRef.set(config))

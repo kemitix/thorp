@@ -10,8 +10,11 @@ import zio.{RIO, UIO, ZIO}
 
 trait AmazonS3ClientTestFixture extends MockFactory {
 
-  val fixture: Fixture =
-    Fixture(stub[AmazonS3.Client], stub[AmazonTransferManager])
+  @SuppressWarnings(Array("org.wartremover.warts.PublicInference"))
+  private val manager = stub[AmazonTransferManager]
+  @SuppressWarnings(Array("org.wartremover.warts.PublicInference"))
+  private val client   = stub[AmazonS3.Client]
+  val fixture: Fixture = Fixture(client, manager)
 
   case class Fixture(
       amazonS3Client: AmazonS3.Client,
@@ -53,8 +56,8 @@ trait AmazonS3ClientTestFixture extends MockFactory {
           Deleter.delete(client)(bucket, remoteKey)
 
         override def shutdown: UIO[StorageQueueEvent] = {
-          transferManager.shutdownNow(true)
-          client.shutdown().map(_ => ShutdownQueueEvent())
+          transferManager.shutdownNow(true) *>
+            client.shutdown().map(_ => ShutdownQueueEvent())
         }
       }
   }

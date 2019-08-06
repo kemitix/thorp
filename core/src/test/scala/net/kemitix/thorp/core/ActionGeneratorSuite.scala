@@ -1,7 +1,5 @@
 package net.kemitix.thorp.core
 
-import java.time.Instant
-
 import net.kemitix.thorp.config._
 import net.kemitix.thorp.core.Action.{DoNothing, ToCopy, ToUpload}
 import net.kemitix.thorp.domain.HashType.MD5
@@ -11,14 +9,13 @@ import org.scalatest.FunSpec
 import zio.DefaultRuntime
 
 class ActionGeneratorSuite extends FunSpec {
-  val lastModified       = LastModified(Instant.now())
   private val source     = Resource(this, "upload")
   private val sourcePath = source.toPath
   private val sources    = Sources(List(sourcePath))
   private val prefix     = RemoteKey("prefix")
   private val bucket     = Bucket("bucket")
   private val configOptions = ConfigOptions(
-    List(
+    List[ConfigOption](
       ConfigOption.Bucket("bucket"),
       ConfigOption.Prefix("prefix"),
       ConfigOption.Source(sourcePath),
@@ -38,9 +35,7 @@ class ActionGeneratorSuite extends FunSpec {
                                               sourcePath,
                                               sources,
                                               prefix)
-        theRemoteMetadata = RemoteMetaData(theFile.remoteKey,
-                                           theHash,
-                                           lastModified)
+        theRemoteMetadata = RemoteMetaData(theFile.remoteKey, theHash)
         input = MatchedMetadata(
           theFile, // local exists
           matchByHash = Set(theRemoteMetadata), // remote matches
@@ -67,11 +62,9 @@ class ActionGeneratorSuite extends FunSpec {
                                               sourcePath,
                                               sources,
                                               prefix)
-        theRemoteKey   = theFile.remoteKey
-        otherRemoteKey = RemoteKey.resolve("other-key")(prefix)
-        otherRemoteMetadata = RemoteMetaData(otherRemoteKey,
-                                             theHash,
-                                             lastModified)
+        theRemoteKey        = theFile.remoteKey
+        otherRemoteKey      = RemoteKey.resolve("other-key")(prefix)
+        otherRemoteMetadata = RemoteMetaData(otherRemoteKey, theHash)
         input = MatchedMetadata(
           theFile, // local exists
           matchByHash = Set(otherRemoteMetadata), // other matches
@@ -125,15 +118,13 @@ class ActionGeneratorSuite extends FunSpec {
                                               sourcePath,
                                               sources,
                                               prefix)
-        theRemoteKey   = theFile.remoteKey
-        oldHash        = MD5Hash("old-hash")
-        otherRemoteKey = RemoteKey.resolve("other-key")(prefix)
-        otherRemoteMetadata = RemoteMetaData(otherRemoteKey,
-                                             theHash,
-                                             lastModified)
+        theRemoteKey        = theFile.remoteKey
+        oldHash             = MD5Hash("old-hash")
+        otherRemoteKey      = RemoteKey.resolve("other-key")(prefix)
+        otherRemoteMetadata = RemoteMetaData(otherRemoteKey, theHash)
         oldRemoteMetadata = RemoteMetaData(theRemoteKey,
-                                           hash = oldHash, // remote no match
-                                           lastModified = lastModified)
+                                           hash = oldHash // remote no match
+        )
         input = MatchedMetadata(
           theFile, // local exists
           matchByHash = Set(otherRemoteMetadata), // other matches
@@ -166,7 +157,7 @@ class ActionGeneratorSuite extends FunSpec {
                                               prefix)
         theRemoteKey      = theFile.remoteKey
         oldHash           = MD5Hash("old-hash")
-        theRemoteMetadata = RemoteMetaData(theRemoteKey, oldHash, lastModified)
+        theRemoteMetadata = RemoteMetaData(theRemoteKey, oldHash)
         input = MatchedMetadata(
           theFile, // local exists
           matchByHash = Set.empty, // remote no match, other no match
@@ -206,7 +197,7 @@ class ActionGeneratorSuite extends FunSpec {
       for {
         config  <- ConfigurationBuilder.buildConfig(configOptions)
         _       <- Config.set(config)
-        actions <- ActionGenerator.createAction(input, previousActions)
+        actions <- ActionGenerator.createActions(input, previousActions)
       } yield actions
 
     new DefaultRuntime {}.unsafeRunSync {

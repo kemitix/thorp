@@ -16,7 +16,7 @@ object FileSystem {
 
   trait Service {
     def fileExists(file: File): ZIO[FileSystem, Throwable, Boolean]
-    def openManagedFileInputStream(file: File, offset: Long = 0L)
+    def openManagedFileInputStream(file: File, offset: Long)
       : RIO[FileSystem, ZManaged[Any, Throwable, FileInputStream]]
     def fileLines(file: File): RIO[FileSystem, Seq[String]]
   }
@@ -24,7 +24,7 @@ object FileSystem {
     override val filesystem: Service = new Service {
       override def fileExists(
           file: File
-      ): ZIO[FileSystem, Throwable, Boolean] = ZIO(file.exists)
+      ): RIO[FileSystem, Boolean] = ZIO(file.exists)
 
       override def openManagedFileInputStream(file: File, offset: Long)
         : RIO[FileSystem, ZManaged[Any, Throwable, FileInputStream]] = {
@@ -32,7 +32,7 @@ object FileSystem {
         def acquire =
           Task {
             val stream = new FileInputStream(file)
-            stream skip offset
+            val _      = stream.skip(offset)
             stream
           }
 
@@ -59,7 +59,7 @@ object FileSystem {
 
     override val filesystem: Service = new Service {
 
-      override def fileExists(file: File): ZIO[FileSystem, Throwable, Boolean] =
+      override def fileExists(file: File): RIO[FileSystem, Boolean] =
         fileExistsResultMap.map(m => m.keys.exists(_ equals file.toPath))
 
       override def openManagedFileInputStream(file: File, offset: Long)
@@ -71,12 +71,16 @@ object FileSystem {
     }
   }
 
-  final def exists(file: File): ZIO[FileSystem, Throwable, Boolean] =
+  final def exists(file: File): RIO[FileSystem, Boolean] =
     ZIO.accessM(_.filesystem fileExists file)
 
-  final def open(file: File, offset: Long = 0)
+  final def openAtOffset(file: File, offset: Long)
     : RIO[FileSystem, ZManaged[FileSystem, Throwable, FileInputStream]] =
     ZIO.accessM(_.filesystem openManagedFileInputStream (file, offset))
+
+  final def open(file: File)
+    : RIO[FileSystem, ZManaged[FileSystem, Throwable, FileInputStream]] =
+    ZIO.accessM(_.filesystem openManagedFileInputStream (file, 0L))
 
   final def lines(file: File): RIO[FileSystem, Seq[String]] =
     ZIO.accessM(_.filesystem fileLines (file))

@@ -48,7 +48,7 @@ trait Lister {
 
     fetch(request)
       .map(summaries => {
-        RemoteObjects(byHash(summaries), byKey(summaries))
+        RemoteObjects.create(byHash(summaries), byKey(summaries))
       })
   }
 

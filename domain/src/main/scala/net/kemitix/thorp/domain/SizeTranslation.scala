@@ -2,9 +2,9 @@ package net.kemitix.thorp.domain
 
 object SizeTranslation {
 
-  val kbLimit = 10240L
-  val mbLimit = kbLimit * 1024
-  val gbLimit = mbLimit * 1024
+  val kbLimit: Long = 10240L
+  val mbLimit: Long = kbLimit * 1024
+  val gbLimit: Long = mbLimit * 1024
 
   def sizeInEnglish(length: Long): String =
     length.toDouble match {

@@ -3,15 +3,23 @@ package net.kemitix.thorp.config
 import net.kemitix.thorp.domain.{Bucket, Filter, RemoteKey, SimpleLens, Sources}
 
 private[config] final case class Configuration(
-    bucket: Bucket = Bucket(""),
-    prefix: RemoteKey = RemoteKey(""),
-    filters: List[Filter] = List(),
-    debug: Boolean = false,
-    batchMode: Boolean = false,
-    sources: Sources = Sources(List())
+    bucket: Bucket,
+    prefix: RemoteKey,
+    filters: List[Filter],
+    debug: Boolean,
+    batchMode: Boolean,
+    sources: Sources
 )
 
 private[config] object Configuration {
+  val empty: Configuration = Configuration(
+    bucket = Bucket(""),
+    prefix = RemoteKey(""),
+    filters = List.empty,
+    debug = false,
+    batchMode = false,
+    sources = Sources(List.empty)
+  )
   val sources: SimpleLens[Configuration, Sources] =
     SimpleLens[Configuration, Sources](_.sources, b => a => b.copy(sources = a))
   val bucket: SimpleLens[Configuration, Bucket] =

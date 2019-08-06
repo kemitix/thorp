@@ -16,6 +16,7 @@ import net.kemitix.thorp.domain._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.FreeSpec
 import zio.{DefaultRuntime, Task}
+import net.kemitix.thorp.domain.NonUnit.~*
 
 class UploaderTest extends FreeSpec with MockFactory {
 
@@ -39,16 +40,17 @@ class UploaderTest extends FreeSpec with MockFactory {
       val expected =
         Right(UploadQueueEvent(remoteKey, aHash))
       new AmazonS3ClientTestFixture {
-        (fixture.amazonS3TransferManager.upload _)
-          .when()
-          .returns(_ => Task.succeed(inProgress))
+        ~*(
+          (fixture.amazonS3TransferManager.upload _)
+            .when()
+            .returns(_ => Task.succeed(inProgress)))
         private val result =
           invoke(fixture.amazonS3TransferManager)(
             localFile,
             bucket,
             listenerSettings
           )
-        assertResult(expected)(result)
+        ~*(assertResult(expected)(result))
       }
     }
     "when Amazon Service Exception" in {
@@ -57,16 +59,17 @@ class UploaderTest extends FreeSpec with MockFactory {
         Right(
           ErrorQueueEvent(Action.Upload(remoteKey.key), remoteKey, exception))
       new AmazonS3ClientTestFixture {
-        (fixture.amazonS3TransferManager.upload _)
-          .when()
-          .returns(_ => Task.fail(exception))
+        ~*(
+          (fixture.amazonS3TransferManager.upload _)
+            .when()
+            .returns(_ => Task.fail(exception)))
         private val result =
           invoke(fixture.amazonS3TransferManager)(
             localFile,
             bucket,
             listenerSettings
           )
-        assertResult(expected)(result)
+        ~*(assertResult(expected)(result))
       }
     }
     "when Amazon SDK Client Exception" in {
@@ -75,16 +78,17 @@ class UploaderTest extends FreeSpec with MockFactory {
         Right(
           ErrorQueueEvent(Action.Upload(remoteKey.key), remoteKey, exception))
       new AmazonS3ClientTestFixture {
-        (fixture.amazonS3TransferManager.upload _)
-          .when()
-          .returns(_ => Task.fail(exception))
+        ~*(
+          (fixture.amazonS3TransferManager.upload _)
+            .when()
+            .returns(_ => Task.fail(exception)))
         private val result =
           invoke(fixture.amazonS3TransferManager)(
             localFile,
             bucket,
             listenerSettings
           )
-        assertResult(expected)(result)
+        ~*(assertResult(expected)(result))
       }
     }
     def invoke(transferManager: AmazonTransferManager)(

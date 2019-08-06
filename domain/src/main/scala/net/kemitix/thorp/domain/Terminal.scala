@@ -1,5 +1,7 @@
 package net.kemitix.thorp.domain
 
+import Implicits._
+
 object Terminal {
 
   val esc: String = "\u001B"
@@ -75,58 +77,58 @@ object Terminal {
     *
     * Stops at the edge of the screen.
     */
-  def cursorUp(lines: Int = 1): String = csi + lines + "A"
+  def cursorUp(lines: Int): String = s"${csi}${lines}A"
 
   /**
     * Move the cursor down, default 1 line.
     *
     * Stops at the edge of the screen.
     */
-  def cursorDown(lines: Int = 1): String = csi + lines + "B"
+  def cursorDown(lines: Int): String = s"${csi}${lines}B"
 
   /**
     * Move the cursor forward, default 1 column.
     *
     * Stops at the edge of the screen.
     */
-  def cursorForward(cols: Int = 1): String = csi + cols + "C"
+  def cursorForward(cols: Int): String = s"${csi}${cols}C"
 
   /**
     * Move the cursor back, default 1 column,
     *
     * Stops at the edge of the screen.
     */
-  def cursorBack(cols: Int = 1): String = csi + cols + "D"
+  def cursorBack(cols: Int): String = s"${csi}${cols}D"
 
   /**
     * Move the cursor to the beginning of the line, default 1, down.
     */
-  def cursorNextLine(lines: Int = 1): String = csi + lines + "E"
+  def cursorNextLine(lines: Int): String = s"${csi}${lines}E"
 
   /**
     * Move the cursor to the beginning of the line, default 1, up.
     */
-  def cursorPrevLine(lines: Int = 1): String = csi + lines + "F"
+  def cursorPrevLine(lines: Int): String = s"${csi}${lines}F"
 
   /**
     * Move the cursor to the column on the current line.
     */
-  def cursorHorizAbs(col: Int): String = csi + col + "G"
+  def cursorHorizAbs(col: Int): String = s"${csi}${col}G"
 
   /**
     * Move the cursor to the position on screen (1,1 is the top-left).
     */
-  def cursorPosition(row: Int, col: Int): String = csi + row + ";" + col + "H"
+  def cursorPosition(row: Int, col: Int): String = s"${csi}${row};${col}H"
 
   /**
     * Scroll page up, default 1, lines.
     */
-  def scrollUp(lines: Int = 1): String = csi + lines + "S"
+  def scrollUp(lines: Int): String = s"${csi}${lines}S"
 
   /**
     * Scroll page down, default 1, lines.
     */
-  def scrollDown(lines: Int = 1): String = csi + lines + "T"
+  def scrollDown(lines: Int): String = s"${csi}${lines}T"
 
   /**
     * The Width of the terminal, as reported by the COLUMNS environment variable.
@@ -154,7 +156,7 @@ object Terminal {
     val pxDone            = pxWidth * ratio
     val fullHeadSize: Int = (pxDone / phases).toInt
     val part              = (pxDone % phases).toInt
-    val partial           = if (part != 0) subBars.getOrElse(part, "") else ""
+    val partial           = if (part =/= 0) subBars.getOrElse(part, "") else ""
     val head              = ("█" * fullHeadSize) + partial
     val tailSize          = barWidth - head.length
     val tail              = " " * tailSize
