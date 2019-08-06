@@ -14,17 +14,21 @@ object UploadEventListener {
       totalBytesSoFar: Long
   )
 
-  private val bytesTransferred = new AtomicLong(0L)
-
   def listener(settings: Settings): UploadEvent => Unit = {
-    case e: RequestEvent =>
-      UploadEventLogger(
-        RequestCycle(settings.localFile,
-                     bytesTransferred.addAndGet(e.transferred),
-                     settings.index,
-                     settings.syncTotals,
-                     settings.totalBytesSoFar))
-    case _ => ()
+    val bytesTransferred = new AtomicLong(0L)
+    event =>
+      {
+        event match {
+          case e: RequestEvent =>
+            UploadEventLogger(
+              RequestCycle(settings.localFile,
+                           bytesTransferred.addAndGet(e.transferred),
+                           settings.index,
+                           settings.syncTotals,
+                           settings.totalBytesSoFar))
+          case _ => ()
+        }
+      }
   }
 
 }
