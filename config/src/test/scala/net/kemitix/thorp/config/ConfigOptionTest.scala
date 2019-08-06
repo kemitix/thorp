@@ -12,7 +12,7 @@ class ConfigOptionTest extends FunSpec with TemporaryFolder {
       withDirectory(path1 => {
         withDirectory(path2 => {
           val configOptions = ConfigOptions(
-            List(
+            List[ConfigOption](
               ConfigOption.Source(path1),
               ConfigOption.Source(path2),
               ConfigOption.Bucket("bucket"),

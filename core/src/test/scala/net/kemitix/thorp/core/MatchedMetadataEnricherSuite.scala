@@ -307,7 +307,7 @@ class MatchedMetadataEnricherSuite extends FunSpec {
     }
 
     describe("when remote key exists and no others match hash") {
-      env.map({
+      val _ = env.map({
         case (remoteObjects, _, keyDiffHash, diffHash) => {
           it("should return match by key") {
             val result = getMatchesByKey(invoke(keyDiffHash, remoteObjects))
@@ -316,8 +316,8 @@ class MatchedMetadataEnricherSuite extends FunSpec {
           it("should return only itself in match by hash") {
             val result = getMatchesByHash(invoke(keyDiffHash, remoteObjects))
             assert(
-              result.equals(Set(
-                (diffHash, KeyModified(keyDiffHash.remoteKey, lastModified)))))
+              result === Set(
+                (diffHash, KeyModified(keyDiffHash.remoteKey, lastModified))))
           }
         }
       })

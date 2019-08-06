@@ -11,14 +11,14 @@ import org.scalatest.FunSpec
 import zio.DefaultRuntime
 
 class ActionGeneratorSuite extends FunSpec {
-  val lastModified       = LastModified(Instant.now())
-  private val source     = Resource(this, "upload")
-  private val sourcePath = source.toPath
-  private val sources    = Sources(List(sourcePath))
-  private val prefix     = RemoteKey("prefix")
-  private val bucket     = Bucket("bucket")
+  private val lastModified = LastModified(Instant.now())
+  private val source       = Resource(this, "upload")
+  private val sourcePath   = source.toPath
+  private val sources      = Sources(List(sourcePath))
+  private val prefix       = RemoteKey("prefix")
+  private val bucket       = Bucket("bucket")
   private val configOptions = ConfigOptions(
-    List(
+    List[ConfigOption](
       ConfigOption.Bucket("bucket"),
       ConfigOption.Prefix("prefix"),
       ConfigOption.Source(sourcePath),

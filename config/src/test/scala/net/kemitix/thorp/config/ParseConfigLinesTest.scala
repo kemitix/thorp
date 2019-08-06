@@ -59,21 +59,21 @@ class ParseConfigLinesTest extends FunSpec {
     }
     describe("debug - false") {
       it("should parse") {
-        val expected = Right(ConfigOptions())
+        val expected = Right(ConfigOptions.empty)
         val result   = invoke(List("debug = false"))
         assertResult(expected)(result)
       }
     }
     describe("comment line") {
       it("should be ignored") {
-        val expected = Right(ConfigOptions())
+        val expected = Right(ConfigOptions.empty)
         val result   = invoke(List("# ignore me"))
         assertResult(expected)(result)
       }
     }
     describe("unrecognised option") {
       it("should be ignored") {
-        val expected = Right(ConfigOptions())
+        val expected = Right(ConfigOptions.empty)
         val result   = invoke(List("unsupported = option"))
         assertResult(expected)(result)
       }

@@ -17,21 +17,14 @@ import zio.{Task, ZIO}
 final case class Sources(
     paths: List[Path]
 ) {
-  def +(path: Path)(implicit m: Monoid[Sources]): Sources = this ++ List(path)
-  def ++(otherPaths: List[Path])(implicit m: Monoid[Sources]): Sources =
-    m.op(this, Sources(otherPaths))
+  def +(path: Path): Sources = this ++ List(path)
+  def ++(otherPaths: List[Path]): Sources =
+    Sources(otherPaths.foldLeft(paths)((acc, path) =>
+      if (acc contains path) acc else path :: acc))
 }
 
 object Sources {
   val emptySources: Sources = Sources(List.empty)
-  implicit def sourcesAppendMonoid: Monoid[Sources] = new Monoid[Sources] {
-    override def zero: Sources = emptySources
-    override def op(t1: Sources, t2: Sources): Sources =
-      Sources(t2.paths.foldLeft(t1.paths) { (acc, path) =>
-        if (acc.contains(path)) acc
-        else acc ++ List(path)
-      })
-  }
 
   /**
     * Returns the source path for the given path.

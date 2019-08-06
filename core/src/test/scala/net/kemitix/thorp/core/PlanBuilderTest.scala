@@ -21,7 +21,7 @@ import zio.{DefaultRuntime, Task, UIO}
 
 class PlanBuilderTest extends FreeSpec with TemporaryFolder {
 
-  private val lastModified: LastModified = LastModified()
+  private val lastModified: LastModified = LastModified.now
   private val emptyRemoteObjects         = RemoteObjects.empty
 
   "create a plan" - {
@@ -228,11 +228,11 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
       "same filename in both" - {
         "only upload file in first source" in {
           withDirectory(firstSource => {
-            val fileInFirstSource: File =
+            val fileInFirstSource =
               createFile(firstSource, filename1, "file-1-content")
             val hash1 = md5Hash(fileInFirstSource)
             withDirectory(secondSource => {
-              val fileInSecondSource: File =
+              val fileInSecondSource =
                 createFile(secondSource, filename1, "file-2-content")
               val hash2 = md5Hash(fileInSecondSource)
               val expected = Right(List(
@@ -338,7 +338,7 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
     ("upload",
      remoteKey.key,
      MD5Hash.hash(md5Hash),
-     source.toString,
+     source.toFile.getPath,
      file.toString)
 
   private def toCopy(
@@ -400,6 +400,6 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
         ("copy", sourceKey.key, MD5Hash.hash(hash), targetKey.key, "")
       case DoNothing(_, remoteKey, _) =>
         ("do-nothing", remoteKey.key, "", "", "")
-      case x => ("other", x.toString, "", "", "")
+      case x => ("other", "", "", "", "")
     })
 }

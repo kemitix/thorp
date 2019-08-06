@@ -2,6 +2,7 @@ package net.kemitix.thorp.config
 
 import java.nio.file.Paths
 
+import net.kemitix.thorp.domain.NonUnit.~*
 import net.kemitix.thorp.domain.Sources
 import org.scalatest.FreeSpec
 
@@ -75,7 +76,7 @@ class ConfigQueryTest extends FreeSpec {
         val pwd      = Paths.get(System.getenv("PWD"))
         val expected = Sources(List(pwd))
         val result   = ConfigQuery.sources(ConfigOptions(List()))
-        assertResult(expected)(result)
+        ~*(assertResult(expected)(result))
       }
     }
     "when is set once" - {

@@ -27,7 +27,7 @@ class SequencePlanTest extends FreeSpec {
       val source     = new File("source")
       val localFile1 =
         LocalFile(file1, source, hashes, remoteKey1)
-      val localFile2 =
+      val _ =
         LocalFile(file2, source, hashes, remoteKey2)
       val copy1   = ToCopy(bucket, remoteKey1, hash, remoteKey2, size)
       val copy2   = ToCopy(bucket, remoteKey2, hash, remoteKey1, size)
@@ -36,9 +36,11 @@ class SequencePlanTest extends FreeSpec {
       val delete1 = ToDelete(bucket, remoteKey1, size)
       val delete2 = ToDelete(bucket, remoteKey2, size)
       "should be in correct order" in {
-        val actions  = List(copy1, delete1, upload1, delete2, upload2, copy2)
-        val expected = List(copy1, copy2, upload1, upload2, delete1, delete2)
-        val result   = actions.sortBy(SequencePlan.order)
+        val actions =
+          List[Action](copy1, delete1, upload1, delete2, upload2, copy2)
+        val expected =
+          List[Action](copy1, copy2, upload1, upload2, delete1, delete2)
+        val result = actions.sortBy(SequencePlan.order)
         assertResult(expected)(result)
       }
     }

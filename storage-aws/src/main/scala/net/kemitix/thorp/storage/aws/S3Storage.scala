@@ -17,7 +17,8 @@ object S3Storage {
       private val client: AmazonS3.Client =
         AmazonS3.ClientImpl(AmazonS3ClientBuilder.defaultClient)
       private val transferManager: AmazonTransferManager =
-        AmazonTransferManager(TransferManagerBuilder.defaultTransferManager)
+        AmazonTransferManager.Wrapper(
+          TransferManagerBuilder.defaultTransferManager)
 
       override def listObjects(bucket: Bucket,
                                prefix: RemoteKey): RIO[Console, RemoteObjects] =

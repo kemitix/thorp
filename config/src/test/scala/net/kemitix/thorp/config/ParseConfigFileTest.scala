@@ -10,7 +10,7 @@ import zio.DefaultRuntime
 
 class ParseConfigFileTest extends FunSpec with TemporaryFolder {
 
-  private val empty = Right(ConfigOptions())
+  private val empty = Right(ConfigOptions.empty)
 
   describe("parse a missing file") {
     val file = new File("/path/to/missing/file")
@@ -21,7 +21,7 @@ class ParseConfigFileTest extends FunSpec with TemporaryFolder {
   describe("parse an empty file") {
     it("should return no options") {
       withDirectory(dir => {
-        val file = writeFile(dir, "empty-file")
+        val file = createFile(dir, "empty-file")
         assertResult(empty)(invoke(file))
       })
     }
@@ -29,7 +29,7 @@ class ParseConfigFileTest extends FunSpec with TemporaryFolder {
   describe("parse a file with no valid entries") {
     it("should return no options") {
       withDirectory(dir => {
-        val file = writeFile(dir, "invalid-config", "no valid = config items")
+        val file = createFile(dir, "invalid-config", "no valid = config items")
         assertResult(empty)(invoke(file))
       })
     }
@@ -37,13 +37,14 @@ class ParseConfigFileTest extends FunSpec with TemporaryFolder {
   describe("parse a file with properties") {
     it("should return some options") {
       val expected = Right(
-        ConfigOptions(List(ConfigOption.Source(Paths.get("/path/to/source")),
-                           ConfigOption.Bucket("bucket-name"))))
+        ConfigOptions(
+          List[ConfigOption](ConfigOption.Source(Paths.get("/path/to/source")),
+                             ConfigOption.Bucket("bucket-name"))))
       withDirectory(dir => {
-        val file = writeFile(dir,
-                             "simple-config",
-                             "source = /path/to/source",
-                             "bucket = bucket-name")
+        val file = createFile(dir,
+                              "simple-config",
+                              "source = /path/to/source",
+                              "bucket = bucket-name")
         assertResult(expected)(invoke(file))
       })
     }

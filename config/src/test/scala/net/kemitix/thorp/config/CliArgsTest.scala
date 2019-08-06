@@ -45,25 +45,27 @@ class CliArgsTest extends FunSpec {
       val strings = List("--source", pathTo("."), "--bucket", "bucket", arg)
         .filter(_ != "")
       val maybeOptions = invoke(strings)
-      maybeOptions.getOrElse(ConfigOptions())
+      maybeOptions.getOrElse(ConfigOptions.empty)
     }
+
+    val containsDebug = ConfigOptions.contains(Debug())(_)
 
     describe("when no debug flag") {
       val configOptions = invokeWithArgument("")
       it("debug should be false") {
-        assertResult(false)(configOptions.contains(Debug()))
+        assertResult(false)(containsDebug(configOptions))
       }
     }
     describe("when long debug flag") {
       val configOptions = invokeWithArgument("--debug")
       it("debug should be true") {
-        assert(configOptions.contains(Debug()))
+        assert(containsDebug(configOptions))
       }
     }
     describe("when short debug flag") {
       val configOptions = invokeWithArgument("-d")
       it("debug should be true") {
-        assert(configOptions.contains(Debug()))
+        assert(containsDebug(configOptions))
       }
     }
   }

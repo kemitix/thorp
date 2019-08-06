@@ -32,7 +32,7 @@ class LocalFileStreamSuite extends FunSpec {
       val result =
         invoke()
           .map(_.localFiles)
-          .map(_.map(LocalFile.relativeToSource(_).toString))
+          .map(_.map(LocalFile.relativeToSource(_).toFile.getPath))
           .map(_.toSet)
       assertResult(expected)(result)
     }
@@ -73,7 +73,7 @@ class LocalFileStreamSuite extends FunSpec {
         file("subdir/leaf-file") -> Map(MD5 -> MD5HashData.Leaf.hash)
       ))
     val configOptions = ConfigOptions(
-      List(
+      List[ConfigOption](
         ConfigOption.IgnoreGlobalOptions,
         ConfigOption.IgnoreUserOptions,
         ConfigOption.Source(sourcePath),
