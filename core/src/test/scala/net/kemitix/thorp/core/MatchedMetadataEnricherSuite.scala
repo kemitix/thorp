@@ -1,7 +1,5 @@
 package net.kemitix.thorp.core
 
-import java.time.Instant
-
 import net.kemitix.thorp.config.Resource
 import net.kemitix.thorp.core.S3MetaDataEnricher.{getMetadata, getS3Status}
 import net.kemitix.thorp.domain.HashType.MD5
@@ -9,22 +7,19 @@ import net.kemitix.thorp.domain._
 import org.scalatest.FunSpec
 
 class MatchedMetadataEnricherSuite extends FunSpec {
-  private val lastModified = LastModified(Instant.now())
-  private val source       = Resource(this, "upload")
-  private val sourcePath   = source.toPath
-  private val sources      = Sources(List(sourcePath))
-  private val prefix       = RemoteKey("prefix")
+  private val source     = Resource(this, "upload")
+  private val sourcePath = source.toPath
+  private val sources    = Sources(List(sourcePath))
+  private val prefix     = RemoteKey("prefix")
 
   def getMatchesByKey(
-      status: (Option[HashModified], Set[(MD5Hash, KeyModified)]))
-    : Option[HashModified] = {
+      status: (Option[MD5Hash], Set[(RemoteKey, MD5Hash)])): Option[MD5Hash] = {
     val (byKey, _) = status
     byKey
   }
 
-  def getMatchesByHash(
-      status: (Option[HashModified], Set[(MD5Hash, KeyModified)]))
-    : Set[(MD5Hash, KeyModified)] = {
+  def getMatchesByHash(status: (Option[MD5Hash], Set[(RemoteKey, MD5Hash)]))
+    : Set[(RemoteKey, MD5Hash)] = {
     val (_, byHash) = status
     byHash
   }
@@ -42,10 +37,10 @@ class MatchedMetadataEnricherSuite extends FunSpec {
                                               prefix)
         theRemoteKey = theFile.remoteKey
         remoteObjects = RemoteObjects(
-          byHash = Map(theHash     -> Set(KeyModified(theRemoteKey, lastModified))),
-          byKey = Map(theRemoteKey -> HashModified(theHash, lastModified))
+          byHash = Map(theHash     -> Set(theRemoteKey)),
+          byKey = Map(theRemoteKey -> theHash)
         )
-        theRemoteMetadata = RemoteMetaData(theRemoteKey, theHash, lastModified)
+        theRemoteMetadata = RemoteMetaData(theRemoteKey, theHash)
       } yield (theFile, theRemoteMetadata, remoteObjects)
       it("generates valid metadata") {
         env.map({
@@ -70,10 +65,10 @@ class MatchedMetadataEnricherSuite extends FunSpec {
                                               prefix)
         theRemoteKey: RemoteKey = RemoteKey.resolve("the-file")(prefix)
         remoteObjects = RemoteObjects(
-          byHash = Map(theHash     -> Set(KeyModified(theRemoteKey, lastModified))),
-          byKey = Map(theRemoteKey -> HashModified(theHash, lastModified))
+          byHash = Map(theHash     -> Set(theRemoteKey)),
+          byKey = Map(theRemoteKey -> theHash)
         )
-        theRemoteMetadata = RemoteMetaData(theRemoteKey, theHash, lastModified)
+        theRemoteMetadata = RemoteMetaData(theRemoteKey, theHash)
       } yield (theFile, theRemoteMetadata, remoteObjects)
       it("generates valid metadata") {
         env.map({
@@ -98,13 +93,10 @@ class MatchedMetadataEnricherSuite extends FunSpec {
                                               prefix)
         otherRemoteKey = RemoteKey("other-key")
         remoteObjects = RemoteObjects(
-          byHash =
-            Map(theHash              -> Set(KeyModified(otherRemoteKey, lastModified))),
-          byKey = Map(otherRemoteKey -> HashModified(theHash, lastModified))
+          byHash = Map(theHash       -> Set(otherRemoteKey)),
+          byKey = Map(otherRemoteKey -> theHash)
         )
-        otherRemoteMetadata = RemoteMetaData(otherRemoteKey,
-                                             theHash,
-                                             lastModified)
+        otherRemoteMetadata = RemoteMetaData(otherRemoteKey, theHash)
       } yield (theFile, otherRemoteMetadata, remoteObjects)
       it("generates valid metadata") {
         env.map({
@@ -157,17 +149,14 @@ class MatchedMetadataEnricherSuite extends FunSpec {
         otherRemoteKey = RemoteKey.resolve("other-key")(prefix)
         remoteObjects = RemoteObjects(
           byHash =
-            Map(oldHash -> Set(KeyModified(theRemoteKey, lastModified)),
-                theHash -> Set(KeyModified(otherRemoteKey, lastModified))),
+            Map(oldHash -> Set(theRemoteKey), theHash -> Set(otherRemoteKey)),
           byKey = Map(
-            theRemoteKey   -> HashModified(oldHash, lastModified),
-            otherRemoteKey -> HashModified(theHash, lastModified)
+            theRemoteKey   -> oldHash,
+            otherRemoteKey -> theHash
           )
         )
-        theRemoteMetadata = RemoteMetaData(theRemoteKey, oldHash, lastModified)
-        otherRemoteMetadata = RemoteMetaData(otherRemoteKey,
-                                             theHash,
-                                             lastModified)
+        theRemoteMetadata   = RemoteMetaData(theRemoteKey, oldHash)
+        otherRemoteMetadata = RemoteMetaData(otherRemoteKey, theHash)
       } yield (theFile, theRemoteMetadata, otherRemoteMetadata, remoteObjects)
       it("generates valid metadata") {
         env.map({
@@ -197,13 +186,10 @@ class MatchedMetadataEnricherSuite extends FunSpec {
         theRemoteKey = theFile.remoteKey
         oldHash      = MD5Hash("old-hash")
         remoteObjects = RemoteObjects(
-          byHash = Map(oldHash -> Set(KeyModified(theRemoteKey, lastModified)),
-                       theHash -> Set.empty),
-          byKey = Map(
-            theRemoteKey -> HashModified(oldHash, lastModified)
-          )
+          byHash = Map(oldHash     -> Set(theRemoteKey), theHash -> Set.empty),
+          byKey = Map(theRemoteKey -> oldHash)
         )
-        theRemoteMetadata = RemoteMetaData(theRemoteKey, oldHash, lastModified)
+        theRemoteMetadata = RemoteMetaData(theRemoteKey, oldHash)
       } yield (theFile, theRemoteMetadata, remoteObjects)
       it("generates valid metadata") {
         env.map({
@@ -243,17 +229,15 @@ class MatchedMetadataEnricherSuite extends FunSpec {
                                                 sourcePath,
                                                 sources,
                                                 prefix)
-      lastModified = LastModified(Instant.now)
       remoteObjects = RemoteObjects(
         byHash = Map(
-          hash -> Set(KeyModified(key, lastModified),
-                      KeyModified(keyOtherKey.remoteKey, lastModified)),
-          diffHash -> Set(KeyModified(keyDiffHash.remoteKey, lastModified))
+          hash     -> Set(key, keyOtherKey.remoteKey),
+          diffHash -> Set(keyDiffHash.remoteKey)
         ),
         byKey = Map(
-          key                   -> HashModified(hash, lastModified),
-          keyOtherKey.remoteKey -> HashModified(hash, lastModified),
-          keyDiffHash.remoteKey -> HashModified(diffHash, lastModified)
+          key                   -> hash,
+          keyOtherKey.remoteKey -> hash,
+          keyDiffHash.remoteKey -> diffHash
         )
       )
     } yield (remoteObjects, localFile, keyDiffHash, diffHash)
@@ -267,7 +251,7 @@ class MatchedMetadataEnricherSuite extends FunSpec {
         env.map({
           case (remoteObjects, localFile: LocalFile, _, _) =>
             val result = getMatchesByKey(invoke(localFile, remoteObjects))
-            assert(result.contains(HashModified(hash, lastModified)))
+            assert(result.contains(hash))
         })
       }
     }
@@ -311,13 +295,11 @@ class MatchedMetadataEnricherSuite extends FunSpec {
         case (remoteObjects, _, keyDiffHash, diffHash) => {
           it("should return match by key") {
             val result = getMatchesByKey(invoke(keyDiffHash, remoteObjects))
-            assert(result.contains(HashModified(diffHash, lastModified)))
+            assert(result.contains(diffHash))
           }
           it("should return only itself in match by hash") {
             val result = getMatchesByHash(invoke(keyDiffHash, remoteObjects))
-            assert(
-              result === Set(
-                (diffHash, KeyModified(keyDiffHash.remoteKey, lastModified))))
+            assert(result === Set((keyDiffHash.remoteKey, diffHash)))
           }
         }
       })

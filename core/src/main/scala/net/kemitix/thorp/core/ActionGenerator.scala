@@ -2,9 +2,9 @@ package net.kemitix.thorp.core
 
 import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.core.Action.{DoNothing, ToCopy, ToUpload}
+import net.kemitix.thorp.domain.Implicits._
 import net.kemitix.thorp.domain._
 import zio.RIO
-import Implicits._
 
 object ActionGenerator {
 

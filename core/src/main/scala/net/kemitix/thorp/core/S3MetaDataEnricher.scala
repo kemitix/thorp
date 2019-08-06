@@ -11,11 +11,11 @@ object S3MetaDataEnricher {
     val (keyMatches, hashMatches) = getS3Status(localFile, remoteObjects)
     MatchedMetadata(
       localFile,
-      matchByKey = keyMatches.map { hm =>
-        RemoteMetaData(localFile.remoteKey, hm.hash, hm.modified)
+      matchByKey = keyMatches.map { hash =>
+        RemoteMetaData(localFile.remoteKey, hash)
       },
       matchByHash = hashMatches.map {
-        case (hash, km) => RemoteMetaData(km.key, hash, km.modified)
+        case (key, hash) => RemoteMetaData(key, hash)
       }
     )
   }
@@ -23,14 +23,14 @@ object S3MetaDataEnricher {
   def getS3Status(
       localFile: LocalFile,
       remoteObjects: RemoteObjects
-  ): (Option[HashModified], Set[(MD5Hash, KeyModified)]) = {
+  ): (Option[MD5Hash], Set[(RemoteKey, MD5Hash)]) = {
     val matchingByKey = remoteObjects.byKey.get(localFile.remoteKey)
     val matchingByHash = localFile.hashes
       .map {
         case (_, md5Hash) =>
           remoteObjects.byHash
             .getOrElse(md5Hash, Set())
-            .map(km => (md5Hash, km))
+            .map(key => (key, md5Hash))
       }
       .flatten
       .toSet

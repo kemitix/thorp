@@ -24,18 +24,12 @@ class ListerTest extends FreeSpec {
     val prefix = RemoteKey("aRemoteKey")
     "when no errors" - {
       "when single fetch required" in {
-        val nowDate    = new Date
-        val nowInstant = nowDate.toInstant
-        val key        = "key"
-        val etag       = "etag"
-        val expectedHashMap = Map(
-          MD5Hash(etag) -> Set(
-            KeyModified(RemoteKey(key), LastModified(nowInstant))))
-        val expectedKeyMap = Map(
-          RemoteKey(key) -> HashModified(MD5Hash(etag),
-                                         LastModified(nowInstant))
-        )
-        val expected = Right(RemoteObjects(expectedHashMap, expectedKeyMap))
+        val nowDate         = new Date
+        val key             = "key"
+        val etag            = "etag"
+        val expectedHashMap = Map(MD5Hash(etag) -> Set(RemoteKey(key)))
+        val expectedKeyMap  = Map(RemoteKey(key) -> MD5Hash(etag))
+        val expected        = Right(RemoteObjects(expectedHashMap, expectedKeyMap))
         new AmazonS3ClientTestFixture {
           ~*(
             (fixture.amazonS3Client.listObjectsV2 _)
@@ -49,23 +43,18 @@ class ListerTest extends FreeSpec {
       }
 
       "when second fetch required" in {
-        val nowDate    = new Date
-        val nowInstant = nowDate.toInstant
-        val key1       = "key1"
-        val etag1      = "etag1"
-        val key2       = "key2"
-        val etag2      = "etag2"
+        val nowDate = new Date
+        val key1    = "key1"
+        val etag1   = "etag1"
+        val key2    = "key2"
+        val etag2   = "etag2"
         val expectedHashMap = Map(
-          MD5Hash(etag1) -> Set(
-            KeyModified(RemoteKey(key1), LastModified(nowInstant))),
-          MD5Hash(etag2) -> Set(
-            KeyModified(RemoteKey(key2), LastModified(nowInstant)))
+          MD5Hash(etag1) -> Set(RemoteKey(key1)),
+          MD5Hash(etag2) -> Set(RemoteKey(key2))
         )
         val expectedKeyMap = Map(
-          RemoteKey(key1) -> HashModified(MD5Hash(etag1),
-                                          LastModified(nowInstant)),
-          RemoteKey(key2) -> HashModified(MD5Hash(etag2),
-                                          LastModified(nowInstant))
+          RemoteKey(key1) -> MD5Hash(etag1),
+          RemoteKey(key2) -> MD5Hash(etag2)
         )
         val expected = Right(RemoteObjects(expectedHashMap, expectedKeyMap))
         new AmazonS3ClientTestFixture {
