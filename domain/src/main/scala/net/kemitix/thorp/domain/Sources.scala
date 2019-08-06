@@ -20,7 +20,7 @@ final case class Sources(
   def +(path: Path): Sources = this ++ List(path)
   def ++(otherPaths: List[Path]): Sources =
     Sources(otherPaths.foldLeft(paths)((acc, path) =>
-      if (acc contains path) acc else path :: acc))
+      if (acc contains path) acc else acc ++ List(path)))
 }
 
 object Sources {

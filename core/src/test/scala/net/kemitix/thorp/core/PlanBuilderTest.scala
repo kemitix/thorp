@@ -208,7 +208,7 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
                 createFile(secondSource, filename2, "file-2-content")
               val hash2 = md5Hash(fileInSecondSource)
               val expected = Right(
-                List(
+                Set(
                   toUpload(remoteKey2, hash2, secondSource, fileInSecondSource),
                   toUpload(remoteKey1, hash1, firstSource, fileInFirstSource)
                 ))
@@ -219,7 +219,7 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
                   UIO.succeed(
                     Map(fileInFirstSource.toPath  -> fileInFirstSource,
                         fileInSecondSource.toPath -> fileInSecondSource))
-                )
+                ).map(_.toSet)
               assertResult(expected)(result)
             })
           })
