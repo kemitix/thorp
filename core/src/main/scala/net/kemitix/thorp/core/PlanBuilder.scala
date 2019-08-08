@@ -13,20 +13,14 @@ object PlanBuilder {
 
   def createPlan
     : RIO[Storage with Console with Config with FileSystem with Hasher,
-          SyncPlan] =
-    SyncLogging.logRunStart *> buildPlan
-
-  private def buildPlan =
-    gatherMetadata >>= assemblePlan
-
-  private def gatherMetadata =
-    fetchRemoteData &&& findLocalFiles
+          SyncPlan] = (fetchRemoteData <&> findLocalFiles) >>= assemblePlan
 
   private def fetchRemoteData =
     for {
       bucket  <- Config.bucket
       prefix  <- Config.prefix
       objects <- Storage.list(bucket, prefix)
+      _       <- Console.putStrLn(s"Found ${objects.byKey.size} remote objects")
     } yield objects
 
   private def assemblePlan(metadata: (RemoteObjects, LocalFiles)) =
@@ -34,17 +28,17 @@ object PlanBuilder {
       case (remoteObjects, localData) =>
         createActions(remoteObjects, localData.localFiles)
           .map(_.filter(doesSomething).sortBy(SequencePlan.order))
-          .map(
-            SyncPlan
-              .create(_,
-                      SyncTotals
-                        .create(localData.count, localData.totalSizeBytes, 0L)))
+          .map(syncPlan(localData))
     }
 
-  private def createActions(
-      remoteObjects: RemoteObjects,
-      localFiles: Stream[LocalFile]
-  ) =
+  private def syncPlan(localData: LocalFiles): Stream[Action] => SyncPlan =
+    SyncPlan.create(_, syncTotal(localData))
+
+  private def syncTotal(localData: LocalFiles): SyncTotals =
+    SyncTotals.create(localData.count, localData.totalSizeBytes, 0L)
+
+  private def createActions(remoteObjects: RemoteObjects,
+                            localFiles: Stream[LocalFile]) =
     for {
       fileActions   <- actionsForLocalFiles(remoteObjects, localFiles)
       remoteActions <- actionsForRemoteKeys(remoteObjects.byKey.keys)
@@ -55,28 +49,30 @@ object PlanBuilder {
     case _            => true
   }
 
-  private def actionsForLocalFiles(
-      remoteObjects: RemoteObjects,
-      localFiles: Stream[LocalFile]
-  ) =
-    ZIO.foldLeft(localFiles)(Stream.empty[Action])((acc, localFile) =>
-      createActionsFromLocalFile(remoteObjects, acc, localFile).map(_ #::: acc))
+  private def actionsForLocalFiles(remoteObjects: RemoteObjects,
+                                   localFiles: Stream[LocalFile]) =
+    ZIO.foldLeft(localFiles)(Stream.empty[Action])(
+      (acc, localFile) =>
+        createActionsFromLocalFile(remoteObjects, acc, localFile)
+          .map(_ #::: acc)
+    )
 
-  private def createActionsFromLocalFile(
-      remoteObjects: RemoteObjects,
-      previousActions: Stream[Action],
-      localFile: LocalFile
-  ) =
+  private def createActionsFromLocalFile(remoteObjects: RemoteObjects,
+                                         previousActions: Stream[Action],
+                                         localFile: LocalFile) =
     ActionGenerator.createActions(
       S3MetaDataEnricher.getMetadata(localFile, remoteObjects),
-      previousActions)
+      previousActions
+    )
 
   private def actionsForRemoteKeys(remoteKeys: Iterable[RemoteKey]) =
-    ZIO.foldLeft(remoteKeys)(Stream.empty[Action])((acc, remoteKey) =>
-      createActionFromRemoteKey(remoteKey).map(_ #:: acc))
+    ZIO.foldLeft(remoteKeys)(Stream.empty[Action])(
+      (acc, remoteKey) => createActionFromRemoteKey(remoteKey).map(_ #:: acc)
+    )
 
   private def createActionFromRemoteKey(
-      remoteKey: RemoteKey): ZIO[FileSystem with Config, Throwable, Action] =
+      remoteKey: RemoteKey
+  ): ZIO[FileSystem with Config, Throwable, Action] =
     for {
       bucket       <- Config.bucket
       prefix       <- Config.prefix
@@ -93,6 +89,7 @@ object PlanBuilder {
     for {
       sources <- Config.sources
       found   <- ZIO.foreach(sources.paths)(LocalFileStream.findFiles)
+      _       <- Console.putStrLn(s"Found ${found.flatMap(_.localFiles).size} files")
     } yield LocalFiles.reduce(found.toStream)
 
 }

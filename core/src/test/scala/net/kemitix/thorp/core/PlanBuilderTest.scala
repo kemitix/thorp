@@ -363,23 +363,20 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
       override def shutdownResult: UIO[StorageQueueEvent] =
         Task.die(new NotImplementedError)
     }
-
     def testProgram =
       for {
         config <- ConfigurationBuilder.buildConfig(configOptions)
         _      <- Config.set(config)
         plan   <- PlanBuilder.createPlan
       } yield plan
-
     new DefaultRuntime {}
       .unsafeRunSync(testProgram.provide(testEnv))
       .toEither
       .map(convertResult)
   }
 
-  private def convertResult
-    : SyncPlan => List[(String, String, String, String, String)] =
-    _.actions.toList.map({
+  private def convertResult(plan: SyncPlan) =
+    plan.actions.map({
       case ToUpload(_, lf, _) =>
         ("upload",
          lf.remoteKey.key,
@@ -391,6 +388,6 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
         ("copy", sourceKey.key, MD5Hash.hash(hash), targetKey.key, "")
       case DoNothing(_, remoteKey, _) =>
         ("do-nothing", remoteKey.key, "", "", "")
-      case x => ("other", "", "", "", "")
+      case _ => ("other", "", "", "", "")
     })
 }

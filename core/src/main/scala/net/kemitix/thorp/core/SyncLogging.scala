@@ -30,7 +30,7 @@ trait SyncLogging {
     } yield ()
 
   def logRunFinished(
-      actions: Stream[StorageQueueEvent]
+      actions: Seq[StorageQueueEvent]
   ): ZIO[Console, Nothing, Unit] = {
     val counters = actions.foldLeft(Counters.empty)(countActivities)
     Console.putStrLn(eraseToEndOfScreen) *>

@@ -25,10 +25,11 @@ trait Program {
 
   private def execute =
     for {
-      plan    <- PlanBuilder.createPlan
-      archive <- UnversionedMirrorArchive.default(plan.syncTotals)
-      events  <- applyPlan(archive, plan)
-      _       <- SyncLogging.logRunFinished(events)
+      _        <- SyncLogging.logRunStart
+      syncPlan <- PlanBuilder.createPlan
+      archive  <- UnversionedMirrorArchive.default(syncPlan.syncTotals)
+      events   <- PlanExecutor.executePlan(archive, syncPlan)
+      _        <- SyncLogging.logRunFinished(events)
     } yield ()
 
   private def handleErrors(throwable: Throwable) =
@@ -39,27 +40,6 @@ trait Program {
       case ConfigValidationException(errors) =>
         ZIO.foreach_(errors)(error => Console.putStrLn(s"- $error"))
     }
-
-  private def applyPlan(archive: ThorpArchive, syncPlan: SyncPlan) =
-    ZIO
-      .foldLeft(sequenceActions(syncPlan.actions))(
-        EventQueue(Stream.empty, syncPlan.syncTotals.totalSizeBytes))(
-        applyAction(archive)(_, _))
-      .map(_.events)
-
-  private def sequenceActions(actions: Stream[Action]) =
-    actions.zipWithIndex
-      .map({ case (a, i) => SequencedAction(a, i) })
-
-  private def applyAction(archive: ThorpArchive)(
-      queue: EventQueue,
-      action: SequencedAction
-  ) = {
-    val remainingBytes = queue.bytesInQueue - action.action.size
-    archive
-      .update(action, remainingBytes)
-      .map(events => EventQueue(queue.events ++ Stream(events), remainingBytes))
-  }
 
 }
 
