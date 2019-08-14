@@ -1,5 +1,7 @@
 package net.kemitix.thorp.storage.aws
 
+import java.util.concurrent.locks.StampedLock
+
 import com.amazonaws.event.ProgressEventType.RESPONSE_BYTE_TRANSFER_EVENT
 import com.amazonaws.event.{ProgressEvent, ProgressListener}
 import com.amazonaws.services.s3.model.{ObjectMetadata, PutObjectRequest}
@@ -75,8 +77,11 @@ trait Uploader {
     listenerSettings =>
       new ProgressListener {
         private val listener = UploadEventListener.listener(listenerSettings)
+        private val lock     = new StampedLock
         override def progressChanged(progressEvent: ProgressEvent): Unit = {
+          val writeLock = lock.writeLock()
           listener(eventHandler(progressEvent))
+          lock.unlock(writeLock)
         }
 
         private def eventHandler: ProgressEvent => UploadEvent =
