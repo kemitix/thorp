@@ -5,8 +5,8 @@ import net.kemitix.thorp.console._
 import net.kemitix.thorp.core.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.domain.StorageQueueEvent.DoNothingQueueEvent
 import net.kemitix.thorp.domain._
-import net.kemitix.thorp.storage.api.Storage
-import zio.{Task, RIO}
+import net.kemitix.thorp.storage.Storage
+import zio.{RIO, Task}
 
 final case class UnversionedMirrorArchive(syncTotals: SyncTotals)
     extends ThorpArchive {

@@ -1,9 +1,9 @@
-package net.kemitix.thorp.storage.api
+package net.kemitix.thorp.storage
 
 import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.console.Console
 import net.kemitix.thorp.domain._
-import zio.{Task, RIO, UIO, ZIO}
+import zio.{RIO, Task, UIO, ZIO}
 
 trait Storage {
   val storage: Storage.Service

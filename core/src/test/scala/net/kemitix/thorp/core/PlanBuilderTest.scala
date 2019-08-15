@@ -15,7 +15,7 @@ import net.kemitix.thorp.core.hasher.Hasher
 import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.filesystem._
-import net.kemitix.thorp.storage.api.Storage
+import net.kemitix.thorp.storage.Storage
 import org.scalatest.FreeSpec
 import zio.{DefaultRuntime, Task, UIO}
 

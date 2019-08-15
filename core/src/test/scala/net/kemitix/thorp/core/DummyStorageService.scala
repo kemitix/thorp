@@ -4,7 +4,7 @@ import java.io.File
 
 import net.kemitix.thorp.console._
 import net.kemitix.thorp.domain._
-import net.kemitix.thorp.storage.api.Storage
+import net.kemitix.thorp.storage.Storage
 import zio.{RIO, UIO}
 
 final case class DummyStorageService(

@@ -10,7 +10,7 @@ import net.kemitix.thorp.console.ConsoleOut.{
 import net.kemitix.thorp.console._
 import net.kemitix.thorp.domain.StorageQueueEvent
 import net.kemitix.thorp.domain.StorageQueueEvent._
-import net.kemitix.thorp.storage.api.Storage
+import net.kemitix.thorp.storage.Storage
 import zio.{RIO, ZIO}
 
 trait ThorpArchive {

@@ -9,7 +9,7 @@ import net.kemitix.thorp.domain.{
   StorageQueueEvent,
   SyncTotals
 }
-import net.kemitix.thorp.storage.api.Storage
+import net.kemitix.thorp.storage.Storage
 import org.scalatest.FreeSpec
 import zio.{DefaultRuntime, ZIO}
 
