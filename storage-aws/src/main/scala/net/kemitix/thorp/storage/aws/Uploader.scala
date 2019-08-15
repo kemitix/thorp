@@ -5,7 +5,6 @@ import java.util.concurrent.locks.StampedLock
 import com.amazonaws.event.ProgressEventType.RESPONSE_BYTE_TRANSFER_EVENT
 import com.amazonaws.event.{ProgressEvent, ProgressListener}
 import com.amazonaws.services.s3.model.{ObjectMetadata, PutObjectRequest}
-import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.domain.Implicits._
 import net.kemitix.thorp.domain.StorageQueueEvent.{
   Action,
@@ -19,12 +18,12 @@ import net.kemitix.thorp.domain.UploadEvent.{
 }
 import net.kemitix.thorp.domain.{StorageQueueEvent, _}
 import net.kemitix.thorp.storage.aws.Uploader.Request
-import zio.{UIO, ZIO}
+import zio.UIO
 
 trait Uploader {
 
   def upload(transferManager: => AmazonTransferManager)(
-      request: Request): ZIO[Config, Nothing, StorageQueueEvent] =
+      request: Request): UIO[StorageQueueEvent] =
     transfer(transferManager)(request)
       .catchAll(handleError(request.localFile.remoteKey))
 
@@ -35,8 +34,7 @@ trait Uploader {
   private def transfer(transferManager: => AmazonTransferManager)(
       request: Request
   ) =
-    putObjectRequest(request) >>=
-      dispatch(transferManager)
+    dispatch(transferManager)(putObjectRequest(request))
 
   private def dispatch(transferManager: AmazonTransferManager)(
       putObjectRequest: PutObjectRequest
@@ -57,13 +55,10 @@ trait Uploader {
                            request.localFile.remoteKey.key,
                            request.localFile.file)
         .withMetadata(metadata(request.localFile))
-    for {
-      batchMode <- Config.batchMode
-      r = if (batchMode) putRequest
-      else
-        putRequest.withGeneralProgressListener(
-          progressListener(request.uploadEventListener))
-    } yield r
+    if (request.uploadEventListener.batchMode) putRequest
+    else
+      putRequest.withGeneralProgressListener(
+        progressListener(request.uploadEventListener))
   }
 
   private def metadata: LocalFile => ObjectMetadata = localFile => {

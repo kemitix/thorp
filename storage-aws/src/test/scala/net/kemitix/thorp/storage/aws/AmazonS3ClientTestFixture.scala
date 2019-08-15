@@ -1,11 +1,10 @@
 package net.kemitix.thorp.storage.aws
 
-import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.domain.StorageQueueEvent.ShutdownQueueEvent
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.Storage
 import org.scalamock.scalatest.MockFactory
-import zio.{RIO, UIO, ZIO}
+import zio.{RIO, UIO}
 
 trait AmazonS3ClientTestFixture extends MockFactory {
 
@@ -35,7 +34,7 @@ trait AmazonS3ClientTestFixture extends MockFactory {
             localFile: LocalFile,
             bucket: Bucket,
             listenerSettings: UploadEventListener.Settings,
-        ): ZIO[Config, Nothing, StorageQueueEvent] =
+        ): UIO[StorageQueueEvent] =
           Uploader.upload(transferManager)(
             Uploader.Request(localFile, bucket, listenerSettings))
 

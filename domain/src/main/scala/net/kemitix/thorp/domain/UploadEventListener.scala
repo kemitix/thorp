@@ -11,7 +11,8 @@ object UploadEventListener {
       localFile: LocalFile,
       index: Int,
       syncTotals: SyncTotals,
-      totalBytesSoFar: Long
+      totalBytesSoFar: Long,
+      batchMode: Boolean
   )
 
   def listener(settings: Settings): UploadEvent => Unit = {

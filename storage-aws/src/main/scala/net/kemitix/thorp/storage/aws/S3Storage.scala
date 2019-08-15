@@ -2,12 +2,11 @@ package net.kemitix.thorp.storage.aws
 
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder
-import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.domain.StorageQueueEvent.ShutdownQueueEvent
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.Storage
 import net.kemitix.thorp.storage.Storage.Service
-import zio.{RIO, UIO, ZIO}
+import zio.{RIO, UIO}
 
 object S3Storage {
   trait Live extends Storage {
@@ -27,7 +26,7 @@ object S3Storage {
           localFile: LocalFile,
           bucket: Bucket,
           listenerSettings: UploadEventListener.Settings,
-      ): ZIO[Config, Nothing, StorageQueueEvent] =
+      ): UIO[StorageQueueEvent] =
         Uploader.upload(transferManager)(
           Uploader.Request(localFile, bucket, listenerSettings))
 

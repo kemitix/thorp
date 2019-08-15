@@ -32,16 +32,20 @@ final case class UnversionedMirrorArchive(syncTotals: SyncTotals)
       bucket: Bucket,
       localFile: LocalFile
   ) =
-    Storage.upload(
-      localFile,
-      bucket,
-      UploadEventListener.Settings(
+    for {
+      batchMode <- Config.batchMode
+      upload <- Storage.upload(
         localFile,
-        index,
-        syncTotals,
-        totalBytesSoFar
+        bucket,
+        UploadEventListener.Settings(
+          localFile,
+          index,
+          syncTotals,
+          totalBytesSoFar,
+          batchMode
+        )
       )
-    )
+    } yield upload
 }
 
 object UnversionedMirrorArchive {

@@ -65,9 +65,9 @@ val zioDependencies = Seq(
   )
 )
 
-// cli -> thorp-lib -> storage-aws -> core -> storage -> config -> domain
+// cli -> thorp-lib -> storage-aws -> core -> storage -> domain
+//                                    core -> console -> config -> domain
 //                                                       config -> filesystem
-//                                    core -> console -> config
 
 lazy val thorp = (project in file("."))
   .settings(commonSettings)
@@ -116,7 +116,7 @@ lazy val storage = (project in file("storage"))
   .settings(commonSettings)
   .settings(zioDependencies)
   .settings(assemblyJarName in assembly := "storage.jar")
-  .dependsOn(config)
+  .dependsOn(domain)
 
 lazy val console = (project in file("console"))
   .settings(commonSettings)
