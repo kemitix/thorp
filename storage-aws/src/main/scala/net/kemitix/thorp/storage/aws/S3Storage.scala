@@ -3,7 +3,6 @@ package net.kemitix.thorp.storage.aws
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder
 import net.kemitix.thorp.config.Config
-import net.kemitix.thorp.console.Console
 import net.kemitix.thorp.domain.StorageQueueEvent.ShutdownQueueEvent
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.Storage
@@ -21,7 +20,7 @@ object S3Storage {
           TransferManagerBuilder.defaultTransferManager)
 
       override def listObjects(bucket: Bucket,
-                               prefix: RemoteKey): RIO[Console, RemoteObjects] =
+                               prefix: RemoteKey): RIO[Storage, RemoteObjects] =
         Lister.listObjects(client)(bucket, prefix)
 
       override def upload(

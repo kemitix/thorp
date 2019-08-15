@@ -8,17 +8,14 @@ import com.amazonaws.services.s3.model.{
   ListObjectsV2Result,
   S3ObjectSummary
 }
-import net.kemitix.thorp.console._
 import net.kemitix.thorp.domain.NonUnit.~*
 import net.kemitix.thorp.domain._
+import net.kemitix.thorp.storage.Storage
 import org.scalatest.FreeSpec
 import org.scalatest.Matchers._
-import zio.internal.PlatformLive
-import zio.{Runtime, Task, UIO}
+import zio.{DefaultRuntime, Task, UIO}
 
 class ListerTest extends FreeSpec {
-
-  private val runtime = Runtime(Console.Live, PlatformLive.Default)
 
   "list" - {
     val bucket = Bucket("aBucket")
@@ -121,8 +118,10 @@ class ListerTest extends FreeSpec {
     }
     def invoke(amazonS3Client: AmazonS3.Client)(bucket: Bucket,
                                                 prefix: RemoteKey) =
-      runtime.unsafeRunSync {
-        Lister.listObjects(amazonS3Client)(bucket, prefix)
+      new DefaultRuntime {}.unsafeRunSync {
+        Lister
+          .listObjects(amazonS3Client)(bucket, prefix)
+          .provide(Storage.Test)
       }.toEither
 
   }

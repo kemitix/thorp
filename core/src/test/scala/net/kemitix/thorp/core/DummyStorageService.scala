@@ -2,7 +2,6 @@ package net.kemitix.thorp.core
 
 import java.io.File
 
-import net.kemitix.thorp.console._
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.Storage
 import zio.{RIO, UIO}
@@ -18,7 +17,7 @@ final case class DummyStorageService(
   override def listObjects(
       bucket: Bucket,
       prefix: RemoteKey
-  ): RIO[Console, RemoteObjects] =
+  ): RIO[Storage, RemoteObjects] =
     RIO(remoteObjects)
 
   override def upload(

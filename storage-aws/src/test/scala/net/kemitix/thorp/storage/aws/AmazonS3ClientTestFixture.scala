@@ -1,7 +1,6 @@
 package net.kemitix.thorp.storage.aws
 
 import net.kemitix.thorp.config.Config
-import net.kemitix.thorp.console.Console
 import net.kemitix.thorp.domain.StorageQueueEvent.ShutdownQueueEvent
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.Storage
@@ -29,7 +28,7 @@ trait AmazonS3ClientTestFixture extends MockFactory {
         override def listObjects(
             bucket: Bucket,
             prefix: RemoteKey
-        ): RIO[Console, RemoteObjects] =
+        ): RIO[Storage, RemoteObjects] =
           Lister.listObjects(client)(bucket, prefix)
 
         override def upload(
