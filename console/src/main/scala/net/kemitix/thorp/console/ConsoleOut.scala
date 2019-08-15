@@ -1,10 +1,9 @@
 package net.kemitix.thorp.console
 
-import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.domain.StorageQueueEvent.Action
 import net.kemitix.thorp.domain.Terminal._
 import net.kemitix.thorp.domain.{Bucket, RemoteKey, Sources}
-import zio.{UIO, ZIO}
+import zio.UIO
 
 import scala.io.AnsiColor._
 
@@ -17,8 +16,8 @@ object ConsoleOut {
   sealed trait WithBatchMode {
     def en: String
     def enBatch: String
-    def apply(): ZIO[Config, Nothing, String] =
-      Config.batchMode >>= selectLine
+    def apply(batchMode: Boolean): UIO[String] =
+      selectLine(batchMode)
     private def selectLine(batchMode: Boolean) =
       if (batchMode) UIO(enBatch) else UIO(en)
   }

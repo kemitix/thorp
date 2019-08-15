@@ -22,17 +22,26 @@ trait ThorpArchive {
 
   def logEvent(
       event: StorageQueueEvent): RIO[Console with Config, StorageQueueEvent] =
-    event match {
-      case UploadQueueEvent(remoteKey, _) =>
-        ZIO(event) <* Console.putMessageLnB(UploadComplete(remoteKey))
-      case CopyQueueEvent(sourceKey, targetKey) =>
-        ZIO(event) <* Console.putMessageLnB(CopyComplete(sourceKey, targetKey))
-      case DeleteQueueEvent(remoteKey) =>
-        ZIO(event) <* Console.putMessageLnB(DeleteComplete(remoteKey))
-      case ErrorQueueEvent(action, _, e) =>
-        ZIO(event) <* Console.putMessageLnB(ErrorQueueEventOccurred(action, e))
-      case DoNothingQueueEvent(_) => ZIO(event)
-      case ShutdownQueueEvent()   => ZIO(event)
-    }
+    for {
+      batchMode <- Config.batchMode
+      sqe <- event match {
+        case UploadQueueEvent(remoteKey, _) =>
+          ZIO(event) <* Console.putMessageLnB(UploadComplete(remoteKey),
+                                              batchMode)
+        case CopyQueueEvent(sourceKey, targetKey) =>
+          ZIO(event) <* Console.putMessageLnB(
+            CopyComplete(sourceKey, targetKey),
+            batchMode)
+        case DeleteQueueEvent(remoteKey) =>
+          ZIO(event) <* Console.putMessageLnB(DeleteComplete(remoteKey),
+                                              batchMode)
+        case ErrorQueueEvent(action, _, e) =>
+          ZIO(event) <* Console.putMessageLnB(
+            ErrorQueueEventOccurred(action, e),
+            batchMode)
+        case DoNothingQueueEvent(_) => ZIO(event)
+        case ShutdownQueueEvent()   => ZIO(event)
+      }
+    } yield sqe
 
 }

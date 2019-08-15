@@ -3,7 +3,6 @@ package net.kemitix.thorp.console
 import java.io.PrintStream
 import java.util.concurrent.atomic.AtomicReference
 
-import net.kemitix.thorp.config.Config
 import zio.{UIO, ZIO}
 
 import scala.{Console => SConsole}
@@ -61,8 +60,8 @@ object Console {
   final def putMessageLn(line: ConsoleOut): ZIO[Console, Nothing, Unit] =
     ZIO.accessM(_.console putMessageLn line)
 
-  final def putMessageLnB(
-      line: ConsoleOut.WithBatchMode): ZIO[Console with Config, Nothing, Unit] =
-    ZIO.accessM(line() >>= _.console.putStrLn)
+  final def putMessageLnB(line: ConsoleOut.WithBatchMode,
+                          batchMode: Boolean): ZIO[Console, Nothing, Unit] =
+    ZIO.accessM(line(batchMode) >>= _.console.putStrLn)
 
 }
