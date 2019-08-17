@@ -19,10 +19,26 @@ trait PlanExecutor {
     for {
       actionCounter <- Ref.make(0)
       bytesCounter  <- Ref.make(0L)
-      events <- ZIO.foreach(syncPlan.actions) {
-        updateArchive(archive, actionCounter, bytesCounter)
-      }
+      events        <- applyActions(archive, syncPlan, actionCounter, bytesCounter)
     } yield events
+
+  private def applyActions(
+      archive: ThorpArchive,
+      syncPlan: SyncPlan,
+      actionCounter: Ref[Int],
+      bytesCounter: Ref[Long]
+  ): ZIO[Storage with Console with Config,
+         Throwable,
+         Stream[StorageQueueEvent]] = {
+    ZIO.foldLeft(syncPlan.actions)(Stream.empty[StorageQueueEvent]) {
+      (stream: Stream[StorageQueueEvent], action) =>
+        val result: ZIO[Storage with Console with Config,
+                        Throwable,
+                        StorageQueueEvent] =
+          updateArchive(archive, actionCounter, bytesCounter)(action)
+        result.map(event => event #:: stream)
+    }
+  }
 
   private def updateArchive(archive: ThorpArchive,
                             actionCounterRef: Ref[Int],
