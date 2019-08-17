@@ -65,6 +65,8 @@ val zioDependencies = Seq(
   )
 )
 
+// app -> cli -> config
+// app -> thorp-lib
 // cli -> thorp-lib -> storage-aws -> core -> storage -> domain
 //                                    core -> console -> domain
 //                                    core -> config -> domain
@@ -72,18 +74,12 @@ val zioDependencies = Seq(
 
 lazy val thorp = (project in file("."))
   .settings(commonSettings)
-  .aggregate(cli, `thorp-lib`, `storage-aws`, core, `storage`, domain)
+  .aggregate(app, cli, `thorp-lib`, `storage-aws`, core, `storage`, domain)
 
-lazy val cli = (project in file("cli"))
+lazy val app = (project in file("app"))
   .settings(commonSettings)
-  .settings(mainClass in assembly := Some("net.kemitix.thorp.cli.Main"))
+  .settings(mainClass in assembly := Some("net.kemitix.thorp.Main"))
   .settings(applicationSettings)
-  .settings(testDependencies)
-  .enablePlugins(BuildInfoPlugin)
-  .settings(
-    buildInfoKeys := Seq[BuildInfoKey](name, version),
-    buildInfoPackage := "thorp"
-  )
   .settings(Seq(
     assemblyOption in assembly := (
       assemblyOption in assembly).value
@@ -91,11 +87,22 @@ lazy val cli = (project in file("cli"))
         Some(defaultShellScript)),
     assemblyJarName in assembly := "thorp"
   ))
+  .dependsOn(cli)
   .dependsOn(`thorp-lib`)
+
+lazy val cli = (project in file("cli"))
+  .settings(commonSettings)
+  .settings(testDependencies)
+  .dependsOn(config)
 
 lazy val `thorp-lib` = (project in file("thorp-lib"))
   .settings(commonSettings)
   .settings(assemblyJarName in assembly := "thorp-lib.jar")
+  .enablePlugins(BuildInfoPlugin)
+  .settings(
+    buildInfoKeys := Seq[BuildInfoKey](name, version),
+    buildInfoPackage := "thorp"
+  )
   .dependsOn(`storage-aws`)
 
 lazy val `storage-aws` = (project in file("storage-aws"))

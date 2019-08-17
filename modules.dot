@@ -1,0 +1,35 @@
+digraph deps {
+
+app -> cli
+cli -> config
+app -> lib
+app -> "storage-aws"
+"storage-aws" -> storage
+
+lib -> storage -> domain
+                                    lib -> console -> domain
+                                    lib -> config -> domain
+                                          config -> filesystem
+
+// current design
+//cli -> "thorp-lib" -> "storage-aws" -> core -> storage -> domain
+//                                    core -> console -> domain
+//                                    core -> config -> domain
+//                                          config -> filesystem
+}
+
+//PHASE 1
+// add app that depends on cli and thorp-lib
+// move non-cli specific to app
+// make cli depend on config
+// make cli not depend on thorp-lib
+
+//PHASE 2
+// make app depend on storage-aws
+// make thorp-lib depend on core
+// make thorp-lib not depend on storage-aws
+// make storage-aws depend on storage
+// make storage-aws not depend on core
+
+//PHASE 3
+// merge core and throp-lib as lib

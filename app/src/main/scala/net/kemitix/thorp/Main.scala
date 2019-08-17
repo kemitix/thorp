@@ -1,4 +1,4 @@
-package net.kemitix.thorp.cli
+package net.kemitix.thorp
 
 import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.console.Console

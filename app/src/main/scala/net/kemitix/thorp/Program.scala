@@ -1,5 +1,6 @@
-package net.kemitix.thorp.cli
+package net.kemitix.thorp
 
+import net.kemitix.thorp.cli.CliArgs
 import net.kemitix.thorp.config._
 import net.kemitix.thorp.console._
 import net.kemitix.thorp.core.CoreTypes.CoreProgram
