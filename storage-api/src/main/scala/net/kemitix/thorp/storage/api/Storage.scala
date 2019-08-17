@@ -40,11 +40,16 @@ object Storage {
 
   trait Test extends Storage {
 
-    def listResult: Task[RemoteObjects]
-    def uploadResult: UIO[StorageQueueEvent]
-    def copyResult: UIO[StorageQueueEvent]
-    def deleteResult: UIO[StorageQueueEvent]
-    def shutdownResult: UIO[StorageQueueEvent]
+    def listResult: Task[RemoteObjects] =
+      Task.die(new NotImplementedError)
+    def uploadResult: UIO[StorageQueueEvent] =
+      Task.die(new NotImplementedError)
+    def copyResult: UIO[StorageQueueEvent] =
+      Task.die(new NotImplementedError)
+    def deleteResult: UIO[StorageQueueEvent] =
+      Task.die(new NotImplementedError)
+    def shutdownResult: UIO[StorageQueueEvent] =
+      Task.die(new NotImplementedError)
 
     val storage: Service = new Service {
 
@@ -77,18 +82,7 @@ object Storage {
     }
   }
 
-  object Test extends Test {
-    override def listResult: Task[RemoteObjects] =
-      Task.die(new NotImplementedError)
-    override def uploadResult: UIO[StorageQueueEvent] =
-      Task.die(new NotImplementedError)
-    override def copyResult: UIO[StorageQueueEvent] =
-      Task.die(new NotImplementedError)
-    override def deleteResult: UIO[StorageQueueEvent] =
-      Task.die(new NotImplementedError)
-    override def shutdownResult: UIO[StorageQueueEvent] =
-      Task.die(new NotImplementedError)
-  }
+  object Test extends Test
 
   final def list(bucket: Bucket,
                  prefix: RemoteKey): RIO[Storage with Console, RemoteObjects] =
