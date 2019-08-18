@@ -65,16 +65,9 @@ val zioDependencies = Seq(
   )
 )
 
-// app -> cli -> config
-// app -> thorp-lib
-// cli -> thorp-lib -> storage-aws -> core -> storage -> domain
-//                                    core -> console -> domain
-//                                    core -> config -> domain
-//                                            config -> filesystem
-
 lazy val thorp = (project in file("."))
   .settings(commonSettings)
-  .aggregate(app, cli, `thorp-lib`, `storage-aws`, core, `storage`, domain)
+  .aggregate(app, cli, `storage-aws`, lib, `storage`, domain)
 
 lazy val app = (project in file("app"))
   .settings(commonSettings)
@@ -88,7 +81,7 @@ lazy val app = (project in file("app"))
     assemblyJarName in assembly := "thorp"
   ))
   .dependsOn(cli)
-  .dependsOn(`thorp-lib`)
+  .dependsOn(lib)
   .dependsOn(`storage-aws`)
 
 lazy val cli = (project in file("cli"))
@@ -96,16 +89,6 @@ lazy val cli = (project in file("cli"))
   .settings(testDependencies)
   .dependsOn(config)
   .dependsOn(filesystem % "test->test")
-
-lazy val `thorp-lib` = (project in file("thorp-lib"))
-  .settings(commonSettings)
-  .settings(assemblyJarName in assembly := "thorp-lib.jar")
-  .enablePlugins(BuildInfoPlugin)
-  .settings(
-    buildInfoKeys := Seq[BuildInfoKey](name, version),
-    buildInfoPackage := "thorp"
-  )
-  .dependsOn(core)
 
 lazy val `storage-aws` = (project in file("storage-aws"))
   .settings(commonSettings)
@@ -115,12 +98,17 @@ lazy val `storage-aws` = (project in file("storage-aws"))
   .dependsOn(storage)
   .dependsOn(filesystem % "compile->compile;test->test")
   .dependsOn(console)
-  .dependsOn(core)
+  .dependsOn(lib)
 
-lazy val core = (project in file("core"))
+lazy val lib = (project in file("lib"))
   .settings(commonSettings)
-  .settings(assemblyJarName in assembly := "core.jar")
+  .settings(assemblyJarName in assembly := "lib.jar")
   .settings(testDependencies)
+  .enablePlugins(BuildInfoPlugin)
+  .settings(
+    buildInfoKeys := Seq[BuildInfoKey](name, version),
+    buildInfoPackage := "thorp"
+  )
   .dependsOn(storage)
   .dependsOn(console)
   .dependsOn(config)

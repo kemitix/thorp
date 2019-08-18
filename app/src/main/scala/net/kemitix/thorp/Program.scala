@@ -3,8 +3,8 @@ package net.kemitix.thorp
 import net.kemitix.thorp.cli.CliArgs
 import net.kemitix.thorp.config._
 import net.kemitix.thorp.console._
-import net.kemitix.thorp.core.CoreTypes.CoreProgram
-import net.kemitix.thorp.core._
+import net.kemitix.thorp.lib.CoreTypes.CoreProgram
+import net.kemitix.thorp.lib._
 import zio.ZIO
 
 trait Program {
