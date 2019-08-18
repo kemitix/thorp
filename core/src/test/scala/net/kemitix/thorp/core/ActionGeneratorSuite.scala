@@ -4,7 +4,7 @@ import net.kemitix.thorp.config._
 import net.kemitix.thorp.core.Action.{DoNothing, ToCopy, ToUpload}
 import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.domain._
-import net.kemitix.thorp.filesystem.FileSystem
+import net.kemitix.thorp.filesystem.{FileSystem, Resource}
 import org.scalatest.FunSpec
 import zio.DefaultRuntime
 

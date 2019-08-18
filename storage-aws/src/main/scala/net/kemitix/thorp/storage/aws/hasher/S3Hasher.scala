@@ -2,11 +2,10 @@ package net.kemitix.thorp.storage.aws.hasher
 
 import java.nio.file.Path
 
-import net.kemitix.thorp.core.hasher.Hasher
-import net.kemitix.thorp.core.hasher.Hasher.Live.{hasher => CoreHasher}
-import net.kemitix.thorp.core.hasher.Hasher.Service
 import net.kemitix.thorp.domain.{HashType, MD5Hash}
-import net.kemitix.thorp.filesystem.FileSystem
+import net.kemitix.thorp.filesystem.Hasher.Live.{hasher => CoreHasher}
+import net.kemitix.thorp.filesystem.Hasher.Service
+import net.kemitix.thorp.filesystem.{FileSystem, Hasher}
 import net.kemitix.thorp.storage.aws.ETag
 import zio.RIO
 

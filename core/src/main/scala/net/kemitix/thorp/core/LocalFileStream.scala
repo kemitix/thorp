@@ -4,10 +4,9 @@ import java.io.File
 import java.nio.file.Path
 
 import net.kemitix.thorp.config.Config
-import net.kemitix.thorp.core.hasher.Hasher
 import net.kemitix.thorp.domain.Sources
-import net.kemitix.thorp.filesystem.FileSystem
-import zio.{Task, RIO, ZIO}
+import net.kemitix.thorp.filesystem.{FileSystem, Hasher}
+import zio.{RIO, Task, ZIO}
 
 object LocalFileStream {
 

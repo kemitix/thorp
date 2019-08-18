@@ -3,8 +3,8 @@ package net.kemitix.thorp.core
 import java.io.File
 import java.nio.file.Path
 
-import net.kemitix.thorp.config.Resource
 import net.kemitix.thorp.domain.{RemoteKey, Sources}
+import net.kemitix.thorp.filesystem.Resource
 import org.scalatest.FunSpec
 import zio.DefaultRuntime
 

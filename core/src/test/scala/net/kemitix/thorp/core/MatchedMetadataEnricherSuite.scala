@@ -1,9 +1,9 @@
 package net.kemitix.thorp.core
 
-import net.kemitix.thorp.config.Resource
 import net.kemitix.thorp.core.S3MetaDataEnricher.{getMetadata, getS3Status}
 import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.domain._
+import net.kemitix.thorp.filesystem.Resource
 import org.scalatest.FunSpec
 
 import scala.collection.MapView

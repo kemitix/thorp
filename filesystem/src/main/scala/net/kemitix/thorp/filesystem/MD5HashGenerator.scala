@@ -1,12 +1,11 @@
-package net.kemitix.thorp.core.hasher
+package net.kemitix.thorp.filesystem
 
 import java.io.{File, FileInputStream}
 import java.nio.file.Path
 import java.security.MessageDigest
 
 import net.kemitix.thorp.domain.MD5Hash
-import net.kemitix.thorp.filesystem.FileSystem
-import zio.{Task, RIO}
+import zio.{RIO, Task}
 
 import scala.collection.immutable.NumericRange
 

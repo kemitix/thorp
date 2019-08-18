@@ -1,11 +1,10 @@
-package net.kemitix.thorp.core.hasher
+package net.kemitix.thorp.filesystem
 
 import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicReference
 
 import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.domain.{HashType, MD5Hash}
-import net.kemitix.thorp.filesystem.FileSystem
 import zio.{RIO, ZIO}
 
 /**

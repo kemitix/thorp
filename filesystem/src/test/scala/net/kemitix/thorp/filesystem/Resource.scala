@@ -1,4 +1,4 @@
-package net.kemitix.thorp.config
+package net.kemitix.thorp.filesystem
 
 import java.io.File
 

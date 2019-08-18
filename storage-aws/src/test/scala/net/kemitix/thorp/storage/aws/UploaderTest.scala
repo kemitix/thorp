@@ -5,7 +5,7 @@ import java.io.File
 import com.amazonaws.SdkClientException
 import com.amazonaws.services.s3.model.AmazonS3Exception
 import com.amazonaws.services.s3.transfer.model.UploadResult
-import net.kemitix.thorp.config.{Config, Resource}
+import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.domain.StorageQueueEvent.{
   Action,
@@ -17,6 +17,7 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.FreeSpec
 import zio.{DefaultRuntime, Task}
 import net.kemitix.thorp.domain.NonUnit.~*
+import net.kemitix.thorp.filesystem.Resource
 
 class UploaderTest extends FreeSpec with MockFactory {
 

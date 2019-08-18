@@ -1,11 +1,9 @@
-package net.kemitix.thorp.core.hasher
+package net.kemitix.thorp.filesystem
 
 import java.nio.file.Path
 
-import net.kemitix.thorp.config.Resource
 import net.kemitix.thorp.domain.MD5Hash
 import net.kemitix.thorp.domain.MD5HashData.{BigFile, Root}
-import net.kemitix.thorp.filesystem.FileSystem
 import org.scalatest.FunSpec
 import zio.DefaultRuntime
 

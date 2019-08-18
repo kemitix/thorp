@@ -3,9 +3,8 @@ package net.kemitix.thorp.core
 import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.console._
 import net.kemitix.thorp.core.Action._
-import net.kemitix.thorp.core.hasher.Hasher
 import net.kemitix.thorp.domain._
-import net.kemitix.thorp.filesystem.FileSystem
+import net.kemitix.thorp.filesystem.{FileSystem, Hasher}
 import net.kemitix.thorp.storage.Storage
 import zio.{RIO, ZIO}
 

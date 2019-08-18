@@ -1,9 +1,9 @@
 package net.kemitix.thorp.storage.aws
 
-import net.kemitix.thorp.config.Resource
 import net.kemitix.thorp.core.{LocalFileValidator, S3MetaDataEnricher}
 import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.domain._
+import net.kemitix.thorp.filesystem.Resource
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.FunSpec
 
