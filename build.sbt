@@ -24,7 +24,6 @@ val commonSettings = Seq(
     "-deprecation",
     "-unchecked",
     "-language:postfixOps",
-    "-language:higherKinds",
     "-language:higherKinds"),
   wartremoverErrors ++= Warts.unsafe.filterNot(wart => List(
     Wart.Any,
