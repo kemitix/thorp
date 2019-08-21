@@ -2,7 +2,7 @@ package net.kemitix.thorp.lib
 
 import org.scalatest.FreeSpec
 import zio.stream._
-import zio.{DefaultRuntime, IO, Queue, ZIO}
+import zio.{DefaultRuntime, IO, UIO, ZIO}
 
 // Experiment on how to trigger events asynchronously
 // i.e. Have one thread add to a queue and another take from the queue, neither waiting for the other thread to finish
@@ -28,27 +28,23 @@ class EIPTest extends FreeSpec {
   }
 
   "EIP: Message Channel" in {
-    type Message = Int
-    type Channel = zio.Queue[Message]
-    def producer(channel: Channel): ZIO[Any, Throwable, Unit] = {
-      for {
-        _ <- ZIO.foreach(1 to 3)(i => {
-          println(s"put  $i")
-          channel.offer(i)
-        })
-      } yield ()
-    }
-    def consumer(channel: Channel): ZIO[Any, Throwable, Unit] = {
-      for {
-        message <- channel.take
-        _       <- ZIO(println(s"took $message"))
-      } yield ()
-    }
-    val program = for {
-      channel <- zio.Queue.bounded[Int](1)
-      _       <- ZIO.forkAll(List(producer(channel), consumer(channel)))
-    } yield ()
-    new DefaultRuntime {}.unsafeRunSync(program)
+    type Message  = Int
+    type Callback = IO[Option[Throwable], Message] => Unit
+    def producer: Callback => UIO[Unit] =
+      cb =>
+        ZIO.foreach(1 to 3)(message =>
+          UIO {
+            println(s"put $message")
+            cb(ZIO.succeed(message))
+            Thread.sleep(100)
+        }) *> UIO(cb(ZIO.fail(None)))
+    def consumer: Message => ZIO[Any, Throwable, Unit] =
+      message => ZIO(println(s"got $message"))
+    val program = zio.stream.Stream
+      .effectAsyncM(producer)
+      .buffer(1)
+      .mapM(consumer)
+    new DefaultRuntime {}.unsafeRunSync(program.runDrain)
   }
 
 }
