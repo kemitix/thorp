@@ -65,6 +65,12 @@ val zioDependencies = Seq(
   )
 )
 
+val eipDependencies = Seq(
+  libraryDependencies ++= Seq(
+    "net.kemitix" %% "eip-zio" % "0.2.0"
+  )
+)
+
 lazy val thorp = (project in file("."))
   .settings(commonSettings)
   .aggregate(app, cli, `storage-aws`, lib, `storage`, domain)
@@ -104,6 +110,7 @@ lazy val lib = (project in file("lib"))
   .settings(commonSettings)
   .settings(assemblyJarName in assembly := "lib.jar")
   .settings(testDependencies)
+  .settings(eipDependencies)
   .enablePlugins(BuildInfoPlugin)
   .settings(
     buildInfoKeys := Seq[BuildInfoKey](name, version),
