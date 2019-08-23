@@ -2,14 +2,13 @@ package net.kemitix.thorp.lib
 
 import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.console._
-import net.kemitix.thorp.lib.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.domain.StorageQueueEvent.DoNothingQueueEvent
 import net.kemitix.thorp.domain._
+import net.kemitix.thorp.lib.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.storage.Storage
 import zio.{RIO, Task}
 
-final case class UnversionedMirrorArchive(syncTotals: SyncTotals)
-    extends ThorpArchive {
+trait UnversionedMirrorArchive extends ThorpArchive {
 
   override def update(
       sequencedAction: SequencedAction,
@@ -40,7 +39,6 @@ final case class UnversionedMirrorArchive(syncTotals: SyncTotals)
         UploadEventListener.Settings(
           localFile,
           index,
-          syncTotals,
           totalBytesSoFar,
           batchMode
         )
@@ -48,9 +46,4 @@ final case class UnversionedMirrorArchive(syncTotals: SyncTotals)
     } yield upload
 }
 
-object UnversionedMirrorArchive {
-  def default(syncTotals: SyncTotals): Task[ThorpArchive] =
-    Task {
-      new UnversionedMirrorArchive(syncTotals)
-    }
-}
+object UnversionedMirrorArchive extends UnversionedMirrorArchive

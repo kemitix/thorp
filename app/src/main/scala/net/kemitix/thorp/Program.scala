@@ -5,7 +5,7 @@ import net.kemitix.thorp.config._
 import net.kemitix.thorp.console._
 import net.kemitix.thorp.lib.CoreTypes.CoreProgram
 import net.kemitix.thorp.lib._
-import zio.ZIO
+import zio.{UIO, ZIO}
 
 trait Program {
 
@@ -28,7 +28,7 @@ trait Program {
     for {
       _        <- SyncLogging.logRunStart
       syncPlan <- PlanBuilder.createPlan
-      archive  <- UnversionedMirrorArchive.default(syncPlan.syncTotals)
+      archive  <- UIO(UnversionedMirrorArchive)
       events   <- PlanExecutor.executePlan(archive, syncPlan)
       _        <- SyncLogging.logRunFinished(events)
     } yield ()

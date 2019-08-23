@@ -10,7 +10,6 @@ object UploadEventListener {
   final case class Settings(
       localFile: LocalFile,
       index: Int,
-      syncTotals: SyncTotals,
       totalBytesSoFar: Long,
       batchMode: Boolean
   )
@@ -25,7 +24,6 @@ object UploadEventListener {
               RequestCycle(settings.localFile,
                            bytesTransferred.addAndGet(e.transferred),
                            settings.index,
-                           settings.syncTotals,
                            settings.totalBytesSoFar))
           case _ => ()
         }
