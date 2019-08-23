@@ -10,25 +10,15 @@ import zio.{RIO, ZIO}
 
 object PlanBuilder {
 
-  def createPlan
+  def createPlan(remoteObjects: RemoteObjects)
     : RIO[Storage with Console with Config with FileSystem with Hasher,
-          SyncPlan] = (fetchRemoteData <&> findLocalFiles) >>= assemblePlan
+          SyncPlan] = findLocalFiles >>= assemblePlan(remoteObjects)
 
-  private def fetchRemoteData =
-    for {
-      bucket  <- Config.bucket
-      prefix  <- Config.prefix
-      objects <- Storage.list(bucket, prefix)
-      _       <- Console.putStrLn(s"Found ${objects.byKey.size} remote objects")
-    } yield objects
-
-  private def assemblePlan(metadata: (RemoteObjects, LocalFiles)) =
-    metadata match {
-      case (remoteObjects, localData) =>
-        createActions(remoteObjects, localData.localFiles)
-          .map(_.filter(doesSomething).sortBy(SequencePlan.order))
-          .map(syncPlan(localData))
-    }
+  private def assemblePlan(remoteObjects: RemoteObjects)(
+      localData: LocalFiles) =
+    createActions(remoteObjects, localData.localFiles)
+      .map(_.filter(doesSomething).sortBy(SequencePlan.order))
+      .map(syncPlan(localData))
 
   private def syncPlan(localData: LocalFiles): LazyList[Action] => SyncPlan =
     SyncPlan.create(_, syncTotal(localData))

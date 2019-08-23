@@ -5,6 +5,7 @@ import net.kemitix.thorp.config._
 import net.kemitix.thorp.console._
 import net.kemitix.thorp.lib.CoreTypes.CoreProgram
 import net.kemitix.thorp.lib._
+import net.kemitix.thorp.storage.Storage
 import zio.{UIO, ZIO}
 
 trait Program {
@@ -26,12 +27,21 @@ trait Program {
 
   private def execute =
     for {
-      _        <- SyncLogging.logRunStart
-      syncPlan <- PlanBuilder.createPlan
-      archive  <- UIO(UnversionedMirrorArchive)
-      events   <- PlanExecutor.executePlan(archive, syncPlan)
-      _        <- SyncLogging.logRunFinished(events)
+      _          <- SyncLogging.logRunStart
+      remoteData <- fetchRemoteData
+      syncPlan   <- PlanBuilder.createPlan(remoteData)
+      archive    <- UIO(UnversionedMirrorArchive)
+      events     <- PlanExecutor.executePlan(archive, syncPlan)
+      _          <- SyncLogging.logRunFinished(events)
     } yield ()
+
+  private def fetchRemoteData =
+    for {
+      bucket  <- Config.bucket
+      prefix  <- Config.prefix
+      objects <- Storage.list(bucket, prefix)
+      _       <- Console.putStrLn(s"Found ${objects.byKey.size} remote objects")
+    } yield objects
 
   private def handleErrors(throwable: Throwable) =
     Console.putStrLn("There were errors:") *> logValidationErrors(throwable)
