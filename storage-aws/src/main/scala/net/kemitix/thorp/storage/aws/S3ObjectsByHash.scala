@@ -9,12 +9,11 @@ object S3ObjectsByHash {
 
   def byHash(
       os: LazyList[S3ObjectSummary]
-  ): MapView[MD5Hash, Set[RemoteKey]] = {
-    val mD5HashToS3Objects: Map[MD5Hash, LazyList[S3ObjectSummary]] =
-      os.groupBy(o => MD5Hash(o.getETag.filter(_ != '"')))
-    mD5HashToS3Objects.view.mapValues { os =>
-      os.map(_.getKey).map(RemoteKey(_)).toSet
-    }
-  }
+  ): MapView[MD5Hash, RemoteKey] =
+    os.map { o =>
+        (MD5Hash(o.getETag) -> RemoteKey(o.getKey))
+      }
+      .toMap
+      .view
 
 }

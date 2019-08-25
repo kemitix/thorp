@@ -79,7 +79,7 @@ object ActionGenerator {
   private def copyFile(
       bucket: Bucket,
       localFile: LocalFile,
-      remoteMetaData: Set[RemoteMetaData]
+      remoteMetaData: Option[RemoteMetaData]
   ) =
     LazyList
       .from(remoteMetaData)

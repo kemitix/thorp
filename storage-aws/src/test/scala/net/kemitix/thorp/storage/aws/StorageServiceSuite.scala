@@ -39,8 +39,8 @@ class StorageServiceSuite extends FunSpec with MockFactory {
                                                 prefix)
       s3ObjectsData = RemoteObjects(
         byHash = MapView(
-          hash     -> Set(key, keyOtherKey.remoteKey),
-          diffHash -> Set(keyDiffHash.remoteKey)
+          hash     -> key,
+          diffHash -> keyDiffHash.remoteKey
         ),
         byKey = MapView(
           key                   -> hash,
@@ -59,14 +59,14 @@ class StorageServiceSuite extends FunSpec with MockFactory {
     def invoke(localFile: LocalFile, s3ObjectsData: RemoteObjects) =
       S3MetaDataEnricher.getS3Status(localFile, s3ObjectsData)
 
-    def getMatchesByKey(status: (Option[MD5Hash], Set[(RemoteKey, MD5Hash)]))
-      : Option[MD5Hash] = {
+    def getMatchesByKey(
+        status: (Option[MD5Hash], Map[MD5Hash, RemoteKey])): Option[MD5Hash] = {
       val (byKey, _) = status
       byKey
     }
 
-    def getMatchesByHash(status: (Option[MD5Hash], Set[(RemoteKey, MD5Hash)]))
-      : Set[(RemoteKey, MD5Hash)] = {
+    def getMatchesByHash(status: (Option[MD5Hash], Map[MD5Hash, RemoteKey]))
+      : Map[MD5Hash, RemoteKey] = {
       val (_, byHash) = status
       byHash
     }

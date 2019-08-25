@@ -63,7 +63,7 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
                 val anOtherKey      = RemoteKey("other")
                 val expected        = Right(List(toCopy(anOtherKey, aHash, remoteKey)))
                 val remoteObjects = RemoteObjects(
-                  byHash = MapView(aHash     -> Set(anOtherKey)),
+                  byHash = MapView(aHash     -> anOtherKey),
                   byKey = MapView(anOtherKey -> aHash)
                 )
                 val result =
@@ -85,7 +85,7 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
                 // DoNothing actions should have been filtered out of the plan
                 val expected = Right(List())
                 val remoteObjects = RemoteObjects(
-                  byHash = MapView(hash     -> Set(remoteKey)),
+                  byHash = MapView(hash     -> remoteKey),
                   byKey = MapView(remoteKey -> hash)
                 )
                 val result =
@@ -106,7 +106,7 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
                   val expected =
                     Right(List(toUpload(remoteKey, currentHash, source, file)))
                   val remoteObjects = RemoteObjects(
-                    byHash = MapView(originalHash -> Set(remoteKey)),
+                    byHash = MapView(originalHash -> remoteKey),
                     byKey = MapView(remoteKey     -> originalHash)
                   )
                   val result =
@@ -125,7 +125,7 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
                   val sourceKey = RemoteKey("other-key")
                   val expected  = Right(List(toCopy(sourceKey, hash, remoteKey)))
                   val remoteObjects = RemoteObjects(
-                    byHash = MapView(hash -> Set(sourceKey)),
+                    byHash = MapView(hash -> sourceKey),
                     byKey = MapView.empty
                   )
                   val result =
@@ -150,7 +150,7 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
               // DoNothing actions should have been filtered out of the plan
               val expected = Right(List())
               val remoteObjects = RemoteObjects(
-                byHash = MapView(hash     -> Set(remoteKey)),
+                byHash = MapView(hash     -> remoteKey),
                 byKey = MapView(remoteKey -> hash)
               )
               val result =
@@ -167,7 +167,7 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
               val hash     = MD5Hash("file-content")
               val expected = Right(List(toDelete(remoteKey)))
               val remoteObjects = RemoteObjects(
-                byHash = MapView(hash     -> Set(remoteKey)),
+                byHash = MapView(hash     -> remoteKey),
                 byKey = MapView(remoteKey -> hash)
               )
               val result =
@@ -254,7 +254,7 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
               val hash2    = md5Hash(fileInSecondSource)
               val expected = Right(List())
               val remoteObjects =
-                RemoteObjects(byHash = MapView(hash2     -> Set(remoteKey2)),
+                RemoteObjects(byHash = MapView(hash2     -> remoteKey2),
                               byKey = MapView(remoteKey2 -> hash2))
               val result =
                 invoke(options(firstSource)(secondSource),
@@ -275,7 +275,7 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
             withDirectory(secondSource => {
               val expected = Right(List())
               val remoteObjects =
-                RemoteObjects(byHash = MapView(hash1     -> Set(remoteKey1)),
+                RemoteObjects(byHash = MapView(hash1     -> remoteKey1),
                               byKey = MapView(remoteKey1 -> hash1))
               val result =
                 invoke(options(firstSource)(secondSource),
@@ -366,9 +366,12 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
     }
     def testProgram =
       for {
-        config <- ConfigurationBuilder.buildConfig(configOptions)
-        _      <- Config.set(config)
-        plan   <- PlanBuilder.createPlan
+        config        <- ConfigurationBuilder.buildConfig(configOptions)
+        _             <- Config.set(config)
+        bucket        <- Config.bucket
+        prefix        <- Config.prefix
+        remoteObjects <- Storage.list(bucket, prefix)
+        plan          <- PlanBuilder.createPlan(remoteObjects)
       } yield plan
     new DefaultRuntime {}
       .unsafeRunSync(testProgram.provide(testEnv))

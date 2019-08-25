@@ -38,7 +38,7 @@ class ActionGeneratorSuite extends FunSpec {
         theRemoteMetadata = RemoteMetaData(theFile.remoteKey, theHash)
         input = MatchedMetadata(
           theFile, // local exists
-          matchByHash = Set(theRemoteMetadata), // remote matches
+          matchByHash = Some(theRemoteMetadata), // remote matches
           matchByKey = Some(theRemoteMetadata) // remote exists
         )
       } yield (theFile, input)
@@ -67,7 +67,7 @@ class ActionGeneratorSuite extends FunSpec {
         otherRemoteMetadata = RemoteMetaData(otherRemoteKey, theHash)
         input = MatchedMetadata(
           theFile, // local exists
-          matchByHash = Set(otherRemoteMetadata), // other matches
+          matchByHash = Some(otherRemoteMetadata), // other matches
           matchByKey = None) // remote is missing
       } yield (theFile, theRemoteKey, input, otherRemoteKey)
       it("copy from other key") {
@@ -94,7 +94,7 @@ class ActionGeneratorSuite extends FunSpec {
                                                 sources,
                                                 prefix)
           input = MatchedMetadata(theFile, // local exists
-                                  matchByHash = Set.empty, // other no matches
+                                  matchByHash = None, // other no matches
                                   matchByKey = None) // remote is missing
         } yield (theFile, input)
         it("upload") {
@@ -127,7 +127,7 @@ class ActionGeneratorSuite extends FunSpec {
         )
         input = MatchedMetadata(
           theFile, // local exists
-          matchByHash = Set(otherRemoteMetadata), // other matches
+          matchByHash = Some(otherRemoteMetadata), // other matches
           matchByKey = Some(oldRemoteMetadata)) // remote exists
       } yield (theFile, theRemoteKey, input, otherRemoteKey)
       it("copy from other key") {
@@ -160,7 +160,7 @@ class ActionGeneratorSuite extends FunSpec {
         theRemoteMetadata = RemoteMetaData(theRemoteKey, oldHash)
         input = MatchedMetadata(
           theFile, // local exists
-          matchByHash = Set.empty, // remote no match, other no match
+          matchByHash = None, // remote no match, other no match
           matchByKey = Some(theRemoteMetadata) // remote exists
         )
       } yield (theFile, input)

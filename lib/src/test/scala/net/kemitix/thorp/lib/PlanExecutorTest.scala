@@ -11,7 +11,7 @@ import net.kemitix.thorp.domain.{
 }
 import net.kemitix.thorp.storage.Storage
 import org.scalatest.FreeSpec
-import zio.{DefaultRuntime, ZIO}
+import zio.{DefaultRuntime, UIO, ZIO}
 
 class PlanExecutorTest extends FreeSpec {
 
@@ -33,7 +33,7 @@ class PlanExecutorTest extends FreeSpec {
       LazyList.from(1 to nActions).map(DoNothing(bucket, remoteKey, _))
 
     val syncTotals  = SyncTotals.empty
-    val archiveTask = UnversionedMirrorArchive.default(syncTotals)
+    val archiveTask = UIO(UnversionedMirrorArchive)
 
     val syncPlan = SyncPlan(input, syncTotals)
     val program: ZIO[Storage with Config with Console,

@@ -36,7 +36,7 @@ class UploaderTest extends FreeSpec with MockFactory {
       override def waitForUploadResult: UploadResult = uploadResult
     }
     val listenerSettings =
-      UploadEventListener.Settings(localFile, 0, SyncTotals(1, 0, 0), 0, true)
+      UploadEventListener.Settings(localFile, 0, 0, batchMode = true)
     "when no error" in {
       val expected =
         Right(UploadQueueEvent(remoteKey, aHash))

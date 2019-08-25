@@ -25,7 +25,7 @@ class ListerTest extends FreeSpec {
         val nowDate         = new Date
         val key             = "key"
         val etag            = "etag"
-        val expectedHashMap = Map(MD5Hash(etag) -> Set(RemoteKey(key)))
+        val expectedHashMap = Map(MD5Hash(etag) -> RemoteKey(key))
         val expectedKeyMap  = Map(RemoteKey(key) -> MD5Hash(etag))
         new AmazonS3ClientTestFixture {
           (fixture.amazonS3Client.listObjectsV2 _)
@@ -48,8 +48,8 @@ class ListerTest extends FreeSpec {
         val key2    = "key2"
         val etag2   = "etag2"
         val expectedHashMap = Map(
-          MD5Hash(etag1) -> Set(RemoteKey(key1)),
-          MD5Hash(etag2) -> Set(RemoteKey(key2))
+          MD5Hash(etag1) -> RemoteKey(key1),
+          MD5Hash(etag2) -> RemoteKey(key2)
         )
         val expectedKeyMap = Map(
           RemoteKey(key1) -> MD5Hash(etag1),
