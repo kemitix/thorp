@@ -13,12 +13,14 @@ trait FileSystem {
 }
 
 object FileSystem {
-
   trait Service {
+
     def fileExists(file: File): ZIO[FileSystem, Throwable, Boolean]
     def openManagedFileInputStream(file: File, offset: Long)
       : RIO[FileSystem, ZManaged[Any, Throwable, FileInputStream]]
     def fileLines(file: File): RIO[FileSystem, Seq[String]]
+    def isDirectory(file: File): RIO[FileSystem, Boolean]
+    def listFiles(path: Path): RIO[FileSystem, Iterable[File]]
   }
   trait Live extends FileSystem {
     override val filesystem: Service = new Service {
@@ -48,6 +50,12 @@ object FileSystem {
           ZIO.effectTotal(lines.iterator.asScala.toList)
         acquire.bracketAuto(use)
       }
+
+      override def isDirectory(file: File): RIO[FileSystem, Boolean] =
+        Task(file.isDirectory)
+
+      override def listFiles(path: Path): RIO[FileSystem, Iterable[File]] =
+        Task(path.toFile.listFiles())
     }
   }
   object Live extends Live
@@ -55,6 +63,9 @@ object FileSystem {
 
     val fileExistsResultMap: Task[Map[Path, File]]
     val fileLinesResult: Task[List[String]]
+    val isDirResult: Task[Boolean]
+    val listFilesResult: RIO[FileSystem, Iterable[File]]
+
     val managedFileInputStream: Task[ZManaged[Any, Throwable, FileInputStream]]
 
     override val filesystem: Service = new Service {
@@ -68,6 +79,12 @@ object FileSystem {
 
       override def fileLines(file: File): RIO[FileSystem, List[String]] =
         fileLinesResult
+
+      override def isDirectory(file: File): RIO[FileSystem, Boolean] =
+        isDirResult
+
+      override def listFiles(path: Path): RIO[FileSystem, Iterable[File]] =
+        listFilesResult
     }
   }
 
@@ -84,4 +101,11 @@ object FileSystem {
 
   final def lines(file: File): RIO[FileSystem, Seq[String]] =
     ZIO.accessM(_.filesystem fileLines (file))
+
+  final def isDirectory(file: File): RIO[FileSystem, Boolean] =
+    ZIO.accessM(_.filesystem.isDirectory(file))
+
+  final def listFiles(path: Path): RIO[FileSystem, Iterable[File]] =
+    ZIO.accessM(_.filesystem.listFiles(path))
+
 }
