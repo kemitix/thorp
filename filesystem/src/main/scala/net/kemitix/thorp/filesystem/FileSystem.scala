@@ -14,13 +14,13 @@ trait FileSystem {
 
 object FileSystem {
   trait Service {
-
     def fileExists(file: File): ZIO[FileSystem, Throwable, Boolean]
     def openManagedFileInputStream(file: File, offset: Long)
       : RIO[FileSystem, ZManaged[Any, Throwable, FileInputStream]]
     def fileLines(file: File): RIO[FileSystem, Seq[String]]
     def isDirectory(file: File): RIO[FileSystem, Boolean]
     def listFiles(path: Path): RIO[FileSystem, Iterable[File]]
+    def length(file: File): ZIO[FileSystem, Nothing, Long]
   }
   trait Live extends FileSystem {
     override val filesystem: Service = new Service {
@@ -56,6 +56,9 @@ object FileSystem {
 
       override def listFiles(path: Path): RIO[FileSystem, Iterable[File]] =
         Task(path.toFile.listFiles())
+
+      override def length(file: File): ZIO[FileSystem, Nothing, Long] =
+        UIO(file.length)
     }
   }
   object Live extends Live
@@ -65,6 +68,7 @@ object FileSystem {
     val fileLinesResult: Task[List[String]]
     val isDirResult: Task[Boolean]
     val listFilesResult: RIO[FileSystem, Iterable[File]]
+    val lengthResult: UIO[Long]
 
     val managedFileInputStream: Task[ZManaged[Any, Throwable, FileInputStream]]
 
@@ -85,6 +89,9 @@ object FileSystem {
 
       override def listFiles(path: Path): RIO[FileSystem, Iterable[File]] =
         listFilesResult
+
+      override def length(file: File): UIO[Long] =
+        lengthResult
     }
   }
 
@@ -107,5 +114,8 @@ object FileSystem {
 
   final def listFiles(path: Path): RIO[FileSystem, Iterable[File]] =
     ZIO.accessM(_.filesystem.listFiles(path))
+
+  final def length(file: File): ZIO[FileSystem, Nothing, Long] =
+    ZIO.accessM(_.filesystem.length(file))
 
 }
