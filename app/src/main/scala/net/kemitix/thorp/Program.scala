@@ -46,14 +46,14 @@ trait Program {
       Console with Storage with Config with FileSystem with Hasher with Clock,
       Throwable,
       UIEvent]] = UIO { channel =>
-    for {
+    (for {
       _          <- showValidConfig(channel)
       remoteData <- fetchRemoteData
       syncPlan   <- PlanBuilder.createPlan(remoteData)
       archive    <- UIO(UnversionedMirrorArchive)
       events     <- PlanExecutor.executePlan(archive, syncPlan)
       _          <- SyncLogging.logRunFinished(events)
-    } yield ()
+    } yield ()) <* MessageChannel.endChannel(channel)
   }
 
   private def showValidConfig(
