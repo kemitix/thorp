@@ -19,6 +19,8 @@ import net.kemitix.thorp.storage.api.Storage
 import org.scalatest.FreeSpec
 import zio.{DefaultRuntime, Task, UIO}
 
+import scala.collection.MapView
+
 class PlanBuilderTest extends FreeSpec with TemporaryFolder {
 
   private val emptyRemoteObjects = RemoteObjects.empty
@@ -62,8 +64,8 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
                 val anOtherKey      = RemoteKey("other")
                 val expected        = Right(List(toCopy(anOtherKey, aHash, remoteKey)))
                 val remoteObjects = RemoteObjects(
-                  byHash = Map(aHash     -> Set(anOtherKey)),
-                  byKey = Map(anOtherKey -> aHash)
+                  byHash = MapView(aHash     -> Set(anOtherKey)),
+                  byKey = MapView(anOtherKey -> aHash)
                 )
                 val result =
                   invoke(options(source),
@@ -84,8 +86,8 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
                 // DoNothing actions should have been filtered out of the plan
                 val expected = Right(List())
                 val remoteObjects = RemoteObjects(
-                  byHash = Map(hash     -> Set(remoteKey)),
-                  byKey = Map(remoteKey -> hash)
+                  byHash = MapView(hash     -> Set(remoteKey)),
+                  byKey = MapView(remoteKey -> hash)
                 )
                 val result =
                   invoke(options(source),
@@ -105,8 +107,8 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
                   val expected =
                     Right(List(toUpload(remoteKey, currentHash, source, file)))
                   val remoteObjects = RemoteObjects(
-                    byHash = Map(originalHash -> Set(remoteKey)),
-                    byKey = Map(remoteKey     -> originalHash)
+                    byHash = MapView(originalHash -> Set(remoteKey)),
+                    byKey = MapView(remoteKey     -> originalHash)
                   )
                   val result =
                     invoke(options(source),
@@ -124,8 +126,8 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
                   val sourceKey = RemoteKey("other-key")
                   val expected  = Right(List(toCopy(sourceKey, hash, remoteKey)))
                   val remoteObjects = RemoteObjects(
-                    byHash = Map(hash -> Set(sourceKey)),
-                    byKey = Map.empty
+                    byHash = MapView(hash -> Set(sourceKey)),
+                    byKey = MapView.empty
                   )
                   val result =
                     invoke(options(source),
@@ -149,8 +151,8 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
               // DoNothing actions should have been filtered out of the plan
               val expected = Right(List())
               val remoteObjects = RemoteObjects(
-                byHash = Map(hash     -> Set(remoteKey)),
-                byKey = Map(remoteKey -> hash)
+                byHash = MapView(hash     -> Set(remoteKey)),
+                byKey = MapView(remoteKey -> hash)
               )
               val result =
                 invoke(options(source),
@@ -166,8 +168,8 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
               val hash     = MD5Hash("file-content")
               val expected = Right(List(toDelete(remoteKey)))
               val remoteObjects = RemoteObjects(
-                byHash = Map(hash     -> Set(remoteKey)),
-                byKey = Map(remoteKey -> hash)
+                byHash = MapView(hash     -> Set(remoteKey)),
+                byKey = MapView(remoteKey -> hash)
               )
               val result =
                 invoke(options(source),
@@ -253,8 +255,8 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
               val hash2    = md5Hash(fileInSecondSource)
               val expected = Right(List())
               val remoteObjects =
-                RemoteObjects(byHash = Map(hash2     -> Set(remoteKey2)),
-                              byKey = Map(remoteKey2 -> hash2))
+                RemoteObjects(byHash = MapView(hash2     -> Set(remoteKey2)),
+                              byKey = MapView(remoteKey2 -> hash2))
               val result =
                 invoke(options(firstSource)(secondSource),
                        UIO.succeed(remoteObjects),
@@ -274,8 +276,8 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
             withDirectory(secondSource => {
               val expected = Right(List())
               val remoteObjects =
-                RemoteObjects(byHash = Map(hash1     -> Set(remoteKey1)),
-                              byKey = Map(remoteKey1 -> hash1))
+                RemoteObjects(byHash = MapView(hash1     -> Set(remoteKey1)),
+                              byKey = MapView(remoteKey1 -> hash1))
               val result =
                 invoke(options(firstSource)(secondSource),
                        UIO.succeed(remoteObjects),
@@ -292,8 +294,8 @@ class PlanBuilderTest extends FreeSpec with TemporaryFolder {
             withDirectory(secondSource => {
               val expected = Right(List(toDelete(remoteKey1)))
               val remoteObjects =
-                RemoteObjects(byHash = Map.empty,
-                              byKey = Map(remoteKey1 -> MD5Hash("")))
+                RemoteObjects(byHash = MapView.empty,
+                              byKey = MapView(remoteKey1 -> MD5Hash("")))
               val result =
                 invoke(options(firstSource)(secondSource),
                        UIO.succeed(remoteObjects),

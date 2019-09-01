@@ -31,14 +31,14 @@ object PlanBuilder {
           .map(syncPlan(localData))
     }
 
-  private def syncPlan(localData: LocalFiles): Stream[Action] => SyncPlan =
+  private def syncPlan(localData: LocalFiles): LazyList[Action] => SyncPlan =
     SyncPlan.create(_, syncTotal(localData))
 
   private def syncTotal(localData: LocalFiles): SyncTotals =
     SyncTotals.create(localData.count, localData.totalSizeBytes, 0L)
 
   private def createActions(remoteObjects: RemoteObjects,
-                            localFiles: Stream[LocalFile]) =
+                            localFiles: LazyList[LocalFile]) =
     for {
       fileActions   <- actionsForLocalFiles(remoteObjects, localFiles)
       remoteActions <- actionsForRemoteKeys(remoteObjects.byKey.keys)
@@ -50,15 +50,15 @@ object PlanBuilder {
   }
 
   private def actionsForLocalFiles(remoteObjects: RemoteObjects,
-                                   localFiles: Stream[LocalFile]) =
-    ZIO.foldLeft(localFiles)(Stream.empty[Action])(
+                                   localFiles: LazyList[LocalFile]) =
+    ZIO.foldLeft(localFiles)(LazyList.empty[Action])(
       (acc, localFile) =>
         createActionsFromLocalFile(remoteObjects, acc, localFile)
           .map(_ #::: acc)
     )
 
   private def createActionsFromLocalFile(remoteObjects: RemoteObjects,
-                                         previousActions: Stream[Action],
+                                         previousActions: LazyList[Action],
                                          localFile: LocalFile) =
     ActionGenerator.createActions(
       S3MetaDataEnricher.getMetadata(localFile, remoteObjects),
@@ -66,7 +66,7 @@ object PlanBuilder {
     )
 
   private def actionsForRemoteKeys(remoteKeys: Iterable[RemoteKey]) =
-    ZIO.foldLeft(remoteKeys)(Stream.empty[Action])(
+    ZIO.foldLeft(remoteKeys)(LazyList.empty[Action])(
       (acc, remoteKey) => createActionFromRemoteKey(remoteKey).map(_ #:: acc)
     )
 
@@ -90,6 +90,6 @@ object PlanBuilder {
       sources <- Config.sources
       found   <- ZIO.foreach(sources.paths)(LocalFileStream.findFiles)
       _       <- Console.putStrLn(s"Found ${found.flatMap(_.localFiles).size} files")
-    } yield LocalFiles.reduce(found.toStream)
+    } yield LocalFiles.reduce(LazyList.from(found))
 
 }

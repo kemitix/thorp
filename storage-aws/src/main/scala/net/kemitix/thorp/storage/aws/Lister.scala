@@ -11,12 +11,12 @@ import net.kemitix.thorp.storage.aws.S3ObjectsByHash.byHash
 import net.kemitix.thorp.storage.aws.S3ObjectsByKey.byKey
 import zio.{Task, RIO}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 trait Lister {
 
   private type Token = String
-  case class Batch(summaries: Stream[S3ObjectSummary], more: Option[Token])
+  case class Batch(summaries: LazyList[S3ObjectSummary], more: Option[Token])
 
   def listObjects(amazonS3: AmazonS3.Client)(
       bucket: Bucket,
@@ -34,12 +34,12 @@ trait Lister {
     def fetchBatch: ListObjectsV2Request => RIO[Console, Batch] =
       request => ListerLogger.logFetchBatch *> tryFetchBatch(amazonS3)(request)
 
-    def fetchMore: Option[Token] => RIO[Console, Stream[S3ObjectSummary]] = {
-      case None        => RIO.succeed(Stream.empty)
+    def fetchMore: Option[Token] => RIO[Console, LazyList[S3ObjectSummary]] = {
+      case None        => RIO.succeed(LazyList.empty)
       case Some(token) => fetch(requestMore(token))
     }
 
-    def fetch: ListObjectsV2Request => RIO[Console, Stream[S3ObjectSummary]] =
+    def fetch: ListObjectsV2Request => RIO[Console, LazyList[S3ObjectSummary]] =
       request =>
         for {
           batch <- fetchBatch(request)
@@ -60,8 +60,8 @@ trait Lister {
         .map(result => Batch(objectSummaries(result), moreToken(result)))
 
   private def objectSummaries(
-      result: ListObjectsV2Result): Stream[S3ObjectSummary] =
-    result.getObjectSummaries.asScala.toStream
+      result: ListObjectsV2Result): LazyList[S3ObjectSummary] =
+    LazyList.from(result.getObjectSummaries.asScala)
 
   private def moreToken(result: ListObjectsV2Result): Option[String] =
     if (result.isTruncated) Some(result.getNextContinuationToken)

@@ -12,6 +12,7 @@ import net.kemitix.thorp.console._
 import net.kemitix.thorp.domain.NonUnit.~*
 import net.kemitix.thorp.domain._
 import org.scalatest.FreeSpec
+import org.scalatest.Matchers._
 import zio.internal.PlatformLive
 import zio.{Runtime, Task, UIO}
 
@@ -29,16 +30,17 @@ class ListerTest extends FreeSpec {
         val etag            = "etag"
         val expectedHashMap = Map(MD5Hash(etag) -> Set(RemoteKey(key)))
         val expectedKeyMap  = Map(RemoteKey(key) -> MD5Hash(etag))
-        val expected        = Right(RemoteObjects(expectedHashMap, expectedKeyMap))
         new AmazonS3ClientTestFixture {
-          ~*(
-            (fixture.amazonS3Client.listObjectsV2 _)
-              .when()
-              .returns(_ => {
-                UIO.succeed(objectResults(nowDate, key, etag, false))
-              }))
-          private val result = invoke(fixture.amazonS3Client)(bucket, prefix)
-          ~*(assertResult(expected)(result))
+          (fixture.amazonS3Client.listObjectsV2 _)
+            .when()
+            .returns(_ => {
+              UIO.succeed(objectResults(nowDate, key, etag, truncated = false))
+            })
+          private val result  = invoke(fixture.amazonS3Client)(bucket, prefix)
+          private val hashMap = result.map(_.byHash).map(m => Map.from(m))
+          private val keyMap  = result.map(_.byKey).map(m => Map.from(m))
+          hashMap should be(Right(expectedHashMap))
+          keyMap should be(Right(expectedKeyMap))
         }
       }
 
@@ -56,19 +58,23 @@ class ListerTest extends FreeSpec {
           RemoteKey(key1) -> MD5Hash(etag1),
           RemoteKey(key2) -> MD5Hash(etag2)
         )
-        val expected = Right(RemoteObjects(expectedHashMap, expectedKeyMap))
         new AmazonS3ClientTestFixture {
-          ~*(
-            (fixture.amazonS3Client.listObjectsV2 _)
-              .when()
-              .returns(_ => UIO(objectResults(nowDate, key1, etag1, true)))
-              .noMoreThanOnce())
-          ~*(
-            (fixture.amazonS3Client.listObjectsV2 _)
-              .when()
-              .returns(_ => UIO(objectResults(nowDate, key2, etag2, false))))
-          private val result = invoke(fixture.amazonS3Client)(bucket, prefix)
-          ~*(assertResult(expected)(result))
+
+          (fixture.amazonS3Client.listObjectsV2 _)
+            .when()
+            .returns(_ =>
+              UIO(objectResults(nowDate, key1, etag1, truncated = true)))
+            .noMoreThanOnce()
+
+          (fixture.amazonS3Client.listObjectsV2 _)
+            .when()
+            .returns(_ =>
+              UIO(objectResults(nowDate, key2, etag2, truncated = false)))
+          private val result  = invoke(fixture.amazonS3Client)(bucket, prefix)
+          private val hashMap = result.map(_.byHash).map(m => Map.from(m))
+          private val keyMap  = result.map(_.byKey).map(m => Map.from(m))
+          hashMap should be(Right(expectedHashMap))
+          keyMap should be(Right(expectedKeyMap))
         }
       }
 

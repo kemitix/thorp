@@ -16,17 +16,23 @@ inThisBuild(List(
 
 val commonSettings = Seq(
   sonatypeProfileName := "net.kemitix",
-  scalaVersion := "2.12.8",
+  scalaVersion := "2.13.0",
   scalacOptions ++= Seq(
-    "-Ywarn-unused-import",
+    "-Ywarn-unused:imports",
     "-Xfatal-warnings",
     "-feature",
     "-deprecation",
     "-unchecked",
     "-language:postfixOps",
     "-language:higherKinds",
-    "-Ypartial-unification"),
-  wartremoverErrors ++= Warts.unsafe.filterNot(wart => List(Wart.Any, Wart.Nothing, Wart.Serializable).contains(wart)),
+    "-language:higherKinds"),
+  wartremoverErrors ++= Warts.unsafe.filterNot(wart => List(
+    Wart.Any,
+    Wart.Nothing,
+    Wart.Serializable,
+    Wart.NonUnitStatements,
+    Wart.StringPlusAny
+  ).contains(wart)),
   test in assembly := {}
 )
 

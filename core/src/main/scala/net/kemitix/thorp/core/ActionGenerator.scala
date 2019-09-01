@@ -10,8 +10,8 @@ object ActionGenerator {
 
   def createActions(
       matchedMetadata: MatchedMetadata,
-      previousActions: Stream[Action]
-  ): RIO[Config, Stream[Action]] =
+      previousActions: LazyList[Action]
+  ): RIO[Config, LazyList[Action]] =
     for {
       bucket <- Config.bucket
     } yield
@@ -19,7 +19,7 @@ object ActionGenerator {
 
   private def formattedMetadata(
       matchedMetadata: MatchedMetadata,
-      previousActions: Stream[Action]): TaggedMetadata = {
+      previousActions: LazyList[Action]): TaggedMetadata = {
     val remoteExists = matchedMetadata.matchByKey.nonEmpty
     val remoteMatches = remoteExists && matchedMetadata.matchByKey.exists(m =>
       LocalFile.matchesHash(matchedMetadata.localFile)(m.hash))
@@ -33,14 +33,14 @@ object ActionGenerator {
 
   final case class TaggedMetadata(
       matchedMetadata: MatchedMetadata,
-      previousActions: Stream[Action],
+      previousActions: LazyList[Action],
       remoteExists: Boolean,
       remoteMatches: Boolean,
       anyMatches: Boolean
   )
 
   private def genAction(taggedMetadata: TaggedMetadata,
-                        bucket: Bucket): Stream[Action] = {
+                        bucket: Bucket): LazyList[Action] = {
     taggedMetadata match {
       case TaggedMetadata(md, _, remoteExists, remoteMatches, _)
           if remoteExists && remoteMatches =>
@@ -58,7 +58,7 @@ object ActionGenerator {
   private def key = LocalFile.remoteKey ^|-> RemoteKey.key
 
   def isNotUploadAlreadyQueued(
-      previousActions: Stream[Action]
+      previousActions: LazyList[Action]
   )(
       localFile: LocalFile
   ): Boolean = !previousActions.exists {
@@ -69,21 +69,21 @@ object ActionGenerator {
   private def doNothing(
       bucket: Bucket,
       remoteKey: RemoteKey
-  ) = Stream(DoNothing(bucket, remoteKey, 0L))
+  ) = LazyList(DoNothing(bucket, remoteKey, 0L))
 
   private def uploadFile(
       bucket: Bucket,
       localFile: LocalFile
-  ) = Stream(ToUpload(bucket, localFile, localFile.file.length))
+  ) = LazyList(ToUpload(bucket, localFile, localFile.file.length))
 
   private def copyFile(
       bucket: Bucket,
       localFile: LocalFile,
       remoteMetaData: Set[RemoteMetaData]
   ) =
-    remoteMetaData
+    LazyList
+      .from(remoteMetaData)
       .take(1)
-      .toStream
       .map(
         other =>
           ToCopy(bucket,
