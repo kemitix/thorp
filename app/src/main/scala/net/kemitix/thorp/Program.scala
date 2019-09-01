@@ -1,6 +1,6 @@
 package net.kemitix.thorp
 
-import net.kemitix.eip.zio.MessageChannel.EChannel
+import net.kemitix.eip.zio.MessageChannel.UChannel
 import net.kemitix.eip.zio.{Message, MessageChannel}
 import net.kemitix.thorp.cli.CliArgs
 import net.kemitix.thorp.config._
@@ -56,11 +56,7 @@ trait Program {
     } yield ()) <* MessageChannel.endChannel(channel)
   }
 
-  private def showValidConfig(
-      channel: EChannel[
-        Console with Storage with Config with FileSystem with Hasher,
-        Throwable,
-        UIEvent]): ZIO[Clock, Nothing, Unit] =
+  private def showValidConfig(channel: UChannel[Any, UIEvent]) =
     Message.create(UIEvent.ShowValidConfig) >>= MessageChannel.send(channel)
 
   private def fetchRemoteData =
