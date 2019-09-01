@@ -1,6 +1,7 @@
 package net.kemitix.thorp
 
-import net.kemitix.eip.zio.MessageChannel
+import net.kemitix.eip.zio.MessageChannel.EChannel
+import net.kemitix.eip.zio.{Message, MessageChannel}
 import net.kemitix.thorp.cli.CliArgs
 import net.kemitix.thorp.config._
 import net.kemitix.thorp.console._
@@ -8,7 +9,8 @@ import net.kemitix.thorp.filesystem.{FileSystem, Hasher}
 import net.kemitix.thorp.lib.CoreTypes.CoreProgram
 import net.kemitix.thorp.lib._
 import net.kemitix.thorp.storage.Storage
-import net.kemitix.throp.uishell.UIEvent
+import net.kemitix.throp.uishell.{UIEvent, UIShell}
+import zio.clock.Clock
 import zio.{UIO, ZIO}
 
 trait Program {
@@ -31,21 +33,21 @@ trait Program {
   private def execute =
     for {
       uiEventSender   <- headlessProgram
-      uiEventReceiver <- uiEventReceiver
+      uiEventReceiver <- UIShell.receiver
       _               <- MessageChannel.pointToPoint(uiEventSender)(uiEventReceiver).runDrain
     } yield ()
 
   // headless because it shouldn't use any Console effects, only send UIEvents
   // TODO: refactor out Console as a required effect
-  private def headlessProgram
-    : ZIO[Any,
-          Nothing,
-          MessageChannel.ESender[
-            Console with Storage with Config with FileSystem with Hasher,
-            Throwable,
-            UIEvent]] = UIO { channel =>
+  private def headlessProgram: ZIO[
+    Any,
+    Nothing,
+    MessageChannel.ESender[
+      Console with Storage with Config with FileSystem with Hasher with Clock,
+      Throwable,
+      UIEvent]] = UIO { channel =>
     for {
-      _          <- SyncLogging.logRunStart
+      _          <- showValidConfig(channel)
       remoteData <- fetchRemoteData
       syncPlan   <- PlanBuilder.createPlan(remoteData)
       archive    <- UIO(UnversionedMirrorArchive)
@@ -54,11 +56,12 @@ trait Program {
     } yield ()
   }
 
-  private def uiEventReceiver
-    : ZIO[Any, Nothing, MessageChannel.UReceiver[Console, UIEvent]] = UIO {
-    message =>
-      UIO.succeed(())
-  }
+  private def showValidConfig(
+      channel: EChannel[
+        Console with Storage with Config with FileSystem with Hasher,
+        Throwable,
+        UIEvent]): ZIO[Clock, Nothing, Unit] =
+    Message.create(UIEvent.ShowValidConfig) >>= MessageChannel.send(channel)
 
   private def fetchRemoteData =
     for {

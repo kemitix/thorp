@@ -14,14 +14,6 @@ import zio.ZIO
 
 trait SyncLogging {
 
-  def logRunStart: ZIO[Console with Config, Nothing, Unit] =
-    for {
-      bucket  <- Config.bucket
-      prefix  <- Config.prefix
-      sources <- Config.sources
-      _       <- Console.putMessageLn(ConsoleOut.ValidConfig(bucket, prefix, sources))
-    } yield ()
-
   def logFileScan: ZIO[Config with Console, Nothing, Unit] =
     for {
       sources <- Config.sources
