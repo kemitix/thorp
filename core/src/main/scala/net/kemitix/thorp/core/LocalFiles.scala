@@ -3,7 +3,7 @@ package net.kemitix.thorp.core
 import net.kemitix.thorp.domain.LocalFile
 
 final case class LocalFiles(
-    localFiles: Stream[LocalFile],
+    localFiles: LazyList[LocalFile],
     count: Long,
     totalSizeBytes: Long
 ) {
@@ -16,9 +16,9 @@ final case class LocalFiles(
 }
 
 object LocalFiles {
-  val empty: LocalFiles = LocalFiles(Stream.empty, 0L, 0L)
-  def reduce: Stream[LocalFiles] => LocalFiles =
+  val empty: LocalFiles = LocalFiles(LazyList.empty, 0L, 0L)
+  def reduce: LazyList[LocalFiles] => LocalFiles =
     list => list.foldLeft(LocalFiles.empty)((acc, lf) => acc ++ lf)
   def one(localFile: LocalFile): LocalFiles =
-    LocalFiles(Stream(localFile), 1, localFile.file.length)
+    LocalFiles(LazyList(localFile), 1, localFile.file.length)
 }

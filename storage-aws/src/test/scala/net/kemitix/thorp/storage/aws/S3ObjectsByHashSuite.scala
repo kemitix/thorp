@@ -12,12 +12,12 @@ class S3ObjectsByHashSuite extends FunSpec {
     val key2 = RemoteKey("key-2")
     val o1   = s3object(hash, key1)
     val o2   = s3object(hash, key2)
-    val os   = Stream(o1, o2)
+    val os   = LazyList(o1, o2)
     it("should group by the hash value") {
       val expected: Map[MD5Hash, Set[RemoteKey]] = Map(
         hash -> Set(key1, key2)
       )
-      val result = S3ObjectsByHash.byHash(os)
+      val result = Map.from(S3ObjectsByHash.byHash(os))
       assertResult(expected)(result)
     }
   }

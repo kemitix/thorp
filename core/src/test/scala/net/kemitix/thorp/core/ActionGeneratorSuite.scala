@@ -25,7 +25,7 @@ class ActionGeneratorSuite extends FunSpec {
 
   describe("create actions") {
 
-    val previousActions = Stream.empty[Action]
+    val previousActions = LazyList.empty[Action]
 
     describe("#1 local exists, remote exists, remote matches - do nothing") {
       val theHash = MD5Hash("the-hash")
@@ -46,7 +46,7 @@ class ActionGeneratorSuite extends FunSpec {
         env.map({
           case (theFile, input) => {
             val expected =
-              Right(Stream(
+              Right(LazyList(
                 DoNothing(bucket, theFile.remoteKey, theFile.file.length + 1)))
             val result = invoke(input, previousActions)
             assertResult(expected)(result)
@@ -74,7 +74,7 @@ class ActionGeneratorSuite extends FunSpec {
         env.map({
           case (theFile, theRemoteKey, input, otherRemoteKey) => {
             val expected = Right(
-              Stream(
+              LazyList(
                 ToCopy(bucket,
                        otherRemoteKey,
                        theHash,
@@ -100,7 +100,7 @@ class ActionGeneratorSuite extends FunSpec {
         it("upload") {
           env.map({
             case (theFile, input) => {
-              val expected = Right(Stream(
+              val expected = Right(LazyList(
                 ToUpload(bucket, theFile, theFile.file.length))) // upload
               val result = invoke(input, previousActions)
               assertResult(expected)(result)
@@ -134,7 +134,7 @@ class ActionGeneratorSuite extends FunSpec {
         env.map({
           case (theFile, theRemoteKey, input, otherRemoteKey) => {
             val expected = Right(
-              Stream(
+              LazyList(
                 ToCopy(bucket,
                        otherRemoteKey,
                        theHash,
@@ -167,8 +167,8 @@ class ActionGeneratorSuite extends FunSpec {
       it("upload") {
         env.map({
           case (theFile, input) => {
-            val expected = Right(
-              Stream(ToUpload(bucket, theFile, theFile.file.length))) // upload
+            val expected = Right(LazyList(
+              ToUpload(bucket, theFile, theFile.file.length))) // upload
             val result = invoke(input, previousActions)
             assertResult(expected)(result)
           }
@@ -188,7 +188,7 @@ class ActionGeneratorSuite extends FunSpec {
 
   private def invoke(
       input: MatchedMetadata,
-      previousActions: Stream[Action]
+      previousActions: LazyList[Action]
   ) = {
     type TestEnv = Config with FileSystem
     val testEnv: TestEnv = new Config.Live with FileSystem.Live {}

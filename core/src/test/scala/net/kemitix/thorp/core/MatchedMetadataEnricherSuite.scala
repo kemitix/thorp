@@ -6,6 +6,8 @@ import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.domain._
 import org.scalatest.FunSpec
 
+import scala.collection.MapView
+
 class MatchedMetadataEnricherSuite extends FunSpec {
   private val source     = Resource(this, "upload")
   private val sourcePath = source.toPath
@@ -37,8 +39,8 @@ class MatchedMetadataEnricherSuite extends FunSpec {
                                               prefix)
         theRemoteKey = theFile.remoteKey
         remoteObjects = RemoteObjects(
-          byHash = Map(theHash     -> Set(theRemoteKey)),
-          byKey = Map(theRemoteKey -> theHash)
+          byHash = MapView(theHash     -> Set(theRemoteKey)),
+          byKey = MapView(theRemoteKey -> theHash)
         )
         theRemoteMetadata = RemoteMetaData(theRemoteKey, theHash)
       } yield (theFile, theRemoteMetadata, remoteObjects)
@@ -65,8 +67,8 @@ class MatchedMetadataEnricherSuite extends FunSpec {
                                               prefix)
         theRemoteKey: RemoteKey = RemoteKey.resolve("the-file")(prefix)
         remoteObjects = RemoteObjects(
-          byHash = Map(theHash     -> Set(theRemoteKey)),
-          byKey = Map(theRemoteKey -> theHash)
+          byHash = MapView(theHash     -> Set(theRemoteKey)),
+          byKey = MapView(theRemoteKey -> theHash)
         )
         theRemoteMetadata = RemoteMetaData(theRemoteKey, theHash)
       } yield (theFile, theRemoteMetadata, remoteObjects)
@@ -93,8 +95,8 @@ class MatchedMetadataEnricherSuite extends FunSpec {
                                               prefix)
         otherRemoteKey = RemoteKey("other-key")
         remoteObjects = RemoteObjects(
-          byHash = Map(theHash       -> Set(otherRemoteKey)),
-          byKey = Map(otherRemoteKey -> theHash)
+          byHash = MapView(theHash       -> Set(otherRemoteKey)),
+          byKey = MapView(otherRemoteKey -> theHash)
         )
         otherRemoteMetadata = RemoteMetaData(otherRemoteKey, theHash)
       } yield (theFile, otherRemoteMetadata, remoteObjects)
@@ -148,9 +150,9 @@ class MatchedMetadataEnricherSuite extends FunSpec {
         oldHash        = MD5Hash("old-hash")
         otherRemoteKey = RemoteKey.resolve("other-key")(prefix)
         remoteObjects = RemoteObjects(
-          byHash =
-            Map(oldHash -> Set(theRemoteKey), theHash -> Set(otherRemoteKey)),
-          byKey = Map(
+          byHash = MapView(oldHash -> Set(theRemoteKey),
+                           theHash -> Set(otherRemoteKey)),
+          byKey = MapView(
             theRemoteKey   -> oldHash,
             otherRemoteKey -> theHash
           )
@@ -186,8 +188,8 @@ class MatchedMetadataEnricherSuite extends FunSpec {
         theRemoteKey = theFile.remoteKey
         oldHash      = MD5Hash("old-hash")
         remoteObjects = RemoteObjects(
-          byHash = Map(oldHash     -> Set(theRemoteKey), theHash -> Set.empty),
-          byKey = Map(theRemoteKey -> oldHash)
+          byHash = MapView(oldHash     -> Set(theRemoteKey), theHash -> Set.empty),
+          byKey = MapView(theRemoteKey -> oldHash)
         )
         theRemoteMetadata = RemoteMetaData(theRemoteKey, oldHash)
       } yield (theFile, theRemoteMetadata, remoteObjects)
@@ -230,11 +232,11 @@ class MatchedMetadataEnricherSuite extends FunSpec {
                                                 sources,
                                                 prefix)
       remoteObjects = RemoteObjects(
-        byHash = Map(
+        byHash = MapView(
           hash     -> Set(key, keyOtherKey.remoteKey),
           diffHash -> Set(keyDiffHash.remoteKey)
         ),
-        byKey = Map(
+        byKey = MapView(
           key                   -> hash,
           keyOtherKey.remoteKey -> hash,
           keyDiffHash.remoteKey -> diffHash

@@ -7,6 +7,8 @@ import net.kemitix.thorp.domain._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.FunSpec
 
+import scala.collection.MapView
+
 class StorageServiceSuite extends FunSpec with MockFactory {
 
   private val source     = Resource(this, "upload")
@@ -36,11 +38,11 @@ class StorageServiceSuite extends FunSpec with MockFactory {
                                                 sources,
                                                 prefix)
       s3ObjectsData = RemoteObjects(
-        byHash = Map(
+        byHash = MapView(
           hash     -> Set(key, keyOtherKey.remoteKey),
           diffHash -> Set(keyDiffHash.remoteKey)
         ),
-        byKey = Map(
+        byKey = MapView(
           key                   -> hash,
           keyOtherKey.remoteKey -> hash,
           keyDiffHash.remoteKey -> diffHash

@@ -22,11 +22,11 @@ object LocalFileStream {
         case _                  => localFile(path)
       }
 
-    def recurse(paths: Stream[Path])
+    def recurse(paths: LazyList[Path])
       : RIO[Config with FileSystem with Hasher, LocalFiles] =
       for {
         recursed <- ZIO.foreach(paths)(path => recurseIntoSubDirectories(path))
-      } yield LocalFiles.reduce(recursed.toStream)
+      } yield LocalFiles.reduce(LazyList.from(recursed))
 
     def loop(path: Path): RIO[Config with FileSystem with Hasher, LocalFiles] =
       dirPaths(path) >>= recurse
@@ -37,12 +37,13 @@ object LocalFileStream {
   private def dirPaths(path: Path) =
     listFiles(path) >>= includedDirPaths
 
-  private def includedDirPaths(paths: Stream[Path]) =
+  private def includedDirPaths(paths: LazyList[Path]) =
     for {
       flaggedPaths <- RIO.foreach(paths)(path =>
         isIncluded(path).map((path, _)))
     } yield
-      flaggedPaths.toStream
+      LazyList
+        .from(flaggedPaths)
         .filter({ case (_, included) => included })
         .map({ case (path, _) => path })
 
@@ -63,7 +64,7 @@ object LocalFileStream {
     for {
       files <- Task(path.toFile.listFiles)
       _     <- filesMustExist(path, files)
-    } yield Stream(files: _*).map(_.toPath)
+    } yield LazyList.from(files.toIndexedSeq).map(_.toPath)
 
   private def filesMustExist(path: Path, files: Array[File]) =
     Task {

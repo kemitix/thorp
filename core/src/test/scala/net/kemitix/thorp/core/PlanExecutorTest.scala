@@ -15,11 +15,11 @@ import zio.{DefaultRuntime, ZIO}
 
 class PlanExecutorTest extends FreeSpec {
 
-  private def subject(in: Stream[Int]): ZIO[Any, Throwable, Stream[Int]] =
-    ZIO.foldLeft(in)(Stream.empty[Int])((s, i) => ZIO(i #:: s)).map(_.reverse)
+  private def subject(in: LazyList[Int]): ZIO[Any, Throwable, LazyList[Int]] =
+    ZIO.foldLeft(in)(LazyList.empty[Int])((s, i) => ZIO(i #:: s)).map(_.reverse)
 
   "zio foreach on a stream can be a stream" in {
-    val input   = (1 to 1000000).toStream
+    val input   = LazyList.from(1 to 1000000)
     val program = subject(input)
     val result  = new DefaultRuntime {}.unsafeRunSync(program).toEither
     assertResult(Right(input))(result)
@@ -29,7 +29,8 @@ class PlanExecutorTest extends FreeSpec {
     val nActions  = 100000
     val bucket    = Bucket("bucket")
     val remoteKey = RemoteKey("remoteKey")
-    val input     = (1 to nActions).toStream.map(DoNothing(bucket, remoteKey, _))
+    val input =
+      LazyList.from(1 to nActions).map(DoNothing(bucket, remoteKey, _))
 
     val syncTotals  = SyncTotals.empty
     val archiveTask = UnversionedMirrorArchive.default(syncTotals)
@@ -45,7 +46,8 @@ class PlanExecutorTest extends FreeSpec {
       new DefaultRuntime {}.unsafeRunSync(program.provide(TestEnv)).toEither
 
     val expected = Right(
-      (1 to nActions).toStream
+      LazyList
+        .from(1 to nActions)
         .map(_ => StorageQueueEvent.DoNothingQueueEvent(remoteKey)))
     assertResult(expected)(result)
   }

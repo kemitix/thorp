@@ -29,9 +29,9 @@ trait PlanExecutor {
       bytesCounter: Ref[Long]
   ): ZIO[Storage with Console with Config,
          Throwable,
-         Stream[StorageQueueEvent]] = {
-    ZIO.foldLeft(syncPlan.actions)(Stream.empty[StorageQueueEvent]) {
-      (stream: Stream[StorageQueueEvent], action) =>
+         LazyList[StorageQueueEvent]] = {
+    ZIO.foldLeft(syncPlan.actions)(LazyList.empty[StorageQueueEvent]) {
+      (stream: LazyList[StorageQueueEvent], action) =>
         val result: ZIO[Storage with Console with Config,
                         Throwable,
                         StorageQueueEvent] =
