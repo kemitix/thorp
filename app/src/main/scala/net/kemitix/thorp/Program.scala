@@ -37,6 +37,8 @@ trait Program {
       _               <- MessageChannel.pointToPoint(uiEventSender)(uiEventReceiver).runDrain
     } yield ()
 
+  type UIChannel = UChannel[Any, UIEvent]
+
   // headless because it shouldn't use any Console effects, only send UIEvents
   // TODO: refactor out Console as a required effect
   private def headlessProgram: ZIO[
@@ -56,7 +58,7 @@ trait Program {
     } yield ()) <* MessageChannel.endChannel(channel)
   }
 
-  private def showValidConfig(channel: UChannel[Any, UIEvent]) =
+  private def showValidConfig(channel: UIChannel) =
     Message.create(UIEvent.ShowValidConfig) >>= MessageChannel.send(channel)
 
   private def fetchRemoteData =
