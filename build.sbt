@@ -79,6 +79,7 @@ lazy val app = (project in file("app"))
   .settings(commonSettings)
   .settings(mainClass in assembly := Some("net.kemitix.thorp.Main"))
   .settings(applicationSettings)
+  .settings(eipDependencies)
   .settings(Seq(
     assemblyOption in assembly := (
       assemblyOption in assembly).value
