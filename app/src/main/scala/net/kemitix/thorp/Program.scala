@@ -5,13 +5,20 @@ import net.kemitix.eip.zio.{Message, MessageChannel}
 import net.kemitix.thorp.cli.CliArgs
 import net.kemitix.thorp.config._
 import net.kemitix.thorp.console._
+import net.kemitix.thorp.domain.{Counters, StorageQueueEvent}
+import net.kemitix.thorp.domain.StorageQueueEvent.{
+  CopyQueueEvent,
+  DeleteQueueEvent,
+  ErrorQueueEvent,
+  UploadQueueEvent
+}
 import net.kemitix.thorp.filesystem.{FileSystem, Hasher}
 import net.kemitix.thorp.lib.CoreTypes.CoreProgram
 import net.kemitix.thorp.lib._
 import net.kemitix.thorp.storage.Storage
 import net.kemitix.throp.uishell.{UIEvent, UIShell}
 import zio.clock.Clock
-import zio.{UIO, ZIO}
+import zio.{RIO, UIO, ZIO}
 
 trait Program {
 
@@ -49,12 +56,12 @@ trait Program {
       Throwable,
       UIEvent]] = UIO { uiChannel =>
     (for {
-      syncPlan   <- PlanBuilder.createPlan(remoteData)
       _          <- showValidConfig(uiChannel)
       remoteData <- fetchRemoteData(uiChannel)
       archive    <- UIO(UnversionedMirrorArchive)
-      events     <- PlanExecutor.executePlan(archive, syncPlan)
-      _          <- SyncLogging.logRunFinished(events)
+      syncPlan <- PlanBuilder.createPlan(remoteData)
+      events   <- PlanExecutor.executePlan(archive, syncPlan)
+      _        <- showSummary(uiChannel)(events)
     } yield ()) <* MessageChannel.endChannel(uiChannel)
   }
 
@@ -77,6 +84,26 @@ trait Program {
     throwable match {
       case ConfigValidationException(errors) =>
         ZIO.foreach_(errors)(error => Console.putStrLn(s"- $error"))
+    }
+
+  private def showSummary(uiChannel: UIChannel)(
+      events: Seq[StorageQueueEvent]): RIO[Clock, Unit] = {
+    val counters = events.foldLeft(Counters.empty)(countActivities)
+    Message.create(UIEvent.ShowSummary(counters)) >>= MessageChannel.send(
+      uiChannel)
+  }
+
+  private def countActivities: (Counters, StorageQueueEvent) => Counters =
+    (counters: Counters, s3Action: StorageQueueEvent) => {
+      import Counters._
+      val increment: Int => Int = _ + 1
+      s3Action match {
+        case _: UploadQueueEvent => uploaded.modify(increment)(counters)
+        case _: CopyQueueEvent   => copied.modify(increment)(counters)
+        case _: DeleteQueueEvent => deleted.modify(increment)(counters)
+        case _: ErrorQueueEvent  => errors.modify(increment)(counters)
+        case _                   => counters
+      }
     }
 
 }
