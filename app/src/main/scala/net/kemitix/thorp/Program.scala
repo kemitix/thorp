@@ -56,9 +56,10 @@ trait Program {
       Throwable,
       UIEvent]] = UIO { uiChannel =>
     (for {
-      _          <- showValidConfig(uiChannel)
-      remoteData <- fetchRemoteData(uiChannel)
-      archive    <- UIO(UnversionedMirrorArchive)
+      _                <- showValidConfig(uiChannel)
+      remoteData       <- fetchRemoteData(uiChannel)
+      archive          <- UIO(UnversionedMirrorArchive)
+      copyUploadEvents <- PushLocalChanges(uiChannel, archive)
       syncPlan <- PlanBuilder.createPlan(remoteData)
       events   <- PlanExecutor.executePlan(archive, syncPlan)
       _        <- showSummary(uiChannel)(events)
