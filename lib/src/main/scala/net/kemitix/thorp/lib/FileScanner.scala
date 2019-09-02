@@ -34,10 +34,10 @@ object FileScanner {
 
       override def scanSources: RIO[FileScanner, FileSender] =
         RIO { channel =>
-          for {
+          (for {
             sources <- Config.sources
             _       <- ZIO.foreach(sources.paths)(scanPath(channel)(_))
-          } yield ()
+          } yield ()) <* MessageChannel.endChannel(channel)
         }
 
       private def scanPath(channel: ScannerChannel)(
