@@ -6,7 +6,13 @@ import java.nio.file.Path
 import net.kemitix.eip.zio.MessageChannel.{EChannel, ESender}
 import net.kemitix.eip.zio.{Message, MessageChannel}
 import net.kemitix.thorp.config.Config
-import net.kemitix.thorp.domain.{HashType, MD5Hash, RemoteKey}
+import net.kemitix.thorp.domain.{
+  HashType,
+  LocalFile,
+  MD5Hash,
+  RemoteKey,
+  Sources
+}
 import net.kemitix.thorp.filesystem.{FileSystem, Hasher}
 import zio.clock.Clock
 import zio.{RIO, ZIO}
@@ -19,7 +25,7 @@ object FileScanner {
 
   type RemoteHashes = Map[MD5Hash, RemoteKey]
   type Hashes       = Map[HashType, MD5Hash]
-  type ScannedFile  = (File, Hashes)
+  type ScannedFile  = LocalFile
   type FileSender = ESender[Clock with Hasher with FileSystem with Config,
                             Throwable,
                             ScannedFile]
@@ -40,8 +46,8 @@ object FileScanner {
           } yield ()) <* MessageChannel.endChannel(channel)
         }
 
-      private def scanPath(channel: ScannerChannel)(
-          path: Path): ZIO[Clock with Hasher with FileSystem, Throwable, Unit] =
+      private def scanPath(channel: ScannerChannel)(path: Path)
+        : ZIO[Clock with Config with Hasher with FileSystem, Throwable, Unit] =
         for {
           files <- FileSystem.listFiles(path)
           _     <- ZIO.foreach(files)(handleFile(channel))
@@ -56,8 +62,12 @@ object FileScanner {
 
       private def sendHashedFile(channel: ScannerChannel)(file: File) =
         for {
-          hash       <- Hasher.hashObject(file.toPath)
-          hashedFile <- Message.create((file, hash))
+          sources    <- Config.sources
+          source     <- Sources.forPath(file.toPath)(sources)
+          hashes     <- Hasher.hashObject(file.toPath)
+          remoteKey  <- ZIO(RemoteKey.fromSourcePath(source, file.toPath))
+          localFile  <- ZIO(LocalFile(file, source.toFile, hashes, remoteKey))
+          hashedFile <- Message.create(localFile)
           _          <- MessageChannel.send(channel)(hashedFile)
         } yield ()
     }

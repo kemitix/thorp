@@ -1,8 +1,6 @@
 package net.kemitix.throp.uishell
 
-import java.io.File
-
-import net.kemitix.thorp.domain.{Counters, HashType, MD5Hash}
+import net.kemitix.thorp.domain.{Counters, LocalFile}
 
 sealed trait UIEvent
 object UIEvent {
@@ -12,7 +10,6 @@ object UIEvent {
 
   case class ShowSummary(counters: Counters) extends UIEvent
 
-  case class FileFound(file: File, hashes: Map[HashType, MD5Hash])
-      extends UIEvent
+  case class FileFound(localFile: LocalFile) extends UIEvent
 
 }

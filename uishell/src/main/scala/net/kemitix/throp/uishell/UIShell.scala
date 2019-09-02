@@ -26,10 +26,11 @@ object UIShell {
             Console.putStrLn(s"Copied   ${counters.copied} files") *>
             Console.putStrLn(s"Deleted  ${counters.deleted} files") *>
             Console.putStrLn(s"Errors   ${counters.errors}")
-        case UIEvent.FileFound(file, hashes) =>
+        case UIEvent.FileFound(localFile) =>
           for {
             batchMode <- Config.batchMode
-            _         <- ZIO.when(batchMode)(Console.putStrLn(s"Found: $file"))
+            _ <- ZIO.when(batchMode)(
+              Console.putStrLn(s"Found: ${localFile.file}"))
           } yield ()
       }
     }

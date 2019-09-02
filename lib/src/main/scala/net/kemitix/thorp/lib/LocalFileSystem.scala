@@ -38,9 +38,9 @@ object LocalFileSystem extends LocalFileSystem {
       uiChannel: UChannel[Any, UIEvent]
   ): UIO[MessageChannel.UReceiver[Clock, FileScanner.ScannedFile]] =
     UIO { message =>
-      val (file, hashes) = message.body
+      val localFile = message.body
       for {
-        fileFoundMessage <- Message.create(UIEvent.FileFound(file, hashes))
+        fileFoundMessage <- Message.create(UIEvent.FileFound(localFile))
         _                <- MessageChannel.send(uiChannel)(fileFoundMessage)
 
       } yield ()

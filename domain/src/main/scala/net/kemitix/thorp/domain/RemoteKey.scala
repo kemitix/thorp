@@ -21,4 +21,7 @@ object RemoteKey {
   }
   def resolve(path: String)(remoteKey: RemoteKey): RemoteKey =
     RemoteKey(List(remoteKey.key, path).filterNot(_.isEmpty).mkString("/"))
+  def fromSourcePath(source: Path, path: Path): RemoteKey = {
+    RemoteKey(source.relativize(path).toString)
+  }
 }

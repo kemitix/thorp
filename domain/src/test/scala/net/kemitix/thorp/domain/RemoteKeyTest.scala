@@ -67,6 +67,15 @@ class RemoteKeyTest extends FreeSpec {
         assertResult(expected)(result)
       }
     }
+    "fromSourcePath" - {
+      "when path in source" in {
+        val source   = Paths.get("/source")
+        val path     = source.resolve("/source/child")
+        val expected = RemoteKey("child")
+        val result   = RemoteKey.fromSourcePath(source, path)
+        assertResult(expected)(result)
+      }
+    }
   }
 
 }
