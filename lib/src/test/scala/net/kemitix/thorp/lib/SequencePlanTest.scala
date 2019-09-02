@@ -26,9 +26,9 @@ class SequencePlanTest extends FreeSpec {
       val file2      = new File("aFile")
       val source     = new File("source")
       val localFile1 =
-        LocalFile(file1, source, hashes, remoteKey1)
+        LocalFile(file1, source, hashes, remoteKey1, file1.length)
       val _ =
-        LocalFile(file2, source, hashes, remoteKey2)
+        LocalFile(file2, source, hashes, remoteKey2, file2.length)
       val copy1   = ToCopy(bucket, remoteKey1, hash, remoteKey2, size)
       val copy2   = ToCopy(bucket, remoteKey2, hash, remoteKey1, size)
       val upload1 = ToUpload(bucket, localFile1, size)

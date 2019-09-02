@@ -62,11 +62,13 @@ object FileScanner {
 
       private def sendHashedFile(channel: ScannerChannel)(file: File) =
         for {
-          sources    <- Config.sources
-          source     <- Sources.forPath(file.toPath)(sources)
-          hashes     <- Hasher.hashObject(file.toPath)
-          remoteKey  <- ZIO(RemoteKey.fromSourcePath(source, file.toPath))
-          localFile  <- ZIO(LocalFile(file, source.toFile, hashes, remoteKey))
+          sources   <- Config.sources
+          source    <- Sources.forPath(file.toPath)(sources)
+          hashes    <- Hasher.hashObject(file.toPath)
+          remoteKey <- ZIO(RemoteKey.fromSourcePath(source, file.toPath))
+          size      <- FileSystem.length(file)
+          localFile <- ZIO(
+            LocalFile(file, source.toFile, hashes, remoteKey, size))
           hashedFile <- Message.create(localFile)
           _          <- MessageChannel.send(channel)(hashedFile)
         } yield ()

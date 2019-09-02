@@ -24,7 +24,7 @@ object LocalFileValidator {
     for {
       file      <- validateFile(path.toFile)
       remoteKey <- validateRemoteKey(sources, prefix, path)
-    } yield LocalFile(file, source, hash, remoteKey)
+    } yield LocalFile(file, source, hash, remoteKey, file.length)
 
   private def validateFile(file: File): IO[Violation, File] =
     if (file.isDirectory)

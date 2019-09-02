@@ -27,7 +27,7 @@ class UploaderTest extends FreeSpec with MockFactory {
     val aHash         = MD5Hash("aHash")
     val hashes        = Map[HashType, MD5Hash](MD5 -> aHash)
     val remoteKey     = RemoteKey("aRemoteKey")
-    val localFile     = LocalFile(aFile, aSource, hashes, remoteKey)
+    val localFile     = LocalFile(aFile, aSource, hashes, remoteKey, aFile.length)
     val bucket        = Bucket("aBucket")
     val uploadResult  = new UploadResult
     uploadResult.setKey(remoteKey.key)
