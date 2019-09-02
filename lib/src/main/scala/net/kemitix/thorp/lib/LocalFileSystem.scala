@@ -9,13 +9,24 @@ import net.kemitix.throp.uishell.UIEvent
 import zio.clock.Clock
 import zio.{RIO, UIO}
 
-object PushLocalChanges {
+trait LocalFileSystem {
+  def scanCopyUpload(
+      uiChannel: UChannel[Any, UIEvent],
+      archive: ThorpArchive
+  ): RIO[Clock with Hasher with FileSystem with Config with FileScanner,
+         Seq[
+           StorageQueueEvent
+         ]]
+}
+object LocalFileSystem extends LocalFileSystem {
 
-  type UIChannel = UChannel[Any, UIEvent]
-
-  def apply(uiChannel: UIChannel, archive: ThorpArchive)
-    : RIO[Clock with Hasher with FileSystem with Config with FileScanner,
-          Seq[StorageQueueEvent]] =
+  override def scanCopyUpload(
+      uiChannel: UChannel[Any, UIEvent],
+      archive: ThorpArchive
+  ): RIO[Clock with Hasher with FileSystem with Config with FileScanner,
+         Seq[
+           StorageQueueEvent
+         ]] =
     for {
       fileSender   <- FileScanner.scanSources
       fileReceiver <- fileReceiver(uiChannel)
@@ -23,13 +34,15 @@ object PushLocalChanges {
       events       <- UIO(List.empty)
     } yield events
 
-  private def fileReceiver(uiChannel: UIChannel)
-    : UIO[MessageChannel.UReceiver[Clock, FileScanner.ScannedFile]] =
+  private def fileReceiver(
+      uiChannel: UChannel[Any, UIEvent]
+  ): UIO[MessageChannel.UReceiver[Clock, FileScanner.ScannedFile]] =
     UIO { message =>
       val (file, hashes) = message.body
       for {
         fileFoundMessage <- Message.create(UIEvent.FileFound(file, hashes))
         _                <- MessageChannel.send(uiChannel)(fileFoundMessage)
+
       } yield ()
     }
 }

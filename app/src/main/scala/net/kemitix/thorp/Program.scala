@@ -59,7 +59,7 @@ trait Program {
       _                <- showValidConfig(uiChannel)
       remoteData       <- fetchRemoteData(uiChannel)
       archive          <- UIO(UnversionedMirrorArchive)
-      copyUploadEvents <- PushLocalChanges(uiChannel, archive)
+      copyUploadEvents <- LocalFileSystem.scanCopyUpload(uiChannel, archive)
       syncPlan <- PlanBuilder.createPlan(remoteData)
       events   <- PlanExecutor.executePlan(archive, syncPlan)
       _        <- showSummary(uiChannel)(events)
