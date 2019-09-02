@@ -1,6 +1,4 @@
-package net.kemitix.thorp.lib
-
-import net.kemitix.thorp.domain.SimpleLens
+package net.kemitix.thorp.domain
 
 final case class Counters(
     uploaded: Int,
