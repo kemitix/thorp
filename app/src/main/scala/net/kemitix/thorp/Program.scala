@@ -49,9 +49,9 @@ trait Program {
       Throwable,
       UIEvent]] = UIO { uiChannel =>
     (for {
-      remoteData <- fetchRemoteData
       syncPlan   <- PlanBuilder.createPlan(remoteData)
       _          <- showValidConfig(uiChannel)
+      remoteData <- fetchRemoteData(uiChannel)
       archive    <- UIO(UnversionedMirrorArchive)
       events     <- PlanExecutor.executePlan(archive, syncPlan)
       _          <- SyncLogging.logRunFinished(events)
@@ -61,12 +61,13 @@ trait Program {
   private def showValidConfig(uiChannel: UIChannel) =
     Message.create(UIEvent.ShowValidConfig) >>= MessageChannel.send(uiChannel)
 
-  private def fetchRemoteData =
+  private def fetchRemoteData(uiChannel: UIChannel) =
     for {
       bucket  <- Config.bucket
       prefix  <- Config.prefix
       objects <- Storage.list(bucket, prefix)
-      _       <- Console.putStrLn(s"Found ${objects.byKey.size} remote objects")
+      _ <- Message.create(UIEvent.RemoteDataFetched(objects.byKey.size)) >>= MessageChannel
+        .send(uiChannel)
     } yield objects
 
   private def handleErrors(throwable: Throwable) =

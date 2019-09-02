@@ -17,6 +17,8 @@ object UIShell {
             _ <- Console.putMessageLn(
               ConsoleOut.ValidConfig(bucket, prefix, sources))
           } yield ()
+        case UIEvent.RemoteDataFetched(size) =>
+          Console.putStrLn(s"Found $size remote objects")
       }
     }
 }
