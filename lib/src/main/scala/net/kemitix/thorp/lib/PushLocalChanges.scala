@@ -1,6 +1,6 @@
 package net.kemitix.thorp.lib
 
-import net.kemitix.eip.zio.MessageChannel
+import net.kemitix.eip.zio.{Message, MessageChannel}
 import net.kemitix.eip.zio.MessageChannel.UChannel
 import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.domain.StorageQueueEvent
@@ -24,8 +24,12 @@ object PushLocalChanges {
     } yield events
 
   private def fileReceiver(uiChannel: UIChannel)
-    : UIO[MessageChannel.UReceiver[Any, FileScanner.ScannedFile]] =
+    : UIO[MessageChannel.UReceiver[Clock, FileScanner.ScannedFile]] =
     UIO { message =>
-      UIO.succeed(())
+      val (file, hashes) = message.body
+      for {
+        fileFoundMessage <- Message.create(UIEvent.FileFound(file, hashes))
+        _                <- MessageChannel.send(uiChannel)(fileFoundMessage)
+      } yield ()
     }
 }

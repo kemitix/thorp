@@ -4,7 +4,7 @@ import net.kemitix.eip.zio.MessageChannel
 import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.console.{Console, ConsoleOut}
 import net.kemitix.thorp.domain.Terminal.eraseToEndOfScreen
-import zio.UIO
+import zio.{UIO, ZIO}
 
 object UIShell {
   def receiver: UIO[MessageChannel.UReceiver[Console with Config, UIEvent]] =
@@ -26,6 +26,11 @@ object UIShell {
             Console.putStrLn(s"Copied   ${counters.copied} files") *>
             Console.putStrLn(s"Deleted  ${counters.deleted} files") *>
             Console.putStrLn(s"Errors   ${counters.errors}")
+        case UIEvent.FileFound(file, hashes) =>
+          for {
+            batchMode <- Config.batchMode
+            _         <- ZIO.when(batchMode)(Console.putStrLn(s"Found: $file"))
+          } yield ()
       }
     }
 }
