@@ -47,19 +47,19 @@ trait Program {
     MessageChannel.ESender[
       Console with Storage with Config with FileSystem with Hasher with Clock,
       Throwable,
-      UIEvent]] = UIO { channel =>
+      UIEvent]] = UIO { uiChannel =>
     (for {
-      _          <- showValidConfig(channel)
       remoteData <- fetchRemoteData
       syncPlan   <- PlanBuilder.createPlan(remoteData)
+      _          <- showValidConfig(uiChannel)
       archive    <- UIO(UnversionedMirrorArchive)
       events     <- PlanExecutor.executePlan(archive, syncPlan)
       _          <- SyncLogging.logRunFinished(events)
-    } yield ()) <* MessageChannel.endChannel(channel)
+    } yield ()) <* MessageChannel.endChannel(uiChannel)
   }
 
-  private def showValidConfig(channel: UIChannel) =
-    Message.create(UIEvent.ShowValidConfig) >>= MessageChannel.send(channel)
+  private def showValidConfig(uiChannel: UIChannel) =
+    Message.create(UIEvent.ShowValidConfig) >>= MessageChannel.send(uiChannel)
 
   private def fetchRemoteData =
     for {
