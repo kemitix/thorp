@@ -52,7 +52,7 @@ trait Program {
     Any,
     Nothing,
     MessageChannel.ESender[
-      Console with Storage with Config with FileSystem with Hasher with Clock,
+      Console with Storage with Config with FileSystem with Hasher with Clock with FileScanner,
       Throwable,
       UIEvent]] = UIO { uiChannel =>
     (for {
