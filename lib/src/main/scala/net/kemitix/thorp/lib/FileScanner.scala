@@ -7,6 +7,7 @@ import net.kemitix.eip.zio.MessageChannel.{EChannel, ESender}
 import net.kemitix.eip.zio.{Message, MessageChannel}
 import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.domain.{
+  Filter,
   HashType,
   LocalFile,
   MD5Hash,
@@ -15,7 +16,7 @@ import net.kemitix.thorp.domain.{
 }
 import net.kemitix.thorp.filesystem.{FileSystem, Hasher}
 import zio.clock.Clock
-import zio.{RIO, ZIO}
+import zio.{RIO, UIO, ZIO}
 
 trait FileScanner {
   val fileScanner: FileScanner.Service
@@ -49,15 +50,20 @@ object FileScanner {
       private def scanPath(channel: ScannerChannel)(path: Path)
         : ZIO[Clock with Config with Hasher with FileSystem, Throwable, Unit] =
         for {
-          files <- FileSystem.listFiles(path)
-          _     <- ZIO.foreach(files)(handleFile(channel))
+          filters <- Config.filters
+          files   <- FileSystem.listFiles(path)
+          _       <- ZIO.foreach(files)(handleFile(channel, filters))
         } yield ()
 
-      private def handleFile(channel: ScannerChannel)(file: File) =
+      private def handleFile(
+          channel: ScannerChannel,
+          filters: List[Filter]
+      )(file: File) =
         for {
-          isDir <- FileSystem.isDirectory(file)
-          _     <- ZIO.when(isDir)(scanPath(channel)(file.toPath))
-          _     <- ZIO.when(!isDir)(sendHashedFile(channel)(file))
+          isDir      <- FileSystem.isDirectory(file)
+          isIncluded <- UIO(Filters.isIncluded(file.toPath)(filters))
+          _          <- ZIO.when(isIncluded && isDir)(scanPath(channel)(file.toPath))
+          _          <- ZIO.when(isIncluded && !isDir)(sendHashedFile(channel)(file))
         } yield ()
 
       private def sendHashedFile(channel: ScannerChannel)(file: File) =
