@@ -4,6 +4,7 @@ import java.io.File
 import java.nio.file.Paths
 
 import org.scalatest.FreeSpec
+import zio.DefaultRuntime
 
 class RemoteKeyTest extends FreeSpec {
 
@@ -74,6 +75,17 @@ class RemoteKeyTest extends FreeSpec {
         val expected = RemoteKey("child")
         val result   = RemoteKey.fromSourcePath(source, path)
         assertResult(expected)(result)
+      }
+    }
+    "from source, prefix, file" - {
+      "when file in source" in {
+        val source   = Paths.get("/source")
+        val prefix   = RemoteKey("prefix")
+        val file     = new File("/source/dir/filename")
+        val expected = RemoteKey("prefix/dir/filename")
+        val program  = RemoteKey.from(source, prefix, file)
+        val result   = new DefaultRuntime {}.unsafeRunSync(program).toEither
+        assertResult(Right(expected))(result)
       }
     }
   }

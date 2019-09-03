@@ -70,8 +70,9 @@ object FileScanner {
         for {
           sources   <- Config.sources
           source    <- Sources.forPath(file.toPath)(sources)
+          prefix    <- Config.prefix
           hashes    <- Hasher.hashObject(file.toPath)
-          remoteKey <- ZIO(RemoteKey.fromSourcePath(source, file.toPath))
+          remoteKey <- RemoteKey.from(source, prefix, file)
           size      <- FileSystem.length(file)
           localFile <- ZIO(
             LocalFile(file, source.toFile, hashes, remoteKey, size))
