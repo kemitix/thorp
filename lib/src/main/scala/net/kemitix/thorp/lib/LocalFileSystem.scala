@@ -3,6 +3,7 @@ package net.kemitix.thorp.lib
 import net.kemitix.eip.zio.MessageChannel.UChannel
 import net.kemitix.eip.zio.{Message, MessageChannel}
 import net.kemitix.thorp.config.Config
+import net.kemitix.thorp.domain.Action.{DoNothing, ToCopy, ToUpload}
 import net.kemitix.thorp.domain.RemoteObjects.{
   remoteHasHash,
   remoteKeyExists,
@@ -10,7 +11,6 @@ import net.kemitix.thorp.domain.RemoteObjects.{
 }
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.filesystem.{FileSystem, Hasher}
-import net.kemitix.thorp.lib.Action.{DoNothing, ToCopy, ToUpload}
 import net.kemitix.throp.uishell.UIEvent
 import zio._
 import zio.clock.Clock
@@ -47,16 +47,19 @@ object LocalFileSystem extends LocalFileSystem {
     UIO { message =>
       val localFile = message.body
       for {
-        fileFoundMessage <- Message.create(UIEvent.FileFound(localFile))
-        _                <- MessageChannel.send(uiChannel)(fileFoundMessage)
-        action           <- chooseAction(remoteObjects, uploads)(localFile)
+        fileFoundMessage    <- Message.create(UIEvent.FileFound(localFile))
+        _                   <- MessageChannel.send(uiChannel)(fileFoundMessage)
+        action              <- chooseAction(remoteObjects, uploads, uiChannel)(localFile)
+        actionChosenMessage <- Message.create(UIEvent.ActionChosen(action))
+        _                   <- MessageChannel.send(uiChannel)(actionChosenMessage)
       } yield ()
     }
 
   private def chooseAction(
       remoteObjects: RemoteObjects,
-      uploads: Ref[Map[MD5Hash, Promise[Throwable, RemoteKey]]])(
-      localFile: LocalFile): ZIO[Config, Nothing, Action] = {
+      uploads: Ref[Map[MD5Hash, Promise[Throwable, RemoteKey]]],
+      uiChannel: UChannel[Any, UIEvent],
+  )(localFile: LocalFile): ZIO[Config with Clock, Nothing, Action] = {
     for {
       remoteExists  <- remoteKeyExists(remoteObjects, localFile.remoteKey)
       remoteMatches <- remoteMatchesLocalFile(remoteObjects, localFile)
@@ -72,7 +75,7 @@ object LocalFileSystem extends LocalFileSystem {
           case _ if (localFile.hashes.exists({
                 case (_, hash) => previous.contains(hash)
               })) =>
-            doCopyWithPreviousUpload(localFile, bucket, previous)
+            doCopyWithPreviousUpload(localFile, bucket, previous, uiChannel)
           case _ =>
             doUpload(localFile, bucket)
         }
@@ -99,18 +102,28 @@ object LocalFileSystem extends LocalFileSystem {
   private def doCopyWithPreviousUpload(
       localFile: LocalFile,
       bucket: Bucket,
-      previous: Map[MD5Hash, Promise[Throwable, RemoteKey]]): UIO[Action] = {
+      previous: Map[MD5Hash, Promise[Throwable, RemoteKey]],
+      uiChannel: UChannel[Any, UIEvent],
+  ): ZIO[Clock, Nothing, Action] = {
     localFile.hashes
       .find({ case (_, hash) => previous.contains(hash) })
       .map({
         case (_, hash) =>
-          previous(hash).await.map(
-            remoteKey =>
-              ToCopy(bucket,
-                     remoteKey,
-                     hash,
-                     localFile.remoteKey,
-                     localFile.length))
+          for {
+            awaitingMessage <- Message.create(
+              UIEvent.AwaitingAnotherUpload(localFile.remoteKey, hash))
+            _ <- MessageChannel.send(uiChannel)(awaitingMessage)
+            action <- previous(hash).await.map(
+              remoteKey =>
+                ToCopy(bucket,
+                       remoteKey,
+                       hash,
+                       localFile.remoteKey,
+                       localFile.length))
+            waitFinishedMessage <- Message.create(
+              UIEvent.AnotherUploadWaitComplete(action))
+            _ <- MessageChannel.send(uiChannel)(waitFinishedMessage)
+          } yield action
       })
       .getOrElse(doUpload(localFile, bucket))
       .refineToOrDie[Nothing]

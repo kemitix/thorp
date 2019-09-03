@@ -32,6 +32,13 @@ object UIShell {
             _ <- ZIO.when(batchMode)(
               Console.putStrLn(s"Found: ${localFile.file}"))
           } yield ()
+        case UIEvent.ActionChosen(action) =>
+          Console.putStrLn(s"Action: ${action.toString}")
+        case UIEvent.AwaitingAnotherUpload(remoteKey, hash) =>
+          Console.putStrLn(
+            s"Awaiting another upload of $hash before copying it to $remoteKey")
+        case UIEvent.AnotherUploadWaitComplete(action) =>
+          Console.putStrLn(s"Finished waiting to other upload - now $action")
       }
     }
 }
