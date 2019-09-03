@@ -43,16 +43,4 @@ object RemoteObjects {
         remoteObjects.byHash.contains(hash)
     })
 
-  def keyForHashes(
-      remoteObjects: RemoteObjects,
-      hashes: Map[HashType, MD5Hash]
-  ): (RemoteKey, MD5Hash) = {
-    val value: Iterable[MD5Hash] = hashes
-      .filter({
-        case (_, hash) => remoteObjects.byHash.contains(hash)
-      })
-      .values
-    value
-  }
-
 }
