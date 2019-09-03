@@ -11,6 +11,7 @@ import net.kemitix.thorp.domain.RemoteObjects.{
 }
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.filesystem.{FileSystem, Hasher}
+import net.kemitix.thorp.lib.FileScanner.Hashes
 import net.kemitix.throp.uishell.UIEvent
 import zio._
 import zio.clock.Clock
@@ -72,9 +73,7 @@ object LocalFileSystem extends LocalFileSystem {
         remoteForHash match {
           case Some((sourceKey, hash)) =>
             doCopy(localFile, bucket, sourceKey, hash)
-          case _ if (localFile.hashes.exists({
-                case (_, hash) => previous.contains(hash)
-              })) =>
+          case _ if (matchesPreviousUpload(previous, localFile.hashes)) =>
             doCopyWithPreviousUpload(localFile, bucket, previous, uiChannel)
           case _ =>
             doUpload(localFile, bucket)
@@ -82,6 +81,14 @@ object LocalFileSystem extends LocalFileSystem {
       }
     } yield action
   }
+
+  private def matchesPreviousUpload(
+      previous: Map[MD5Hash, Promise[Throwable, RemoteKey]],
+      hashes: Hashes
+  ): Boolean =
+    hashes.exists({
+      case (_, hash) => previous.contains(hash)
+    })
 
   private def doNothing(
       localFile: LocalFile,
