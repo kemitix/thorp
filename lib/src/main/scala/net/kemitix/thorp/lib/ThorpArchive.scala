@@ -18,7 +18,7 @@ trait ThorpArchive {
   def update(
       sequencedAction: SequencedAction,
       totalBytesSoFar: Long
-  ): RIO[Storage with Console with Config, StorageQueueEvent]
+  ): ZIO[Storage with Config, Nothing, StorageQueueEvent]
 
   def logEvent(
       event: StorageQueueEvent): RIO[Console with Config, StorageQueueEvent] =
