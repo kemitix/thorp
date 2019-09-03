@@ -1,6 +1,4 @@
-package net.kemitix.thorp.lib
-
-import net.kemitix.thorp.domain.{Bucket, LocalFile, MD5Hash, RemoteKey}
+package net.kemitix.thorp.domain
 
 sealed trait Action {
   def bucket: Bucket

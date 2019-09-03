@@ -1,6 +1,6 @@
 package net.kemitix.thorp.lib
 
-import net.kemitix.thorp.domain.SyncTotals
+import net.kemitix.thorp.domain.{Action, SyncTotals}
 
 final case class SyncPlan private (
     actions: LazyList[Action],

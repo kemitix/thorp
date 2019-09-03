@@ -2,9 +2,9 @@ package net.kemitix.thorp.lib
 
 import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.console._
+import net.kemitix.thorp.domain.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.domain.StorageQueueEvent.DoNothingQueueEvent
 import net.kemitix.thorp.domain._
-import net.kemitix.thorp.lib.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.storage.Storage
 import zio.{RIO, Task}
 

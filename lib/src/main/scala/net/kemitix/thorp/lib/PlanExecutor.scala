@@ -2,7 +2,7 @@ package net.kemitix.thorp.lib
 
 import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.console.Console
-import net.kemitix.thorp.domain.StorageQueueEvent
+import net.kemitix.thorp.domain.{Action, StorageQueueEvent}
 import net.kemitix.thorp.storage.Storage
 import zio.{Ref, ZIO}
 

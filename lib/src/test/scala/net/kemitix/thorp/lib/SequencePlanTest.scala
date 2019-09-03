@@ -2,14 +2,8 @@ package net.kemitix.thorp.lib
 
 import java.io.File
 
-import net.kemitix.thorp.lib.Action._
-import net.kemitix.thorp.domain.{
-  Bucket,
-  HashType,
-  LocalFile,
-  MD5Hash,
-  RemoteKey
-}
+import net.kemitix.thorp.domain.Action._
+import net.kemitix.thorp.domain._
 import org.scalatest.FreeSpec
 
 class SequencePlanTest extends FreeSpec {

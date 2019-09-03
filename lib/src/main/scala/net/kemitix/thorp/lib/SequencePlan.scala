@@ -1,6 +1,7 @@
 package net.kemitix.thorp.lib
 
-import net.kemitix.thorp.lib.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
+import net.kemitix.thorp.domain.Action
+import net.kemitix.thorp.domain.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
 
 trait SequencePlan {
 

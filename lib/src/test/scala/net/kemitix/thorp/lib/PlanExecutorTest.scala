@@ -2,7 +2,7 @@ package net.kemitix.thorp.lib
 
 import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.console.Console
-import net.kemitix.thorp.lib.Action.DoNothing
+import net.kemitix.thorp.domain.Action.DoNothing
 import net.kemitix.thorp.domain.{
   Bucket,
   RemoteKey,

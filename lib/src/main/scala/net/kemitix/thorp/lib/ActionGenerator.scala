@@ -1,7 +1,7 @@
 package net.kemitix.thorp.lib
 
 import net.kemitix.thorp.config.Config
-import net.kemitix.thorp.lib.Action.{DoNothing, ToCopy, ToUpload}
+import net.kemitix.thorp.domain.Action.{DoNothing, ToCopy, ToUpload}
 import net.kemitix.thorp.domain.Implicits._
 import net.kemitix.thorp.domain._
 import zio.RIO
