@@ -94,7 +94,6 @@ trait Program {
       MessageChannel.send(uiChannel)
   }
 
-  //TODO: Not counting activities -- all coming up zeros
   private def countActivities: (Counters, StorageQueueEvent) => Counters =
     (counters: Counters, s3Action: StorageQueueEvent) => {
       import Counters._

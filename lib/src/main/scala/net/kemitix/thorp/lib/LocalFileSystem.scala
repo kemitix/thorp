@@ -40,14 +40,16 @@ object LocalFileSystem extends LocalFileSystem {
       actionCounter <- Ref.make(0)
       bytesCounter  <- Ref.make(0L)
       uploads       <- Ref.make(Map.empty[MD5Hash, Promise[Throwable, RemoteKey]])
+      eventsRef     <- Ref.make(List.empty[StorageQueueEvent])
       fileReceiver <- fileReceiver(uiChannel,
                                    remoteObjects,
                                    archive,
                                    uploads,
                                    actionCounter,
-                                   bytesCounter)
+                                   bytesCounter,
+                                   eventsRef)
       _      <- MessageChannel.pointToPoint(fileSender)(fileReceiver).runDrain
-      events <- UIO(List.empty)
+      events <- eventsRef.get
     } yield events
 
   private def fileReceiver(
@@ -56,7 +58,8 @@ object LocalFileSystem extends LocalFileSystem {
       archive: ThorpArchive,
       uploads: Ref[Map[MD5Hash, Promise[Throwable, RemoteKey]]],
       actionCounterRef: Ref[Int],
-      bytesCounterRef: Ref[Long]
+      bytesCounterRef: Ref[Long],
+      eventsRef: Ref[List[StorageQueueEvent]]
   ): UIO[MessageChannel.UReceiver[Clock with Config with Storage,
                                   FileScanner.ScannedFile]] =
     UIO { message =>
@@ -70,6 +73,7 @@ object LocalFileSystem extends LocalFileSystem {
         _                   <- MessageChannel.send(uiChannel)(actionChosenMessage)
         sequencedAction = SequencedAction(action, actionCounter)
         event <- archive.update(sequencedAction, bytesCounter)
+        _     <- eventsRef.update(list => event :: list)
         actionFinishedMessage <- Message.create(
           UIEvent.ActionFinished(event, actionCounter, bytesCounter))
         _ <- MessageChannel.send(uiChannel)(actionFinishedMessage)
