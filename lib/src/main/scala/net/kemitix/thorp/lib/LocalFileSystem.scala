@@ -12,6 +12,7 @@ import net.kemitix.thorp.domain.RemoteObjects.{
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.filesystem.{FileSystem, Hasher}
 import net.kemitix.thorp.lib.FileScanner.Hashes
+import net.kemitix.thorp.storage.Storage
 import net.kemitix.throp.uishell.UIEvent
 import zio._
 import zio.clock.Clock
@@ -21,8 +22,9 @@ trait LocalFileSystem {
       uiChannel: UChannel[Any, UIEvent],
       remoteObjects: RemoteObjects,
       archive: ThorpArchive
-  ): RIO[Clock with Hasher with FileSystem with Config with FileScanner,
-         Seq[StorageQueueEvent]]
+  ): RIO[
+    Clock with Hasher with FileSystem with Config with FileScanner with Storage,
+    Seq[StorageQueueEvent]]
 }
 object LocalFileSystem extends LocalFileSystem {
 
@@ -30,28 +32,47 @@ object LocalFileSystem extends LocalFileSystem {
       uiChannel: UChannel[Any, UIEvent],
       remoteObjects: RemoteObjects,
       archive: ThorpArchive
-  ): RIO[Clock with Hasher with FileSystem with Config with FileScanner,
-         Seq[StorageQueueEvent]] =
+  ): RIO[
+    Clock with Hasher with FileSystem with Config with FileScanner with Storage,
+    Seq[StorageQueueEvent]] =
     for {
-      fileSender   <- FileScanner.scanSources
-      uploads      <- Ref.make(Map.empty[MD5Hash, Promise[Throwable, RemoteKey]])
-      fileReceiver <- fileReceiver(uiChannel, remoteObjects, uploads)
-      _            <- MessageChannel.pointToPoint(fileSender)(fileReceiver).runDrain
-      events       <- UIO(List.empty)
+      fileSender    <- FileScanner.scanSources
+      actionCounter <- Ref.make(0)
+      bytesCounter  <- Ref.make(0L)
+      uploads       <- Ref.make(Map.empty[MD5Hash, Promise[Throwable, RemoteKey]])
+      fileReceiver <- fileReceiver(uiChannel,
+                                   remoteObjects,
+                                   archive,
+                                   uploads,
+                                   actionCounter,
+                                   bytesCounter)
+      _      <- MessageChannel.pointToPoint(fileSender)(fileReceiver).runDrain
+      events <- UIO(List.empty)
     } yield events
 
   private def fileReceiver(
       uiChannel: UChannel[Any, UIEvent],
       remoteObjects: RemoteObjects,
-      uploads: Ref[Map[MD5Hash, Promise[Throwable, RemoteKey]]]
-  ): UIO[MessageChannel.UReceiver[Clock with Config, FileScanner.ScannedFile]] =
+      archive: ThorpArchive,
+      uploads: Ref[Map[MD5Hash, Promise[Throwable, RemoteKey]]],
+      actionCounterRef: Ref[Int],
+      bytesCounterRef: Ref[Long]
+  ): UIO[MessageChannel.UReceiver[Clock with Config with Storage,
+                                  FileScanner.ScannedFile]] =
     UIO { message =>
       val localFile = message.body
       for {
         _                   <- uiFileFound(uiChannel)(localFile)
         action              <- chooseAction(remoteObjects, uploads, uiChannel)(localFile)
+        actionCounter       <- actionCounterRef.update(_ + 1)
+        bytesCounter        <- bytesCounterRef.update(_ + action.size)
         actionChosenMessage <- Message.create(UIEvent.ActionChosen(action))
         _                   <- MessageChannel.send(uiChannel)(actionChosenMessage)
+        sequencedAction = SequencedAction(action, actionCounter)
+        event <- archive.update(sequencedAction, bytesCounter)
+        actionFinishedMessage <- Message.create(
+          UIEvent.ActionFinished(event, actionCounter, bytesCounter))
+        _ <- MessageChannel.send(uiChannel)(actionFinishedMessage)
       } yield ()
     }
 

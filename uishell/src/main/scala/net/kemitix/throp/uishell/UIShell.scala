@@ -17,6 +17,7 @@ object UIShell {
   def receiver: UIO[MessageChannel.UReceiver[Console with Config, UIEvent]] =
     UIO { uiEventMessage =>
       uiEventMessage.body match {
+
         case UIEvent.ShowValidConfig =>
           for {
             bucket  <- Config.bucket
@@ -25,27 +26,34 @@ object UIShell {
             _ <- Console.putMessageLn(
               ConsoleOut.ValidConfig(bucket, prefix, sources))
           } yield ()
+
         case UIEvent.RemoteDataFetched(size) =>
           Console.putStrLn(s"Found $size remote objects")
+
         case UIEvent.ShowSummary(counters) =>
           Console.putStrLn(eraseToEndOfScreen) *>
             Console.putStrLn(s"Uploaded ${counters.uploaded} files") *>
             Console.putStrLn(s"Copied   ${counters.copied} files") *>
             Console.putStrLn(s"Deleted  ${counters.deleted} files") *>
             Console.putStrLn(s"Errors   ${counters.errors}")
+
         case UIEvent.FileFound(localFile) =>
           for {
             batchMode <- Config.batchMode
             _ <- ZIO.when(batchMode)(
               Console.putStrLn(s"Found: ${localFile.file}"))
           } yield ()
+
         case UIEvent.ActionChosen(action) =>
           UIO(()) //Console.putStrLn(s"Action: ${action.toString}")
+
         case UIEvent.AwaitingAnotherUpload(remoteKey, hash) =>
           Console.putStrLn(
             s"Awaiting another upload of $hash before copying it to $remoteKey")
+
         case UIEvent.AnotherUploadWaitComplete(action) =>
           Console.putStrLn(s"Finished waiting to other upload - now $action")
+
         case UIEvent.ActionFinished(event, actionCounter, bytesCounter) =>
           for {
             batchMode <- Config.batchMode

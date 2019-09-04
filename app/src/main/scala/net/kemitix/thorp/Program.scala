@@ -46,13 +46,12 @@ trait Program {
 
   type UIChannel = UChannel[Any, UIEvent]
 
-  // headless because it shouldn't use any Console effects, only send UIEvents
-  // TODO: refactor out Console as a required effect
+  // headless because it doesn't use any Console effects, only sends UIEvents
   private def headlessProgram: ZIO[
     Any,
     Nothing,
     MessageChannel.ESender[
-      Console with Storage with Config with FileSystem with Hasher with Clock with FileScanner,
+      Storage with Config with FileSystem with Hasher with Clock with FileScanner,
       Throwable,
       UIEvent]] = UIO { uiChannel =>
     (for {
@@ -62,9 +61,8 @@ trait Program {
       copyUploadEvents <- LocalFileSystem.scanCopyUpload(uiChannel,
                                                          remoteData,
                                                          archive)
-      syncPlan <- PlanBuilder.createPlan(remoteData)
-      events   <- PlanExecutor.executePlan(archive, syncPlan)
-      _        <- showSummary(uiChannel)(events)
+      //TODO: delete actions
+      _        <- showSummary(uiChannel)(copyUploadEvents)
     } yield ()) <* MessageChannel.endChannel(uiChannel)
   }
 
@@ -92,10 +90,11 @@ trait Program {
   private def showSummary(uiChannel: UIChannel)(
       events: Seq[StorageQueueEvent]): RIO[Clock, Unit] = {
     val counters = events.foldLeft(Counters.empty)(countActivities)
-    Message.create(UIEvent.ShowSummary(counters)) >>= MessageChannel.send(
-      uiChannel)
+    Message.create(UIEvent.ShowSummary(counters)) >>=
+      MessageChannel.send(uiChannel)
   }
 
+  //TODO: Not counting activities -- all coming up zeros
   private def countActivities: (Counters, StorageQueueEvent) => Counters =
     (counters: Counters, s3Action: StorageQueueEvent) => {
       import Counters._
