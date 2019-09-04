@@ -33,7 +33,7 @@ object UIShell {
               Console.putStrLn(s"Found: ${localFile.file}"))
           } yield ()
         case UIEvent.ActionChosen(action) =>
-          Console.putStrLn(s"Action: ${action.toString}")
+          UIO(()) //Console.putStrLn(s"Action: ${action.toString}")
         case UIEvent.AwaitingAnotherUpload(remoteKey, hash) =>
           Console.putStrLn(
             s"Awaiting another upload of $hash before copying it to $remoteKey")
