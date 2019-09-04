@@ -1,13 +1,6 @@
 package net.kemitix.throp.uishell
 
-import net.kemitix.thorp.domain.{
-  Action,
-  Counters,
-  LocalFile,
-  MD5Hash,
-  RemoteKey,
-  StorageQueueEvent
-}
+import net.kemitix.thorp.domain._
 
 sealed trait UIEvent
 object UIEvent {
@@ -34,9 +27,11 @@ object UIEvent {
 
   case class AnotherUploadWaitComplete(action: Action) extends UIEvent
 
-  case class ActionFinished(event: StorageQueueEvent,
+  case class ActionFinished(action: Action,
                             actionCounter: Int,
                             bytesCounter: Long)
       extends UIEvent
+
+  case class KeyFound(remoteKey: RemoteKey) extends UIEvent
 
 }

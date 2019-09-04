@@ -47,13 +47,13 @@ trait Program {
   type UIChannel = UChannel[Any, UIEvent]
 
   // headless because it doesn't use any Console effects, only sends UIEvents
-  private def headlessProgram: ZIO[
-    Any,
-    Nothing,
-    MessageChannel.ESender[
-      Storage with Config with FileSystem with Hasher with Clock with FileScanner,
-      Throwable,
-      UIEvent]] = UIO { uiChannel =>
+  private def headlessProgram
+    : ZIO[Any,
+          Nothing,
+          MessageChannel.ESender[
+            Storage with Config with FileSystem with Hasher with Clock with FileScanner,
+            Throwable,
+            UIEvent]] = UIO { uiChannel =>
     (for {
       _          <- showValidConfig(uiChannel)
       remoteData <- fetchRemoteData(uiChannel)
@@ -61,8 +61,8 @@ trait Program {
       copyUploadEvents <- LocalFileSystem.scanCopyUpload(uiChannel,
                                                          remoteData,
                                                          archive)
-      //TODO: delete actions
-      _        <- showSummary(uiChannel)(copyUploadEvents)
+      deleteEvents <- LocalFileSystem.scanDelete(uiChannel, remoteData, archive)
+      _            <- showSummary(uiChannel)(copyUploadEvents ++ deleteEvents)
     } yield ()) <* MessageChannel.endChannel(uiChannel)
   }
 

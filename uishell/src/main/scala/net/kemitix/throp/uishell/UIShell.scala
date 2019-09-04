@@ -5,11 +5,11 @@ import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.console.ConsoleOut.{
   CopyComplete,
   DeleteComplete,
-  ErrorQueueEventOccurred,
   UploadComplete
 }
 import net.kemitix.thorp.console.{Console, ConsoleOut}
-import net.kemitix.thorp.domain.StorageQueueEvent._
+import net.kemitix.thorp.domain.Action
+import net.kemitix.thorp.domain.Action.ToUpload
 import net.kemitix.thorp.domain.Terminal.eraseToEndOfScreen
 import zio.{UIO, ZIO}
 
@@ -54,24 +54,24 @@ object UIShell {
         case UIEvent.AnotherUploadWaitComplete(action) =>
           Console.putStrLn(s"Finished waiting to other upload - now $action")
 
-        case UIEvent.ActionFinished(event, actionCounter, bytesCounter) =>
+        case UIEvent.ActionFinished(action, _, _) =>
           for {
             batchMode <- Config.batchMode
-            _ <- event match {
-              case UploadQueueEvent(remoteKey, _) =>
-                Console.putMessageLnB(UploadComplete(remoteKey), batchMode)
-              case CopyQueueEvent(sourceKey, targetKey) =>
+            _ <- action match {
+              case _: Action.DoNothing => UIO(())
+              case ToUpload(_, localFile, _) =>
+                Console.putMessageLnB(UploadComplete(localFile.remoteKey),
+                                      batchMode)
+              case Action.ToCopy(_, sourceKey, _, targetKey, _) =>
                 Console.putMessageLnB(CopyComplete(sourceKey, targetKey),
                                       batchMode)
-              case DeleteQueueEvent(remoteKey) =>
+              case Action.ToDelete(_, remoteKey, _) =>
                 Console.putMessageLnB(DeleteComplete(remoteKey), batchMode)
-              case ErrorQueueEvent(action, _, e) =>
-                Console.putMessageLnB(ErrorQueueEventOccurred(action, e),
-                                      batchMode)
-              case DoNothingQueueEvent(_) => UIO(())
-              case ShutdownQueueEvent()   => UIO(())
             }
           } yield ()
+
+        case UIEvent.KeyFound(_) => UIO(())
+
       }
     }
 }

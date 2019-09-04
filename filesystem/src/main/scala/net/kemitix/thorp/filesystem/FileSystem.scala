@@ -14,7 +14,7 @@ trait FileSystem {
 
 object FileSystem {
   trait Service {
-    def fileExists(file: File): ZIO[FileSystem, Throwable, Boolean]
+    def fileExists(file: File): ZIO[FileSystem, Nothing, Boolean]
     def openManagedFileInputStream(file: File, offset: Long)
       : RIO[FileSystem, ZManaged[Any, Throwable, FileInputStream]]
     def fileLines(file: File): RIO[FileSystem, Seq[String]]
@@ -26,7 +26,7 @@ object FileSystem {
     override val filesystem: Service = new Service {
       override def fileExists(
           file: File
-      ): RIO[FileSystem, Boolean] = ZIO(file.exists)
+      ): ZIO[FileSystem, Nothing, Boolean] = UIO(file.exists)
 
       override def openManagedFileInputStream(file: File, offset: Long)
         : RIO[FileSystem, ZManaged[Any, Throwable, FileInputStream]] = {
@@ -64,7 +64,7 @@ object FileSystem {
   object Live extends Live
   trait Test extends FileSystem {
 
-    val fileExistsResultMap: Task[Map[Path, File]]
+    val fileExistsResultMap: UIO[Map[Path, File]]
     val fileLinesResult: Task[List[String]]
     val isDirResult: Task[Boolean]
     val listFilesResult: RIO[FileSystem, Iterable[File]]
@@ -74,7 +74,7 @@ object FileSystem {
 
     override val filesystem: Service = new Service {
 
-      override def fileExists(file: File): RIO[FileSystem, Boolean] =
+      override def fileExists(file: File): ZIO[FileSystem, Nothing, Boolean] =
         fileExistsResultMap.map(m => m.keys.exists(_ equals file.toPath))
 
       override def openManagedFileInputStream(file: File, offset: Long)
@@ -95,7 +95,7 @@ object FileSystem {
     }
   }
 
-  final def exists(file: File): RIO[FileSystem, Boolean] =
+  final def exists(file: File): ZIO[FileSystem, Nothing, Boolean] =
     ZIO.accessM(_.filesystem fileExists file)
 
   final def openAtOffset(file: File, offset: Long)
