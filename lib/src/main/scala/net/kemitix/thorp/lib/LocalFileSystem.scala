@@ -48,13 +48,19 @@ object LocalFileSystem extends LocalFileSystem {
     UIO { message =>
       val localFile = message.body
       for {
-        fileFoundMessage    <- Message.create(UIEvent.FileFound(localFile))
-        _                   <- MessageChannel.send(uiChannel)(fileFoundMessage)
+        _                   <- uiFileFound(uiChannel)(localFile)
         action              <- chooseAction(remoteObjects, uploads, uiChannel)(localFile)
         actionChosenMessage <- Message.create(UIEvent.ActionChosen(action))
         _                   <- MessageChannel.send(uiChannel)(actionChosenMessage)
       } yield ()
     }
+
+  private def uiFileFound(uiChannel: UChannel[Any, UIEvent])(
+      localFile: LocalFile) =
+    for {
+      fileFoundMessage <- Message.create(UIEvent.FileFound(localFile))
+      _                <- MessageChannel.send(uiChannel)(fileFoundMessage)
+    } yield ()
 
   private def chooseAction(
       remoteObjects: RemoteObjects,
