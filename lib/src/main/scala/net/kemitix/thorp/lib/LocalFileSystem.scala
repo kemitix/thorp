@@ -228,7 +228,7 @@ object LocalFileSystem extends LocalFileSystem {
         for {
           _       <- uiKeyFound(uiChannel)(remoteKey)
           sources <- Config.sources
-          exists  <- hasLocalFile(sources, remoteKey)
+          exists  <- FileSystem.hasLocalFile(sources, remoteKey)
           _ <- ZIO.when(!exists) {
             for {
               actionCounter <- actionCounterRef.update(_ + 1)
@@ -251,13 +251,5 @@ object LocalFileSystem extends LocalFileSystem {
       remoteKey: RemoteKey) =
     Message.create(UIEvent.KeyFound(remoteKey)) >>=
       MessageChannel.send(uiChannel)
-
-  private def hasLocalFile(
-      sources: Sources,
-      remoteKey: RemoteKey
-  ) =
-    ZIO.foldLeft(sources.paths)(false) { (exists, source) =>
-      FileSystem.exists(source.resolve(remoteKey.key).toFile).map(_ || exists)
-    }
 
 }

@@ -4,7 +4,8 @@ import java.io.{File, FileInputStream}
 import java.nio.file.{Files, Path}
 import java.util.stream
 
-import zio.{Task, RIO, UIO, ZIO, ZManaged}
+import net.kemitix.thorp.domain.{RemoteKey, Sources}
+import zio.{RIO, Task, UIO, ZIO, ZManaged}
 
 import scala.jdk.CollectionConverters._
 
@@ -21,6 +22,8 @@ object FileSystem {
     def isDirectory(file: File): RIO[FileSystem, Boolean]
     def listFiles(path: Path): RIO[FileSystem, Iterable[File]]
     def length(file: File): ZIO[FileSystem, Nothing, Long]
+    def hasLocalFile(sources: Sources,
+                     remoteKey: RemoteKey): ZIO[FileSystem, Nothing, Boolean]
   }
   trait Live extends FileSystem {
     override val filesystem: Service = new Service {
@@ -59,6 +62,17 @@ object FileSystem {
 
       override def length(file: File): ZIO[FileSystem, Nothing, Long] =
         UIO(file.length)
+
+      override def hasLocalFile(
+          sources: Sources,
+          remoteKey: RemoteKey): ZIO[FileSystem, Nothing, Boolean] = {
+        val exists = ZIO.foldLeft(sources.paths)(false) { (exists, source) =>
+          FileSystem
+            .exists(source.resolve(remoteKey.key).toFile)
+            .map(_ || exists)
+        }
+        exists
+      }
     }
   }
   object Live extends Live
@@ -69,8 +83,8 @@ object FileSystem {
     val isDirResult: Task[Boolean]
     val listFilesResult: RIO[FileSystem, Iterable[File]]
     val lengthResult: UIO[Long]
-
     val managedFileInputStream: Task[ZManaged[Any, Throwable, FileInputStream]]
+    val hasLocalFileResult: UIO[Boolean]
 
     override val filesystem: Service = new Service {
 
@@ -92,6 +106,11 @@ object FileSystem {
 
       override def length(file: File): UIO[Long] =
         lengthResult
+
+      override def hasLocalFile(
+          sources: Sources,
+          remoteKey: RemoteKey): ZIO[FileSystem, Nothing, Boolean] =
+        hasLocalFileResult
     }
   }
 
@@ -118,4 +137,8 @@ object FileSystem {
   final def length(file: File): ZIO[FileSystem, Nothing, Long] =
     ZIO.accessM(_.filesystem.length(file))
 
+  final def hasLocalFile(
+      sources: Sources,
+      remoteKey: RemoteKey): ZIO[FileSystem, Nothing, Boolean] =
+    ZIO.accessM(_.filesystem.hasLocalFile(sources, remoteKey))
 }
