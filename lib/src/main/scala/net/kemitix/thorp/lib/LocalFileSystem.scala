@@ -228,7 +228,8 @@ object LocalFileSystem extends LocalFileSystem {
         for {
           _       <- uiKeyFound(uiChannel)(remoteKey)
           sources <- Config.sources
-          exists  <- FileSystem.hasLocalFile(sources, remoteKey)
+          prefix  <- Config.prefix
+          exists  <- FileSystem.hasLocalFile(sources, prefix, remoteKey)
           _ <- ZIO.when(!exists) {
             for {
               actionCounter <- actionCounterRef.update(_ + 1)

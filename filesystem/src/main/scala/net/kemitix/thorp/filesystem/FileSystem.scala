@@ -5,7 +5,7 @@ import java.nio.file.{Files, Path}
 import java.util.stream
 
 import net.kemitix.thorp.domain.{RemoteKey, Sources}
-import zio.{RIO, Task, UIO, ZIO, ZManaged}
+import zio._
 
 import scala.jdk.CollectionConverters._
 
@@ -23,6 +23,7 @@ object FileSystem {
     def listFiles(path: Path): RIO[FileSystem, Iterable[File]]
     def length(file: File): ZIO[FileSystem, Nothing, Long]
     def hasLocalFile(sources: Sources,
+                     prefix: RemoteKey,
                      remoteKey: RemoteKey): ZIO[FileSystem, Nothing, Boolean]
   }
   trait Live extends FileSystem {
@@ -65,13 +66,15 @@ object FileSystem {
 
       override def hasLocalFile(
           sources: Sources,
+          prefix: RemoteKey,
           remoteKey: RemoteKey): ZIO[FileSystem, Nothing, Boolean] = {
-        val exists = ZIO.foldLeft(sources.paths)(false) { (exists, source) =>
-          FileSystem
-            .exists(source.resolve(remoteKey.key).toFile)
-            .map(_ || exists)
+        ZIO.foldLeft(sources.paths)(false) { (accExists, source) =>
+          RemoteKey
+            .asFile(source, prefix)(remoteKey)
+            .map(FileSystem.exists)
+            .getOrElse(UIO(false))
+            .map(_ || accExists)
         }
-        exists
       }
     }
   }
@@ -109,6 +112,7 @@ object FileSystem {
 
       override def hasLocalFile(
           sources: Sources,
+          prefix: RemoteKey,
           remoteKey: RemoteKey): ZIO[FileSystem, Nothing, Boolean] =
         hasLocalFileResult
     }
@@ -139,6 +143,7 @@ object FileSystem {
 
   final def hasLocalFile(
       sources: Sources,
+      prefix: RemoteKey,
       remoteKey: RemoteKey): ZIO[FileSystem, Nothing, Boolean] =
-    ZIO.accessM(_.filesystem.hasLocalFile(sources, remoteKey))
+    ZIO.accessM(_.filesystem.hasLocalFile(sources, prefix, remoteKey))
 }

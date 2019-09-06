@@ -89,5 +89,42 @@ class RemoteKeyTest extends FreeSpec {
       }
     }
   }
+  "asFile" - {
+    "remoteKey is empty" in {
+      val source    = Paths.get("/source")
+      val prefix    = RemoteKey("prefix")
+      val remoteKey = RemoteKey("")
+
+      val expected = None
+
+      val result = RemoteKey.asFile(source, prefix)(remoteKey)
+
+      assertResult(expected)(result)
+    }
+    "remoteKey is not empty" - {
+      "remoteKey is within prefix" in {
+        val source    = Paths.get("/source")
+        val prefix    = RemoteKey("prefix")
+        val remoteKey = RemoteKey("prefix/key")
+
+        val expected = Some(Paths.get("/source/key").toFile)
+
+        val result = RemoteKey.asFile(source, prefix)(remoteKey)
+
+        assertResult(expected)(result)
+      }
+      "remoteKey is outwith prefix" in {
+        val source    = Paths.get("/source")
+        val prefix    = RemoteKey("prefix")
+        val remoteKey = RemoteKey("elsewhere/key")
+
+        val expected = None
+
+        val result = RemoteKey.asFile(source, prefix)(remoteKey)
+
+        assertResult(expected)(result)
+      }
+    }
+  }
 
 }
