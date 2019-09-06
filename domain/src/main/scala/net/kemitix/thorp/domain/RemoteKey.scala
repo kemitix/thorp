@@ -15,7 +15,8 @@ object RemoteKey {
 
   def asFile(source: Path, prefix: RemoteKey)(
       remoteKey: RemoteKey): Option[File] =
-    if (remoteKey.key.length === 0) None
+    if (remoteKey.key.length === 0 || !remoteKey.key.startsWith(prefix.key))
+      None
     else Some(source.resolve(RemoteKey.relativeTo(prefix)(remoteKey)).toFile)
 
   def relativeTo(prefix: RemoteKey)(remoteKey: RemoteKey): Path = prefix match {
