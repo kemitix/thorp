@@ -14,7 +14,8 @@ class FileSystemTest extends FreeSpec with TemporaryFolder {
           createFile(dir, filename, contents = "")
           val remoteKey = RemoteKey(filename)
           val sources   = Sources(List(dir))
-          val program   = FileSystem.hasLocalFile(sources, remoteKey)
+          val prefix    = RemoteKey("")
+          val program   = FileSystem.hasLocalFile(sources, prefix, remoteKey)
           val result = new DefaultRuntime {}
             .unsafeRunSync(program.provide(FileSystem.Live))
             .toEither
@@ -27,7 +28,8 @@ class FileSystemTest extends FreeSpec with TemporaryFolder {
           val filename  = "filename"
           val remoteKey = RemoteKey(filename)
           val sources   = Sources(List(dir))
-          val program   = FileSystem.hasLocalFile(sources, remoteKey)
+          val prefix    = RemoteKey("")
+          val program   = FileSystem.hasLocalFile(sources, prefix, remoteKey)
           val result = new DefaultRuntime {}
             .unsafeRunSync(program.provide(FileSystem.Live))
             .toEither
