@@ -135,7 +135,7 @@ object LocalFileSystem extends LocalFileSystem {
         remoteForHash match {
           case Some((sourceKey, hash)) =>
             doCopy(localFile, bucket, sourceKey, hash)
-          case _ if (matchesPreviousUpload(previous, localFile.hashes)) =>
+          case _ if matchesPreviousUpload(previous, localFile.hashes) =>
             doCopyWithPreviousUpload(localFile, bucket, previous, uiChannel)
           case _ =>
             doUpload(localFile, bucket)
