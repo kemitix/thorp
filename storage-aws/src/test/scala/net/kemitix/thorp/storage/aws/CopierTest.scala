@@ -2,7 +2,6 @@ package net.kemitix.thorp.storage.aws
 
 import com.amazonaws.services.s3.model.{AmazonS3Exception, CopyObjectResult}
 import net.kemitix.thorp.console.Console
-import net.kemitix.thorp.domain.NonUnit.~*
 import net.kemitix.thorp.domain.StorageQueueEvent.{Action, ErrorQueueEvent}
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.aws.S3ClientException.{CopyError, HashError}
@@ -25,26 +24,24 @@ class CopierTest extends FreeSpec {
           val event    = StorageQueueEvent.CopyQueueEvent(sourceKey, targetKey)
           val expected = Right(event)
           new AmazonS3ClientTestFixture {
-            ~*(
-              (fixture.amazonS3Client.copyObject _)
-                .when()
-                .returns(_ => Task.succeed(Some(new CopyObjectResult))))
+            (fixture.amazonS3Client.copyObject _)
+              .when()
+              .returns(_ => Task.succeed(Some(new CopyObjectResult)))
             private val result =
               invoke(bucket, sourceKey, hash, targetKey, fixture.amazonS3Client)
-            ~*(assertResult(expected)(result))
+            assertResult(expected)(result)
           }
         }
       }
       "when source hash does not match" - {
         "skip the file with an error" in {
           new AmazonS3ClientTestFixture {
-            ~*(
-              (fixture.amazonS3Client.copyObject _)
-                .when()
-                .returns(_ => Task.succeed(None)))
+            (fixture.amazonS3Client.copyObject _)
+              .when()
+              .returns(_ => Task.succeed(None))
             private val result =
               invoke(bucket, sourceKey, hash, targetKey, fixture.amazonS3Client)
-            ~*(result match {
+            result match {
               case Right(
                   ErrorQueueEvent(Action.Copy("sourceKey => targetKey"),
                                   RemoteKey("targetKey"),
@@ -54,7 +51,7 @@ class CopierTest extends FreeSpec {
                   case _         => fail(s"Not a HashError: ${e.getMessage}")
                 }
               case e => fail(s"Not an ErrorQueueEvent: $e")
-            })
+            }
           }
         }
       }
@@ -62,12 +59,12 @@ class CopierTest extends FreeSpec {
         "skip the file with an error" in {
           new AmazonS3ClientTestFixture {
             private val expectedMessage = "The specified key does not exist"
-            ~*((fixture.amazonS3Client.copyObject _)
+            (fixture.amazonS3Client.copyObject _)
               .when()
-              .returns(_ => Task.fail(new AmazonS3Exception(expectedMessage))))
+              .returns(_ => Task.fail(new AmazonS3Exception(expectedMessage)))
             private val result =
               invoke(bucket, sourceKey, hash, targetKey, fixture.amazonS3Client)
-            ~*(result match {
+            result match {
               case Right(
                   ErrorQueueEvent(Action.Copy("sourceKey => targetKey"),
                                   RemoteKey("targetKey"),
@@ -78,7 +75,7 @@ class CopierTest extends FreeSpec {
                   case _ => fail(s"Not a CopyError: ${e.getMessage}")
                 }
               case e => fail(s"Not an ErrorQueueEvent: ${e}")
-            })
+            }
           }
         }
       }

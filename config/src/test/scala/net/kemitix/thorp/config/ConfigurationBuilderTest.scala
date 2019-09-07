@@ -3,7 +3,6 @@ package net.kemitix.thorp.config
 import java.nio.file.{Path, Paths}
 
 import net.kemitix.thorp.domain.Filter.{Exclude, Include}
-import net.kemitix.thorp.domain.NonUnit.~*
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.filesystem.FileSystem
 import org.scalatest.FunSpec
@@ -131,10 +130,10 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
                            Filter.Include("current-include")))
             val options = configOptions(ConfigOption.Source(currentSource))
             val result  = invoke(options)
-            ~*(assertResult(expectedSources)(result.map(_.sources)))
-            ~*(assertResult(expectedBuckets)(result.map(_.bucket)))
-            ~*(assertResult(expectedPrefixes)(result.map(_.prefix)))
-            ~*(assertResult(expectedFilters)(result.map(_.filters)))
+            assertResult(expectedSources)(result.map(_.sources))
+            assertResult(expectedBuckets)(result.map(_.bucket))
+            assertResult(expectedPrefixes)(result.map(_.prefix))
+            assertResult(expectedFilters)(result.map(_.filters))
           })
         })
       }
