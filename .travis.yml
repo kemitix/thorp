@@ -16,6 +16,10 @@ jobs:
   include:
     - stage: test
       script: sbt ++$TRAVIS_SCALA_VERSION test
+    - stage: coverage
+      script:
+        - sbt clean coverage test coverageAggregate
+        - bash <(curl -s https://codecov.io/bash)
     - stage: release
       script: sbt ++$TRAVIS_SCALA_VERSION ci-release
 cache:
