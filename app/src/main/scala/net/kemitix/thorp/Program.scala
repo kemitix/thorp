@@ -13,7 +13,6 @@ import net.kemitix.thorp.domain.StorageQueueEvent.{
   UploadQueueEvent
 }
 import net.kemitix.thorp.filesystem.{FileSystem, Hasher}
-import net.kemitix.thorp.lib.CoreTypes.CoreProgram
 import net.kemitix.thorp.lib._
 import net.kemitix.thorp.storage.Storage
 import net.kemitix.throp.uishell.{UIEvent, UIShell}
@@ -24,7 +23,10 @@ trait Program {
 
   lazy val version = s"Thorp v${thorp.BuildInfo.version}"
 
-  def run(args: List[String]): CoreProgram[Unit] = {
+  def run(args: List[String]): ZIO[
+    Storage with Console with Config with Clock with FileSystem with Hasher with FileScanner,
+    Throwable,
+    Unit] = {
     for {
       cli    <- CliArgs.parse(args)
       config <- ConfigurationBuilder.buildConfig(cli)
