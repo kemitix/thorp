@@ -1,34 +1,34 @@
 package net.kemitix.thorp.domain
 
-sealed trait StorageQueueEvent
+sealed trait StorageEvent
 
-object StorageQueueEvent {
+object StorageEvent {
 
-  final case class DoNothingQueueEvent(
+  final case class DoNothingEvent(
       remoteKey: RemoteKey
-  ) extends StorageQueueEvent
+  ) extends StorageEvent
 
-  final case class CopyQueueEvent(
+  final case class CopyEvent(
       sourceKey: RemoteKey,
       targetKey: RemoteKey
-  ) extends StorageQueueEvent
+  ) extends StorageEvent
 
-  final case class UploadQueueEvent(
+  final case class UploadEvent(
       remoteKey: RemoteKey,
       md5Hash: MD5Hash
-  ) extends StorageQueueEvent
+  ) extends StorageEvent
 
-  final case class DeleteQueueEvent(
+  final case class DeleteEvent(
       remoteKey: RemoteKey
-  ) extends StorageQueueEvent
+  ) extends StorageEvent
 
-  final case class ErrorQueueEvent(
+  final case class ErrorEvent(
       action: Action,
       remoteKey: RemoteKey,
       e: Throwable
-  ) extends StorageQueueEvent
+  ) extends StorageEvent
 
-  final case class ShutdownQueueEvent() extends StorageQueueEvent
+  final case class ShutdownEvent() extends StorageEvent
 
   sealed trait Action {
     val name: String

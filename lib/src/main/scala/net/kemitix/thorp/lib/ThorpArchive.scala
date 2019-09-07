@@ -8,8 +8,8 @@ import net.kemitix.thorp.console.ConsoleOut.{
   UploadComplete
 }
 import net.kemitix.thorp.console._
-import net.kemitix.thorp.domain.StorageQueueEvent
-import net.kemitix.thorp.domain.StorageQueueEvent._
+import net.kemitix.thorp.domain.StorageEvent
+import net.kemitix.thorp.domain.StorageEvent._
 import net.kemitix.thorp.storage.Storage
 import zio.{RIO, ZIO}
 
@@ -18,29 +18,28 @@ trait ThorpArchive {
   def update(
       sequencedAction: SequencedAction,
       totalBytesSoFar: Long
-  ): ZIO[Storage with Config, Nothing, StorageQueueEvent]
+  ): ZIO[Storage with Config, Nothing, StorageEvent]
 
-  def logEvent(
-      event: StorageQueueEvent): RIO[Console with Config, StorageQueueEvent] =
+  def logEvent(event: StorageEvent): RIO[Console with Config, StorageEvent] =
     for {
       batchMode <- Config.batchMode
       sqe <- event match {
-        case UploadQueueEvent(remoteKey, _) =>
+        case UploadEvent(remoteKey, _) =>
           ZIO(event) <* Console.putMessageLnB(UploadComplete(remoteKey),
                                               batchMode)
-        case CopyQueueEvent(sourceKey, targetKey) =>
+        case CopyEvent(sourceKey, targetKey) =>
           ZIO(event) <* Console.putMessageLnB(
             CopyComplete(sourceKey, targetKey),
             batchMode)
-        case DeleteQueueEvent(remoteKey) =>
+        case DeleteEvent(remoteKey) =>
           ZIO(event) <* Console.putMessageLnB(DeleteComplete(remoteKey),
                                               batchMode)
-        case ErrorQueueEvent(action, _, e) =>
+        case ErrorEvent(action, _, e) =>
           ZIO(event) <* Console.putMessageLnB(
             ErrorQueueEventOccurred(action, e),
             batchMode)
-        case DoNothingQueueEvent(_) => ZIO(event)
-        case ShutdownQueueEvent()   => ZIO(event)
+        case DoNothingEvent(_) => ZIO(event)
+        case ShutdownEvent()   => ZIO(event)
       }
     } yield sqe
 

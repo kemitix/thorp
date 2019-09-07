@@ -25,13 +25,13 @@ trait LocalFileSystem {
       archive: ThorpArchive
   ): RIO[
     Clock with Config with Hasher with FileSystem with FileScanner with Storage,
-    Seq[StorageQueueEvent]]
+    Seq[StorageEvent]]
 
   def scanDelete(
       uiChannel: UChannel[Any, UIEvent],
       remoteData: RemoteObjects,
       archive: UnversionedMirrorArchive.type
-  ): RIO[Clock with Config with FileSystem with Storage, Seq[StorageQueueEvent]]
+  ): RIO[Clock with Config with FileSystem with Storage, Seq[StorageEvent]]
 
 }
 object LocalFileSystem extends LocalFileSystem {
@@ -42,12 +42,12 @@ object LocalFileSystem extends LocalFileSystem {
       archive: ThorpArchive
   ): RIO[
     Clock with Hasher with FileSystem with Config with FileScanner with Storage,
-    Seq[StorageQueueEvent]] =
+    Seq[StorageEvent]] =
     for {
       actionCounter <- Ref.make(0)
       bytesCounter  <- Ref.make(0L)
       uploads       <- Ref.make(Map.empty[MD5Hash, Promise[Throwable, RemoteKey]])
-      eventsRef     <- Ref.make(List.empty[StorageQueueEvent])
+      eventsRef     <- Ref.make(List.empty[StorageEvent])
       fileSender    <- FileScanner.scanSources
       fileReceiver <- fileReceiver(uiChannel,
                                    remoteObjects,
@@ -64,12 +64,11 @@ object LocalFileSystem extends LocalFileSystem {
       uiChannel: UChannel[Any, UIEvent],
       remoteData: RemoteObjects,
       archive: UnversionedMirrorArchive.type
-  ): RIO[Clock with Config with FileSystem with Storage,
-         Seq[StorageQueueEvent]] =
+  ): RIO[Clock with Config with FileSystem with Storage, Seq[StorageEvent]] =
     for {
       actionCounter <- Ref.make(0)
       bytesCounter  <- Ref.make(0L)
-      eventsRef     <- Ref.make(List.empty[StorageQueueEvent])
+      eventsRef     <- Ref.make(List.empty[StorageEvent])
       keySender     <- keySender(remoteData.byKey.keys)
       keyReceiver <- keyReceiver(uiChannel,
                                  archive,
@@ -87,7 +86,7 @@ object LocalFileSystem extends LocalFileSystem {
       uploads: Ref[Map[MD5Hash, Promise[Throwable, RemoteKey]]],
       actionCounterRef: Ref[Int],
       bytesCounterRef: Ref[Long],
-      eventsRef: Ref[List[StorageQueueEvent]]
+      eventsRef: Ref[List[StorageEvent]]
   ): UIO[MessageChannel.UReceiver[Clock with Config with Storage,
                                   FileScanner.ScannedFile]] =
     UIO { message =>
@@ -218,7 +217,7 @@ object LocalFileSystem extends LocalFileSystem {
       archive: ThorpArchive,
       actionCounterRef: Ref[Int],
       bytesCounterRef: Ref[Long],
-      eventsRef: Ref[List[StorageQueueEvent]]
+      eventsRef: Ref[List[StorageEvent]]
   ): UIO[
     MessageChannel.UReceiver[Clock with Config with FileSystem with Storage,
                              RemoteKey]] =

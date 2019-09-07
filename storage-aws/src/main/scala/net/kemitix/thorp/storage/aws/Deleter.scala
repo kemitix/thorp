@@ -1,12 +1,8 @@
 package net.kemitix.thorp.storage.aws
 
 import com.amazonaws.services.s3.model.DeleteObjectRequest
-import net.kemitix.thorp.domain.StorageQueueEvent.{
-  Action,
-  DeleteQueueEvent,
-  ErrorQueueEvent
-}
-import net.kemitix.thorp.domain.{Bucket, RemoteKey, StorageQueueEvent}
+import net.kemitix.thorp.domain.StorageEvent.{Action, DeleteEvent, ErrorEvent}
+import net.kemitix.thorp.domain.{Bucket, RemoteKey, StorageEvent}
 import zio.{Task, UIO, ZIO}
 
 trait Deleter {
@@ -14,17 +10,17 @@ trait Deleter {
   def delete(amazonS3: AmazonS3.Client)(
       bucket: Bucket,
       remoteKey: RemoteKey
-  ): UIO[StorageQueueEvent] =
+  ): UIO[StorageEvent] =
     deleteObject(amazonS3)(bucket, remoteKey)
       .catchAll(e =>
-        UIO(ErrorQueueEvent(Action.Delete(remoteKey.key), remoteKey, e)))
+        UIO(ErrorEvent(Action.Delete(remoteKey.key), remoteKey, e)))
 
   private def deleteObject(amazonS3: AmazonS3.Client)(
       bucket: Bucket,
       remoteKey: RemoteKey
-  ): Task[StorageQueueEvent] =
+  ): Task[StorageEvent] =
     (amazonS3.deleteObject(new DeleteObjectRequest(bucket.name, remoteKey.key))
-      *> ZIO(DeleteQueueEvent(remoteKey)))
+      *> ZIO(DeleteEvent(remoteKey)))
 }
 
 object Deleter extends Deleter

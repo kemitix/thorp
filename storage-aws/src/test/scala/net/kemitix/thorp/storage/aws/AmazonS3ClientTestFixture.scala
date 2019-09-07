@@ -1,6 +1,6 @@
 package net.kemitix.thorp.storage.aws
 
-import net.kemitix.thorp.domain.StorageQueueEvent.ShutdownQueueEvent
+import net.kemitix.thorp.domain.StorageEvent.ShutdownEvent
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.Storage
 import org.scalamock.scalatest.MockFactory
@@ -34,7 +34,7 @@ trait AmazonS3ClientTestFixture extends MockFactory {
             localFile: LocalFile,
             bucket: Bucket,
             listenerSettings: UploadEventListener.Settings,
-        ): UIO[StorageQueueEvent] =
+        ): UIO[StorageEvent] =
           Uploader.upload(transferManager)(
             Uploader.Request(localFile, bucket, listenerSettings))
 
@@ -43,19 +43,19 @@ trait AmazonS3ClientTestFixture extends MockFactory {
             sourceKey: RemoteKey,
             hash: MD5Hash,
             targetKey: RemoteKey
-        ): UIO[StorageQueueEvent] =
+        ): UIO[StorageEvent] =
           Copier.copy(client)(
             Copier.Request(bucket, sourceKey, hash, targetKey))
 
         override def delete(
             bucket: Bucket,
             remoteKey: RemoteKey
-        ): UIO[StorageQueueEvent] =
+        ): UIO[StorageEvent] =
           Deleter.delete(client)(bucket, remoteKey)
 
-        override def shutdown: UIO[StorageQueueEvent] = {
+        override def shutdown: UIO[StorageEvent] = {
           transferManager.shutdownNow(true) *>
-            client.shutdown().map(_ => ShutdownQueueEvent())
+            client.shutdown().map(_ => ShutdownEvent())
         }
       }
   }

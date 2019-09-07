@@ -2,7 +2,7 @@ package net.kemitix.thorp.storage.aws
 
 import com.amazonaws.services.s3.model.{AmazonS3Exception, CopyObjectResult}
 import net.kemitix.thorp.console.Console
-import net.kemitix.thorp.domain.StorageQueueEvent.{Action, ErrorQueueEvent}
+import net.kemitix.thorp.domain.StorageEvent.{Action, ErrorEvent}
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.aws.S3ClientException.{CopyError, HashError}
 import org.scalatest.FreeSpec
@@ -21,7 +21,7 @@ class CopierTest extends FreeSpec {
     "when source exists" - {
       "when source hash matches" - {
         "copies from source to target" in {
-          val event    = StorageQueueEvent.CopyQueueEvent(sourceKey, targetKey)
+          val event    = StorageEvent.CopyEvent(sourceKey, targetKey)
           val expected = Right(event)
           new AmazonS3ClientTestFixture {
             (fixture.amazonS3Client.copyObject _)
@@ -43,9 +43,9 @@ class CopierTest extends FreeSpec {
               invoke(bucket, sourceKey, hash, targetKey, fixture.amazonS3Client)
             result match {
               case Right(
-                  ErrorQueueEvent(Action.Copy("sourceKey => targetKey"),
-                                  RemoteKey("targetKey"),
-                                  e)) =>
+                  ErrorEvent(Action.Copy("sourceKey => targetKey"),
+                             RemoteKey("targetKey"),
+                             e)) =>
                 e match {
                   case HashError => assert(true)
                   case _         => fail(s"Not a HashError: ${e.getMessage}")
@@ -66,9 +66,9 @@ class CopierTest extends FreeSpec {
               invoke(bucket, sourceKey, hash, targetKey, fixture.amazonS3Client)
             result match {
               case Right(
-                  ErrorQueueEvent(Action.Copy("sourceKey => targetKey"),
-                                  RemoteKey("targetKey"),
-                                  e)) =>
+                  ErrorEvent(Action.Copy("sourceKey => targetKey"),
+                             RemoteKey("targetKey"),
+                             e)) =>
                 e match {
                   case CopyError(cause) =>
                     assert(cause.getMessage.startsWith(expectedMessage))

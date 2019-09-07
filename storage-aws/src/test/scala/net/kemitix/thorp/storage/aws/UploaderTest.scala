@@ -7,11 +7,7 @@ import com.amazonaws.services.s3.model.AmazonS3Exception
 import com.amazonaws.services.s3.transfer.model.UploadResult
 import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.domain.HashType.MD5
-import net.kemitix.thorp.domain.StorageQueueEvent.{
-  Action,
-  ErrorQueueEvent,
-  UploadQueueEvent
-}
+import net.kemitix.thorp.domain.StorageEvent.{Action, ErrorEvent, UploadEvent}
 import net.kemitix.thorp.domain._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.FreeSpec
@@ -38,7 +34,7 @@ class UploaderTest extends FreeSpec with MockFactory {
       UploadEventListener.Settings(localFile, 0, 0, batchMode = true)
     "when no error" in {
       val expected =
-        Right(UploadQueueEvent(remoteKey, aHash))
+        Right(UploadEvent(remoteKey, aHash))
       new AmazonS3ClientTestFixture {
         (fixture.amazonS3TransferManager.upload _)
           .when()
@@ -55,8 +51,7 @@ class UploaderTest extends FreeSpec with MockFactory {
     "when Amazon Service Exception" in {
       val exception = new AmazonS3Exception("message")
       val expected =
-        Right(
-          ErrorQueueEvent(Action.Upload(remoteKey.key), remoteKey, exception))
+        Right(ErrorEvent(Action.Upload(remoteKey.key), remoteKey, exception))
       new AmazonS3ClientTestFixture {
         (fixture.amazonS3TransferManager.upload _)
           .when()
@@ -73,8 +68,7 @@ class UploaderTest extends FreeSpec with MockFactory {
     "when Amazon SDK Client Exception" in {
       val exception = new SdkClientException("message")
       val expected =
-        Right(
-          ErrorQueueEvent(Action.Upload(remoteKey.key), remoteKey, exception))
+        Right(ErrorEvent(Action.Upload(remoteKey.key), remoteKey, exception))
       new AmazonS3ClientTestFixture {
         (fixture.amazonS3TransferManager.upload _)
           .when()

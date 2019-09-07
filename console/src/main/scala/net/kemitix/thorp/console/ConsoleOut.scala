@@ -1,6 +1,6 @@
 package net.kemitix.thorp.console
 
-import net.kemitix.thorp.domain.StorageQueueEvent.Action
+import net.kemitix.thorp.domain.StorageEvent.Action
 import net.kemitix.thorp.domain.Terminal._
 import net.kemitix.thorp.domain.{Bucket, RemoteKey, Sources}
 import zio.UIO

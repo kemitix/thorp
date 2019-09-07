@@ -19,34 +19,34 @@ object Storage {
         localFile: LocalFile,
         bucket: Bucket,
         listenerSettings: UploadEventListener.Settings,
-    ): ZIO[Storage, Nothing, StorageQueueEvent]
+    ): ZIO[Storage, Nothing, StorageEvent]
 
     def copy(
         bucket: Bucket,
         sourceKey: RemoteKey,
         hash: MD5Hash,
         targetKey: RemoteKey
-    ): ZIO[Storage, Nothing, StorageQueueEvent]
+    ): ZIO[Storage, Nothing, StorageEvent]
 
     def delete(
         bucket: Bucket,
         remoteKey: RemoteKey
-    ): UIO[StorageQueueEvent]
+    ): UIO[StorageEvent]
 
-    def shutdown: UIO[StorageQueueEvent]
+    def shutdown: UIO[StorageEvent]
   }
 
   trait Test extends Storage {
 
     def listResult: Task[RemoteObjects] =
       Task.die(new NotImplementedError)
-    def uploadResult: UIO[StorageQueueEvent] =
+    def uploadResult: UIO[StorageEvent] =
       Task.die(new NotImplementedError)
-    def copyResult: UIO[StorageQueueEvent] =
+    def copyResult: UIO[StorageEvent] =
       Task.die(new NotImplementedError)
-    def deleteResult: UIO[StorageQueueEvent] =
+    def deleteResult: UIO[StorageEvent] =
       Task.die(new NotImplementedError)
-    def shutdownResult: UIO[StorageQueueEvent] =
+    def shutdownResult: UIO[StorageEvent] =
       Task.die(new NotImplementedError)
 
     val storage: Service = new Service {
@@ -59,21 +59,21 @@ object Storage {
           localFile: LocalFile,
           bucket: Bucket,
           listenerSettings: UploadEventListener.Settings
-      ): ZIO[Storage, Nothing, StorageQueueEvent] =
+      ): ZIO[Storage, Nothing, StorageEvent] =
         uploadResult
 
       override def copy(
           bucket: Bucket,
           sourceKey: RemoteKey,
           hash: MD5Hash,
-          targetKey: RemoteKey): ZIO[Storage, Nothing, StorageQueueEvent] =
+          targetKey: RemoteKey): ZIO[Storage, Nothing, StorageEvent] =
         copyResult
 
       override def delete(bucket: Bucket,
-                          remoteKey: RemoteKey): UIO[StorageQueueEvent] =
+                          remoteKey: RemoteKey): UIO[StorageEvent] =
         deleteResult
 
-      override def shutdown: UIO[StorageQueueEvent] =
+      override def shutdown: UIO[StorageEvent] =
         shutdownResult
 
     }
@@ -89,7 +89,7 @@ object Storage {
       localFile: LocalFile,
       bucket: Bucket,
       listenerSettings: UploadEventListener.Settings
-  ): ZIO[Storage, Nothing, StorageQueueEvent] =
+  ): ZIO[Storage, Nothing, StorageEvent] =
     ZIO.accessM(_.storage upload (localFile, bucket, listenerSettings))
 
   final def copy(
@@ -97,13 +97,13 @@ object Storage {
       sourceKey: RemoteKey,
       hash: MD5Hash,
       targetKey: RemoteKey
-  ): ZIO[Storage, Nothing, StorageQueueEvent] =
+  ): ZIO[Storage, Nothing, StorageEvent] =
     ZIO.accessM(_.storage copy (bucket, sourceKey, hash, targetKey))
 
   final def delete(
       bucket: Bucket,
       remoteKey: RemoteKey
-  ): ZIO[Storage, Nothing, StorageQueueEvent] =
+  ): ZIO[Storage, Nothing, StorageEvent] =
     ZIO.accessM(_.storage delete (bucket, remoteKey))
 
 }
