@@ -30,24 +30,23 @@ trait Program {
       config <- ConfigurationBuilder.buildConfig(cli)
       _      <- Config.set(config)
       _      <- ZIO.when(showVersion(cli))(Console.putStrLn(version))
-      _      <- ZIO.when(!showVersion(cli))(execute.catchAll(handleErrors))
+      _      <- ZIO.when(!showVersion(cli))(executeWithUI.catchAll(handleErrors))
     } yield ()
   }
 
   private def showVersion: ConfigOptions => Boolean =
     cli => ConfigQuery.showVersion(cli)
 
-  private def execute =
+  private def executeWithUI =
     for {
-      uiEventSender   <- headlessProgram
+      uiEventSender   <- execute
       uiEventReceiver <- UIShell.receiver
       _               <- MessageChannel.pointToPoint(uiEventSender)(uiEventReceiver).runDrain
     } yield ()
 
   type UIChannel = UChannel[Any, UIEvent]
 
-  // headless because it doesn't use any Console effects, only sends UIEvents
-  private def headlessProgram
+  private def execute
     : ZIO[Any,
           Nothing,
           MessageChannel.ESender[
@@ -96,13 +95,13 @@ trait Program {
 
   private def countActivities: (Counters, StorageQueueEvent) => Counters =
     (counters: Counters, s3Action: StorageQueueEvent) => {
-      import Counters._
       val increment: Int => Int = _ + 1
       s3Action match {
-        case _: UploadQueueEvent => uploaded.modify(increment)(counters)
-        case _: CopyQueueEvent   => copied.modify(increment)(counters)
-        case _: DeleteQueueEvent => deleted.modify(increment)(counters)
-        case _: ErrorQueueEvent  => errors.modify(increment)(counters)
+        case _: UploadQueueEvent =>
+          Counters.uploaded.modify(increment)(counters)
+        case _: CopyQueueEvent   => Counters.copied.modify(increment)(counters)
+        case _: DeleteQueueEvent => Counters.deleted.modify(increment)(counters)
+        case _: ErrorQueueEvent  => Counters.errors.modify(increment)(counters)
         case _                   => counters
       }
     }
