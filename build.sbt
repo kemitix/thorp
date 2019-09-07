@@ -11,13 +11,7 @@ inThisBuild(List(
       "pcampbell@kemitix.net",
       url("https://github.kemitix.net")
     )
-  ),
-  jacocoReportSettings := JacocoReportSettings(
-    "Jacoco Coverage Report",
-    None,
-    JacocoThresholds(),
-    Seq(JacocoReportFormats.ScalaHTML, JacocoReportFormats.XML), // note XML formatter
-    "utf-8")
+  )
 ))
 
 val commonSettings = Seq(

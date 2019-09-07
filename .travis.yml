@@ -18,7 +18,7 @@ jobs:
       script: sbt ++$TRAVIS_SCALA_VERSION test
     - stage: coverage
       script:
-        - sbt jacoco
+        - sbt clean coverage test coverageAggregate
         - bash <(curl -s https://codecov.io/bash)
     - stage: release
       script: sbt ++$TRAVIS_SCALA_VERSION ci-release
