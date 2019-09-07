@@ -2,7 +2,7 @@ package net.kemitix.thorp.domain
 
 import java.nio.file.Path
 
-import zio.{Task, ZIO}
+import zio.{UIO, ZIO}
 
 /**
   * The paths to synchronise with target.
@@ -14,13 +14,16 @@ import zio.{Task, ZIO}
   *
   * A path should only occur once in paths.
   */
-final case class Sources(
-    paths: List[Path]
-) {
+final case class Sources(paths: List[Path]) {
   def +(path: Path): Sources = this ++ List(path)
   def ++(otherPaths: List[Path]): Sources =
-    Sources(otherPaths.foldLeft(paths)((acc, path) =>
-      if (acc contains path) acc else acc ++ List(path)))
+    Sources(
+      otherPaths.foldLeft(paths)(
+        (acc, path) =>
+          if (acc contains path) acc
+          else acc ++ List(path)
+      )
+    )
 }
 
 object Sources {
@@ -29,8 +32,10 @@ object Sources {
   /**
     * Returns the source path for the given path.
     */
-  def forPath(path: Path)(sources: Sources): Task[Path] =
+  def forPath(path: Path)(sources: Sources): UIO[Path] =
     ZIO
       .fromOption(sources.paths.find(s => path.startsWith(s)))
-      .mapError(_ => new Exception("Path is not within any known source"))
+      .orDieWith { _ =>
+        new RuntimeException("Path is not within any known source")
+      }
 }

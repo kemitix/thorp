@@ -8,17 +8,14 @@ import com.amazonaws.services.s3.model.{
   ListObjectsV2Result,
   S3ObjectSummary
 }
-import net.kemitix.thorp.console._
 import net.kemitix.thorp.domain.NonUnit.~*
 import net.kemitix.thorp.domain._
+import net.kemitix.thorp.storage.Storage
 import org.scalatest.FreeSpec
 import org.scalatest.Matchers._
-import zio.internal.PlatformLive
-import zio.{Runtime, Task, UIO}
+import zio.{DefaultRuntime, Task, UIO}
 
 class ListerTest extends FreeSpec {
-
-  private val runtime = Runtime(Console.Live, PlatformLive.Default)
 
   "list" - {
     val bucket = Bucket("aBucket")
@@ -28,7 +25,7 @@ class ListerTest extends FreeSpec {
         val nowDate         = new Date
         val key             = "key"
         val etag            = "etag"
-        val expectedHashMap = Map(MD5Hash(etag) -> Set(RemoteKey(key)))
+        val expectedHashMap = Map(MD5Hash(etag) -> RemoteKey(key))
         val expectedKeyMap  = Map(RemoteKey(key) -> MD5Hash(etag))
         new AmazonS3ClientTestFixture {
           (fixture.amazonS3Client.listObjectsV2 _)
@@ -51,8 +48,8 @@ class ListerTest extends FreeSpec {
         val key2    = "key2"
         val etag2   = "etag2"
         val expectedHashMap = Map(
-          MD5Hash(etag1) -> Set(RemoteKey(key1)),
-          MD5Hash(etag2) -> Set(RemoteKey(key2))
+          MD5Hash(etag1) -> RemoteKey(key1),
+          MD5Hash(etag2) -> RemoteKey(key2)
         )
         val expectedKeyMap = Map(
           RemoteKey(key1) -> MD5Hash(etag1),
@@ -121,8 +118,10 @@ class ListerTest extends FreeSpec {
     }
     def invoke(amazonS3Client: AmazonS3.Client)(bucket: Bucket,
                                                 prefix: RemoteKey) =
-      runtime.unsafeRunSync {
-        Lister.listObjects(amazonS3Client)(bucket, prefix)
+      new DefaultRuntime {}.unsafeRunSync {
+        Lister
+          .listObjects(amazonS3Client)(bucket, prefix)
+          .provide(Storage.Test)
       }.toEither
 
   }

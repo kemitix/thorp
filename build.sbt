@@ -24,7 +24,6 @@ val commonSettings = Seq(
     "-deprecation",
     "-unchecked",
     "-language:postfixOps",
-    "-language:higherKinds",
     "-language:higherKinds"),
   wartremoverErrors ++= Warts.unsafe.filterNot(wart => List(
     Wart.Any,
@@ -61,27 +60,26 @@ val awsSdkDependencies = Seq(
 )
 val zioDependencies = Seq(
   libraryDependencies ++= Seq (
-    "dev.zio" %% "zio" % "1.0.0-RC12-1"
+    "dev.zio" %% "zio" % "1.0.0-RC12-1",
+    "dev.zio" %% "zio-streams" % "1.0.0-RC12-1"
   )
 )
 
-// cli -> thorp-lib -> storage-aws -> core -> storage-api -> console -> config -> domain
-//                                            storage-api ->            config -> filesystem
+val eipDependencies = Seq(
+  libraryDependencies ++= Seq(
+    "net.kemitix" %% "eip-zio" % "0.3.1"
+  )
+)
 
 lazy val thorp = (project in file("."))
   .settings(commonSettings)
-  .aggregate(cli, `thorp-lib`, `storage-aws`, core, `storage-api`, domain)
+  .aggregate(app, cli, `storage-aws`, lib, `storage`, domain)
 
-lazy val cli = (project in file("cli"))
+lazy val app = (project in file("app"))
   .settings(commonSettings)
-  .settings(mainClass in assembly := Some("net.kemitix.thorp.cli.Main"))
+  .settings(mainClass in assembly := Some("net.kemitix.thorp.Main"))
   .settings(applicationSettings)
-  .settings(testDependencies)
-  .enablePlugins(BuildInfoPlugin)
-  .settings(
-    buildInfoKeys := Seq[BuildInfoKey](name, version),
-    buildInfoPackage := "thorp"
-  )
+  .settings(eipDependencies)
   .settings(Seq(
     assemblyOption in assembly := (
       assemblyOption in assembly).value
@@ -89,39 +87,62 @@ lazy val cli = (project in file("cli"))
         Some(defaultShellScript)),
     assemblyJarName in assembly := "thorp"
   ))
-  .dependsOn(`thorp-lib`)
-
-lazy val `thorp-lib` = (project in file("thorp-lib"))
-  .settings(commonSettings)
-  .settings(assemblyJarName in assembly := "thorp-lib.jar")
+  .dependsOn(cli)
+  .dependsOn(lib)
   .dependsOn(`storage-aws`)
+
+lazy val cli = (project in file("cli"))
+  .settings(commonSettings)
+  .settings(testDependencies)
+  .dependsOn(config)
+  .dependsOn(filesystem % "test->test")
 
 lazy val `storage-aws` = (project in file("storage-aws"))
   .settings(commonSettings)
   .settings(assemblyJarName in assembly := "storage-aws.jar")
   .settings(awsSdkDependencies)
   .settings(testDependencies)
-  .dependsOn(core % "compile->compile;test->test")
+  .dependsOn(storage)
+  .dependsOn(filesystem % "compile->compile;test->test")
+  .dependsOn(console)
+  .dependsOn(lib)
 
-lazy val core = (project in file("core"))
+lazy val lib = (project in file("lib"))
   .settings(commonSettings)
-  .settings(assemblyJarName in assembly := "core.jar")
+  .settings(assemblyJarName in assembly := "lib.jar")
   .settings(testDependencies)
-  .dependsOn(`storage-api`)
-  .dependsOn(domain % "compile->compile;test->test")
-
-lazy val `storage-api` = (project in file("storage-api"))
-  .settings(commonSettings)
-  .settings(zioDependencies)
-  .settings(assemblyJarName in assembly := "storage-api.jar")
+  .enablePlugins(BuildInfoPlugin)
+  .settings(
+    buildInfoKeys := Seq[BuildInfoKey](name, version),
+    buildInfoPackage := "thorp"
+  )
+  .dependsOn(storage)
   .dependsOn(console)
   .dependsOn(config)
+  .dependsOn(domain % "compile->compile;test->test")
+  .dependsOn(filesystem % "compile->compile;test->test")
+
+lazy val storage = (project in file("storage"))
+  .settings(commonSettings)
+  .settings(zioDependencies)
+  .settings(assemblyJarName in assembly := "storage.jar")
+  .dependsOn(uishell)
+  .dependsOn(domain)
+
+lazy val uishell = (project in file("uishell"))
+  .settings(commonSettings)
+  .settings(zioDependencies)
+  .settings(eipDependencies)
+  .settings(assemblyJarName in assembly := "uishell.jar")
+  .dependsOn(config)
+  .dependsOn(console)
+  .dependsOn(filesystem)
 
 lazy val console = (project in file("console"))
   .settings(commonSettings)
   .settings(zioDependencies)
   .settings(assemblyJarName in assembly := "console.jar")
-  .dependsOn(config)
+  .dependsOn(domain)
 
 lazy val config = (project in file("config"))
   .settings(commonSettings)
@@ -137,6 +158,7 @@ lazy val filesystem = (project in file("filesystem"))
   .settings(zioDependencies)
   .settings(testDependencies)
   .settings(assemblyJarName in assembly := "filesystem.jar")
+  .dependsOn(domain % "compile->compile;test->test")
 
 lazy val domain = (project in file("domain"))
   .settings(commonSettings)

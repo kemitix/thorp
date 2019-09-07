@@ -5,7 +5,7 @@ import java.io.File
 import com.amazonaws.SdkClientException
 import com.amazonaws.services.s3.model.AmazonS3Exception
 import com.amazonaws.services.s3.transfer.model.UploadResult
-import net.kemitix.thorp.config.{Config, Resource}
+import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.domain.StorageQueueEvent.{
   Action,
@@ -17,6 +17,7 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.FreeSpec
 import zio.{DefaultRuntime, Task}
 import net.kemitix.thorp.domain.NonUnit.~*
+import net.kemitix.thorp.filesystem.Resource
 
 class UploaderTest extends FreeSpec with MockFactory {
 
@@ -26,7 +27,7 @@ class UploaderTest extends FreeSpec with MockFactory {
     val aHash         = MD5Hash("aHash")
     val hashes        = Map[HashType, MD5Hash](MD5 -> aHash)
     val remoteKey     = RemoteKey("aRemoteKey")
-    val localFile     = LocalFile(aFile, aSource, hashes, remoteKey)
+    val localFile     = LocalFile(aFile, aSource, hashes, remoteKey, aFile.length)
     val bucket        = Bucket("aBucket")
     val uploadResult  = new UploadResult
     uploadResult.setKey(remoteKey.key)
@@ -35,7 +36,7 @@ class UploaderTest extends FreeSpec with MockFactory {
       override def waitForUploadResult: UploadResult = uploadResult
     }
     val listenerSettings =
-      UploadEventListener.Settings(localFile, 0, SyncTotals(1, 0, 0), 0)
+      UploadEventListener.Settings(localFile, 0, 0, batchMode = true)
     "when no error" in {
       val expected =
         Right(UploadQueueEvent(remoteKey, aHash))

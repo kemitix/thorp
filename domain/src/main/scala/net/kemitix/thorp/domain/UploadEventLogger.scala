@@ -10,14 +10,13 @@ object UploadEventLogger {
       localFile: LocalFile,
       bytesTransferred: Long,
       index: Int,
-      syncTotals: SyncTotals,
       totalBytesSoFar: Long
   )
 
   def apply(requestCycle: RequestCycle): Unit = {
     val remoteKey    = requestCycle.localFile.remoteKey.key
     val fileLength   = requestCycle.localFile.file.length
-    val statusHeight = 7
+    val statusHeight = 3
     if (requestCycle.bytesTransferred < fileLength)
       println(
         s"${GREEN}Uploading:$RESET $remoteKey$eraseToEndOfScreen\n" +
@@ -25,15 +24,6 @@ object UploadEventLogger {
                         SizeTranslation.sizeInEnglish,
                         requestCycle.bytesTransferred,
                         fileLength) +
-          statusWithBar("Files",
-                        l => l.toString,
-                        requestCycle.index,
-                        requestCycle.syncTotals.count) +
-          statusWithBar(
-            " Size",
-            SizeTranslation.sizeInEnglish,
-            requestCycle.bytesTransferred + requestCycle.totalBytesSoFar,
-            requestCycle.syncTotals.totalSizeBytes) +
           s"${Terminal.cursorPrevLine(statusHeight)}")
   }
 

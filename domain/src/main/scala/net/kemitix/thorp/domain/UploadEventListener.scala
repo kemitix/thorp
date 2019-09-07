@@ -10,8 +10,8 @@ object UploadEventListener {
   final case class Settings(
       localFile: LocalFile,
       index: Int,
-      syncTotals: SyncTotals,
-      totalBytesSoFar: Long
+      totalBytesSoFar: Long,
+      batchMode: Boolean
   )
 
   def listener(settings: Settings): UploadEvent => Unit = {
@@ -24,7 +24,6 @@ object UploadEventListener {
               RequestCycle(settings.localFile,
                            bytesTransferred.addAndGet(e.transferred),
                            settings.index,
-                           settings.syncTotals,
                            settings.totalBytesSoFar))
           case _ => ()
         }

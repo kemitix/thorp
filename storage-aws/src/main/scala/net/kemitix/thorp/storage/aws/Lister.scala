@@ -5,11 +5,11 @@ import com.amazonaws.services.s3.model.{
   ListObjectsV2Result,
   S3ObjectSummary
 }
-import net.kemitix.thorp.console._
 import net.kemitix.thorp.domain.{Bucket, RemoteKey, RemoteObjects}
+import net.kemitix.thorp.storage.Storage
 import net.kemitix.thorp.storage.aws.S3ObjectsByHash.byHash
 import net.kemitix.thorp.storage.aws.S3ObjectsByKey.byKey
-import zio.{Task, RIO}
+import zio.{RIO, Task}
 
 import scala.jdk.CollectionConverters._
 
@@ -21,7 +21,7 @@ trait Lister {
   def listObjects(amazonS3: AmazonS3.Client)(
       bucket: Bucket,
       prefix: RemoteKey
-  ): RIO[Console, RemoteObjects] = {
+  ): RIO[Storage, RemoteObjects] = {
 
     def request =
       new ListObjectsV2Request()
@@ -31,15 +31,16 @@ trait Lister {
     def requestMore: Token => ListObjectsV2Request =
       token => request.withContinuationToken(token)
 
-    def fetchBatch: ListObjectsV2Request => RIO[Console, Batch] =
-      request => ListerLogger.logFetchBatch *> tryFetchBatch(amazonS3)(request)
+    def fetchBatch: ListObjectsV2Request => Task[Batch] =
+      request => tryFetchBatch(amazonS3)(request)
 
-    def fetchMore: Option[Token] => RIO[Console, LazyList[S3ObjectSummary]] = {
+    def fetchMore: Option[Token] => Task[LazyList[S3ObjectSummary]] = {
       case None        => RIO.succeed(LazyList.empty)
       case Some(token) => fetch(requestMore(token))
     }
 
-    def fetch: ListObjectsV2Request => RIO[Console, LazyList[S3ObjectSummary]] =
+    def fetch: ListObjectsV2Request => Task[LazyList[S3ObjectSummary]] =
+
       request =>
         for {
           batch <- fetchBatch(request)

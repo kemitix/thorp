@@ -10,7 +10,8 @@ final case class LocalFile private (
     file: File,
     source: File,
     hashes: Map[HashType, MD5Hash],
-    remoteKey: RemoteKey
+    remoteKey: RemoteKey,
+    length: Long
 )
 
 object LocalFile {

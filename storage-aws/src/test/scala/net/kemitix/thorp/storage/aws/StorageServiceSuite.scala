@@ -1,9 +1,9 @@
 package net.kemitix.thorp.storage.aws
 
-import net.kemitix.thorp.config.Resource
-import net.kemitix.thorp.core.{LocalFileValidator, S3MetaDataEnricher}
+import net.kemitix.thorp.lib.{LocalFileValidator, S3MetaDataEnricher}
 import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.domain._
+import net.kemitix.thorp.filesystem.Resource
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.FunSpec
 
@@ -39,8 +39,8 @@ class StorageServiceSuite extends FunSpec with MockFactory {
                                                 prefix)
       s3ObjectsData = RemoteObjects(
         byHash = MapView(
-          hash     -> Set(key, keyOtherKey.remoteKey),
-          diffHash -> Set(keyDiffHash.remoteKey)
+          hash     -> key,
+          diffHash -> keyDiffHash.remoteKey
         ),
         byKey = MapView(
           key                   -> hash,
@@ -59,14 +59,14 @@ class StorageServiceSuite extends FunSpec with MockFactory {
     def invoke(localFile: LocalFile, s3ObjectsData: RemoteObjects) =
       S3MetaDataEnricher.getS3Status(localFile, s3ObjectsData)
 
-    def getMatchesByKey(status: (Option[MD5Hash], Set[(RemoteKey, MD5Hash)]))
-      : Option[MD5Hash] = {
+    def getMatchesByKey(
+        status: (Option[MD5Hash], Map[MD5Hash, RemoteKey])): Option[MD5Hash] = {
       val (byKey, _) = status
       byKey
     }
 
-    def getMatchesByHash(status: (Option[MD5Hash], Set[(RemoteKey, MD5Hash)]))
-      : Set[(RemoteKey, MD5Hash)] = {
+    def getMatchesByHash(status: (Option[MD5Hash], Map[MD5Hash, RemoteKey]))
+      : Map[MD5Hash, RemoteKey] = {
       val (_, byHash) = status
       byHash
     }

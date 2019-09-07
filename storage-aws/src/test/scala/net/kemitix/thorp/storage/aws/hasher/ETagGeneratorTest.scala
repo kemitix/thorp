@@ -3,11 +3,9 @@ package net.kemitix.thorp.storage.aws.hasher
 import java.nio.file.Path
 
 import com.amazonaws.services.s3.transfer.TransferManagerConfiguration
-import net.kemitix.thorp.config.Resource
-import net.kemitix.thorp.core.hasher.Hasher
 import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.domain.MD5Hash
-import net.kemitix.thorp.filesystem.FileSystem
+import net.kemitix.thorp.filesystem.{FileSystem, Hasher, Resource}
 import org.scalatest.FunSpec
 import zio.DefaultRuntime
 
