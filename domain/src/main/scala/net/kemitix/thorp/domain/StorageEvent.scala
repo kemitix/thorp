@@ -23,25 +23,25 @@ object StorageEvent {
   ) extends StorageEvent
 
   final case class ErrorEvent(
-      action: Action,
+      action: ActionSummary,
       remoteKey: RemoteKey,
       e: Throwable
   ) extends StorageEvent
 
   final case class ShutdownEvent() extends StorageEvent
 
-  sealed trait Action {
+  sealed trait ActionSummary {
     val name: String
     val keys: String
   }
-  object Action {
-    final case class Copy(keys: String) extends Action {
+  object ActionSummary {
+    final case class Copy(keys: String) extends ActionSummary {
       override val name: String = "Copy"
     }
-    final case class Upload(keys: String) extends Action {
+    final case class Upload(keys: String) extends ActionSummary {
       override val name: String = "Upload"
     }
-    final case class Delete(keys: String) extends Action {
+    final case class Delete(keys: String) extends ActionSummary {
       override val name: String = "Delete"
     }
   }

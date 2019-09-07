@@ -6,13 +6,25 @@ import com.amazonaws.event.ProgressEventType.RESPONSE_BYTE_TRANSFER_EVENT
 import com.amazonaws.event.{ProgressEvent, ProgressListener}
 import com.amazonaws.services.s3.model.{ObjectMetadata, PutObjectRequest}
 import net.kemitix.thorp.domain.Implicits._
-import net.kemitix.thorp.domain.StorageEvent.{Action, ErrorEvent, UploadEvent}
-import net.kemitix.thorp.domain.UploadEvent.{
+import net.kemitix.thorp.domain.StorageEvent.{
+  ActionSummary,
+  ErrorEvent,
+  UploadEvent
+}
+import net.kemitix.thorp.domain.UploadProgressEvent.{
   ByteTransferEvent,
   RequestEvent,
   TransferEvent
 }
-import net.kemitix.thorp.domain.{StorageEvent, _}
+import net.kemitix.thorp.domain.{
+  Bucket,
+  LocalFile,
+  MD5Hash,
+  RemoteKey,
+  StorageEvent,
+  UploadEventListener,
+  UploadProgressEvent
+}
 import net.kemitix.thorp.storage.aws.Uploader.Request
 import zio.UIO
 
@@ -25,7 +37,7 @@ trait Uploader {
 
   private def handleError(remoteKey: RemoteKey)(
       e: Throwable): UIO[StorageEvent] =
-    UIO(ErrorEvent(Action.Upload(remoteKey.key), remoteKey, e))
+    UIO(ErrorEvent(ActionSummary.Upload(remoteKey.key), remoteKey, e))
 
   private def transfer(transferManager: => AmazonTransferManager)(
       request: Request
@@ -75,7 +87,7 @@ trait Uploader {
           lock.unlock(writeLock)
         }
 
-        private def eventHandler: ProgressEvent => UploadEvent =
+        private def eventHandler: ProgressEvent => UploadProgressEvent =
           progressEvent => {
             def isTransfer: ProgressEvent => Boolean =
               _.getEventType.isTransferEvent

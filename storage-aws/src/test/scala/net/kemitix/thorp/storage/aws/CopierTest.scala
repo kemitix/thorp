@@ -2,7 +2,7 @@ package net.kemitix.thorp.storage.aws
 
 import com.amazonaws.services.s3.model.{AmazonS3Exception, CopyObjectResult}
 import net.kemitix.thorp.console.Console
-import net.kemitix.thorp.domain.StorageEvent.{Action, ErrorEvent}
+import net.kemitix.thorp.domain.StorageEvent.{ActionSummary, ErrorEvent}
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.aws.S3ClientException.{CopyError, HashError}
 import org.scalatest.FreeSpec
@@ -43,7 +43,7 @@ class CopierTest extends FreeSpec {
               invoke(bucket, sourceKey, hash, targetKey, fixture.amazonS3Client)
             result match {
               case Right(
-                  ErrorEvent(Action.Copy("sourceKey => targetKey"),
+                  ErrorEvent(ActionSummary.Copy("sourceKey => targetKey"),
                              RemoteKey("targetKey"),
                              e)) =>
                 e match {
@@ -66,7 +66,7 @@ class CopierTest extends FreeSpec {
               invoke(bucket, sourceKey, hash, targetKey, fixture.amazonS3Client)
             result match {
               case Right(
-                  ErrorEvent(Action.Copy("sourceKey => targetKey"),
+                  ErrorEvent(ActionSummary.Copy("sourceKey => targetKey"),
                              RemoteKey("targetKey"),
                              e)) =>
                 e match {

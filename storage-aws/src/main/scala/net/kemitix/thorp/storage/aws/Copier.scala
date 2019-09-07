@@ -2,7 +2,11 @@ package net.kemitix.thorp.storage.aws
 
 import com.amazonaws.SdkClientException
 import com.amazonaws.services.s3.model.{CopyObjectRequest, CopyObjectResult}
-import net.kemitix.thorp.domain.StorageEvent.{Action, CopyEvent, ErrorEvent}
+import net.kemitix.thorp.domain.StorageEvent.{
+  ActionSummary,
+  CopyEvent,
+  ErrorEvent
+}
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.aws.S3ClientException.{CopyError, HashError}
 import zio.{IO, Task, UIO}
@@ -61,8 +65,9 @@ trait Copier {
     (sourceKey, targetKey, error) =>
       ErrorEvent(action(sourceKey, targetKey), targetKey, error)
 
-  private def action(sourceKey: RemoteKey, targetKey: RemoteKey): Action =
-    Action.Copy(s"${sourceKey.key} => ${targetKey.key}")
+  private def action(sourceKey: RemoteKey,
+                     targetKey: RemoteKey): ActionSummary =
+    ActionSummary.Copy(s"${sourceKey.key} => ${targetKey.key}")
 
 }
 

@@ -1,6 +1,6 @@
 package net.kemitix.thorp.console
 
-import net.kemitix.thorp.domain.StorageEvent.Action
+import net.kemitix.thorp.domain.StorageEvent.ActionSummary
 import net.kemitix.thorp.domain.Terminal._
 import net.kemitix.thorp.domain.{Bucket, RemoteKey, Sources}
 import zio.UIO
@@ -59,7 +59,7 @@ object ConsoleOut {
       s"Deleted: $remoteKey"
   }
 
-  final case class ErrorQueueEventOccurred(action: Action, e: Throwable)
+  final case class ErrorQueueEventOccurred(action: ActionSummary, e: Throwable)
       extends ConsoleOut.WithBatchMode {
     override def en: String =
       s"${action.name} failed: ${action.keys}: ${e.getMessage}"
