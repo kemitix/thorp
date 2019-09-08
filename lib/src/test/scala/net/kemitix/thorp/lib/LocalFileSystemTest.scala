@@ -100,10 +100,13 @@ class LocalFileSystemTest extends FreeSpec {
         "ui is updated" in {
           uiEvents.set(List.empty)
           runtime.unsafeRunSync(program(remoteObjects).provide(TestEnv))
-          uiEventsSummary shouldEqual List(
+          val summary = uiEventsSummary
+          summary should have size 6
+          summary should contain inOrderElementsOf List(
             "file found : root-file",
             "action chosen : root-file : ToUpload",
-            "action finished : root-file : ToUpload : 1 : 55",
+            "action finished : root-file : ToUpload : 1 : 55")
+          summary should contain inOrderElementsOf List(
             "file found : subdir/leaf-file",
             "action chosen : subdir/leaf-file : ToUpload",
             "action finished : subdir/leaf-file : ToUpload : 2 : 113"
@@ -130,10 +133,13 @@ class LocalFileSystemTest extends FreeSpec {
         "ui is updated" in {
           uiEvents.set(List.empty)
           runtime.unsafeRunSync(program(remoteObjects).provide(TestEnv))
-          uiEventsSummary shouldEqual List(
+          val summary = uiEventsSummary
+          summary should have size 6
+          summary should contain inOrderElementsOf List(
             "file found : root-file",
             "action chosen : root-file : DoNothing",
-            "action finished : root-file : DoNothing : 1 : 55",
+            "action finished : root-file : DoNothing : 1 : 55")
+          summary should contain inOrderElementsOf List(
             "file found : subdir/leaf-file",
             "action chosen : subdir/leaf-file : DoNothing",
             "action finished : subdir/leaf-file : DoNothing : 2 : 113"
@@ -162,10 +168,12 @@ class LocalFileSystemTest extends FreeSpec {
         "ui is updated" in {
           uiEvents.set(List.empty)
           runtime.unsafeRunSync(program(remoteObjects).provide(TestEnv))
-          uiEventsSummary shouldEqual List(
+          val summary = uiEventsSummary
+          summary should contain inOrderElementsOf List(
             "file found : root-file",
             "action chosen : root-file : DoNothing",
-            "action finished : root-file : DoNothing : 1 : 55",
+            "action finished : root-file : DoNothing : 1 : 55")
+          summary should contain inOrderElementsOf List(
             "file found : subdir/leaf-file",
             "action chosen : subdir/leaf-file : ToUpload",
             "action finished : subdir/leaf-file : ToUpload : 2 : 113"
@@ -212,10 +220,12 @@ class LocalFileSystemTest extends FreeSpec {
       "ui is updated" in {
         uiEvents.set(List.empty)
         runtime.unsafeRunSync(program(remoteObjects).provide(TestEnv))
-        uiEventsSummary shouldEqual List(
+        val summary = uiEventsSummary
+        summary should contain inOrderElementsOf List(
           "file found : root-file",
           "action chosen : root-file : ToCopy",
-          "action finished : root-file : ToCopy : 1 : 55",
+          "action finished : root-file : ToCopy : 1 : 55")
+        summary should contain inOrderElementsOf List(
           "file found : subdir/leaf-file",
           "action chosen : subdir/leaf-file : DoNothing",
           "action finished : subdir/leaf-file : DoNothing : 2 : 113"
