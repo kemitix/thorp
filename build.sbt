@@ -77,7 +77,7 @@ val eipDependencies = Seq(
 
 lazy val thorp = (project in file("."))
   .settings(commonSettings)
-  .aggregate(app, cli, `storage-aws`, lib, `storage`, domain)
+  .aggregate(app, cli, config, console, domain, filesystem, lib, storage, `storage-aws`, uishell)
 
 lazy val app = (project in file("app"))
   .settings(commonSettings)
