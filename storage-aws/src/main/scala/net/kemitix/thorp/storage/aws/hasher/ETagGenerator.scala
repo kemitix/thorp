@@ -12,14 +12,24 @@ import zio.{RIO, ZIO}
 
 private trait ETagGenerator {
 
-  def eTag(
-      path: Path
-  ): RIO[Hasher with FileSystem, String] = {
+  def eTag(path: Path): RIO[Hasher with FileSystem, String]
+
+  def offsets(totalFileSizeBytes: Long, optimalPartSize: Long): List[Long]
+
+}
+
+private object ETagGenerator extends ETagGenerator {
+
+  override def eTag(path: Path): RIO[Hasher with FileSystem, String] = {
     val partSize = calculatePartSize(path)
     val parts    = numParts(path.toFile.length, partSize)
     eTagHex(path, partSize, parts)
       .map(hash => s"$hash-$parts")
   }
+
+  override def offsets(totalFileSizeBytes: Long,
+                       optimalPartSize: Long): List[Long] =
+    Range.Long(0, totalFileSizeBytes, optimalPartSize).toList
 
   private def eTagHex(path: Path, partSize: Long, parts: Long) =
     ZIO
@@ -57,12 +67,4 @@ private trait ETagGenerator {
       .hashObjectChunk(path, chunkNumber, chunkSize)
       .map(_(MD5))
       .map(MD5Hash.digest)
-
-  def offsets(
-      totalFileSizeBytes: Long,
-      optimalPartSize: Long
-  ): List[Long] =
-    Range.Long(0, totalFileSizeBytes, optimalPartSize).toList
 }
-
-private object ETagGenerator extends ETagGenerator
