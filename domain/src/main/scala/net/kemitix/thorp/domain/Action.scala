@@ -3,6 +3,7 @@ package net.kemitix.thorp.domain
 sealed trait Action {
   def bucket: Bucket
   def size: Long
+  def remoteKey: RemoteKey
 }
 object Action {
 
@@ -16,7 +17,9 @@ object Action {
       bucket: Bucket,
       localFile: LocalFile,
       size: Long
-  ) extends Action
+  ) extends Action {
+    override def remoteKey: RemoteKey = localFile.remoteKey
+  }
 
   final case class ToCopy(
       bucket: Bucket,
@@ -24,7 +27,9 @@ object Action {
       hash: MD5Hash,
       targetKey: RemoteKey,
       size: Long
-  ) extends Action
+  ) extends Action {
+    override def remoteKey: RemoteKey = targetKey
+  }
 
   final case class ToDelete(
       bucket: Bucket,
