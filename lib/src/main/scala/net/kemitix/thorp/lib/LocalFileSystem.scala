@@ -30,7 +30,7 @@ trait LocalFileSystem {
   def scanDelete(
       uiChannel: UChannel[Any, UIEvent],
       remoteData: RemoteObjects,
-      archive: UnversionedMirrorArchive.type
+      archive: ThorpArchive
   ): RIO[Clock with Config with FileSystem with Storage, Seq[StorageEvent]]
 
 }
@@ -63,7 +63,7 @@ object LocalFileSystem extends LocalFileSystem {
   override def scanDelete(
       uiChannel: UChannel[Any, UIEvent],
       remoteData: RemoteObjects,
-      archive: UnversionedMirrorArchive.type
+      archive: ThorpArchive
   ): RIO[Clock with Config with FileSystem with Storage, Seq[StorageEvent]] =
     for {
       actionCounter <- Ref.make(0)
@@ -92,18 +92,23 @@ object LocalFileSystem extends LocalFileSystem {
     UIO { message =>
       val localFile = message.body
       for {
-        _                   <- uiFileFound(uiChannel)(localFile)
-        action              <- chooseAction(remoteObjects, uploads, uiChannel)(localFile)
-        actionCounter       <- actionCounterRef.update(_ + 1)
-        bytesCounter        <- bytesCounterRef.update(_ + action.size)
-        actionChosenMessage <- Message.create(UIEvent.ActionChosen(action))
-        _                   <- MessageChannel.send(uiChannel)(actionChosenMessage)
+        _             <- uiFileFound(uiChannel)(localFile)
+        action        <- chooseAction(remoteObjects, uploads, uiChannel)(localFile)
+        actionCounter <- actionCounterRef.update(_ + 1)
+        bytesCounter  <- bytesCounterRef.update(_ + action.size)
+        _             <- uiActionChosen(uiChannel)(action)
         sequencedAction = SequencedAction(action, actionCounter)
         event <- archive.update(sequencedAction, bytesCounter)
         _     <- eventsRef.update(list => event :: list)
         _     <- uiActionFinished(uiChannel)(action, actionCounter, bytesCounter)
       } yield ()
     }
+
+  private def uiActionChosen(uiChannel: MessageChannel.UChannel[Any, UIEvent])(
+      action: Action) =
+    Message.create(UIEvent.ActionChosen(action)) >>=
+      MessageChannel.send(uiChannel)
+
   private def uiActionFinished(uiChannel: UChannel[Any, UIEvent])(
       action: Action,
       actionCounter: Int,
@@ -234,6 +239,7 @@ object LocalFileSystem extends LocalFileSystem {
               actionCounter <- actionCounterRef.update(_ + 1)
               bucket        <- Config.bucket
               action = ToDelete(bucket, remoteKey, 0L)
+              _            <- uiActionChosen(uiChannel)(action)
               bytesCounter <- bytesCounterRef.update(_ + action.size)
               sequencedAction = SequencedAction(action, actionCounter)
               event <- archive.update(sequencedAction, 0L)
