@@ -13,7 +13,7 @@ import net.kemitix.thorp.config.{
   ConfigOptions,
   ConfigurationBuilder
 }
-import net.kemitix.thorp.domain.Action.{DoNothing, ToCopy, ToUpload}
+import net.kemitix.thorp.domain.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.filesystem.{FileSystem, Hasher, Resource}
 import net.kemitix.thorp.storage.Storage
@@ -77,7 +77,7 @@ class LocalFileSystemTest extends FreeSpec {
         uiEvents.updateAndGet(l => uiEvent :: l)
         UIO(())
       }
-    def program(remoteObjects: RemoteObjects) = {
+    def program(remoteObjects: RemoteObjects) =
       for {
         config   <- ConfigurationBuilder.buildConfig(configOptions)
         _        <- Config.set(config)
@@ -85,7 +85,6 @@ class LocalFileSystemTest extends FreeSpec {
         receiver <- receiver()
         _        <- MessageChannel.pointToPoint(sender)(receiver).runDrain
       } yield ()
-    }
     "where remote has no objects" - {
       val remoteObjects = RemoteObjects.empty
       "upload all files" - {
@@ -225,7 +224,88 @@ class LocalFileSystemTest extends FreeSpec {
     }
   }
 
-  "scanDelete" ignore {}
+  "scanDelete" - {
+    def sender(objects: RemoteObjects): UIO[
+      MessageChannel.ESender[Clock with Config with FileSystem with Storage,
+                             Throwable,
+                             UIEvent]] =
+      UIO { uiChannel =>
+        (for {
+          _ <- LocalFileSystem.scanDelete(uiChannel, objects, archive)
+        } yield ()) <* MessageChannel.endChannel(uiChannel)
+      }
+    def receiver(): UIO[MessageChannel.UReceiver[Any, UIEvent]] =
+      UIO { message =>
+        val uiEvent = message.body
+        uiEvents.updateAndGet(l => uiEvent :: l)
+        UIO(())
+      }
+    def program(remoteObjects: RemoteObjects) = {
+      for {
+        config   <- ConfigurationBuilder.buildConfig(configOptions)
+        _        <- Config.set(config)
+        sender   <- sender(remoteObjects)
+        receiver <- receiver()
+        _        <- MessageChannel.pointToPoint(sender)(receiver).runDrain
+      } yield ()
+    }
+    "where remote has no extra objects" - {
+      val remoteObjects = RemoteObjects(
+        byHash = MapView(MD5HashData.Root.hash     -> MD5HashData.Root.remoteKey,
+                         MD5HashData.Leaf.hash     -> MD5HashData.Leaf.remoteKey),
+        byKey = MapView(MD5HashData.Root.remoteKey -> MD5HashData.Root.hash,
+                        MD5HashData.Leaf.remoteKey -> MD5HashData.Leaf.hash)
+      )
+      "do nothing for all files" - {
+        "no archive actions" in {
+          actions.set(List.empty)
+          runtime.unsafeRunSync(program(remoteObjects).provide(TestEnv))
+          val actionList: Set[Action] = actions.get.map(_.action).toSet
+          actionList should have size 0
+        }
+        "ui is updated" in {
+          uiEvents.set(List.empty)
+          runtime.unsafeRunSync(program(remoteObjects).provide(TestEnv))
+          uiEventsSummary shouldEqual List("key found: root-file",
+                                           "key found: subdir/leaf-file")
+        }
+      }
+    }
+    "where remote has extra objects" - {
+      val extraHash   = MD5Hash("extra")
+      val extraObject = RemoteKey("extra")
+      val remoteObjects = RemoteObjects(
+        byHash = MapView(MD5HashData.Root.hash     -> MD5HashData.Root.remoteKey,
+                         MD5HashData.Leaf.hash     -> MD5HashData.Leaf.remoteKey,
+                         extraHash                 -> extraObject),
+        byKey = MapView(MD5HashData.Root.remoteKey -> MD5HashData.Root.hash,
+                        MD5HashData.Leaf.remoteKey -> MD5HashData.Leaf.hash,
+                        extraObject                -> extraHash)
+      )
+      "remove the extra object" - {
+        "archive delete action" in {
+          actions.set(List.empty)
+          runtime.unsafeRunSync(program(remoteObjects).provide(TestEnv))
+          val actionList: Set[Action] = actions.get.map(_.action).toSet
+          actionList should have size 1
+          actionList
+            .filter(_.isInstanceOf[ToDelete])
+            .map(_.remoteKey) shouldEqual Set(extraObject)
+        }
+        "ui is updated" in {
+          uiEvents.set(List.empty)
+          runtime.unsafeRunSync(program(remoteObjects).provide(TestEnv))
+          uiEventsSummary shouldEqual List(
+            "key found: root-file",
+            "key found: subdir/leaf-file",
+            "key found: extra",
+            "action chosen : extra : ToDelete",
+            "action finished : extra : ToDelete : 1 : 0"
+          )
+        }
+      }
+    }
+  }
 
   private def uiEventsSummary: List[String] = {
     uiEvents
@@ -244,7 +324,9 @@ class LocalFileSystemTest extends FreeSpec {
                         action.getClass.getSimpleName,
                         actionCounter,
                         bytesCounter)
-        case _ => ""
+        case KeyFound(remoteKey) =>
+          String.format("key found: %s", remoteKey.key)
+        case x => String.format("unknown : %s", x.getClass.getSimpleName)
       }
   }
 
