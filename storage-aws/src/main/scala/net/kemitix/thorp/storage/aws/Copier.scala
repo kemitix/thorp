@@ -2,10 +2,10 @@ package net.kemitix.thorp.storage.aws
 
 import com.amazonaws.SdkClientException
 import com.amazonaws.services.s3.model.{CopyObjectRequest, CopyObjectResult}
-import net.kemitix.thorp.domain.StorageQueueEvent.{
-  Action,
-  CopyQueueEvent,
-  ErrorQueueEvent
+import net.kemitix.thorp.domain.StorageEvent.{
+  ActionSummary,
+  CopyEvent,
+  ErrorEvent
 }
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.aws.S3ClientException.{CopyError, HashError}
@@ -13,8 +13,7 @@ import zio.{IO, Task, UIO}
 
 trait Copier {
 
-  def copy(amazonS3: AmazonS3.Client)(
-      request: Request): UIO[StorageQueueEvent] =
+  def copy(amazonS3: AmazonS3.Client)(request: Request): UIO[StorageEvent] =
     copyObject(amazonS3)(request)
       .fold(foldFailure(request.sourceKey, request.targetKey),
             foldSuccess(request.sourceKey, request.targetKey))
@@ -43,9 +42,8 @@ trait Copier {
       copyRequest.targetKey.key
     ).withMatchingETagConstraint(MD5Hash.hash(copyRequest.hash))
 
-  private def foldFailure(
-      sourceKey: RemoteKey,
-      targetKey: RemoteKey): Throwable => StorageQueueEvent = {
+  private def foldFailure(sourceKey: RemoteKey,
+                          targetKey: RemoteKey): Throwable => StorageEvent = {
     case error: SdkClientException =>
       errorEvent(sourceKey, targetKey, error)
     case error =>
@@ -55,20 +53,21 @@ trait Copier {
 
   private def foldSuccess(
       sourceKey: RemoteKey,
-      targetKey: RemoteKey): CopyObjectResult => StorageQueueEvent =
+      targetKey: RemoteKey): CopyObjectResult => StorageEvent =
     result =>
       Option(result) match {
-        case Some(_) => CopyQueueEvent(sourceKey, targetKey)
+        case Some(_) => CopyEvent(sourceKey, targetKey)
         case None =>
           errorEvent(sourceKey, targetKey, HashError)
     }
 
-  private def errorEvent: (RemoteKey, RemoteKey, Throwable) => ErrorQueueEvent =
+  private def errorEvent: (RemoteKey, RemoteKey, Throwable) => ErrorEvent =
     (sourceKey, targetKey, error) =>
-      ErrorQueueEvent(action(sourceKey, targetKey), targetKey, error)
+      ErrorEvent(action(sourceKey, targetKey), targetKey, error)
 
-  private def action(sourceKey: RemoteKey, targetKey: RemoteKey): Action =
-    Action.Copy(s"${sourceKey.key} => ${targetKey.key}")
+  private def action(sourceKey: RemoteKey,
+                     targetKey: RemoteKey): ActionSummary =
+    ActionSummary.Copy(s"${sourceKey.key} => ${targetKey.key}")
 
 }
 

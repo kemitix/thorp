@@ -11,7 +11,7 @@ class MD5HashGeneratorTest extends FunSpec {
 
   describe("md5File()") {
     describe("read a small file (smaller than buffer)") {
-      val path = Resource(this, "../upload/root-file").toPath
+      val path = Resource(this, "upload/root-file").toPath
       it("should generate the correct hash") {
         val expected = Right(Root.hash)
         val result   = invoke(path)
@@ -20,7 +20,7 @@ class MD5HashGeneratorTest extends FunSpec {
     }
 
     describe("read a large file (bigger than buffer)") {
-      val path = Resource(this, "../big-file").toPath
+      val path = Resource(this, "big-file").toPath
       it("should generate the correct hash") {
         val expected = Right(BigFile.hash)
         val result   = invoke(path)
@@ -38,7 +38,7 @@ class MD5HashGeneratorTest extends FunSpec {
 
   describe("md5FileChunk") {
     describe("read chunks of file") {
-      val path = Resource(this, "../big-file").toPath
+      val path = Resource(this, "big-file").toPath
       it("should generate the correct hash for first chunk of the file") {
         val part1    = BigFile.Part1
         val expected = Right(MD5Hash.hash(part1.hash))

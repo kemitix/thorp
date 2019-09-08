@@ -4,8 +4,6 @@ import java.io.{File, IOException, PrintWriter}
 import java.nio.file.attribute.BasicFileAttributes
 import java.nio.file.{FileVisitResult, Files, Path, SimpleFileVisitor}
 
-import net.kemitix.thorp.domain.NonUnit.~*
-
 import scala.util.Try
 
 trait TemporaryFolder {
@@ -15,27 +13,26 @@ trait TemporaryFolder {
     val dir: Path = Files.createTempDirectory("thorp-temp")
     val t         = Try(testCode(dir))
     remove(dir)
-    ~*(t.get)
+    t.get
+    ()
   }
 
   def remove(root: Path): Unit = {
-    ~*(
-      Files.walkFileTree(
-        root,
-        new SimpleFileVisitor[Path] {
-          override def visitFile(
-              file: Path,
-              attrs: BasicFileAttributes): FileVisitResult = {
-            Files.delete(file)
-            FileVisitResult.CONTINUE
-          }
-          override def postVisitDirectory(dir: Path,
-                                          exc: IOException): FileVisitResult = {
-            Files.delete(dir)
-            FileVisitResult.CONTINUE
-          }
+    Files.walkFileTree(
+      root,
+      new SimpleFileVisitor[Path] {
+        override def visitFile(file: Path,
+                               attrs: BasicFileAttributes): FileVisitResult = {
+          Files.delete(file)
+          FileVisitResult.CONTINUE
         }
-      ))
+        override def postVisitDirectory(dir: Path,
+                                        exc: IOException): FileVisitResult = {
+          Files.delete(dir)
+          FileVisitResult.CONTINUE
+        }
+      }
+    )
   }
 
   def createFile(directory: Path, name: String, contents: String*): File = {
@@ -48,6 +45,6 @@ trait TemporaryFolder {
   }
 
   def writeFile(directory: Path, name: String, contents: String*): Unit =
-    ~*(createFile(directory, name, contents: _*))
+    createFile(directory, name, contents: _*)
 
 }

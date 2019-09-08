@@ -2,7 +2,7 @@ package net.kemitix.thorp.domain
 
 import java.util.concurrent.atomic.AtomicLong
 
-import net.kemitix.thorp.domain.UploadEvent.RequestEvent
+import net.kemitix.thorp.domain.UploadProgressEvent.RequestEvent
 import net.kemitix.thorp.domain.UploadEventLogger.RequestCycle
 
 object UploadEventListener {
@@ -14,7 +14,7 @@ object UploadEventListener {
       batchMode: Boolean
   )
 
-  def listener(settings: Settings): UploadEvent => Unit = {
+  def listener(settings: Settings): UploadProgressEvent => Unit = {
     val bytesTransferred = new AtomicLong(0L)
     event =>
       {

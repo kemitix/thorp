@@ -32,7 +32,11 @@ val commonSettings = Seq(
     Wart.NonUnitStatements,
     Wart.StringPlusAny
   ).contains(wart)),
-  test in assembly := {}
+  test in assembly := {},
+  assemblyMergeStrategy in assembly := {
+    case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+    case x => MergeStrategy.first
+  }
 )
 
 val applicationSettings = Seq(

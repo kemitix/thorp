@@ -2,7 +2,7 @@ package net.kemitix.thorp.lib
 
 import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.domain.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
-import net.kemitix.thorp.domain.StorageQueueEvent.DoNothingQueueEvent
+import net.kemitix.thorp.domain.StorageEvent.DoNothingEvent
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.Storage
 import zio.{UIO, ZIO}
@@ -12,7 +12,7 @@ trait UnversionedMirrorArchive extends ThorpArchive {
   override def update(
       sequencedAction: SequencedAction,
       totalBytesSoFar: Long
-  ): ZIO[Storage with Config, Nothing, StorageQueueEvent] =
+  ): ZIO[Storage with Config, Nothing, StorageEvent] =
     sequencedAction match {
       case SequencedAction(ToUpload(bucket, localFile, _), index) =>
         doUpload(index, totalBytesSoFar, bucket, localFile)
@@ -21,7 +21,7 @@ trait UnversionedMirrorArchive extends ThorpArchive {
       case SequencedAction(ToDelete(bucket, remoteKey, _), _) =>
         Storage.delete(bucket, remoteKey)
       case SequencedAction(DoNothing(_, remoteKey, _), _) =>
-        UIO(DoNothingQueueEvent(remoteKey))
+        UIO(DoNothingEvent(remoteKey))
     }
 
   private def doUpload(

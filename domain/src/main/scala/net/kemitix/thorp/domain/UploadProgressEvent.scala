@@ -1,23 +1,23 @@
 package net.kemitix.thorp.domain
 
-sealed trait UploadEvent {
+sealed trait UploadProgressEvent {
   def name: String
 }
 
-object UploadEvent {
+object UploadProgressEvent {
 
   final case class TransferEvent(
       name: String
-  ) extends UploadEvent
+  ) extends UploadProgressEvent
 
   final case class RequestEvent(
       name: String,
       bytes: Long,
       transferred: Long
-  ) extends UploadEvent
+  ) extends UploadProgressEvent
 
   final case class ByteTransferEvent(
       name: String
-  ) extends UploadEvent
+  ) extends UploadProgressEvent
 
 }

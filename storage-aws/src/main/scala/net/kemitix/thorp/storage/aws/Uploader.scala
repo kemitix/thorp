@@ -6,30 +6,38 @@ import com.amazonaws.event.ProgressEventType.RESPONSE_BYTE_TRANSFER_EVENT
 import com.amazonaws.event.{ProgressEvent, ProgressListener}
 import com.amazonaws.services.s3.model.{ObjectMetadata, PutObjectRequest}
 import net.kemitix.thorp.domain.Implicits._
-import net.kemitix.thorp.domain.StorageQueueEvent.{
-  Action,
-  ErrorQueueEvent,
-  UploadQueueEvent
+import net.kemitix.thorp.domain.StorageEvent.{
+  ActionSummary,
+  ErrorEvent,
+  UploadEvent
 }
-import net.kemitix.thorp.domain.UploadEvent.{
+import net.kemitix.thorp.domain.UploadProgressEvent.{
   ByteTransferEvent,
   RequestEvent,
   TransferEvent
 }
-import net.kemitix.thorp.domain.{StorageQueueEvent, _}
+import net.kemitix.thorp.domain.{
+  Bucket,
+  LocalFile,
+  MD5Hash,
+  RemoteKey,
+  StorageEvent,
+  UploadEventListener,
+  UploadProgressEvent
+}
 import net.kemitix.thorp.storage.aws.Uploader.Request
 import zio.UIO
 
 trait Uploader {
 
   def upload(transferManager: => AmazonTransferManager)(
-      request: Request): UIO[StorageQueueEvent] =
+      request: Request): UIO[StorageEvent] =
     transfer(transferManager)(request)
       .catchAll(handleError(request.localFile.remoteKey))
 
   private def handleError(remoteKey: RemoteKey)(
-      e: Throwable): UIO[StorageQueueEvent] =
-    UIO(ErrorQueueEvent(Action.Upload(remoteKey.key), remoteKey, e))
+      e: Throwable): UIO[StorageEvent] =
+    UIO(ErrorEvent(ActionSummary.Upload(remoteKey.key), remoteKey, e))
 
   private def transfer(transferManager: => AmazonTransferManager)(
       request: Request
@@ -43,8 +51,8 @@ trait Uploader {
       .upload(putObjectRequest)
       .map(_.waitForUploadResult)
       .map(uploadResult =>
-        UploadQueueEvent(RemoteKey(uploadResult.getKey),
-                         MD5Hash(uploadResult.getETag)))
+        UploadEvent(RemoteKey(uploadResult.getKey),
+                    MD5Hash(uploadResult.getETag)))
   }
 
   private def putObjectRequest(
@@ -79,7 +87,7 @@ trait Uploader {
           lock.unlock(writeLock)
         }
 
-        private def eventHandler: ProgressEvent => UploadEvent =
+        private def eventHandler: ProgressEvent => UploadProgressEvent =
           progressEvent => {
             def isTransfer: ProgressEvent => Boolean =
               _.getEventType.isTransferEvent

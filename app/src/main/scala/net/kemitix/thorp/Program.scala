@@ -5,15 +5,14 @@ import net.kemitix.eip.zio.{Message, MessageChannel}
 import net.kemitix.thorp.cli.CliArgs
 import net.kemitix.thorp.config._
 import net.kemitix.thorp.console._
-import net.kemitix.thorp.domain.{Counters, StorageQueueEvent}
-import net.kemitix.thorp.domain.StorageQueueEvent.{
-  CopyQueueEvent,
-  DeleteQueueEvent,
-  ErrorQueueEvent,
-  UploadQueueEvent
+import net.kemitix.thorp.domain.{Counters, StorageEvent}
+import net.kemitix.thorp.domain.StorageEvent.{
+  CopyEvent,
+  DeleteEvent,
+  ErrorEvent,
+  UploadEvent
 }
 import net.kemitix.thorp.filesystem.{FileSystem, Hasher}
-import net.kemitix.thorp.lib.CoreTypes.CoreProgram
 import net.kemitix.thorp.lib._
 import net.kemitix.thorp.storage.Storage
 import net.kemitix.throp.uishell.{UIEvent, UIShell}
@@ -24,7 +23,10 @@ trait Program {
 
   lazy val version = s"Thorp v${thorp.BuildInfo.version}"
 
-  def run(args: List[String]): CoreProgram[Unit] = {
+  def run(args: List[String]): ZIO[
+    Storage with Console with Config with Clock with FileSystem with Hasher with FileScanner,
+    Throwable,
+    Unit] = {
     for {
       cli    <- CliArgs.parse(args)
       config <- ConfigurationBuilder.buildConfig(cli)
@@ -87,22 +89,22 @@ trait Program {
     }
 
   private def showSummary(uiChannel: UIChannel)(
-      events: Seq[StorageQueueEvent]): RIO[Clock, Unit] = {
+      events: Seq[StorageEvent]): RIO[Clock, Unit] = {
     val counters = events.foldLeft(Counters.empty)(countActivities)
     Message.create(UIEvent.ShowSummary(counters)) >>=
       MessageChannel.send(uiChannel)
   }
 
-  private def countActivities: (Counters, StorageQueueEvent) => Counters =
-    (counters: Counters, s3Action: StorageQueueEvent) => {
+  private def countActivities: (Counters, StorageEvent) => Counters =
+    (counters: Counters, s3Action: StorageEvent) => {
       val increment: Int => Int = _ + 1
       s3Action match {
-        case _: UploadQueueEvent =>
+        case _: UploadEvent =>
           Counters.uploaded.modify(increment)(counters)
-        case _: CopyQueueEvent   => Counters.copied.modify(increment)(counters)
-        case _: DeleteQueueEvent => Counters.deleted.modify(increment)(counters)
-        case _: ErrorQueueEvent  => Counters.errors.modify(increment)(counters)
-        case _                   => counters
+        case _: CopyEvent   => Counters.copied.modify(increment)(counters)
+        case _: DeleteEvent => Counters.deleted.modify(increment)(counters)
+        case _: ErrorEvent  => Counters.errors.modify(increment)(counters)
+        case _              => counters
       }
     }
 
