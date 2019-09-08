@@ -105,11 +105,11 @@ class LocalFileSystemTest extends FreeSpec {
           summary should contain inOrderElementsOf List(
             "file found : root-file",
             "action chosen : root-file : ToUpload",
-            "action finished : root-file : ToUpload : 1 : 55")
+            "action finished : root-file : ToUpload")
           summary should contain inOrderElementsOf List(
             "file found : subdir/leaf-file",
             "action chosen : subdir/leaf-file : ToUpload",
-            "action finished : subdir/leaf-file : ToUpload : 2 : 113"
+            "action finished : subdir/leaf-file : ToUpload"
           )
         }
       }
@@ -138,11 +138,11 @@ class LocalFileSystemTest extends FreeSpec {
           summary should contain inOrderElementsOf List(
             "file found : root-file",
             "action chosen : root-file : DoNothing",
-            "action finished : root-file : DoNothing : 1 : 55")
+            "action finished : root-file : DoNothing")
           summary should contain inOrderElementsOf List(
             "file found : subdir/leaf-file",
             "action chosen : subdir/leaf-file : DoNothing",
-            "action finished : subdir/leaf-file : DoNothing : 2 : 113"
+            "action finished : subdir/leaf-file : DoNothing"
           )
         }
       }
@@ -172,11 +172,11 @@ class LocalFileSystemTest extends FreeSpec {
           summary should contain inOrderElementsOf List(
             "file found : root-file",
             "action chosen : root-file : DoNothing",
-            "action finished : root-file : DoNothing : 1 : 55")
+            "action finished : root-file : DoNothing")
           summary should contain inOrderElementsOf List(
             "file found : subdir/leaf-file",
             "action chosen : subdir/leaf-file : ToUpload",
-            "action finished : subdir/leaf-file : ToUpload : 2 : 113"
+            "action finished : subdir/leaf-file : ToUpload"
           )
         }
       }
@@ -224,11 +224,11 @@ class LocalFileSystemTest extends FreeSpec {
         summary should contain inOrderElementsOf List(
           "file found : root-file",
           "action chosen : root-file : ToCopy",
-          "action finished : root-file : ToCopy : 1 : 55")
+          "action finished : root-file : ToCopy")
         summary should contain inOrderElementsOf List(
           "file found : subdir/leaf-file",
           "action chosen : subdir/leaf-file : DoNothing",
-          "action finished : subdir/leaf-file : DoNothing : 2 : 113"
+          "action finished : subdir/leaf-file : DoNothing"
         )
       }
     }
@@ -310,7 +310,7 @@ class LocalFileSystemTest extends FreeSpec {
             "key found: subdir/leaf-file",
             "key found: extra",
             "action chosen : extra : ToDelete",
-            "action finished : extra : ToDelete : 1 : 0"
+            "action finished : extra : ToDelete"
           )
         }
       }
@@ -329,11 +329,9 @@ class LocalFileSystemTest extends FreeSpec {
                         action.remoteKey.key,
                         action.getClass.getSimpleName)
         case ActionFinished(action, actionCounter, bytesCounter) =>
-          String.format("action finished : %s : %s : %s : %s",
+          String.format("action finished : %s : %s",
                         action.remoteKey.key,
-                        action.getClass.getSimpleName,
-                        actionCounter,
-                        bytesCounter)
+                        action.getClass.getSimpleName)
         case KeyFound(remoteKey) =>
           String.format("key found: %s", remoteKey.key)
         case x => String.format("unknown : %s", x.getClass.getSimpleName)
