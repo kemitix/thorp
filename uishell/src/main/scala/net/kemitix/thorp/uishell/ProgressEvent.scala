@@ -1,4 +1,4 @@
-package net.kemitix.throp.uishell
+package net.kemitix.thorp.uishell
 
 import net.kemitix.eip.zio.MessageChannel
 import net.kemitix.thorp.config.Config

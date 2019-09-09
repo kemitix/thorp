@@ -1,4 +1,4 @@
-package net.kemitix.throp.uishell
+package net.kemitix.thorp.uishell
 
 import net.kemitix.thorp.domain._
 
