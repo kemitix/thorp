@@ -71,7 +71,7 @@ val zioDependencies = Seq(
 
 val eipDependencies = Seq(
   libraryDependencies ++= Seq(
-    "net.kemitix" %% "eip-zio" % "0.3.1"
+    "net.kemitix" %% "eip-zio" % "0.3.2"
   )
 )
 
