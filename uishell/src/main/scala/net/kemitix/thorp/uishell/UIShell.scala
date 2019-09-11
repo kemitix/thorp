@@ -8,21 +8,14 @@ import net.kemitix.thorp.console.ConsoleOut.{
   UploadComplete
 }
 import net.kemitix.thorp.console.{Console, ConsoleOut}
-import net.kemitix.thorp.domain.{
-  Action,
-  Counters,
-  LocalFile,
-  MD5Hash,
-  RemoteKey,
-  SizeTranslation,
-  Terminal
-}
 import net.kemitix.thorp.domain.Action.ToUpload
+import net.kemitix.thorp.domain.SizeTranslation.sizeInEnglish
 import net.kemitix.thorp.domain.Terminal.{
   eraseLineForward,
   eraseToEndOfScreen,
   progressBar
 }
+import net.kemitix.thorp.domain._
 import zio.{UIO, ZIO}
 
 import scala.io.AnsiColor.{GREEN, RESET}
@@ -105,29 +98,17 @@ object UIShell {
       bytesTransferred: Long,
       index: Int,
       totalBytesSoFar: Long): ZIO[Console with Config, Nothing, Unit] =
-    UIO {
-      val remoteKey    = localFile.remoteKey.key
+    ZIO.when(bytesTransferred < localFile.file.length()) {
       val fileLength   = localFile.file.length
+      val remoteKey    = localFile.remoteKey.key
       val statusHeight = 3
-      if (bytesTransferred < fileLength)
-        println(
-          s"${GREEN}Uploading:$RESET $remoteKey$eraseToEndOfScreen\n" +
-            statusWithBar(" File",
-                          SizeTranslation.sizeInEnglish,
-                          bytesTransferred,
-                          fileLength) +
-            s"${Terminal.cursorPrevLine(statusHeight)}")
+      val percent      = f"${(bytesTransferred * 100) / fileLength}%2d"
+      Console.putStrLn(
+        s"${GREEN}Uploading:$RESET $remoteKey$eraseToEndOfScreen\n" +
+          s"$GREEN File:$RESET ($percent%) ${sizeInEnglish(bytesTransferred)} of ${sizeInEnglish(fileLength)}" +
+          s"$eraseLineForward\n" +
+          progressBar(bytesTransferred, fileLength, Terminal.width) +
+          s"${Terminal.cursorPrevLine(statusHeight)}")
     }
 
-  private def statusWithBar(
-      label: String,
-      format: Long => String,
-      current: Long,
-      max: Long
-  ): String = {
-    val percent = f"${(current * 100) / max}%2d"
-    s"$GREEN$label:$RESET ($percent%) ${format(current)} of ${format(max)}" +
-      s"$eraseLineForward\n" +
-      progressBar(current, max, Terminal.width)
-  }
 }
