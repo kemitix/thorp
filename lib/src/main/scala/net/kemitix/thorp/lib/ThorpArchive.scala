@@ -1,5 +1,6 @@
 package net.kemitix.thorp.lib
 
+import net.kemitix.eip.zio.MessageChannel.UChannel
 import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.console.ConsoleOut.{
   CopyComplete,
@@ -11,11 +12,13 @@ import net.kemitix.thorp.console._
 import net.kemitix.thorp.domain.StorageEvent
 import net.kemitix.thorp.domain.StorageEvent._
 import net.kemitix.thorp.storage.Storage
+import net.kemitix.thorp.uishell.UIEvent
 import zio.{RIO, ZIO}
 
 trait ThorpArchive {
 
   def update(
+      uiChannel: UChannel[Any, UIEvent],
       sequencedAction: SequencedAction,
       totalBytesSoFar: Long
   ): ZIO[Storage with Config, Nothing, StorageEvent]

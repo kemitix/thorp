@@ -5,6 +5,7 @@ import java.io.File
 import com.amazonaws.SdkClientException
 import com.amazonaws.services.s3.model.AmazonS3Exception
 import com.amazonaws.services.s3.transfer.model.UploadResult
+import net.kemitix.eip.zio.MessageChannel.UChannel
 import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.domain.StorageEvent.{
@@ -17,8 +18,11 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.FreeSpec
 import zio.{DefaultRuntime, Task}
 import net.kemitix.thorp.filesystem.Resource
+import net.kemitix.thorp.uishell.{UIEvent, UploadEventListener}
 
 class UploaderTest extends FreeSpec with MockFactory {
+
+  val uiChannel: UChannel[Any, UIEvent] = zioMessage => ()
 
   "upload" - {
     val aSource: File = Resource(this, "")
@@ -35,7 +39,7 @@ class UploaderTest extends FreeSpec with MockFactory {
       override def waitForUploadResult: UploadResult = uploadResult
     }
     val listenerSettings =
-      UploadEventListener.Settings(localFile, 0, 0, batchMode = true)
+      UploadEventListener.Settings(uiChannel, localFile, 0, 0, batchMode = true)
     "when no error" in {
       val expected =
         Right(UploadEvent(remoteKey, aHash))

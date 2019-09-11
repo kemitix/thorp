@@ -22,15 +22,13 @@ object UploadEventListener {
     event =>
       {
         event match {
-          case e: RequestEvent => {
-            println(s"listener: $e")
+          case e: RequestEvent =>
             settings.uiChannel(
               Message.withBody(
                 UIEvent.RequestCycle(settings.localFile,
                                      bytesTransferred.addAndGet(e.transferred),
                                      settings.index,
                                      settings.totalBytesSoFar)))
-          }
           case _ => ()
         }
       }

@@ -34,4 +34,10 @@ object UIEvent {
 
   case class KeyFound(remoteKey: RemoteKey) extends UIEvent
 
+  case class RequestCycle(localFile: LocalFile,
+                          bytesTransferred: Long,
+                          index: Int,
+                          totalBytesSoFar: Long)
+      extends UIEvent
+
 }
