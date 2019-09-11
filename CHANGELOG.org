@@ -6,7 +6,7 @@ The format is based on [[https://keepachangelog.com/en/1.0.0/][Keep a Changelog]
 [[https://semver.org/spec/v2.0.0.html][Semantic Versioning]].
 
 
-* [0.8.0] - 2019-??-??
+* [0.8.0] - 2019-09-11
 
 ** Added
 
