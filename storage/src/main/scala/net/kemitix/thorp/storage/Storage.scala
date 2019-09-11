@@ -1,6 +1,7 @@
 package net.kemitix.thorp.storage
 
 import net.kemitix.thorp.domain._
+import net.kemitix.thorp.uishell.UploadEventListener
 import zio.{RIO, Task, UIO, ZIO}
 
 trait Storage {

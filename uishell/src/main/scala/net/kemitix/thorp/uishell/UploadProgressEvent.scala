@@ -1,4 +1,4 @@
-package net.kemitix.thorp.domain
+package net.kemitix.thorp.uishell
 
 sealed trait UploadProgressEvent {
   def name: String

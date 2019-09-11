@@ -11,21 +11,20 @@ import net.kemitix.thorp.domain.StorageEvent.{
   ErrorEvent,
   UploadEvent
 }
-import net.kemitix.thorp.domain.UploadProgressEvent.{
-  ByteTransferEvent,
-  RequestEvent,
-  TransferEvent
-}
 import net.kemitix.thorp.domain.{
   Bucket,
   LocalFile,
   MD5Hash,
   RemoteKey,
-  StorageEvent,
-  UploadEventListener,
-  UploadProgressEvent
+  StorageEvent
 }
 import net.kemitix.thorp.storage.aws.Uploader.Request
+import net.kemitix.thorp.uishell.UploadProgressEvent.{
+  ByteTransferEvent,
+  RequestEvent,
+  TransferEvent
+}
+import net.kemitix.thorp.uishell.{UploadEventListener, UploadProgressEvent}
 import zio.UIO
 
 trait Uploader {

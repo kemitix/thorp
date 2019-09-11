@@ -13,7 +13,7 @@ import net.kemitix.thorp.domain._
 import net.kemitix.thorp.filesystem.{FileSystem, Hasher}
 import net.kemitix.thorp.lib.FileScanner.Hashes
 import net.kemitix.thorp.storage.Storage
-import net.kemitix.throp.uishell.UIEvent
+import net.kemitix.thorp.uishell.UIEvent
 import zio._
 import zio.clock.Clock
 
@@ -98,7 +98,7 @@ object LocalFileSystem extends LocalFileSystem {
         bytesCounter  <- bytesCounterRef.update(_ + action.size)
         _             <- uiActionChosen(uiChannel)(action)
         sequencedAction = SequencedAction(action, actionCounter)
-        event <- archive.update(sequencedAction, bytesCounter)
+        event <- archive.update(uiChannel, sequencedAction, bytesCounter)
         _     <- eventsRef.update(list => event :: list)
         _     <- uiActionFinished(uiChannel)(action, actionCounter, bytesCounter)
       } yield ()
@@ -242,7 +242,7 @@ object LocalFileSystem extends LocalFileSystem {
               _            <- uiActionChosen(uiChannel)(action)
               bytesCounter <- bytesCounterRef.update(_ + action.size)
               sequencedAction = SequencedAction(action, actionCounter)
-              event <- archive.update(sequencedAction, 0L)
+              event <- archive.update(uiChannel, sequencedAction, 0L)
               _     <- eventsRef.update(list => event :: list)
               _ <- uiActionFinished(uiChannel)(action,
                                                actionCounter,

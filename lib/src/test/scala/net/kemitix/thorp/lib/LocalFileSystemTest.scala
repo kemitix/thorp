@@ -3,6 +3,7 @@ package net.kemitix.thorp.lib
 import java.util.concurrent.atomic.AtomicReference
 
 import net.kemitix.eip.zio.MessageChannel
+import net.kemitix.eip.zio.MessageChannel.UChannel
 import net.kemitix.thorp.config.ConfigOption.{
   IgnoreGlobalOptions,
   IgnoreUserOptions
@@ -17,12 +18,17 @@ import net.kemitix.thorp.domain.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.filesystem.{FileSystem, Hasher, Resource}
 import net.kemitix.thorp.storage.Storage
-import net.kemitix.throp.uishell.UIEvent
-import net.kemitix.throp.uishell.UIEvent._
+import net.kemitix.thorp.uishell.UIEvent
+import net.kemitix.thorp.uishell.UIEvent.{
+  ActionChosen,
+  ActionFinished,
+  FileFound,
+  KeyFound
+}
 import org.scalatest.FreeSpec
 import org.scalatest.Matchers._
 import zio.clock.Clock
-import zio.{DefaultRuntime, UIO}
+import zio.{DefaultRuntime, UIO, ZIO}
 
 import scala.collection.MapView
 
@@ -44,12 +50,15 @@ class LocalFileSystemTest extends FreeSpec {
   private val uiEvents = new AtomicReference[List[UIEvent]](List.empty)
   private val actions  = new AtomicReference[List[SequencedAction]](List.empty)
 
-  private def archive: ThorpArchive =
-    (sequencedAction: SequencedAction, _) =>
-      UIO {
-        actions.updateAndGet(l => sequencedAction :: l)
-        StorageEvent.DoNothingEvent(sequencedAction.action.remoteKey)
+  private def archive: ThorpArchive = new ThorpArchive {
+    override def update(uiChannel: UChannel[Any, UIEvent],
+                        sequencedAction: SequencedAction,
+                        totalBytesSoFar: Long)
+      : ZIO[Storage with Config, Nothing, StorageEvent] = UIO {
+      actions.updateAndGet(l => sequencedAction :: l)
+      StorageEvent.DoNothingEvent(sequencedAction.action.remoteKey)
     }
+  }
 
   private val runtime = new DefaultRuntime {}
 

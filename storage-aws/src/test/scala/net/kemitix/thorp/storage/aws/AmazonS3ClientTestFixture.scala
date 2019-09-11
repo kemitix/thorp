@@ -3,6 +3,7 @@ package net.kemitix.thorp.storage.aws
 import net.kemitix.thorp.domain.StorageEvent.ShutdownEvent
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.Storage
+import net.kemitix.thorp.uishell.UploadEventListener
 import org.scalamock.scalatest.MockFactory
 import zio.{RIO, UIO}
 

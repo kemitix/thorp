@@ -1,4 +1,4 @@
-package net.kemitix.throp.uishell
+package net.kemitix.thorp.uishell
 
 import net.kemitix.thorp.domain._
 
@@ -33,5 +33,11 @@ object UIEvent {
       extends UIEvent
 
   case class KeyFound(remoteKey: RemoteKey) extends UIEvent
+
+  case class RequestCycle(localFile: LocalFile,
+                          bytesTransferred: Long,
+                          index: Int,
+                          totalBytesSoFar: Long)
+      extends UIEvent
 
 }

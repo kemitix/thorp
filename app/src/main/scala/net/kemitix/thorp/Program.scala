@@ -15,7 +15,7 @@ import net.kemitix.thorp.domain.StorageEvent.{
 import net.kemitix.thorp.filesystem.{FileSystem, Hasher}
 import net.kemitix.thorp.lib._
 import net.kemitix.thorp.storage.Storage
-import net.kemitix.throp.uishell.{UIEvent, UIShell}
+import net.kemitix.thorp.uishell.{UIEvent, UIShell}
 import zio.clock.Clock
 import zio.{RIO, UIO, ZIO}
 
