@@ -6,6 +6,7 @@ import net.kemitix.thorp.domain.StorageEvent.ShutdownEvent
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.Storage
 import net.kemitix.thorp.storage.Storage.Service
+import net.kemitix.thorp.uishell.UploadEventListener
 import zio.{RIO, UIO}
 
 object S3Storage {

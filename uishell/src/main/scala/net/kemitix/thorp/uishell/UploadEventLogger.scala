@@ -1,8 +1,13 @@
-package net.kemitix.thorp.domain
+package net.kemitix.thorp.uishell
 
-import net.kemitix.thorp.domain.Terminal._
+import net.kemitix.thorp.domain.Terminal.{
+  eraseLineForward,
+  eraseToEndOfScreen,
+  progressBar
+}
+import net.kemitix.thorp.domain.{LocalFile, SizeTranslation, Terminal}
 
-import scala.io.AnsiColor._
+import scala.io.AnsiColor.{GREEN, RESET}
 
 object UploadEventLogger {
 
