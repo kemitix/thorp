@@ -30,6 +30,18 @@ import zio.UIO
 trait Uploader {
 
   def upload(transferManager: => AmazonTransferManager)(
+      request: Request): UIO[StorageEvent]
+
+}
+
+object Uploader extends Uploader {
+  final case class Request(
+      localFile: LocalFile,
+      bucket: Bucket,
+      uploadEventListener: UploadEventListener.Settings
+  )
+
+  override def upload(transferManager: => AmazonTransferManager)(
       request: Request): UIO[StorageEvent] =
     transfer(transferManager)(request)
       .catchAll(handleError(request.localFile.remoteKey))
@@ -104,13 +116,4 @@ trait Uploader {
             }
           }
     }
-
-}
-
-object Uploader extends Uploader {
-  final case class Request(
-      localFile: LocalFile,
-      bucket: Bucket,
-      uploadEventListener: UploadEventListener.Settings
-  )
 }
