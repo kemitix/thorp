@@ -20,12 +20,14 @@ object AmazonTransferManager {
     def upload: PutObjectRequest => UIO[InProgress] =
       putObjectRequest =>
         transfer(transferManager, putObjectRequest)
-          .catchAll(e => UIO(InProgress.Errored(e)))
+          .mapError(e => InProgress.Errored(e))
+          .catchAll(e => UIO(e))
 
   }
 
   private def transfer(transferManager: TransferManager,
                        putObjectRequest: PutObjectRequest): Task[InProgress] =
-    ZIO(transferManager.upload(putObjectRequest))
+    ZIO
+      .effect(transferManager.upload(putObjectRequest))
       .map(InProgress.CompletableUpload)
 }
