@@ -35,19 +35,30 @@ trait UnversionedMirrorArchive extends ThorpArchive {
       localFile: LocalFile
   ) =
     for {
-      batchMode <- Config.batchMode
-      upload <- Storage.upload(
-        localFile,
-        bucket,
-        UploadEventListener.Settings(
-          uiChannel: UChannel[Any, UIEvent],
-          localFile,
-          index,
-          totalBytesSoFar,
-          batchMode
-        )
-      )
+      settings <- listenerSettings(uiChannel,
+                                   index,
+                                   totalBytesSoFar,
+                                   bucket,
+                                   localFile)
+      upload <- Storage.upload(localFile, bucket, settings)
     } yield upload
+
+  private def listenerSettings(
+      uiChannel: UChannel[Any, UIEvent],
+      index: Int,
+      totalBytesSoFar: Long,
+      bucket: Bucket,
+      localFile: LocalFile
+  ) =
+    for {
+      batchMode <- Config.batchMode
+    } yield
+      UploadEventListener.Settings(uiChannel,
+                                   localFile,
+                                   index,
+                                   totalBytesSoFar,
+                                   batchMode)
+
 }
 
 object UnversionedMirrorArchive extends UnversionedMirrorArchive
