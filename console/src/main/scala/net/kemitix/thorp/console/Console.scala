@@ -16,6 +16,7 @@ object Console {
   trait Service {
     def putMessageLn(line: ConsoleOut): ZIO[Console, Nothing, Unit]
     def putStrLn(line: String): ZIO[Console, Nothing, Unit]
+    def putStr(line: String): ZIO[Console, Nothing, Unit]
   }
 
   trait Live extends Console {
@@ -24,9 +25,15 @@ object Console {
         putStrLn(line.en)
       override def putStrLn(line: String): ZIO[Console, Nothing, Unit] =
         putStrLnPrintStream(SConsole.out)(line)
+      override def putStr(line: String): ZIO[Console, Nothing, Unit] =
+        putStrPrintStream(SConsole.out)(line)
       final def putStrLnPrintStream(stream: PrintStream)(
           line: String): ZIO[Console, Nothing, Unit] =
         UIO(SConsole.withOut(stream)(SConsole.println(line)))
+      final def putStrPrintStream(stream: PrintStream)(
+          line: String): ZIO[Console, Nothing, Unit] =
+        UIO(SConsole.withOut(stream)(SConsole.print(line)))
+
     }
   }
 
@@ -46,6 +53,10 @@ object Console {
         ZIO.succeed(())
       }
 
+      override def putStr(line: String): ZIO[Console, Nothing, Unit] = {
+        val _ = output.accumulateAndGet(List(line), (a, b) => a ++ b)
+        ZIO.succeed(())
+      }
     }
   }
 
@@ -56,6 +67,9 @@ object Console {
 
   final def putStrLn(line: String): ZIO[Console, Nothing, Unit] =
     ZIO.accessM(_.console putStrLn line)
+
+  final def putStr(line: String): ZIO[Console, Nothing, Unit] =
+    ZIO.accessM(_.console.putStr(line))
 
   final def putMessageLn(line: ConsoleOut): ZIO[Console, Nothing, Unit] =
     ZIO.accessM(_.console putMessageLn line)
