@@ -18,6 +18,7 @@ import net.kemitix.thorp.domain.{
   RemoteKey,
   StorageEvent
 }
+import net.kemitix.thorp.storage.aws.AmazonUpload.InProgress
 import net.kemitix.thorp.storage.aws.Uploader.Request
 import net.kemitix.thorp.uishell.UploadProgressEvent.{
   ByteTransferEvent,
@@ -44,26 +45,27 @@ object Uploader extends Uploader {
   override def upload(transferManager: => AmazonTransferManager)(
       request: Request): UIO[StorageEvent] =
     transfer(transferManager)(request)
-      .catchAll(handleError(request.localFile.remoteKey))
-
-  private def handleError(remoteKey: RemoteKey)(
-      e: Throwable): UIO[StorageEvent] =
-    UIO(ErrorEvent(ActionSummary.Upload(remoteKey.key), remoteKey, e))
 
   private def transfer(transferManager: => AmazonTransferManager)(
       request: Request
   ) =
-    dispatch(transferManager)(putObjectRequest(request))
+    dispatch(transferManager)(putObjectRequest(request),
+                              request.localFile.remoteKey)
 
   private def dispatch(transferManager: AmazonTransferManager)(
-      putObjectRequest: PutObjectRequest
-  ) = {
+      putObjectRequest: PutObjectRequest,
+      remoteKey: RemoteKey
+  ): UIO[StorageEvent] = {
     transferManager
       .upload(putObjectRequest)
-      .map(_.waitForUploadResult)
-      .map(uploadResult =>
-        UploadEvent(RemoteKey(uploadResult.getKey),
-                    MD5Hash(uploadResult.getETag)))
+      .map {
+        case InProgress.Errored(e) =>
+          ErrorEvent(ActionSummary.Upload(remoteKey.key), remoteKey, e)
+        case InProgress.CompletableUpload(upload) =>
+          val uploadResult = upload.waitForUploadResult()
+          UploadEvent(RemoteKey(uploadResult.getKey),
+                      MD5Hash(uploadResult.getETag))
+      }
   }
 
   private def putObjectRequest(
