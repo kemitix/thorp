@@ -29,7 +29,7 @@ object UIShell {
         case UIEvent.RemoteDataFetched(size) => remoteDataFetched(size)
         case UIEvent.ShowSummary(counters)   => showSummary(counters)
         case UIEvent.FileFound(localFile)    => fileFound(localFile)
-        case UIEvent.ActionChosen(action)    => UIO(())
+        case UIEvent.ActionChosen(action)    => actionChosen(action)
         case UIEvent.AwaitingAnotherUpload(remoteKey, hash) =>
           awaitingUpload(remoteKey, hash)
         case UIEvent.AnotherUploadWaitComplete(action) =>
@@ -110,5 +110,18 @@ object UIShell {
           progressBar(bytesTransferred, fileLength, Terminal.width) +
           s"${Terminal.cursorPrevLine(statusHeight)}")
     }
+
+  private def actionAsString(action: Action): String = action match {
+    case Action.DoNothing(bucket, remoteKey, size) =>
+      s"Do nothing: ${remoteKey.key}"
+    case ToUpload(bucket, localFile, size) => s"Upload: ${localFile.remoteKey}"
+    case Action.ToCopy(bucket, sourceKey, hash, targetKey, size) =>
+      s"Copy: ${sourceKey.key} => ${targetKey.key}"
+    case Action.ToDelete(bucket, remoteKey, size) => s"Delete: ${remoteKey.key}"
+  }
+
+  def actionChosen(action: Action): ZIO[Console with Config, Nothing, Unit] = {
+    Console.putStr(actionAsString(action) + eraseLineForward + "\r")
+  }
 
 }
