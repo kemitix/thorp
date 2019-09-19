@@ -5,6 +5,7 @@ import com.amazonaws.services.s3.model.{
   ListObjectsV2Result,
   S3ObjectSummary
 }
+import net.kemitix.thorp.console.Console
 import net.kemitix.thorp.domain.{Bucket, RemoteKey, RemoteObjects}
 import net.kemitix.thorp.storage.Storage
 import net.kemitix.thorp.storage.aws.S3ObjectsByHash.byHash
@@ -21,7 +22,7 @@ trait Lister {
   def listObjects(amazonS3: AmazonS3.Client)(
       bucket: Bucket,
       prefix: RemoteKey
-  ): RIO[Storage, RemoteObjects] = {
+  ): RIO[Storage with Console, RemoteObjects] = {
 
     def request =
       new ListObjectsV2Request()
@@ -31,16 +32,19 @@ trait Lister {
     def requestMore: Token => ListObjectsV2Request =
       token => request.withContinuationToken(token)
 
-    def fetchBatch: ListObjectsV2Request => Task[Batch] =
-      request => tryFetchBatch(amazonS3)(request)
+    def fetchBatch: ListObjectsV2Request => RIO[Console, Batch] =
+      request =>
+        for {
+          _     <- Console.putStrLn("Fetching remote summaries...")
+          batch <- tryFetchBatch(amazonS3)(request)
+        } yield batch
 
-    def fetchMore: Option[Token] => Task[LazyList[S3ObjectSummary]] = {
+    def fetchMore: Option[Token] => RIO[Console, LazyList[S3ObjectSummary]] = {
       case None        => RIO.succeed(LazyList.empty)
       case Some(token) => fetch(requestMore(token))
     }
 
-    def fetch: ListObjectsV2Request => Task[LazyList[S3ObjectSummary]] =
-
+    def fetch: ListObjectsV2Request => RIO[Console, LazyList[S3ObjectSummary]] =
       request =>
         for {
           batch <- fetchBatch(request)

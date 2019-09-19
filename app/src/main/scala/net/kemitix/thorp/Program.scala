@@ -52,7 +52,7 @@ trait Program {
     : ZIO[Any,
           Nothing,
           MessageChannel.ESender[
-            Storage with Config with FileSystem with Hasher with Clock with FileScanner,
+            Storage with Config with FileSystem with Hasher with Clock with FileScanner with Console,
             Throwable,
             UIEvent]] = UIO { uiChannel =>
     (for {
