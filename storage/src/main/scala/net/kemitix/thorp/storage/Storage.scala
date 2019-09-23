@@ -1,5 +1,6 @@
 package net.kemitix.thorp.storage
 
+import net.kemitix.thorp.console.Console
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.uishell.UploadEventListener
 import zio.{RIO, Task, UIO, ZIO}
@@ -14,7 +15,7 @@ object Storage {
     def listObjects(
         bucket: Bucket,
         prefix: RemoteKey
-    ): RIO[Storage, RemoteObjects]
+    ): RIO[Storage with Console, RemoteObjects]
 
     def upload(
         localFile: LocalFile,
@@ -83,7 +84,7 @@ object Storage {
   object Test extends Test
 
   final def list(bucket: Bucket,
-                 prefix: RemoteKey): RIO[Storage, RemoteObjects] =
+                 prefix: RemoteKey): RIO[Storage with Console, RemoteObjects] =
     ZIO.accessM(_.storage listObjects (bucket, prefix))
 
   final def upload(

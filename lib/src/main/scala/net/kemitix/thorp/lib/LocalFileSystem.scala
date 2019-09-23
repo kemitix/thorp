@@ -100,7 +100,10 @@ object LocalFileSystem extends LocalFileSystem {
         sequencedAction = SequencedAction(action, actionCounter)
         event <- archive.update(uiChannel, sequencedAction, bytesCounter)
         _     <- eventsRef.update(list => event :: list)
-        _     <- uiActionFinished(uiChannel)(action, actionCounter, bytesCounter)
+        _ <- uiActionFinished(uiChannel)(action,
+                                         actionCounter,
+                                         bytesCounter,
+                                         event)
       } yield ()
     }
 
@@ -112,9 +115,11 @@ object LocalFileSystem extends LocalFileSystem {
   private def uiActionFinished(uiChannel: UChannel[Any, UIEvent])(
       action: Action,
       actionCounter: Int,
-      bytesCounter: Long
+      bytesCounter: Long,
+      event: StorageEvent
   ) =
-    Message.create(UIEvent.ActionFinished(action, actionCounter, bytesCounter)) >>=
+    Message.create(
+      UIEvent.ActionFinished(action, actionCounter, bytesCounter, event)) >>=
       MessageChannel.send(uiChannel)
 
   private def uiFileFound(uiChannel: UChannel[Any, UIEvent])(
@@ -246,7 +251,8 @@ object LocalFileSystem extends LocalFileSystem {
               _     <- eventsRef.update(list => event :: list)
               _ <- uiActionFinished(uiChannel)(action,
                                                actionCounter,
-                                               bytesCounter)
+                                               bytesCounter,
+                                               event)
             } yield ()
           }
         } yield ()

@@ -337,7 +337,7 @@ class LocalFileSystemTest extends FreeSpec {
           String.format("action chosen : %s : %s",
                         action.remoteKey.key,
                         action.getClass.getSimpleName)
-        case ActionFinished(action, actionCounter, bytesCounter) =>
+        case ActionFinished(action, actionCounter, bytesCounter, event) =>
           String.format("action finished : %s : %s",
                         action.remoteKey.key,
                         action.getClass.getSimpleName)

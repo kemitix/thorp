@@ -5,6 +5,7 @@ import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.console.ConsoleOut.{
   CopyComplete,
   DeleteComplete,
+  ErrorQueueEventOccurred,
   UploadComplete
 }
 import net.kemitix.thorp.console.{Console, ConsoleOut}
@@ -29,13 +30,14 @@ object UIShell {
         case UIEvent.RemoteDataFetched(size) => remoteDataFetched(size)
         case UIEvent.ShowSummary(counters)   => showSummary(counters)
         case UIEvent.FileFound(localFile)    => fileFound(localFile)
-        case UIEvent.ActionChosen(action)    => UIO(())
+        case UIEvent.ActionChosen(action)    => actionChosen(action)
         case UIEvent.AwaitingAnotherUpload(remoteKey, hash) =>
           awaitingUpload(remoteKey, hash)
         case UIEvent.AnotherUploadWaitComplete(action) =>
           uploadWaitComplete(action)
-        case UIEvent.ActionFinished(action, _, _) => actionFinished(action)
-        case UIEvent.KeyFound(_)                  => UIO(())
+        case UIEvent.ActionFinished(_, _, _, event) =>
+          actionFinished(event)
+        case UIEvent.KeyFound(_) => UIO(())
         case UIEvent.RequestCycle(localFile,
                                   bytesTransferred,
                                   index,
@@ -45,17 +47,20 @@ object UIShell {
     }
 
   private def actionFinished(
-      action: Action): ZIO[Console with Config, Nothing, Unit] =
+      event: StorageEvent): ZIO[Console with Config, Nothing, Unit] =
     for {
       batchMode <- Config.batchMode
-      _ <- action match {
-        case _: Action.DoNothing => UIO(())
-        case ToUpload(_, localFile, _) =>
-          Console.putMessageLnB(UploadComplete(localFile.remoteKey), batchMode)
-        case Action.ToCopy(_, sourceKey, _, targetKey, _) =>
+      _ <- event match {
+        case StorageEvent.DoNothingEvent(remoteKey) => UIO.unit
+        case StorageEvent.CopyEvent(sourceKey, targetKey) =>
           Console.putMessageLnB(CopyComplete(sourceKey, targetKey), batchMode)
-        case Action.ToDelete(_, remoteKey, _) =>
+        case StorageEvent.UploadEvent(remoteKey, md5Hash) =>
+          Console.putMessageLnB(UploadComplete(remoteKey), batchMode)
+        case StorageEvent.DeleteEvent(remoteKey) =>
           Console.putMessageLnB(DeleteComplete(remoteKey), batchMode)
+        case StorageEvent.ErrorEvent(action, remoteKey, e) =>
+          Console.putMessageLnB(ErrorQueueEventOccurred(action, e), batchMode)
+        case StorageEvent.ShutdownEvent() => UIO.unit
       }
     } yield ()
 
@@ -110,5 +115,27 @@ object UIShell {
           progressBar(bytesTransferred, fileLength, Terminal.width) +
           s"${Terminal.cursorPrevLine(statusHeight)}")
     }
+
+  private def actionAsString(action: Action): String = action match {
+    case Action.DoNothing(bucket, remoteKey, size) =>
+      s"Do nothing: ${remoteKey.key}"
+    case ToUpload(bucket, localFile, size) => s"Upload: ${localFile.remoteKey}"
+    case Action.ToCopy(bucket, sourceKey, hash, targetKey, size) =>
+      s"Copy: ${sourceKey.key} => ${targetKey.key}"
+    case Action.ToDelete(bucket, remoteKey, size) => s"Delete: ${remoteKey.key}"
+  }
+
+  def trimHeadTerminal(str: String): String = {
+    val width = Terminal.width
+    str.length match {
+      case l if l > width => str.substring(l - width)
+      case _              => str
+    }
+  }
+
+  def actionChosen(action: Action): ZIO[Console with Config, Nothing, Unit] = {
+    Console.putStr(
+      trimHeadTerminal(actionAsString(action)) + eraseLineForward + "\r")
+  }
 
 }

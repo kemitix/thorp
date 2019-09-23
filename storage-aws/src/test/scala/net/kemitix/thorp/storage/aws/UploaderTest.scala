@@ -16,7 +16,7 @@ import net.kemitix.thorp.domain.StorageEvent.{
 import net.kemitix.thorp.domain._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.FreeSpec
-import zio.{DefaultRuntime, Task}
+import zio.{DefaultRuntime, Task, UIO}
 import net.kemitix.thorp.filesystem.Resource
 import net.kemitix.thorp.uishell.{UIEvent, UploadEventListener}
 
@@ -35,18 +35,19 @@ class UploaderTest extends FreeSpec with MockFactory {
     val uploadResult  = new UploadResult
     uploadResult.setKey(remoteKey.key)
     uploadResult.setETag(MD5Hash.hash(aHash))
-    val inProgress = new AmazonUpload.InProgress {
-      override def waitForUploadResult: UploadResult = uploadResult
-    }
     val listenerSettings =
       UploadEventListener.Settings(uiChannel, localFile, 0, 0, batchMode = true)
     "when no error" in {
       val expected =
         Right(UploadEvent(remoteKey, aHash))
+      val inProgress = new AmazonUpload.InProgress {
+        override def waitForUploadResult: Task[UploadResult] =
+          Task(uploadResult)
+      }
       new AmazonS3ClientTestFixture {
         (fixture.amazonS3TransferManager.upload _)
           .when()
-          .returns(_ => Task.succeed(inProgress))
+          .returns(_ => UIO.succeed(inProgress))
         private val result =
           invoke(fixture.amazonS3TransferManager)(
             localFile,
@@ -61,10 +62,14 @@ class UploaderTest extends FreeSpec with MockFactory {
       val expected =
         Right(
           ErrorEvent(ActionSummary.Upload(remoteKey.key), remoteKey, exception))
+      val inProgress = new AmazonUpload.InProgress {
+        override def waitForUploadResult: Task[UploadResult] =
+          Task.fail(exception)
+      }
       new AmazonS3ClientTestFixture {
         (fixture.amazonS3TransferManager.upload _)
           .when()
-          .returns(_ => Task.fail(exception))
+          .returns(_ => UIO.succeed(inProgress))
         private val result =
           invoke(fixture.amazonS3TransferManager)(
             localFile,
@@ -79,10 +84,14 @@ class UploaderTest extends FreeSpec with MockFactory {
       val expected =
         Right(
           ErrorEvent(ActionSummary.Upload(remoteKey.key), remoteKey, exception))
+      val inProgress = new AmazonUpload.InProgress {
+        override def waitForUploadResult: Task[UploadResult] =
+          Task.fail(exception)
+      }
       new AmazonS3ClientTestFixture {
         (fixture.amazonS3TransferManager.upload _)
           .when()
-          .returns(_ => Task.fail(exception))
+          .returns(_ => UIO.succeed(inProgress))
         private val result =
           invoke(fixture.amazonS3TransferManager)(
             localFile,
@@ -97,14 +106,15 @@ class UploaderTest extends FreeSpec with MockFactory {
         bucket: Bucket,
         listenerSettings: UploadEventListener.Settings
     ) = {
-      type TestEnv = Config
-      val testEnv: TestEnv = Config.Live
-      new DefaultRuntime {}.unsafeRunSync {
-        Uploader
-          .upload(transferManager)(
-            Uploader.Request(localFile, bucket, listenerSettings))
-          .provide(testEnv)
-      }.toEither
+      val program = Uploader
+        .upload(transferManager)(
+          Uploader.Request(localFile, bucket, listenerSettings))
+      val runtime = new DefaultRuntime {}
+      runtime
+        .unsafeRunSync(
+          program
+            .provide(Config.Live))
+        .toEither
     }
   }
 

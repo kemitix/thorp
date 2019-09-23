@@ -62,8 +62,8 @@ object ConsoleOut {
   final case class ErrorQueueEventOccurred(action: ActionSummary, e: Throwable)
       extends ConsoleOut.WithBatchMode {
     override def en: String =
-      s"${action.name} failed: ${action.keys}: ${e.getMessage}"
-    override def enBatch: String =
       s"${RED}ERROR:$RESET ${action.name} ${action.keys}: ${e.getMessage}$eraseToEndOfScreen"
+    override def enBatch: String =
+      s"${action.name} failed: ${action.keys}: ${e.getMessage}"
   }
 }
