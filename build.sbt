@@ -57,15 +57,15 @@ val awsSdkDependencies = Seq(
   libraryDependencies ++= Seq(
     "com.amazonaws" % "aws-java-sdk-s3" % "1.11.635",
     // override the versions AWS uses, which is they do to preserve Java 6 compatibility
-    "com.fasterxml.jackson.core" % "jackson-databind" % "2.9.9.3",
-    "com.fasterxml.jackson.dataformat" % "jackson-dataformat-cbor" % "2.9.10",
+    "com.fasterxml.jackson.core" % "jackson-databind" % "2.9.10",
+    "com.fasterxml.jackson.dataformat" % "jackson-dataformat-cbor" % "2.9.9",
     "javax.xml.bind" % "jaxb-api" % "2.3.1"
   )
 )
 val zioDependencies = Seq(
   libraryDependencies ++= Seq (
-    "dev.zio" %% "zio" % "1.0.0-RC12-1",
-    "dev.zio" %% "zio-streams" % "1.0.0-RC12-1"
+    "dev.zio" %% "zio" % "1.0.0-RC13",
+    "dev.zio" %% "zio-streams" % "1.0.0-RC13"
   )
 )
 
