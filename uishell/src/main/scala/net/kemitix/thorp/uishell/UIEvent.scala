@@ -29,7 +29,8 @@ object UIEvent {
 
   case class ActionFinished(action: Action,
                             actionCounter: Int,
-                            bytesCounter: Long)
+                            bytesCounter: Long,
+                            event: StorageEvent)
       extends UIEvent
 
   case class KeyFound(remoteKey: RemoteKey) extends UIEvent
