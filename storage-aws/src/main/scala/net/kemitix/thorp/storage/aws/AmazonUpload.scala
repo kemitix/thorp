@@ -6,7 +6,8 @@ import zio.Task
 
 object AmazonUpload {
 
-  sealed trait InProgress {
+  // unsealed for testing :(
+  trait InProgress {
     def waitForUploadResult: Task[UploadResult]
   }
 
