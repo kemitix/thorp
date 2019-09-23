@@ -11,14 +11,7 @@ import net.kemitix.thorp.domain.StorageEvent.{
   ErrorEvent,
   UploadEvent
 }
-import net.kemitix.thorp.domain.{
-  Bucket,
-  LocalFile,
-  MD5Hash,
-  RemoteKey,
-  StorageEvent
-}
-import net.kemitix.thorp.storage.aws.AmazonUpload.InProgress
+import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.aws.Uploader.Request
 import net.kemitix.thorp.uishell.UploadProgressEvent.{
   ByteTransferEvent,
@@ -30,56 +23,48 @@ import zio.UIO
 
 trait Uploader {
 
-  def upload(transferManager: => AmazonTransferManager)(
-      request: Request): UIO[StorageEvent]
+  def upload(
+      transferManager: => AmazonTransferManager
+  )(request: Request): UIO[StorageEvent] =
+    transfer(
+      transferManager,
+      putObjectRequest(request),
+      request.localFile.remoteKey
+    )
 
-}
-
-object Uploader extends Uploader {
-  final case class Request(
-      localFile: LocalFile,
-      bucket: Bucket,
-      uploadEventListener: UploadEventListener.Settings
-  )
-
-  override def upload(transferManager: => AmazonTransferManager)(
-      request: Request): UIO[StorageEvent] =
-    transfer(transferManager)(request)
-
-  private def transfer(transferManager: => AmazonTransferManager)(
-      request: Request
-  ) =
-    dispatch(transferManager)(putObjectRequest(request),
-                              request.localFile.remoteKey)
-
-  private def dispatch(transferManager: AmazonTransferManager)(
-      putObjectRequest: PutObjectRequest,
-      remoteKey: RemoteKey
-  ): UIO[StorageEvent] = {
+  private def transfer(transferManager: AmazonTransferManager,
+                       putObjectRequest: PutObjectRequest,
+                       remoteKey: RemoteKey): UIO[StorageEvent] = {
     transferManager
       .upload(putObjectRequest)
-      .map {
-        case InProgress.Errored(e) =>
-          ErrorEvent(ActionSummary.Upload(remoteKey.key), remoteKey, e)
-        case InProgress.CompletableUpload(upload) =>
-          val uploadResult = upload.waitForUploadResult()
-          UploadEvent(RemoteKey(uploadResult.getKey),
-                      MD5Hash(uploadResult.getETag))
-      }
+      .flatMap(_.waitForUploadResult)
+      .map(
+        uploadResult =>
+          UploadEvent(
+            RemoteKey(uploadResult.getKey),
+            MD5Hash(uploadResult.getETag)
+        )
+      )
+      .catchAll(handleError(remoteKey))
   }
 
-  private def putObjectRequest(
-      request: Request
-  ) = {
+  private def handleError(
+      remoteKey: RemoteKey
+  )(e: Throwable): UIO[StorageEvent] =
+    UIO(ErrorEvent(ActionSummary.Upload(remoteKey.key), remoteKey, e))
+
+  private def putObjectRequest(request: Request) = {
     val putRequest =
-      new PutObjectRequest(request.bucket.name,
-                           request.localFile.remoteKey.key,
-                           request.localFile.file)
-        .withMetadata(metadata(request.localFile))
+      new PutObjectRequest(
+        request.bucket.name,
+        request.localFile.remoteKey.key,
+        request.localFile.file
+      ).withMetadata(metadata(request.localFile))
     if (request.uploadEventListener.batchMode) putRequest
     else
       putRequest.withGeneralProgressListener(
-        progressListener(request.uploadEventListener))
+        progressListener(request.uploadEventListener)
+      )
   }
 
   private def metadata: LocalFile => ObjectMetadata = localFile => {
@@ -112,10 +97,19 @@ object Uploader extends Uploader {
               case e: ProgressEvent if isByteTransfer(e) =>
                 ByteTransferEvent(e.getEventType.name)
               case e: ProgressEvent =>
-                RequestEvent(e.getEventType.name,
-                             e.getBytes,
-                             e.getBytesTransferred)
+                RequestEvent(
+                  e.getEventType.name,
+                  e.getBytes,
+                  e.getBytesTransferred
+                )
             }
           }
     }
+
+}
+
+object Uploader extends Uploader {
+  final case class Request(localFile: LocalFile,
+                           bucket: Bucket,
+                           uploadEventListener: UploadEventListener.Settings)
 }
