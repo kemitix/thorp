@@ -6,6 +6,23 @@ The format is based on [[https://keepachangelog.com/en/1.0.0/][Keep a Changelog]
 [[https://semver.org/spec/v2.0.0.html][Semantic Versioning]].
 
 
+* [0.8.1] - 2019-09-23
+
+** Fixed
+
+   - Not wrapping exceptions thrown in waitForUploadResult (#162)
+
+** Dependencies
+
+   - Update ~jackson-dataformat-cbor~ to ~2.9.10~ (#208)
+   - Update ~jackson-databind~ to ~2.9.10~ (#206)
+   - Update ~sbt~ to ~1.3.2~ (#207)
+   - Update ~zio, zio-streams~ to 1.0.0-RC13~ (#209)
+   - Update ~aws-java-sdk-s3~ to ~1.11.635~ (#203)
+   - Update ~sbt~ to ~1.3.1~ (#204)
+   - Update ~sbt-wartremover~ to ~2.4.3~ (#202)
+   - Update ~sbt-ci-release~ to ~1.3.2~ (#200)
+
 * [0.8.0] - 2019-09-11
 
 ** Added
