@@ -37,6 +37,9 @@ object CliArgs {
       opt[String]('p', "prefix")
         .action((str, cos) => ConfigOption.Prefix(str) :: cos)
         .text("Prefix within the S3 Bucket"),
+      opt[Int]('P', "parallel")
+        .action((int, cos) => ConfigOption.Parallel(int) :: cos)
+        .text("Maximum Parallel uploads"),
       opt[String]('i', "include")
         .unbounded()
         .action((str, cos) => ConfigOption.Include(str) :: cos)
