@@ -20,7 +20,7 @@ object FileSystem {
       : RIO[FileSystem, ZManaged[Any, Throwable, FileInputStream]]
     def fileLines(file: File): RIO[FileSystem, Seq[String]]
     def isDirectory(file: File): RIO[FileSystem, Boolean]
-    def listFiles(path: Path): RIO[FileSystem, Iterable[File]]
+    def listFiles(path: Path): UIO[List[File]]
     def length(file: File): ZIO[FileSystem, Nothing, Long]
     def hasLocalFile(sources: Sources,
                      prefix: RemoteKey,
@@ -58,8 +58,9 @@ object FileSystem {
       override def isDirectory(file: File): RIO[FileSystem, Boolean] =
         Task(file.isDirectory)
 
-      override def listFiles(path: Path): RIO[FileSystem, Iterable[File]] =
-        Task(path.toFile.listFiles())
+      override def listFiles(path: Path): UIO[List[File]] =
+        Task(List.from(path.toFile.listFiles()))
+          .catchAll(_ => UIO.succeed(List.empty[File]))
 
       override def length(file: File): ZIO[FileSystem, Nothing, Long] =
         UIO(file.length)
@@ -84,7 +85,7 @@ object FileSystem {
     val fileExistsResultMap: UIO[Map[Path, File]]
     val fileLinesResult: Task[List[String]]
     val isDirResult: Task[Boolean]
-    val listFilesResult: RIO[FileSystem, Iterable[File]]
+    val listFilesResult: UIO[List[File]]
     val lengthResult: UIO[Long]
     val managedFileInputStream: Task[ZManaged[Any, Throwable, FileInputStream]]
     val hasLocalFileResult: UIO[Boolean]
@@ -104,7 +105,7 @@ object FileSystem {
       override def isDirectory(file: File): RIO[FileSystem, Boolean] =
         isDirResult
 
-      override def listFiles(path: Path): RIO[FileSystem, Iterable[File]] =
+      override def listFiles(path: Path): UIO[List[File]] =
         listFilesResult
 
       override def length(file: File): UIO[Long] =
@@ -135,7 +136,7 @@ object FileSystem {
   final def isDirectory(file: File): RIO[FileSystem, Boolean] =
     ZIO.accessM(_.filesystem.isDirectory(file))
 
-  final def listFiles(path: Path): RIO[FileSystem, Iterable[File]] =
+  final def listFiles(path: Path): ZIO[FileSystem, Nothing, List[File]] =
     ZIO.accessM(_.filesystem.listFiles(path))
 
   final def length(file: File): ZIO[FileSystem, Nothing, Long] =
