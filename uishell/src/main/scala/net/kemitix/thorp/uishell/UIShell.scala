@@ -97,7 +97,8 @@ object UIShell {
   private def actionAsString(action: Action): String = action match {
     case Action.DoNothing(bucket, remoteKey, size) =>
       s"Do nothing: ${remoteKey.key}"
-    case ToUpload(bucket, localFile, size) => s"Upload: ${localFile.remoteKey}"
+    case ToUpload(bucket, localFile, size) =>
+      s"Upload: ${localFile.remoteKey.key}"
     case Action.ToCopy(bucket, sourceKey, hash, targetKey, size) =>
       s"Copy: ${sourceKey.key} => ${targetKey.key}"
     case Action.ToDelete(bucket, remoteKey, size) => s"Delete: ${remoteKey.key}"
