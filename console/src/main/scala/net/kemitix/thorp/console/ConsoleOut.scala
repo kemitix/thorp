@@ -56,7 +56,7 @@ object ConsoleOut {
     override def en: String =
       s"${GREEN}Deleted:$RESET ${remoteKey.key}$eraseToEndOfScreen"
     override def enBatch: String =
-      s"Deleted: $remoteKey"
+      s"Deleted: ${remoteKey.key}"
   }
 
   final case class ErrorQueueEventOccurred(action: ActionSummary, e: Throwable)

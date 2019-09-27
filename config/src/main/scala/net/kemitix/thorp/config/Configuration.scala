@@ -8,6 +8,7 @@ private[config] final case class Configuration(
     filters: List[Filter],
     debug: Boolean,
     batchMode: Boolean,
+    parallel: Int,
     sources: Sources
 )
 
@@ -18,6 +19,7 @@ private[config] object Configuration {
     filters = List.empty,
     debug = false,
     batchMode = false,
+    parallel = 1,
     sources = Sources(List.empty)
   )
   val sources: SimpleLens[Configuration, Sources] =
@@ -34,4 +36,6 @@ private[config] object Configuration {
   val batchMode: SimpleLens[Configuration, Boolean] =
     SimpleLens[Configuration, Boolean](_.batchMode,
                                        b => a => b.copy(batchMode = a))
+  val parallel: SimpleLens[Configuration, Int] =
+    SimpleLens[Configuration, Int](_.parallel, b => a => b.copy(parallel = a))
 }

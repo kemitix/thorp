@@ -10,16 +10,9 @@ import net.kemitix.thorp.console.ConsoleOut.{
 }
 import net.kemitix.thorp.console.{Console, ConsoleOut}
 import net.kemitix.thorp.domain.Action.ToUpload
-import net.kemitix.thorp.domain.SizeTranslation.sizeInEnglish
-import net.kemitix.thorp.domain.Terminal.{
-  eraseLineForward,
-  eraseToEndOfScreen,
-  progressBar
-}
+import net.kemitix.thorp.domain.Terminal.{eraseLineForward, eraseToEndOfScreen}
 import net.kemitix.thorp.domain._
 import zio.{UIO, ZIO}
-
-import scala.io.AnsiColor.{GREEN, RESET}
 
 object UIShell {
 
@@ -42,7 +35,10 @@ object UIShell {
                                   bytesTransferred,
                                   index,
                                   totalBytesSoFar) =>
-          requestCycle(localFile, bytesTransferred, index, totalBytesSoFar)
+          UIRequestCycle.handle(localFile,
+                                bytesTransferred,
+                                index,
+                                totalBytesSoFar)
       }
     }
 
@@ -98,34 +94,17 @@ object UIShell {
       _       <- Console.putMessageLn(ConsoleOut.ValidConfig(bucket, prefix, sources))
     } yield ()
 
-  private def requestCycle(
-      localFile: LocalFile,
-      bytesTransferred: Long,
-      index: Int,
-      totalBytesSoFar: Long): ZIO[Console with Config, Nothing, Unit] =
-    ZIO.when(bytesTransferred < localFile.file.length()) {
-      val fileLength   = localFile.file.length
-      val remoteKey    = localFile.remoteKey.key
-      val statusHeight = 3
-      val percent      = f"${(bytesTransferred * 100) / fileLength}%2d"
-      Console.putStrLn(
-        s"${GREEN}Uploading:$RESET $remoteKey$eraseToEndOfScreen\n" +
-          s"$GREEN File:$RESET ($percent%) ${sizeInEnglish(bytesTransferred)} of ${sizeInEnglish(fileLength)}" +
-          s"$eraseLineForward\n" +
-          progressBar(bytesTransferred, fileLength, Terminal.width) +
-          s"${Terminal.cursorPrevLine(statusHeight)}")
-    }
-
   private def actionAsString(action: Action): String = action match {
     case Action.DoNothing(bucket, remoteKey, size) =>
       s"Do nothing: ${remoteKey.key}"
-    case ToUpload(bucket, localFile, size) => s"Upload: ${localFile.remoteKey}"
+    case ToUpload(bucket, localFile, size) =>
+      s"Upload: ${localFile.remoteKey.key}"
     case Action.ToCopy(bucket, sourceKey, hash, targetKey, size) =>
       s"Copy: ${sourceKey.key} => ${targetKey.key}"
     case Action.ToDelete(bucket, remoteKey, size) => s"Delete: ${remoteKey.key}"
   }
 
-  def trimHeadTerminal(str: String): String = {
+  def trimHead(str: String): String = {
     val width = Terminal.width
     str.length match {
       case l if l > width => str.substring(l - width)
@@ -133,9 +112,12 @@ object UIShell {
     }
   }
 
-  def actionChosen(action: Action): ZIO[Console with Config, Nothing, Unit] = {
-    Console.putStr(
-      trimHeadTerminal(actionAsString(action)) + eraseLineForward + "\r")
-  }
+  def actionChosen(action: Action): ZIO[Console with Config, Nothing, Unit] =
+    for {
+      batch <- Config.batchMode
+      message = trimHead(actionAsString(action)) + eraseLineForward
+      _ <- ZIO.when(!batch) { Console.putStr(message + "\r") }
+      _ <- ZIO.when(batch) { Console.putStrLn(message) }
+    } yield ()
 
 }

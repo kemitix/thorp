@@ -18,6 +18,7 @@ object Config {
     def prefix: ZIO[Config, Nothing, RemoteKey]
     def sources: ZIO[Config, Nothing, Sources]
     def filters: ZIO[Config, Nothing, List[Filter]]
+    def parallel: UIO[Int]
   }
 
   trait Live extends Config {
@@ -42,6 +43,8 @@ object Config {
 
       override def filters: ZIO[Config, Nothing, List[Filter]] =
         UIO(configRef.get).map(_.filters)
+
+      override def parallel: UIO[Int] = UIO(configRef.get).map(_.parallel)
     }
   }
 
@@ -64,4 +67,7 @@ object Config {
 
   final def filters: ZIO[Config, Nothing, List[Filter]] =
     ZIO.accessM(_.config filters)
+
+  final def parallel: ZIO[Config, Nothing, Int] =
+    ZIO.accessM(_.config parallel)
 }

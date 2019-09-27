@@ -72,6 +72,29 @@ class CliArgsTest extends FunSpec {
     }
   }
 
+  describe("parse - parallel") {
+    def invokeWithArguments(args: List[String]): ConfigOptions = {
+      val strings = List("--source", pathTo("."), "--bucket", "bucket")
+        .concat(args)
+        .filter(_ != "")
+      val maybeOptions = invoke(strings)
+      maybeOptions.getOrElse(ConfigOptions.empty)
+    }
+
+    describe("when no parallel parameter") {
+      val configOptions = invokeWithArguments(List.empty[String])
+      it("should have parallel of 1") {
+        assertResult(1)(ConfigOptions.parallel(configOptions))
+      }
+    }
+    describe("when parallel parameter given") {
+      val configOptions = invokeWithArguments(List("--parallel", "5"))
+      it("should have parallel of 5") {
+        assertResult(5)(ConfigOptions.parallel(configOptions))
+      }
+    }
+  }
+
   private def pathTo(value: String): String =
     Try(Resource(this, value))
       .map(_.getCanonicalPath)

@@ -13,6 +13,15 @@ final case class ConfigOptions(options: List[ConfigOption]) {
 }
 
 object ConfigOptions {
+  val defaultParallel = 1
+  def parallel(configOptions: ConfigOptions): Int = {
+    configOptions.options
+      .collectFirst {
+        case ConfigOption.Parallel(factor) => factor
+      }
+      .getOrElse(defaultParallel)
+  }
+
   val empty: ConfigOptions = ConfigOptions(List.empty)
   val options: SimpleLens[ConfigOptions, List[ConfigOption]] =
     SimpleLens[ConfigOptions, List[ConfigOption]](_.options,

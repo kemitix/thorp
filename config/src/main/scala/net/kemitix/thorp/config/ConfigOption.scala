@@ -65,4 +65,9 @@ object ConfigOption {
     override def update(config: Configuration): Configuration = config
   }
 
+  case class Parallel(factor: Int) extends ConfigOption {
+    override def update(config: Configuration): Configuration =
+      parallel.set(factor)(config)
+  }
+
 }
