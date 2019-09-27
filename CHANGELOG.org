@@ -6,6 +6,18 @@ The format is based on [[https://keepachangelog.com/en/1.0.0/][Keep a Changelog]
 [[https://semver.org/spec/v2.0.0.html][Semantic Versioning]].
 
 
+* [0.9.0] - 2019-09-27
+
+** Added
+
+   - Support multiple parallel uploads (#188)
+
+** Dependencues
+
+   - Update ~jackson-dataformat-cbor~ to ~2.10.0~ (#216)
+   - Update ~jackson-databind~ to ~2.10.0~ (#214)
+   - Update ~sbt-ci-release~ to ~1.4.31~ (#211)
+
 * [0.8.1] - 2019-09-23
 
 ** Fixed
