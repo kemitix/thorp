@@ -18,10 +18,11 @@ import net.kemitix.thorp.storage.Storage
 import net.kemitix.thorp.uishell.{UIEvent, UIShell}
 import zio.clock.Clock
 import zio.{RIO, UIO, ZIO}
+import scala.io.AnsiColor.{WHITE, RESET}
 
 trait Program {
 
-  lazy val version = s"Thorp v${thorp.BuildInfo.version}"
+  lazy val version = s"${WHITE}Thorp v${thorp.BuildInfo.version}$RESET"
 
   def run(args: List[String]): ZIO[
     Storage with Console with Config with Clock with FileSystem with Hasher with FileScanner,
