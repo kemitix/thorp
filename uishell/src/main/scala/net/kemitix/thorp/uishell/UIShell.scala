@@ -103,7 +103,7 @@ object UIShell {
     case Action.ToDelete(bucket, remoteKey, size) => s"Delete: ${remoteKey.key}"
   }
 
-  def trimHeadTerminal(str: String): String = {
+  def trimHead(str: String): String = {
     val width = Terminal.width
     str.length match {
       case l if l > width => str.substring(l - width)
@@ -111,9 +111,12 @@ object UIShell {
     }
   }
 
-  def actionChosen(action: Action): ZIO[Console with Config, Nothing, Unit] = {
-    Console.putStr(
-      trimHeadTerminal(actionAsString(action)) + eraseLineForward + "\r")
-  }
+  def actionChosen(action: Action): ZIO[Console with Config, Nothing, Unit] =
+    for {
+      batch <- Config.batchMode
+      message = trimHead(actionAsString(action)) + eraseLineForward
+      _ <- ZIO.when(!batch) { Console.putStr(message + "\r") }
+      _ <- ZIO.when(batch) { Console.putStrLn(message) }
+    } yield ()
 
 }
