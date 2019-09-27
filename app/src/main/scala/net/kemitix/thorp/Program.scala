@@ -31,7 +31,7 @@ trait Program {
       cli    <- CliArgs.parse(args)
       config <- ConfigurationBuilder.buildConfig(cli)
       _      <- Config.set(config)
-      _      <- ZIO.when(showVersion(cli))(Console.putStrLn(version))
+      _      <- Console.putStrLn(version)
       _      <- ZIO.when(!showVersion(cli))(executeWithUI.catchAll(handleErrors))
     } yield ()
   }
