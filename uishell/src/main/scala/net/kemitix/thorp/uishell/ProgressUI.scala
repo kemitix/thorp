@@ -63,7 +63,7 @@ object ProgressUI {
     } *> Console.putStr(resetCursor)
   }
 
-  private def finishedUploading(
+  def finishedUploading(
       remoteKey: RemoteKey
   ): ZIO[Any, Nothing, Unit] = {
     UIO(uploads.updateAndGet((m: Map[RemoteKey, UploadState]) =>

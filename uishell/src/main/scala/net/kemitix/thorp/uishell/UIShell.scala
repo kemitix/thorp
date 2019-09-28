@@ -55,7 +55,8 @@ object UIShell {
         case StorageEvent.DeleteEvent(remoteKey) =>
           Console.putMessageLnB(DeleteComplete(remoteKey), batchMode)
         case StorageEvent.ErrorEvent(action, remoteKey, e) =>
-          Console.putMessageLnB(ErrorQueueEventOccurred(action, e), batchMode)
+          ProgressUI.finishedUploading(remoteKey) *>
+            Console.putMessageLnB(ErrorQueueEventOccurred(action, e), batchMode)
         case StorageEvent.ShutdownEvent() => UIO.unit
       }
     } yield ()
