@@ -11,7 +11,7 @@ import zio.{UIO, ZIO}
 
 import scala.io.AnsiColor.{GREEN, RESET}
 
-object UIRequestCycle {
+object ProgressUI {
 
   private case class UploadState(transferred: Long, fileLength: Long)
 

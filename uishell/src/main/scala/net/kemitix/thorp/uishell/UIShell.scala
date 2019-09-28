@@ -35,10 +35,7 @@ object UIShell {
                                   bytesTransferred,
                                   index,
                                   totalBytesSoFar) =>
-          UIRequestCycle.handle(localFile,
-                                bytesTransferred,
-                                index,
-                                totalBytesSoFar)
+          ProgressUI.handle(localFile, bytesTransferred, index, totalBytesSoFar)
       }
     }
 
