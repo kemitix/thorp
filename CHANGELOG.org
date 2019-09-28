@@ -6,6 +6,16 @@ The format is based on [[https://keepachangelog.com/en/1.0.0/][Keep a Changelog]
 [[https://semver.org/spec/v2.0.0.html][Semantic Versioning]].
 
 
+* [0.9.1] - 2019-09-28
+
+** Fixed
+
+   - Progress UI should be updated when upload fails (#218)
+
+** Dependencues
+
+   - Update ~aws-java-sdk-s3~ to ~1.11.641~ (#217)
+
 * [0.9.0] - 2019-09-27
 
 ** Added
