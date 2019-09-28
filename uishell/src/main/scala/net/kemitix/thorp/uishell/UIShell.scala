@@ -51,7 +51,8 @@ object UIShell {
         case StorageEvent.CopyEvent(sourceKey, targetKey) =>
           Console.putMessageLnB(CopyComplete(sourceKey, targetKey), batchMode)
         case StorageEvent.UploadEvent(remoteKey, md5Hash) =>
-          Console.putMessageLnB(UploadComplete(remoteKey), batchMode)
+          ProgressUI.finishedUploading(remoteKey) *>
+            Console.putMessageLnB(UploadComplete(remoteKey), batchMode)
         case StorageEvent.DeleteEvent(remoteKey) =>
           Console.putMessageLnB(DeleteComplete(remoteKey), batchMode)
         case StorageEvent.ErrorEvent(action, remoteKey, e) =>
