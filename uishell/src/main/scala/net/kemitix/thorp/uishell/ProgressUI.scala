@@ -20,10 +20,11 @@ object ProgressUI {
 
   private val statusHeight = 3
 
-  def handle(localFile: LocalFile,
-             bytesTransferred: Long,
-             index: Int,
-             totalBytesSoFar: Long): ZIO[Console with Config, Nothing, Unit] =
+  def requestCycle(
+      localFile: LocalFile,
+      bytesTransferred: Long,
+      index: Int,
+      totalBytesSoFar: Long): ZIO[Console with Config, Nothing, Unit] =
     for {
       _ <- ZIO.when(bytesTransferred < localFile.file.length())(
         stillUploading(localFile.remoteKey,
