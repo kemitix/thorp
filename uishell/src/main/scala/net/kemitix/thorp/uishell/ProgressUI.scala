@@ -11,7 +11,7 @@ import zio.{UIO, ZIO}
 
 import scala.io.AnsiColor.{GREEN, RESET}
 
-object UIRequestCycle {
+object ProgressUI {
 
   private case class UploadState(transferred: Long, fileLength: Long)
 
@@ -20,10 +20,11 @@ object UIRequestCycle {
 
   private val statusHeight = 3
 
-  def handle(localFile: LocalFile,
-             bytesTransferred: Long,
-             index: Int,
-             totalBytesSoFar: Long): ZIO[Console with Config, Nothing, Unit] =
+  def requestCycle(
+      localFile: LocalFile,
+      bytesTransferred: Long,
+      index: Int,
+      totalBytesSoFar: Long): ZIO[Console with Config, Nothing, Unit] =
     for {
       _ <- ZIO.when(bytesTransferred < localFile.file.length())(
         stillUploading(localFile.remoteKey,
@@ -62,7 +63,7 @@ object UIRequestCycle {
     } *> Console.putStr(resetCursor)
   }
 
-  private def finishedUploading(
+  def finishedUploading(
       remoteKey: RemoteKey
   ): ZIO[Any, Nothing, Unit] = {
     UIO(uploads.updateAndGet((m: Map[RemoteKey, UploadState]) =>
