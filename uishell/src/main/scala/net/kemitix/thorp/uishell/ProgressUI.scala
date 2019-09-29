@@ -18,7 +18,7 @@ object ProgressUI {
   private val uploads: AtomicReference[Map[RemoteKey, UploadState]] =
     new AtomicReference[Map[RemoteKey, UploadState]](Map.empty)
 
-  private val statusHeight = 3
+  private val statusHeight = 2
 
   def requestCycle(
       localFile: LocalFile,
@@ -53,12 +53,14 @@ object ProgressUI {
         val fileLength  = sizeInEnglish(state.fileLength)
         val line1 =
           s"${GREEN}Uploading:$RESET ${remoteKey.key}$eraseLineForward"
-        val line2 = s"$GREEN File:$RESET ($percent%) $transferred of $fileLength" + s"$eraseLineForward"
-        val line3 =
-          progressBar(state.transferred, state.fileLength, Terminal.width)
+        val line2body = s"($percent%) $transferred of $fileLength "
+        val bar =
+          progressBar(state.transferred,
+                      state.fileLength,
+                      Terminal.width - line2body.length)
+        val line2 = s"$GREEN$line2body$RESET$bar$eraseLineForward"
         Console.putStrLn(line1) *>
-          Console.putStrLn(line2) *>
-          Console.putStrLn(line3)
+          Console.putStrLn(line2)
       }
     } *> Console.putStr(resetCursor)
   }
