@@ -78,7 +78,10 @@ object LocalFileSystem extends LocalFileSystem {
                                  actionCounter,
                                  bytesCounter,
                                  eventsRef)
-      _      <- MessageChannel.pointToPoint(keySender)(keyReceiver).runDrain
+      parallel <- Config.parallel
+      _ <- MessageChannel
+        .pointToPointPar(parallel)(keySender)(keyReceiver)
+        .runDrain
       events <- eventsRef.get
     } yield events
 
