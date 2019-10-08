@@ -50,6 +50,24 @@ class ParseConfigLinesTest extends FunSpec {
         assertResult(expected)(result)
       }
     }
+    describe("parallel") {
+      describe("when valid") {
+        it("should parse") {
+          val expected =
+            Right(ConfigOptions(List(ConfigOption.Parallel(3))))
+          val result = invoke(List("parallel = 3"))
+          assertResult(expected)(result)
+        }
+      }
+      describe("when invalid") {
+        it("should ignore") {
+          val expected =
+            Right(ConfigOptions(List.empty))
+          val result = invoke(List("parallel = invalid"))
+          assertResult(expected)(result)
+        }
+      }
+    }
     describe("debug - true") {
       it("should parse") {
         val expected = Right(ConfigOptions(List(ConfigOption.Debug())))
