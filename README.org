@@ -83,6 +83,6 @@ When considering a local file, the following table governs what should happen:
 
 To build as an executable jar, perform `sbt assembly`
 
-This will create the file `cli/target/scala-2.12/thorp`
+This will create the file `cli/target/scala-2.13/thorp`
 
 Copy this file to your `PATH`.
