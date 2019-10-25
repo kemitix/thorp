@@ -44,6 +44,7 @@ object FileScanner {
         for {
           filters <- Config.filters
           files   <- FileSystem.listFiles(path)
+          cache   <- FileSystem.findCache(path)
           _       <- ZIO.foreach(files)(handleFile(channel, filters))
         } yield ()
 

@@ -25,6 +25,7 @@ object FileSystem {
     def hasLocalFile(sources: Sources,
                      prefix: RemoteKey,
                      remoteKey: RemoteKey): ZIO[FileSystem, Nothing, Boolean]
+    def findCache(directory: Path): ZIO[FileSystem, Nothing, PathCache]
   }
   trait Live extends FileSystem {
     override val filesystem: Service = new Service {
@@ -77,6 +78,14 @@ object FileSystem {
             .map(_ || accExists)
         }
       }
+
+      override def findCache(
+          directory: Path): ZIO[FileSystem, Nothing, PathCache] =
+        for {
+          cacheFile <- UIO(directory.resolve(".thorp.cache").toFile)
+          lines     <- fileLines(cacheFile).catchAll(_ => UIO(List.empty))
+          cache     <- PathCache.fromLines(lines)
+        } yield cache
     }
   }
   object Live extends Live
@@ -89,6 +98,7 @@ object FileSystem {
     val lengthResult: UIO[Long]
     val managedFileInputStream: Task[ZManaged[Any, Throwable, FileInputStream]]
     val hasLocalFileResult: UIO[Boolean]
+    val pathCacheResult: UIO[PathCache]
 
     override val filesystem: Service = new Service {
 
@@ -116,6 +126,9 @@ object FileSystem {
           prefix: RemoteKey,
           remoteKey: RemoteKey): ZIO[FileSystem, Nothing, Boolean] =
         hasLocalFileResult
+
+      override def findCache(directory: Path): UIO[PathCache] =
+        pathCacheResult
     }
   }
 
@@ -147,4 +160,7 @@ object FileSystem {
       prefix: RemoteKey,
       remoteKey: RemoteKey): ZIO[FileSystem, Nothing, Boolean] =
     ZIO.accessM(_.filesystem.hasLocalFile(sources, prefix, remoteKey))
+
+  final def findCache(directory: Path): ZIO[FileSystem, Nothing, PathCache] =
+    ZIO.accessM(_.filesystem.findCache(directory))
 }
