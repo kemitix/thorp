@@ -36,7 +36,7 @@ object RemoteObjects {
 
   def remoteHasHash(
       remoteObjects: RemoteObjects,
-      hashes: Map[HashType, MD5Hash]
+      hashes: Hashes
   ): UIO[Option[(RemoteKey, MD5Hash)]] =
     UIO(remoteObjects.byHash.collectFirst {
       case (hash, key) if (hashes.values.exists(h => h == hash)) => (key, hash)

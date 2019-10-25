@@ -6,14 +6,7 @@ import java.nio.file.Path
 import net.kemitix.eip.zio.MessageChannel.{EChannel, ESender}
 import net.kemitix.eip.zio.{Message, MessageChannel}
 import net.kemitix.thorp.config.Config
-import net.kemitix.thorp.domain.{
-  Filter,
-  HashType,
-  LocalFile,
-  MD5Hash,
-  RemoteKey,
-  Sources
-}
+import net.kemitix.thorp.domain._
 import net.kemitix.thorp.filesystem.{FileSystem, Hasher}
 import zio.clock.Clock
 import zio.{RIO, UIO, ZIO}
@@ -25,7 +18,6 @@ trait FileScanner {
 object FileScanner {
 
   type RemoteHashes = Map[MD5Hash, RemoteKey]
-  type Hashes       = Map[HashType, MD5Hash]
   type ScannedFile  = LocalFile
   type FileSender = ESender[Clock with Hasher with FileSystem with Config,
                             Throwable,

@@ -11,7 +11,6 @@ import net.kemitix.thorp.domain.RemoteObjects.{
 }
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.filesystem.{FileSystem, Hasher}
-import net.kemitix.thorp.lib.FileScanner.Hashes
 import net.kemitix.thorp.storage.Storage
 import net.kemitix.thorp.uishell.UIEvent
 import zio._

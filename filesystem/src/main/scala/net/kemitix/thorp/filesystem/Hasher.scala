@@ -4,7 +4,7 @@ import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicReference
 
 import net.kemitix.thorp.domain.HashType.MD5
-import net.kemitix.thorp.domain.{HashType, MD5Hash}
+import net.kemitix.thorp.domain.Hashes
 import zio.{RIO, ZIO}
 
 /**
@@ -15,27 +15,24 @@ trait Hasher {
 }
 object Hasher {
   trait Service {
-    def hashObject(
-        path: Path): RIO[Hasher with FileSystem, Map[HashType, MD5Hash]]
-    def hashObjectChunk(
-        path: Path,
-        chunkNumber: Long,
-        chunkSize: Long): RIO[Hasher with FileSystem, Map[HashType, MD5Hash]]
+    def hashObject(path: Path): RIO[Hasher with FileSystem, Hashes]
+    def hashObjectChunk(path: Path,
+                        chunkNumber: Long,
+                        chunkSize: Long): RIO[Hasher with FileSystem, Hashes]
     def hex(in: Array[Byte]): RIO[Hasher, String]
     def digest(in: String): RIO[Hasher, Array[Byte]]
   }
   trait Live extends Hasher {
     val hasher: Service = new Service {
-      override def hashObject(
-          path: Path): RIO[FileSystem, Map[HashType, MD5Hash]] =
+      override def hashObject(path: Path): RIO[FileSystem, Hashes] =
         for {
           md5 <- MD5HashGenerator.md5File(path)
         } yield Map(MD5 -> md5)
 
-      override def hashObjectChunk(path: Path,
-                                   chunkNumber: Long,
-                                   chunkSize: Long)
-        : RIO[Hasher with FileSystem, Map[HashType, MD5Hash]] =
+      override def hashObjectChunk(
+          path: Path,
+          chunkNumber: Long,
+          chunkSize: Long): RIO[Hasher with FileSystem, Hashes] =
         for {
           md5 <- MD5HashGenerator.md5FileChunk(path,
                                                chunkNumber * chunkSize,
@@ -52,20 +49,18 @@ object Hasher {
   object Live extends Live
 
   trait Test extends Hasher {
-    val hashes: AtomicReference[Map[Path, Map[HashType, MD5Hash]]] =
+    val hashes: AtomicReference[Map[Path, Hashes]] =
       new AtomicReference(Map.empty)
-    val hashChunks
-      : AtomicReference[Map[Path, Map[Long, Map[HashType, MD5Hash]]]] =
+    val hashChunks: AtomicReference[Map[Path, Map[Long, Hashes]]] =
       new AtomicReference(Map.empty)
     val hasher: Service = new Service {
-      override def hashObject(
-          path: Path): RIO[Hasher with FileSystem, Map[HashType, MD5Hash]] =
+      override def hashObject(path: Path): RIO[Hasher with FileSystem, Hashes] =
         ZIO(hashes.get()(path))
 
-      override def hashObjectChunk(path: Path,
-                                   chunkNumber: Long,
-                                   chunkSize: Long)
-        : RIO[Hasher with FileSystem, Map[HashType, MD5Hash]] =
+      override def hashObjectChunk(
+          path: Path,
+          chunkNumber: Long,
+          chunkSize: Long): RIO[Hasher with FileSystem, Hashes] =
         ZIO(hashChunks.get()(path)(chunkNumber))
 
       override def hex(in: Array[Byte]): RIO[Hasher, String] =
@@ -77,14 +72,13 @@ object Hasher {
   }
   object Test extends Test
 
-  final def hashObject(
-      path: Path): RIO[Hasher with FileSystem, Map[HashType, MD5Hash]] =
+  final def hashObject(path: Path): RIO[Hasher with FileSystem, Hashes] =
     ZIO.accessM(_.hasher hashObject path)
 
   final def hashObjectChunk(
       path: Path,
       chunkNumber: Long,
-      chunkSize: Long): RIO[Hasher with FileSystem, Map[HashType, MD5Hash]] =
+      chunkSize: Long): RIO[Hasher with FileSystem, Hashes] =
     ZIO.accessM(_.hasher hashObjectChunk (path, chunkNumber, chunkSize))
 
   final def hex(in: Array[Byte]): RIO[Hasher, String] =

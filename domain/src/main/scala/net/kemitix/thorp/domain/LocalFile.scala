@@ -8,7 +8,7 @@ import net.kemitix.thorp.domain.Implicits._
 final case class LocalFile private (
     file: File,
     source: File,
-    hashes: Map[HashType, MD5Hash],
+    hashes: Hashes,
     remoteKey: RemoteKey,
     length: Long
 )
