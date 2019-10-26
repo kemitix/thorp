@@ -84,7 +84,8 @@ object FileScanner {
           _ <- MessageChannel
             .pointToPoint(fileHandler)(cacheReceiver)
             .runDrain
-          // TODO Write an updated cache file
+          _ <- FileSystem.moveFile(path.resolve(PathCache.tempFileName),
+                                   path.resolve(PathCache.fileName))
         } yield ()
 
       private def handleFiles(

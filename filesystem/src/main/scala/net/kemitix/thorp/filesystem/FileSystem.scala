@@ -1,7 +1,7 @@
 package net.kemitix.thorp.filesystem
 
 import java.io.{File, FileInputStream, FileWriter}
-import java.nio.file.{Files, Path}
+import java.nio.file.{Files, Path, StandardCopyOption}
 import java.time.Instant
 import java.util.stream
 
@@ -31,6 +31,7 @@ object FileSystem {
                      remoteKey: RemoteKey): ZIO[FileSystem, Nothing, Boolean]
     def findCache(directory: Path): ZIO[FileSystem, Nothing, PathCache]
     def getHashes(path: Path, fileData: FileData): ZIO[FileSystem, Any, Hashes]
+    def moveFile(source: Path, target: Path): UIO[Unit]
   }
   trait Live extends FileSystem {
     override val filesystem: Service = new Service {
@@ -123,6 +124,13 @@ object FileSystem {
                                fileName: FileName): UIO[Unit] =
         UIO.bracket(UIO(new FileWriter(fileName)))(fw => UIO(fw.close()))(fw =>
           UIO(lines.map(fw.append(_))))
+
+      override def moveFile(source: Path, target: Path): UIO[Unit] =
+        UIO {
+          if (source.toFile.exists()) {
+            Files.move(source, target, StandardCopyOption.REPLACE_EXISTING)
+          }
+        }
     }
   }
   object Live extends Live
@@ -182,6 +190,9 @@ object FileSystem {
 
       override def appendLines(lines: Iterable[String],
                                fileName: FileName): UIO[Unit] = UIO.unit
+
+      override def moveFile(source: Path, target: Path): UIO[Unit] =
+        UIO.unit
     }
   }
 
@@ -236,5 +247,11 @@ object FileSystem {
   final def appendLines(lines: Iterable[String],
                         fileName: FileName): ZIO[FileSystem, Nothing, Unit] =
     ZIO.accessM(_.filesystem.appendLines(lines, fileName))
+
+  final def moveFile(
+      source: Path,
+      target: Path
+  ): ZIO[FileSystem, Nothing, Unit] =
+    ZIO.accessM(_.filesystem.moveFile(source, target))
 
 }
