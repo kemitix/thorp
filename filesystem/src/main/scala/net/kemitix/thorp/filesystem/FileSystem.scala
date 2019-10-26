@@ -22,6 +22,7 @@ object FileSystem {
     def fileLines(file: File): RIO[FileSystem, Seq[String]]
     def isDirectory(file: File): RIO[FileSystem, Boolean]
     def listFiles(path: Path): UIO[List[File]]
+    def listDirs(path: Path): UIO[List[Path]]
     def length(file: File): ZIO[FileSystem, Nothing, Long]
     def hasLocalFile(sources: Sources,
                      prefix: RemoteKey,
@@ -61,9 +62,23 @@ object FileSystem {
       override def isDirectory(file: File): RIO[FileSystem, Boolean] =
         Task(file.isDirectory)
 
+      private val cacheFileName = ".thorp.cache"
+
       override def listFiles(path: Path): UIO[List[File]] =
-        Task(List.from(path.toFile.listFiles()))
+        Task(
+          List
+            .from(path.toFile.listFiles())
+            .filterNot(_.isDirectory)
+            .filterNot(_.getName.contentEquals(cacheFileName)))
           .catchAll(_ => UIO.succeed(List.empty[File]))
+
+      override def listDirs(path: Path): UIO[List[Path]] =
+        Task(
+          List
+            .from(path.toFile.listFiles())
+            .filter(_.isDirectory)
+            .map(_.toPath))
+          .catchAll(_ => UIO.succeed(List.empty[Path]))
 
       override def length(file: File): ZIO[FileSystem, Nothing, Long] =
         UIO(file.length)
@@ -84,7 +99,7 @@ object FileSystem {
       override def findCache(
           directory: Path): ZIO[FileSystem, Nothing, PathCache] =
         for {
-          cacheFile <- UIO(directory.resolve(".thorp.cache").toFile)
+          cacheFile <- UIO(directory.resolve(cacheFileName).toFile)
           lines     <- fileLines(cacheFile).catchAll(_ => UIO(List.empty))
           cache     <- PathCache.fromLines(lines)
         } yield cache
@@ -108,6 +123,7 @@ object FileSystem {
     val fileLinesResult: Task[List[String]]
     val isDirResult: Task[Boolean]
     val listFilesResult: UIO[List[File]]
+    val listDirsResult: UIO[List[Path]]
     val lengthResult: UIO[Long]
     val managedFileInputStream: Task[ZManaged[Any, Throwable, FileInputStream]]
     val hasLocalFileResult: UIO[Boolean]
@@ -131,6 +147,9 @@ object FileSystem {
 
       override def listFiles(path: Path): UIO[List[File]] =
         listFilesResult
+
+      override def listDirs(path: Path): UIO[List[Path]] =
+        listDirsResult
 
       override def length(file: File): UIO[Long] =
         lengthResult
@@ -167,8 +186,17 @@ object FileSystem {
   final def isDirectory(file: File): RIO[FileSystem, Boolean] =
     ZIO.accessM(_.filesystem.isDirectory(file))
 
+  /**
+    * Lists only files within the Path.
+    */
   final def listFiles(path: Path): ZIO[FileSystem, Nothing, List[File]] =
     ZIO.accessM(_.filesystem.listFiles(path))
+
+  /**
+    * Lists only sub-directories within the Path.
+    */
+  final def listDirs(path: Path): ZIO[FileSystem, Nothing, List[Path]] =
+    ZIO.accessM(_.filesystem.listDirs(path))
 
   final def length(file: File): ZIO[FileSystem, Nothing, Long] =
     ZIO.accessM(_.filesystem.length(file))

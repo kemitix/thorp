@@ -9,7 +9,7 @@ import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.filesystem.{FileSystem, Hasher, PathCache}
 import zio.clock.Clock
-import zio.{RIO, UIO, ZIO}
+import zio.{RIO, ZIO}
 
 trait FileScanner {
   val fileScanner: FileScanner.Service
@@ -39,25 +39,34 @@ object FileScanner {
           } yield ()) <* MessageChannel.endChannel(channel)
         }
 
+      /**
+        * Scan the files and directories for the path.
+        *
+        * <p>Descends into sub-directories before fetching the local cache to minimise the
+        * time the cache needs to be held on the Heap. So the cache is only loaded and held
+        * while 'backing-out' of the recursive calls.</p>
+        *
+        * @param channel Where to send selected files
+        * @param path The path to scan
+        */
       private def scanPath(channel: ScannerChannel)(path: Path)
         : ZIO[Clock with Config with Hasher with FileSystem, Throwable, Unit] =
         for {
-          filters <- Config.filters
-          files   <- FileSystem.listFiles(path)
-          cache   <- FileSystem.findCache(path)
-          _       <- ZIO.foreach(files)(handleFile(channel, filters, cache))
+          dirs  <- FileSystem.listDirs(path)
+          _     <- ZIO.foreach(dirs)(scanPath(channel))
+          files <- FileSystem.listFiles(path)
+          cache <- FileSystem.findCache(path)
+          _     <- ZIO.foreach(files)(handleFile(channel, cache))
         } yield ()
 
       private def handleFile(
           channel: ScannerChannel,
-          filters: List[Filter],
           cache: PathCache
-      )(file: File) =
+      )(file: File)
+        : ZIO[Clock with FileSystem with Hasher with Config, Throwable, Unit] =
         for {
-          isDir <- FileSystem.isDirectory(file)
-          isInc <- UIO(Filters.isIncluded(file.toPath)(filters))
-          _     <- ZIO.when(isInc && isDir)(scanPath(channel)(file.toPath))
-          _     <- ZIO.when(isInc && !isDir)(sendHashedFile(channel)(file, cache))
+          isIncluded <- Filters.isIncluded(file)
+          _          <- ZIO.when(isIncluded)(sendHashedFile(channel)(file, cache))
         } yield ()
 
       private def sendHashedFile(
