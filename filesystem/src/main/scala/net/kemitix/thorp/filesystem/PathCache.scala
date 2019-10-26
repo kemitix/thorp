@@ -1,5 +1,6 @@
 package net.kemitix.thorp.filesystem
 
+import java.io.File
 import java.time.Instant
 import java.util.regex.Pattern
 
@@ -13,7 +14,9 @@ import zio.{UIO, ZIO}
   */
 final case class PathCache(
     data: Map[FileName, FileData]
-) {}
+) {
+  def get(file: File): Option[FileData] = data.get(file.getName)
+}
 
 object PathCache {
   private val pattern =

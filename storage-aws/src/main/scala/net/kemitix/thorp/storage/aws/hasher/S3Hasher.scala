@@ -5,7 +5,7 @@ import java.nio.file.Path
 import net.kemitix.thorp.domain.{Hashes, MD5Hash}
 import net.kemitix.thorp.filesystem.Hasher.Live.{hasher => CoreHasher}
 import net.kemitix.thorp.filesystem.Hasher.Service
-import net.kemitix.thorp.filesystem.{FileSystem, Hasher}
+import net.kemitix.thorp.filesystem.{FileData, FileSystem, Hasher}
 import net.kemitix.thorp.storage.aws.ETag
 import zio.RIO
 
@@ -20,9 +20,10 @@ object S3Hasher {
         * @param path the local path to scan
         * @return a set of hash values
         */
-      override def hashObject(path: Path): RIO[Hasher with FileSystem, Hashes] =
+      override def hashObject(path: Path, cachedFileData: Option[FileData])
+        : RIO[Hasher with FileSystem, Hashes] =
         for {
-          base <- CoreHasher.hashObject(path)
+          base <- CoreHasher.hashObject(path, cachedFileData)
           etag <- ETagGenerator.eTag(path).map(MD5Hash(_))
         } yield base + (ETag -> etag)
 

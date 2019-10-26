@@ -2,9 +2,10 @@ package net.kemitix.thorp.filesystem
 
 import java.io.{File, FileInputStream}
 import java.nio.file.{Files, Path}
+import java.time.Instant
 import java.util.stream
 
-import net.kemitix.thorp.domain.{RemoteKey, Sources}
+import net.kemitix.thorp.domain.{Hashes, RemoteKey, Sources}
 import zio._
 
 import scala.jdk.CollectionConverters._
@@ -26,6 +27,7 @@ object FileSystem {
                      prefix: RemoteKey,
                      remoteKey: RemoteKey): ZIO[FileSystem, Nothing, Boolean]
     def findCache(directory: Path): ZIO[FileSystem, Nothing, PathCache]
+    def getHashes(path: Path, fileData: FileData): ZIO[FileSystem, Any, Hashes]
   }
   trait Live extends FileSystem {
     override val filesystem: Service = new Service {
@@ -86,6 +88,17 @@ object FileSystem {
           lines     <- fileLines(cacheFile).catchAll(_ => UIO(List.empty))
           cache     <- PathCache.fromLines(lines)
         } yield cache
+
+      override def getHashes(
+          path: Path,
+          fileData: FileData): ZIO[FileSystem, Any, Hashes] = {
+        val lastModified = Instant.ofEpochMilli(path.toFile.lastModified())
+        if (lastModified.isAfter(fileData.lastModified)) {
+          ZIO.fail("fileData is out-of-date")
+        } else {
+          ZIO.succeed(fileData.hashes)
+        }
+      }
     }
   }
   object Live extends Live
@@ -99,6 +112,7 @@ object FileSystem {
     val managedFileInputStream: Task[ZManaged[Any, Throwable, FileInputStream]]
     val hasLocalFileResult: UIO[Boolean]
     val pathCacheResult: UIO[PathCache]
+    val matchesResult: IO[Any, Hashes]
 
     override val filesystem: Service = new Service {
 
@@ -129,6 +143,10 @@ object FileSystem {
 
       override def findCache(directory: Path): UIO[PathCache] =
         pathCacheResult
+
+      override def getHashes(path: Path,
+                             fileData: FileData): ZIO[FileSystem, Any, Hashes] =
+        matchesResult
     }
   }
 
@@ -163,4 +181,8 @@ object FileSystem {
 
   final def findCache(directory: Path): ZIO[FileSystem, Nothing, PathCache] =
     ZIO.accessM(_.filesystem.findCache(directory))
+
+  final def getHashes(path: Path,
+                      fileData: FileData): ZIO[FileSystem, Any, Hashes] =
+    ZIO.accessM(_.filesystem.getHashes(path, fileData))
 }

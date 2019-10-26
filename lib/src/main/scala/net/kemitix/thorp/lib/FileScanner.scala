@@ -7,7 +7,7 @@ import net.kemitix.eip.zio.MessageChannel.{EChannel, ESender}
 import net.kemitix.eip.zio.{Message, MessageChannel}
 import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.domain._
-import net.kemitix.thorp.filesystem.{FileSystem, Hasher}
+import net.kemitix.thorp.filesystem.{FileSystem, Hasher, PathCache}
 import zio.clock.Clock
 import zio.{RIO, UIO, ZIO}
 
@@ -45,26 +45,29 @@ object FileScanner {
           filters <- Config.filters
           files   <- FileSystem.listFiles(path)
           cache   <- FileSystem.findCache(path)
-          _       <- ZIO.foreach(files)(handleFile(channel, filters))
+          _       <- ZIO.foreach(files)(handleFile(channel, filters, cache))
         } yield ()
 
       private def handleFile(
           channel: ScannerChannel,
-          filters: List[Filter]
+          filters: List[Filter],
+          pathCache: PathCache
       )(file: File) =
         for {
           isDir      <- FileSystem.isDirectory(file)
           isIncluded <- UIO(Filters.isIncluded(file.toPath)(filters))
           _          <- ZIO.when(isIncluded && isDir)(scanPath(channel)(file.toPath))
-          _          <- ZIO.when(isIncluded && !isDir)(sendHashedFile(channel)(file))
+          _ <- ZIO.when(isIncluded && !isDir)(
+            sendHashedFile(channel)(file, pathCache))
         } yield ()
 
-      private def sendHashedFile(channel: ScannerChannel)(file: File) =
+      private def sendHashedFile(
+          channel: ScannerChannel)(file: File, pathCache: PathCache) =
         for {
           sources   <- Config.sources
           source    <- Sources.forPath(file.toPath)(sources)
           prefix    <- Config.prefix
-          hashes    <- Hasher.hashObject(file.toPath)
+          hashes    <- Hasher.hashObject(file.toPath, pathCache.get(file))
           remoteKey <- RemoteKey.from(source, prefix, file)
           size      <- FileSystem.length(file)
           localFile <- ZIO(

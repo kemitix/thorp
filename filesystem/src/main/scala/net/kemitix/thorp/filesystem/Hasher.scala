@@ -15,7 +15,9 @@ trait Hasher {
 }
 object Hasher {
   trait Service {
-    def hashObject(path: Path): RIO[Hasher with FileSystem, Hashes]
+    def hashObject(
+        path: Path,
+        cachedFileData: Option[FileData]): RIO[Hasher with FileSystem, Hashes]
     def hashObjectChunk(path: Path,
                         chunkNumber: Long,
                         chunkSize: Long): RIO[Hasher with FileSystem, Hashes]
@@ -24,10 +26,15 @@ object Hasher {
   }
   trait Live extends Hasher {
     val hasher: Service = new Service {
-      override def hashObject(path: Path): RIO[FileSystem, Hashes] =
-        for {
-          md5 <- MD5HashGenerator.md5File(path)
-        } yield Map(MD5 -> md5)
+      override def hashObject(
+          path: Path,
+          cachedFileData: Option[FileData]): RIO[FileSystem, Hashes] =
+        ZIO
+          .fromOption(cachedFileData)
+          .flatMap(fileData => FileSystem.getHashes(path, fileData))
+          .orElse(for {
+            md5 <- MD5HashGenerator.md5File(path)
+          } yield Map(MD5 -> md5))
 
       override def hashObjectChunk(
           path: Path,
@@ -54,7 +61,8 @@ object Hasher {
     val hashChunks: AtomicReference[Map[Path, Map[Long, Hashes]]] =
       new AtomicReference(Map.empty)
     val hasher: Service = new Service {
-      override def hashObject(path: Path): RIO[Hasher with FileSystem, Hashes] =
+      override def hashObject(path: Path, cachedFileData: Option[FileData])
+        : RIO[Hasher with FileSystem, Hashes] =
         ZIO(hashes.get()(path))
 
       override def hashObjectChunk(
@@ -72,8 +80,10 @@ object Hasher {
   }
   object Test extends Test
 
-  final def hashObject(path: Path): RIO[Hasher with FileSystem, Hashes] =
-    ZIO.accessM(_.hasher hashObject path)
+  final def hashObject(
+      path: Path,
+      cachedFileData: Option[FileData]): RIO[Hasher with FileSystem, Hashes] =
+    ZIO.accessM(_.hasher.hashObject(path, cachedFileData))
 
   final def hashObjectChunk(
       path: Path,
