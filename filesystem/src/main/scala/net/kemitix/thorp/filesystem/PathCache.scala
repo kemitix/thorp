@@ -37,7 +37,7 @@ object PathCache {
     }
 
   private val pattern =
-    "^(?<hashtype>.+):(?<hash>.+):(?<modified>.+):(?<filename>.+)$"
+    "^(?<hashtype>.+):(?<hash>.+):(?<modified>\\d+):(?<filename>.+)$"
   private val format = Pattern.compile(pattern)
   def fromLines(lines: Seq[String]): ZIO[Hasher, Nothing, PathCache] = {
     ZIO
@@ -52,7 +52,7 @@ object PathCache {
             .create(
               Map[HashType, MD5Hash](
                 hashType -> MD5Hash(matcher.group("hash"))),
-              Instant.parse(matcher.group("modified"))
+              Instant.ofEpochMilli(matcher.group("modified").toLong)
             ))
       }
       .catchAll({ _: IllegalArgumentException =>
