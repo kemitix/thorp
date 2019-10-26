@@ -1,6 +1,6 @@
 package net.kemitix.thorp.filesystem
 
-import net.kemitix.thorp.domain.{HashType, Hashes, LastModified, MD5Hash}
+import net.kemitix.thorp.domain.{Hashes, LastModified}
 
 case class FileData(
     hashes: Hashes,
@@ -8,10 +8,8 @@ case class FileData(
 ) {}
 
 object FileData {
-  def create(hashType: HashType,
-             hash: MD5Hash,
-             lastModified: LastModified): FileData = FileData(
-    hashes = Map(hashType -> hash),
+  def create(hashes: Hashes, lastModified: LastModified): FileData = FileData(
+    hashes = hashes,
     lastModified = lastModified
   )
 }

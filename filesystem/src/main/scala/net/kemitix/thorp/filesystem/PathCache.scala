@@ -19,6 +19,22 @@ final case class PathCache(
 }
 
 object PathCache {
+  val fileName     = ".thorp.cache"
+  val tempFileName = ".thorp.cache.tmp"
+
+  def create(fileName: FileName, fileData: FileData): UIO[Iterable[String]] =
+    UIO {
+      fileData.hashes.keys.map(hashType => {
+        val hash     = fileData.hashes(hashType)
+        val modified = fileData.lastModified
+        String.join(":",
+                    hashType.toString,
+                    hash.in,
+                    modified.toString,
+                    fileName)
+      })
+    }
+
   private val pattern =
     "^(?<hashtype>.+):(?<hash>.+):(?<modified>.+):(?<filename>.+)$"
   private val format = Pattern.compile(pattern)
@@ -33,8 +49,8 @@ object PathCache {
         } yield
           (matcher.group("filename") -> FileData
             .create(
-              hashType,
-              MD5Hash(matcher.group("hash")),
+              Map[HashType, MD5Hash](
+                hashType -> MD5Hash(matcher.group("hash"))),
               Instant.parse(matcher.group("modified"))
             ))
       }

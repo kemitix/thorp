@@ -1,6 +1,6 @@
 package net.kemitix.thorp.filesystem
 
-import java.io.{File, FileInputStream}
+import java.io.{File, FileInputStream, FileWriter}
 import java.nio.file.{Files, Path}
 import java.time.Instant
 import java.util.stream
@@ -20,10 +20,12 @@ object FileSystem {
     def openManagedFileInputStream(file: File, offset: Long)
       : RIO[FileSystem, ZManaged[Any, Throwable, FileInputStream]]
     def fileLines(file: File): RIO[FileSystem, Seq[String]]
+    def appendLines(lines: Iterable[String], fileName: FileName): UIO[Unit]
     def isDirectory(file: File): RIO[FileSystem, Boolean]
     def listFiles(path: Path): UIO[List[File]]
     def listDirs(path: Path): UIO[List[Path]]
     def length(file: File): ZIO[FileSystem, Nothing, Long]
+    def lastModified(file: File): UIO[Instant]
     def hasLocalFile(sources: Sources,
                      prefix: RemoteKey,
                      remoteKey: RemoteKey): ZIO[FileSystem, Nothing, Boolean]
@@ -62,15 +64,14 @@ object FileSystem {
       override def isDirectory(file: File): RIO[FileSystem, Boolean] =
         Task(file.isDirectory)
 
-      private val cacheFileName = ".thorp.cache"
-
       override def listFiles(path: Path): UIO[List[File]] =
-        Task(
+        Task {
           List
             .from(path.toFile.listFiles())
             .filterNot(_.isDirectory)
-            .filterNot(_.getName.contentEquals(cacheFileName)))
-          .catchAll(_ => UIO.succeed(List.empty[File]))
+            .filterNot(_.getName.contentEquals(PathCache.fileName))
+            .filterNot(_.getName.contentEquals(PathCache.tempFileName))
+        }.catchAll(_ => UIO.succeed(List.empty[File]))
 
       override def listDirs(path: Path): UIO[List[Path]] =
         Task(
@@ -82,6 +83,9 @@ object FileSystem {
 
       override def length(file: File): ZIO[FileSystem, Nothing, Long] =
         UIO(file.length)
+
+      override def lastModified(file: File): UIO[Instant] =
+        UIO(Instant.ofEpochMilli(file.lastModified()))
 
       override def hasLocalFile(
           sources: Sources,
@@ -99,7 +103,7 @@ object FileSystem {
       override def findCache(
           directory: Path): ZIO[FileSystem, Nothing, PathCache] =
         for {
-          cacheFile <- UIO(directory.resolve(cacheFileName).toFile)
+          cacheFile <- UIO(directory.resolve(PathCache.fileName).toFile)
           lines     <- fileLines(cacheFile).catchAll(_ => UIO(List.empty))
           cache     <- PathCache.fromLines(lines)
         } yield cache
@@ -114,6 +118,11 @@ object FileSystem {
           ZIO.succeed(fileData.hashes)
         }
       }
+
+      override def appendLines(lines: Iterable[String],
+                               fileName: FileName): UIO[Unit] =
+        UIO.bracket(UIO(new FileWriter(fileName)))(fw => UIO(fw.close()))(fw =>
+          UIO(lines.map(fw.append(_))))
     }
   }
   object Live extends Live
@@ -125,6 +134,7 @@ object FileSystem {
     val listFilesResult: UIO[List[File]]
     val listDirsResult: UIO[List[Path]]
     val lengthResult: UIO[Long]
+    val lastModifiedResult: UIO[Instant]
     val managedFileInputStream: Task[ZManaged[Any, Throwable, FileInputStream]]
     val hasLocalFileResult: UIO[Boolean]
     val pathCacheResult: UIO[PathCache]
@@ -154,6 +164,9 @@ object FileSystem {
       override def length(file: File): UIO[Long] =
         lengthResult
 
+      override def lastModified(file: File): UIO[Instant] =
+        lastModifiedResult
+
       override def hasLocalFile(
           sources: Sources,
           prefix: RemoteKey,
@@ -166,6 +179,9 @@ object FileSystem {
       override def getHashes(path: Path,
                              fileData: FileData): ZIO[FileSystem, Any, Hashes] =
         matchesResult
+
+      override def appendLines(lines: Iterable[String],
+                               fileName: FileName): UIO[Unit] = UIO.unit
     }
   }
 
@@ -213,4 +229,12 @@ object FileSystem {
   final def getHashes(path: Path,
                       fileData: FileData): ZIO[FileSystem, Any, Hashes] =
     ZIO.accessM(_.filesystem.getHashes(path, fileData))
+
+  final def lastModified(file: File): ZIO[FileSystem, Nothing, Instant] =
+    ZIO.accessM(_.filesystem.lastModified(file))
+
+  final def appendLines(lines: Iterable[String],
+                        fileName: FileName): ZIO[FileSystem, Nothing, Unit] =
+    ZIO.accessM(_.filesystem.appendLines(lines, fileName))
+
 }
