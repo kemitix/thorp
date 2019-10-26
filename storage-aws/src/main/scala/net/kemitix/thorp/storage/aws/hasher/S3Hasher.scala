@@ -2,12 +2,12 @@ package net.kemitix.thorp.storage.aws.hasher
 
 import java.nio.file.Path
 
-import net.kemitix.thorp.domain.{Hashes, MD5Hash}
+import net.kemitix.thorp.domain.{HashType, Hashes, MD5Hash}
 import net.kemitix.thorp.filesystem.Hasher.Live.{hasher => CoreHasher}
 import net.kemitix.thorp.filesystem.Hasher.Service
 import net.kemitix.thorp.filesystem.{FileData, FileSystem, Hasher}
 import net.kemitix.thorp.storage.aws.ETag
-import zio.RIO
+import zio.{RIO, ZIO}
 
 object S3Hasher {
 
@@ -38,6 +38,15 @@ object S3Hasher {
 
       override def digest(in: String): RIO[Hasher, Array[Byte]] =
         CoreHasher.digest(in)
+
+      override def typeFrom(
+          str: String): ZIO[Hasher, IllegalArgumentException, HashType] =
+        if (str.contentEquals("ETag")) {
+          RIO.succeed(ETag)
+        } else {
+          CoreHasher.typeFrom(str)
+        }
+
     }
 
   }

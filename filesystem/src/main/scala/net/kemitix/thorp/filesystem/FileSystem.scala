@@ -29,7 +29,8 @@ object FileSystem {
     def hasLocalFile(sources: Sources,
                      prefix: RemoteKey,
                      remoteKey: RemoteKey): ZIO[FileSystem, Nothing, Boolean]
-    def findCache(directory: Path): ZIO[FileSystem, Nothing, PathCache]
+    def findCache(
+        directory: Path): ZIO[FileSystem with Hasher, Nothing, PathCache]
     def getHashes(path: Path, fileData: FileData): ZIO[FileSystem, Any, Hashes]
     def moveFile(source: Path, target: Path): UIO[Unit]
   }
@@ -102,7 +103,7 @@ object FileSystem {
       }
 
       override def findCache(
-          directory: Path): ZIO[FileSystem, Nothing, PathCache] =
+          directory: Path): ZIO[FileSystem with Hasher, Nothing, PathCache] =
         for {
           cacheFile <- UIO(directory.resolve(PathCache.fileName).toFile)
           lines     <- fileLines(cacheFile).catchAll(_ => UIO(List.empty))
@@ -239,7 +240,8 @@ object FileSystem {
       remoteKey: RemoteKey): ZIO[FileSystem, Nothing, Boolean] =
     ZIO.accessM(_.filesystem.hasLocalFile(sources, prefix, remoteKey))
 
-  final def findCache(directory: Path): ZIO[FileSystem, Nothing, PathCache] =
+  final def findCache(
+      directory: Path): ZIO[FileSystem with Hasher, Nothing, PathCache] =
     ZIO.accessM(_.filesystem.findCache(directory))
 
   final def getHashes(path: Path,

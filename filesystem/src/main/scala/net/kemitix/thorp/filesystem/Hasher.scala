@@ -4,7 +4,7 @@ import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicReference
 
 import net.kemitix.thorp.domain.HashType.MD5
-import net.kemitix.thorp.domain.Hashes
+import net.kemitix.thorp.domain.{HashType, Hashes}
 import zio.{RIO, ZIO}
 
 /**
@@ -15,6 +15,8 @@ trait Hasher {
 }
 object Hasher {
   trait Service {
+    def typeFrom(str: String): ZIO[Hasher, IllegalArgumentException, HashType]
+
     def hashObject(
         path: Path,
         cachedFileData: Option[FileData]): RIO[Hasher with FileSystem, Hashes]
@@ -51,6 +53,15 @@ object Hasher {
 
       override def digest(in: String): RIO[Hasher, Array[Byte]] =
         ZIO(MD5HashGenerator.digest(in))
+
+      override def typeFrom(
+          str: String): ZIO[Hasher, IllegalArgumentException, HashType] =
+        if (str.contentEquals("MD5")) {
+          ZIO.succeed(MD5)
+        } else {
+          ZIO.fail(
+            new IllegalArgumentException("Unknown Hash Type: %s".format(str)))
+        }
     }
   }
   object Live extends Live
@@ -76,6 +87,10 @@ object Hasher {
 
       override def digest(in: String): RIO[Hasher, Array[Byte]] =
         ZIO(MD5HashGenerator.digest(in))
+
+      override def typeFrom(
+          str: String): ZIO[Hasher, IllegalArgumentException, HashType] =
+        Live.hasher.typeFrom(str)
     }
   }
   object Test extends Test
@@ -96,4 +111,9 @@ object Hasher {
 
   final def digest(in: String): RIO[Hasher, Array[Byte]] =
     ZIO.accessM(_.hasher digest in)
+
+  final def typeFrom(
+      str: String): ZIO[Hasher, IllegalArgumentException, HashType] =
+    ZIO.accessM(_.hasher.typeFrom(str))
+
 }

@@ -1,6 +1,7 @@
 package net.kemitix.thorp.filesystem
 
 import java.io.File
+import java.lang.IllegalArgumentException
 import java.time.Instant
 import java.util.regex.Pattern
 
@@ -38,14 +39,14 @@ object PathCache {
   private val pattern =
     "^(?<hashtype>.+):(?<hash>.+):(?<modified>.+):(?<filename>.+)$"
   private val format = Pattern.compile(pattern)
-  def fromLines(lines: Seq[String]): UIO[PathCache] = {
+  def fromLines(lines: Seq[String]): ZIO[Hasher, Nothing, PathCache] = {
     ZIO
       .foreach(
         lines
           .map(format.matcher(_))
           .filter(_.matches())) { matcher =>
         for {
-          hashType <- HashType.from(matcher.group("hashType"))
+          hashType <- Hasher.typeFrom(matcher.group("hashtype"))
         } yield
           (matcher.group("filename") -> FileData
             .create(
@@ -54,6 +55,9 @@ object PathCache {
               Instant.parse(matcher.group("modified"))
             ))
       }
+      .catchAll({ _: IllegalArgumentException =>
+        UIO(List.empty)
+      })
       .map(list => Map.from(list))
       .map(map => PathCache(map))
   }
