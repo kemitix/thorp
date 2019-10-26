@@ -20,7 +20,7 @@ object FileSystem {
     def openManagedFileInputStream(file: File, offset: Long)
       : RIO[FileSystem, ZManaged[Any, Throwable, FileInputStream]]
     def fileLines(file: File): RIO[FileSystem, Seq[String]]
-    def appendLines(lines: Iterable[String], fileName: FileName): UIO[Unit]
+    def appendLines(lines: Iterable[String], file: File): UIO[Unit]
     def isDirectory(file: File): RIO[FileSystem, Boolean]
     def listFiles(path: Path): UIO[List[File]]
     def listDirs(path: Path): UIO[List[Path]]
@@ -120,10 +120,15 @@ object FileSystem {
         }
       }
 
-      override def appendLines(lines: Iterable[String],
-                               fileName: FileName): UIO[Unit] =
-        UIO.bracket(UIO(new FileWriter(fileName)))(fw => UIO(fw.close()))(fw =>
-          UIO(lines.map(fw.append(_))))
+      override def appendLines(lines: Iterable[String], file: File): UIO[Unit] =
+        UIO.bracket(UIO(new FileWriter(file)))(fw => UIO(fw.close()))(fw =>
+          UIO {
+            lines.map { line =>
+              {
+                fw.append(line + System.lineSeparator())
+              }
+            }
+        })
 
       override def moveFile(source: Path, target: Path): UIO[Unit] =
         UIO {
@@ -188,8 +193,8 @@ object FileSystem {
                              fileData: FileData): ZIO[FileSystem, Any, Hashes] =
         matchesResult
 
-      override def appendLines(lines: Iterable[String],
-                               fileName: FileName): UIO[Unit] = UIO.unit
+      override def appendLines(lines: Iterable[String], file: File): UIO[Unit] =
+        UIO.unit
 
       override def moveFile(source: Path, target: Path): UIO[Unit] =
         UIO.unit
@@ -245,8 +250,8 @@ object FileSystem {
     ZIO.accessM(_.filesystem.lastModified(file))
 
   final def appendLines(lines: Iterable[String],
-                        fileName: FileName): ZIO[FileSystem, Nothing, Unit] =
-    ZIO.accessM(_.filesystem.appendLines(lines, fileName))
+                        file: File): ZIO[FileSystem, Nothing, Unit] =
+    ZIO.accessM(_.filesystem.appendLines(lines, file))
 
   final def moveFile(
       source: Path,

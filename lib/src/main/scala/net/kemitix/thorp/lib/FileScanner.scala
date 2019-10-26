@@ -56,7 +56,9 @@ object FileScanner {
           val (fileName, fileData) = message.body
           for {
             line <- PathCache.create(fileName, fileData)
-            _    <- FileSystem.appendLines(line, PathCache.tempFileName)
+            _ <- FileSystem.appendLines(
+              line,
+              path.resolve(PathCache.tempFileName).toFile)
           } yield ()
         }
 
