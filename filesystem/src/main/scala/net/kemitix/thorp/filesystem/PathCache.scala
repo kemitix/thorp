@@ -31,7 +31,7 @@ object PathCache {
         String.join(":",
                     hashType.toString,
                     hash.in,
-                    modified.toString,
+                    modified.toEpochMilli.toString,
                     fileName)
       })
     }
