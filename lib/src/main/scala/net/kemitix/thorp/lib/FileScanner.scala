@@ -51,14 +51,13 @@ object FileScanner {
       private def handleFile(
           channel: ScannerChannel,
           filters: List[Filter],
-          pathCache: PathCache
+          cache: PathCache
       )(file: File) =
         for {
-          isDir      <- FileSystem.isDirectory(file)
-          isIncluded <- UIO(Filters.isIncluded(file.toPath)(filters))
-          _          <- ZIO.when(isIncluded && isDir)(scanPath(channel)(file.toPath))
-          _ <- ZIO.when(isIncluded && !isDir)(
-            sendHashedFile(channel)(file, pathCache))
+          isDir <- FileSystem.isDirectory(file)
+          isInc <- UIO(Filters.isIncluded(file.toPath)(filters))
+          _     <- ZIO.when(isInc && isDir)(scanPath(channel)(file.toPath))
+          _     <- ZIO.when(isInc && !isDir)(sendHashedFile(channel)(file, cache))
         } yield ()
 
       private def sendHashedFile(
