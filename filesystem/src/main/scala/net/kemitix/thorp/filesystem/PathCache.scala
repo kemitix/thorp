@@ -1,7 +1,6 @@
 package net.kemitix.thorp.filesystem
 
 import java.io.File
-import java.lang.IllegalArgumentException
 import java.time.Instant
 import java.util.regex.Pattern
 
@@ -58,7 +57,16 @@ object PathCache {
       .catchAll({ _: IllegalArgumentException =>
         UIO(List.empty)
       })
-      .map(list => Map.from(list))
+      .map(list => mergeFileData(list))
       .map(map => PathCache(map))
+  }
+
+  private def mergeFileData(
+      list: List[(FileName, FileData)]
+  ): Map[String, FileData] = {
+    list.foldLeft(Map.empty[FileName, FileData]) { (acc, pair) =>
+      val (fileName, fileData) = pair
+      acc.updatedWith(fileName)(_.map(fd => fd + fileData))
+    }
   }
 }
