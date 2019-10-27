@@ -35,6 +35,9 @@ object FileScanner {
   type CacheSender =
     ESender[Clock with FileSystem with Hasher with Config, Throwable, CacheData]
 
+  final def scanSources: RIO[FileScanner, FileSender] =
+    ZIO.accessM(_.fileScanner.scanSources)
+
   trait Service {
     def scanSources: RIO[FileScanner, FileSender]
   }
@@ -48,18 +51,6 @@ object FileScanner {
             sources <- Config.sources
             _       <- ZIO.foreach(sources.paths)(scanPath(channel)(_))
           } yield ()) <* MessageChannel.endChannel(channel)
-        }
-
-      def cacheReceiver(
-          path: Path): UIO[MessageChannel.UReceiver[FileSystem, CacheData]] =
-        UIO { message =>
-          val (fileName, fileData) = message.body
-          for {
-            line <- PathCache.create(fileName, fileData)
-            _ <- FileSystem.appendLines(
-              line,
-              path.resolve(PathCache.tempFileName).toFile)
-          } yield ()
         }
 
       /**
@@ -137,10 +128,21 @@ object FileScanner {
           cacheData  <- Message.create((fileName, fileData))
           _          <- MessageChannel.send(cacheChannel)(cacheData)
         } yield ()
+
+      def cacheReceiver(
+          path: Path): UIO[MessageChannel.UReceiver[FileSystem, CacheData]] =
+        UIO { message =>
+          val (fileName, fileData) = message.body
+          for {
+            line <- PathCache.create(fileName, fileData)
+            _ <- FileSystem.appendLines(
+              line,
+              path.resolve(PathCache.tempFileName).toFile)
+          } yield ()
+        }
     }
 
   }
+
   object Live extends Live
-  final def scanSources: RIO[FileScanner, FileSender] =
-    ZIO.accessM(_.fileScanner.scanSources)
 }
