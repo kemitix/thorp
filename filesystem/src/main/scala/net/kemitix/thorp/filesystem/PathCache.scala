@@ -39,7 +39,7 @@ object PathCache {
   private val pattern =
     "^(?<hashtype>.+):(?<hash>.+):(?<modified>\\d+):(?<filename>.+)$"
   private val format = Pattern.compile(pattern)
-  def fromLines(lines: Seq[String]): ZIO[Hasher, Nothing, PathCache] = {
+  def fromLines(lines: Seq[String]): ZIO[Hasher, Nothing, PathCache] =
     ZIO
       .foreach(
         lines
@@ -60,14 +60,15 @@ object PathCache {
       })
       .map(list => mergeFileData(list))
       .map(map => PathCache(map))
-  }
 
   private def mergeFileData(
       list: List[(Path, FileData)]
   ): Data = {
     list.foldLeft(Map.empty[Path, FileData]) { (acc, pair) =>
       val (fileName, fileData) = pair
-      acc.updatedWith(fileName)(_.map(fd => fd + fileData))
+      acc.updatedWith(fileName)(
+        _.map(fd => fd + fileData)
+          .orElse(Some(fileData)))
     }
   }
 }
