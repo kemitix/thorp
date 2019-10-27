@@ -6,6 +6,17 @@ The format is based on [[https://keepachangelog.com/en/1.0.0/][Keep a Changelog]
 [[https://semver.org/spec/v2.0.0.html][Semantic Versioning]].
 
 
+* [1.0.0] - ???
+
+** Added
+
+   - Create and use a cache of hashes for local files (#249)
+
+** Dependencies
+
+   - Revert "[sbt] Rollback ~sbt-ci-release~ to ~1.3.2~ (#231)"
+   - Update ~sbt~ to ~1.3.3~ (#238)
+
 * [0.10.0] - 2019-10-08
 
 This is the last ~v0.x~ feature release. The next feature release will be ~v1.x~.

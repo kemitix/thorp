@@ -1,11 +1,19 @@
 package net.kemitix.thorp.lib
 
+import java.io.File
 import java.nio.file.Path
 
+import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.domain.Filter
 import net.kemitix.thorp.domain.Filter.{Exclude, Include}
+import zio.ZIO
 
 object Filters {
+
+  def isIncluded(file: File): ZIO[Config, Nothing, Boolean] =
+    for {
+      filters <- Config.filters
+    } yield isIncluded(file.toPath)(filters)
 
   def isIncluded(p: Path)(filters: List[Filter]): Boolean = {
     sealed trait State

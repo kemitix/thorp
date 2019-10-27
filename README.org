@@ -64,6 +64,10 @@ that can be written to a file.
   Note, that ~include~ and ~exclude~ are cumulative across all
   configuration files.
 
+* Caching
+
+The last modified time for files is used to decide whether to calculate the hash values for the file. If a file has not been updated, then the hash values stored in the `.thorp.cache` file located in the root of the source is used. Otherwise the file will be read to caculate the the new hashes.
+
 * Behaviour
 
 When considering a local file, the following table governs what should happen:

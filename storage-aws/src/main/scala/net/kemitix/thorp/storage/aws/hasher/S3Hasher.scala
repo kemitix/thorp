@@ -2,12 +2,12 @@ package net.kemitix.thorp.storage.aws.hasher
 
 import java.nio.file.Path
 
-import net.kemitix.thorp.domain.{HashType, MD5Hash}
+import net.kemitix.thorp.domain.{HashType, Hashes, MD5Hash}
 import net.kemitix.thorp.filesystem.Hasher.Live.{hasher => CoreHasher}
 import net.kemitix.thorp.filesystem.Hasher.Service
-import net.kemitix.thorp.filesystem.{FileSystem, Hasher}
+import net.kemitix.thorp.filesystem.{FileData, FileSystem, Hasher}
 import net.kemitix.thorp.storage.aws.ETag
-import zio.RIO
+import zio.{RIO, ZIO}
 
 object S3Hasher {
 
@@ -20,17 +20,20 @@ object S3Hasher {
         * @param path the local path to scan
         * @return a set of hash values
         */
-      override def hashObject(
-          path: Path): RIO[Hasher with FileSystem, Map[HashType, MD5Hash]] =
-        for {
-          base <- CoreHasher.hashObject(path)
-          etag <- ETagGenerator.eTag(path).map(MD5Hash(_))
-        } yield base + (ETag -> etag)
+      override def hashObject(path: Path, cachedFileData: Option[FileData])
+        : RIO[Hasher with FileSystem, Hashes] =
+        ZIO
+          .fromOption(cachedFileData)
+          .flatMap(fileData => FileSystem.getHashes(path, fileData))
+          .orElse(for {
+            base <- CoreHasher.hashObject(path, cachedFileData)
+            etag <- ETagGenerator.eTag(path).map(MD5Hash(_))
+          } yield base + (ETag -> etag))
 
-      override def hashObjectChunk(path: Path,
-                                   chunkNumber: Long,
-                                   chunkSize: Long)
-        : RIO[Hasher with FileSystem, Map[HashType, MD5Hash]] =
+      override def hashObjectChunk(
+          path: Path,
+          chunkNumber: Long,
+          chunkSize: Long): RIO[Hasher with FileSystem, Hashes] =
         CoreHasher.hashObjectChunk(path, chunkNumber, chunkSize)
 
       override def hex(in: Array[Byte]): RIO[Hasher, String] =
@@ -38,6 +41,15 @@ object S3Hasher {
 
       override def digest(in: String): RIO[Hasher, Array[Byte]] =
         CoreHasher.digest(in)
+
+      override def typeFrom(
+          str: String): ZIO[Hasher, IllegalArgumentException, HashType] =
+        if (str.contentEquals("ETag")) {
+          RIO.succeed(ETag)
+        } else {
+          CoreHasher.typeFrom(str)
+        }
+
     }
 
   }
