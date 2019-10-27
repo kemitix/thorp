@@ -22,10 +22,13 @@ object S3Hasher {
         */
       override def hashObject(path: Path, cachedFileData: Option[FileData])
         : RIO[Hasher with FileSystem, Hashes] =
-        for {
-          base <- CoreHasher.hashObject(path, cachedFileData)
-          etag <- ETagGenerator.eTag(path).map(MD5Hash(_))
-        } yield base + (ETag -> etag)
+        ZIO
+          .fromOption(cachedFileData)
+          .flatMap(fileData => FileSystem.getHashes(path, fileData))
+          .orElse(for {
+            base <- CoreHasher.hashObject(path, cachedFileData)
+            etag <- ETagGenerator.eTag(path).map(MD5Hash(_))
+          } yield base + (ETag -> etag))
 
       override def hashObjectChunk(
           path: Path,
