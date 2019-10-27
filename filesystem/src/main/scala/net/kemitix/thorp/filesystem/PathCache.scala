@@ -1,6 +1,6 @@
 package net.kemitix.thorp.filesystem
 
-import java.io.File
+import java.nio.file.{Path, Paths}
 import java.time.Instant
 import java.util.regex.Pattern
 
@@ -8,21 +8,22 @@ import net.kemitix.thorp.domain.{HashType, MD5Hash}
 import zio.{UIO, ZIO}
 
 /**
-  * Meta data for files in the current directory, as of the last time Thorp processed this directory.
+  * Meta data for files in the current source, as of the last time Thorp processed this directory.
   *
   * <p>N.B. Does not include sub-directories.</p>
   */
 final case class PathCache(
-    data: Map[FileName, FileData]
+    data: PathCache.Data
 ) {
-  def get(file: File): Option[FileData] = data.get(file.getName)
+  def get(path: Path): Option[FileData] = data.get(path)
 }
 
 object PathCache {
+  type Data = Map[Path, FileData]
   val fileName     = ".thorp.cache"
   val tempFileName = ".thorp.cache.tmp"
 
-  def create(fileName: FileName, fileData: FileData): UIO[Iterable[String]] =
+  def create(path: Path, fileData: FileData): UIO[Iterable[String]] =
     UIO {
       fileData.hashes.keys.map(hashType => {
         val hash     = fileData.hashes(hashType)
@@ -31,7 +32,7 @@ object PathCache {
                     hashType.toString,
                     hash.in,
                     modified.toEpochMilli.toString,
-                    fileName)
+                    path.toString)
       })
     }
 
@@ -47,7 +48,7 @@ object PathCache {
         for {
           hashType <- Hasher.typeFrom(matcher.group("hashtype"))
         } yield
-          (matcher.group("filename") -> FileData
+          (Paths.get(matcher.group("filename")) -> FileData
             .create(
               Map[HashType, MD5Hash](
                 hashType -> MD5Hash(matcher.group("hash"))),
@@ -62,9 +63,9 @@ object PathCache {
   }
 
   private def mergeFileData(
-      list: List[(FileName, FileData)]
-  ): Map[String, FileData] = {
-    list.foldLeft(Map.empty[FileName, FileData]) { (acc, pair) =>
+      list: List[(Path, FileData)]
+  ): Data = {
+    list.foldLeft(Map.empty[Path, FileData]) { (acc, pair) =>
       val (fileName, fileData) = pair
       acc.updatedWith(fileName)(_.map(fd => fd + fileData))
     }

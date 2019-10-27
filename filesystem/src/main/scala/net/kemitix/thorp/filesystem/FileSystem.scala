@@ -122,21 +122,19 @@ object FileSystem {
       }
 
       override def appendLines(lines: Iterable[String], file: File): UIO[Unit] =
-        UIO.bracket(UIO(new FileWriter(file)))(fw => UIO(fw.close()))(fw =>
-          UIO {
-            lines.map { line =>
-              {
-                fw.append(line + System.lineSeparator())
-              }
-            }
-        })
+        UIO.bracket(UIO(new FileWriter(file, true)))(fw => UIO(fw.close()))(
+          fw =>
+            UIO {
+              lines.map(line => fw.append(line + System.lineSeparator()))
+          })
 
       override def moveFile(source: Path, target: Path): UIO[Unit] =
         UIO {
           if (source.toFile.exists()) {
-            Files.move(source, target, StandardCopyOption.REPLACE_EXISTING)
+            Files.move(source, target, StandardCopyOption.ATOMIC_MOVE)
           }
-        }
+          ()
+        }.catchAll(_ => UIO.unit)
     }
   }
   object Live extends Live
