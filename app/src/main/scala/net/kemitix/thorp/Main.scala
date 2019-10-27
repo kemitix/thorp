@@ -7,7 +7,7 @@ import net.kemitix.thorp.lib.FileScanner
 import net.kemitix.thorp.storage.aws.S3Storage
 import net.kemitix.thorp.storage.aws.hasher.S3Hasher
 import zio.clock.Clock
-import zio.{App, ZIO}
+import zio.{App, ZEnv, ZIO}
 
 object Main extends App {
 
@@ -20,7 +20,7 @@ object Main extends App {
       with S3Hasher.Live
       with FileScanner.Live
 
-  override def run(args: List[String]): ZIO[Environment, Nothing, Int] =
+  override def run(args: List[String]): ZIO[ZEnv, Nothing, Int] =
     Program
       .run(args)
       .provide(LiveThorpApp)
