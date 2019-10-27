@@ -129,7 +129,7 @@ object FileSystem {
           })
 
       override def moveFile(source: Path, target: Path): UIO[Unit] =
-        UIO {
+        IO {
           if (source.toFile.exists()) {
             Files.move(source, target, StandardCopyOption.ATOMIC_MOVE)
           }
