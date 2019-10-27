@@ -13,9 +13,9 @@ object Filters {
   def isIncluded(file: File): ZIO[Config, Nothing, Boolean] =
     for {
       filters <- Config.filters
-    } yield isIncludedUsingFilters(file.toPath)(filters)
+    } yield isIncluded(file.toPath)(filters)
 
-  def isIncludedUsingFilters(p: Path)(filters: List[Filter]): Boolean = {
+  def isIncluded(p: Path)(filters: List[Filter]): Boolean = {
     sealed trait State
     final case class Unknown()   extends State
     final case class Accepted()  extends State
