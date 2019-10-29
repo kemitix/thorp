@@ -64,8 +64,8 @@ val awsSdkDependencies = Seq(
 )
 val zioDependencies = Seq(
   libraryDependencies ++= Seq (
-    "dev.zio" %% "zio" % "1.0.0-RC15",
-    "dev.zio" %% "zio-streams" % "1.0.0-RC15"
+    "dev.zio" %% "zio" % "1.0.0-RC16",
+    "dev.zio" %% "zio-streams" % "1.0.0-RC16"
   )
 )
 
