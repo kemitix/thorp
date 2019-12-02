@@ -5,12 +5,12 @@ import java.nio.file.Paths
 import net.kemitix.thorp.config.ConfigOption.Debug
 import net.kemitix.thorp.config.{ConfigOptions, ConfigQuery}
 import net.kemitix.thorp.filesystem.Resource
-import org.scalatest.FunSpec
 import zio.DefaultRuntime
 
 import scala.util.Try
+import org.scalatest.funspec.AnyFunSpec
 
-class CliArgsTest extends FunSpec {
+class CliArgsTest extends AnyFunSpec {
 
   private val runtime = new DefaultRuntime {}
 

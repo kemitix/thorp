@@ -1,8 +1,8 @@
 package net.kemitix.thorp.domain
 
-import org.scalatest.FreeSpec
+import org.scalatest.freespec.AnyFreeSpec
 
-class SimpleLensTest extends FreeSpec {
+class SimpleLensTest extends AnyFreeSpec {
 
   "lens" - {
     val subject = Subject(0, "s")

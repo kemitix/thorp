@@ -1,8 +1,8 @@
 package net.kemitix.thorp.domain
 
-import org.scalatest.FunSpec
+import org.scalatest.funspec.AnyFunSpec
 
-class TerminalTest extends FunSpec {
+class TerminalTest extends AnyFunSpec {
 
   describe("progressBar") {
     describe("width 10 - 0%") {

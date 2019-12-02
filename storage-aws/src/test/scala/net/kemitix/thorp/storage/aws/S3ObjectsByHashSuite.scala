@@ -2,9 +2,9 @@ package net.kemitix.thorp.storage.aws
 
 import com.amazonaws.services.s3.model.S3ObjectSummary
 import net.kemitix.thorp.domain.{MD5Hash, RemoteKey}
-import org.scalatest.FunSpec
+import org.scalatest.funspec.AnyFunSpec
 
-class S3ObjectsByHashSuite extends FunSpec {
+class S3ObjectsByHashSuite extends AnyFunSpec {
 
   describe("grouping s3 object together by their hash values") {
     val hash = MD5Hash("hash")

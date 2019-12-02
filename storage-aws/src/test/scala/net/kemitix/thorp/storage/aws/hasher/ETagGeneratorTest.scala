@@ -4,10 +4,10 @@ import com.amazonaws.services.s3.transfer.TransferManagerConfiguration
 import net.kemitix.thorp.domain.HashType.MD5
 import net.kemitix.thorp.domain.MD5Hash
 import net.kemitix.thorp.filesystem.{FileSystem, Hasher, Resource}
-import org.scalatest.FreeSpec
 import zio.DefaultRuntime
+import org.scalatest.freespec.AnyFreeSpec
 
-class ETagGeneratorTest extends FreeSpec {
+class ETagGeneratorTest extends AnyFreeSpec {
 
   private val bigFile       = Resource(this, "../big-file")
   private val bigFilePath   = bigFile.toPath
