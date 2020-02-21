@@ -12,11 +12,11 @@ import net.kemitix.thorp.config.{
 import net.kemitix.thorp.domain.{LocalFile, RemoteKey}
 import net.kemitix.thorp.filesystem.{FileSystem, Hasher, Resource}
 import net.kemitix.thorp.lib.FileScanner.ScannedFile
-import org.scalatest.FreeSpec
 import zio.clock.Clock
 import zio.{DefaultRuntime, Ref, UIO}
+import org.scalatest.freespec.AnyFreeSpec
 
-class FileScannerTest extends FreeSpec {
+class FileScannerTest extends AnyFreeSpec {
 
   "scanSources" - {
     "creates a FileSender for files in resources" in {

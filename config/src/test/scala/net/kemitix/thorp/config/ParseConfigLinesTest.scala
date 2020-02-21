@@ -2,10 +2,10 @@ package net.kemitix.thorp.config
 
 import java.nio.file.Paths
 
-import org.scalatest.FunSpec
 import zio.DefaultRuntime
+import org.scalatest.funspec.AnyFunSpec
 
-class ParseConfigLinesTest extends FunSpec {
+class ParseConfigLinesTest extends AnyFunSpec {
 
   describe("parse single lines") {
     describe("source") {

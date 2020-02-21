@@ -4,9 +4,9 @@ import java.nio.file.Paths
 
 import net.kemitix.thorp.domain.Filter
 import net.kemitix.thorp.domain.Filter.{Exclude, Include}
-import org.scalatest.FunSpec
+import org.scalatest.funspec.AnyFunSpec
 
-class FiltersSuite extends FunSpec {
+class FiltersSuite extends AnyFunSpec {
 
   private val path1 = "a-file"
   private val path2 = "another-file.txt"

@@ -4,10 +4,10 @@ import java.nio.file.Path
 
 import net.kemitix.thorp.domain.MD5Hash
 import net.kemitix.thorp.domain.MD5HashData.{BigFile, Root}
-import org.scalatest.FunSpec
 import zio.DefaultRuntime
+import org.scalatest.funspec.AnyFunSpec
 
-class MD5HashGeneratorTest extends FunSpec {
+class MD5HashGeneratorTest extends AnyFunSpec {
 
   describe("md5File()") {
     describe("read a small file (smaller than buffer)") {
