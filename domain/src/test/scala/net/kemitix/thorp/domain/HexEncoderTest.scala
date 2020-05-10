@@ -2,9 +2,9 @@ package net.kemitix.thorp.domain
 
 import java.nio.charset.StandardCharsets
 
-import org.scalatest.FreeSpec
+import org.scalatest.freespec.AnyFreeSpec
 
-class HexEncoderTest extends FreeSpec {
+class HexEncoderTest extends AnyFreeSpec {
 
   val text = "test text to encode to hex"
   val hex  = "74657374207465787420746F20656E636F646520746F20686578"

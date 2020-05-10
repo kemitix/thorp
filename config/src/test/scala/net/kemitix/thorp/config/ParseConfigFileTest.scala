@@ -5,10 +5,10 @@ import java.nio.file.Paths
 
 import net.kemitix.thorp.domain.TemporaryFolder
 import net.kemitix.thorp.filesystem.FileSystem
-import org.scalatest.FunSpec
 import zio.DefaultRuntime
+import org.scalatest.funspec.AnyFunSpec
 
-class ParseConfigFileTest extends FunSpec with TemporaryFolder {
+class ParseConfigFileTest extends AnyFunSpec with TemporaryFolder {
 
   private val empty = Right(ConfigOptions.empty)
 

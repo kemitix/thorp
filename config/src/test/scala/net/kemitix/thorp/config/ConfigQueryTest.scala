@@ -3,9 +3,9 @@ package net.kemitix.thorp.config
 import java.nio.file.Paths
 
 import net.kemitix.thorp.domain.Sources
-import org.scalatest.FreeSpec
+import org.scalatest.freespec.AnyFreeSpec
 
-class ConfigQueryTest extends FreeSpec {
+class ConfigQueryTest extends AnyFreeSpec {
 
   "show version" - {
     "when is set" - {

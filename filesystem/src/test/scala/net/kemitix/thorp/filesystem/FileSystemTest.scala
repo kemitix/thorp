@@ -1,10 +1,10 @@
 package net.kemitix.thorp.filesystem
 
 import net.kemitix.thorp.domain.{RemoteKey, Sources, TemporaryFolder}
-import org.scalatest.FreeSpec
 import zio.DefaultRuntime
+import org.scalatest.freespec.AnyFreeSpec
 
-class FileSystemTest extends FreeSpec with TemporaryFolder {
+class FileSystemTest extends AnyFreeSpec with TemporaryFolder {
 
   "Live" - {
     "hasLocalFile" - {

@@ -9,11 +9,11 @@ import net.kemitix.thorp.domain.StorageEvent.{
   ErrorEvent
 }
 import net.kemitix.thorp.domain.{Bucket, RemoteKey}
-import org.scalatest.FreeSpec
 import zio.internal.PlatformLive
 import zio.{Runtime, Task, UIO}
+import org.scalatest.freespec.AnyFreeSpec
 
-class DeleterTest extends FreeSpec {
+class DeleterTest extends AnyFreeSpec {
 
   private val runtime = Runtime(Console.Live, PlatformLive.Default)
 

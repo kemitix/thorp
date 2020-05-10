@@ -1,8 +1,8 @@
 package net.kemitix.thorp.domain
 
-import org.scalatest.FunSpec
+import org.scalatest.funspec.AnyFunSpec
 
-class MD5HashTest extends FunSpec {
+class MD5HashTest extends AnyFunSpec {
 
   describe("recover base64 hash") {
     it("should recover base 64 #1") {

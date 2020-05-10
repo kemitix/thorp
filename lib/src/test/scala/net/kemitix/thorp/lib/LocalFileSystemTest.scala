@@ -25,14 +25,15 @@ import net.kemitix.thorp.uishell.UIEvent.{
   FileFound,
   KeyFound
 }
-import org.scalatest.FreeSpec
-import org.scalatest.Matchers._
+import matchers.should.Matchers._
 import zio.clock.Clock
 import zio.{DefaultRuntime, UIO, ZIO}
 
 import scala.collection.MapView
+import org.scalatest.matchers
+import org.scalatest.freespec.AnyFreeSpec
 
-class LocalFileSystemTest extends FreeSpec {
+class LocalFileSystemTest extends AnyFreeSpec {
 
   private val source       = Resource(this, "upload")
   private val sourcePath   = source.toPath

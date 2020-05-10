@@ -3,10 +3,10 @@ package net.kemitix.thorp.domain
 import java.io.File
 import java.nio.file.Paths
 
-import org.scalatest.FreeSpec
 import zio.DefaultRuntime
+import org.scalatest.freespec.AnyFreeSpec
 
-class RemoteKeyTest extends FreeSpec {
+class RemoteKeyTest extends AnyFreeSpec {
 
   private val emptyKey = RemoteKey("")
 

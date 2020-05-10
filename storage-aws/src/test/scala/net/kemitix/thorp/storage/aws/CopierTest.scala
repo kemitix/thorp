@@ -5,11 +5,11 @@ import net.kemitix.thorp.console.Console
 import net.kemitix.thorp.domain.StorageEvent.{ActionSummary, ErrorEvent}
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.aws.S3ClientException.{CopyError, HashError}
-import org.scalatest.FreeSpec
 import zio.internal.PlatformLive
 import zio.{Runtime, Task}
+import org.scalatest.freespec.AnyFreeSpec
 
-class CopierTest extends FreeSpec {
+class CopierTest extends AnyFreeSpec {
 
   private val runtime = Runtime(Console.Live, PlatformLive.Default)
 
