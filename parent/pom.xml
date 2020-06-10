@@ -13,6 +13,7 @@
     <groupId>net.kemitix.thorp</groupId>
     <artifactId>thorp-parent</artifactId>
     <version>DEV-SNAPSHOT</version>
+    <packaging>pom</packaging>
 
     <properties>
         <scala-maven-plugin.version>4.4.0</scala-maven-plugin.version>
