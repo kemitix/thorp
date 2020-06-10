@@ -112,8 +112,9 @@
                         <tile>net.kemitix.tiles:pmd:${kemitix-maven-tiles.version}</tile>
                         <tile>net.kemitix.tiles:digraph:${kemitix-maven-tiles.version}</tile>
                         <tile>net.kemitix.tiles:testing:${kemitix-maven-tiles.version}</tile>
-                        <tile>net.kemitix.tiles:coverage:${kemitix-maven-tiles.version}</tile>
-                        <tile>net.kemitix.tiles:pitest:${kemitix-maven-tiles.version}</tile></tiles>
+<!--                        <tile>net.kemitix.tiles:coverage:${kemitix-maven-tiles.version}</tile>-->
+<!--                        <tile>net.kemitix.tiles:pitest:${kemitix-maven-tiles.version}</tile>-->
+                    </tiles>
                 </configuration>
             </plugin>
         </plugins>
