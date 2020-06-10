@@ -24,6 +24,18 @@
 
     <dependencyManagement>
         <dependencies>
+            <!-- throp -->
+            <dependency>
+                <groupId>net.kemitix.thorp</groupId>
+                <artifactId>throp-domain</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.kemitix.thorp</groupId>
+                <artifactId>throp-filesystem</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
             <!-- scala -->
             <dependency>
                 <groupId>org.scala-lang</groupId>
