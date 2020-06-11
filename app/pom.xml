@@ -1,0 +1,100 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>net.kemitix.thorp</groupId>
+        <artifactId>thorp-parent</artifactId>
+        <version>DEV-SNAPSHOT</version>
+        <relativePath>../parent/pom.xml</relativePath>
+    </parent>
+
+    <artifactId>thorp</artifactId>
+    <name>thorp</name>
+
+    <dependencies>
+        <!-- thorp -->
+        <dependency>
+            <groupId>net.kemitix.thorp</groupId>
+            <artifactId>thorp-cli</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.kemitix.thorp</groupId>
+            <artifactId>thorp-config</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.kemitix.thorp</groupId>
+            <artifactId>thorp-domain</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.kemitix.thorp</groupId>
+            <artifactId>thorp-filesystem</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.kemitix.thorp</groupId>
+            <artifactId>thorp-lib</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.kemitix.thorp</groupId>
+            <artifactId>thorp-storage</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.kemitix.thorp</groupId>
+            <artifactId>thorp-storage-aws</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.kemitix.thorp</groupId>
+            <artifactId>thorp-uishell</artifactId>
+        </dependency>
+
+        <!-- command line parsing -->
+        <dependency>
+            <groupId>com.github.scopt</groupId>
+            <artifactId>scopt_2.13</artifactId>
+        </dependency>
+
+        <!-- scala -->
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+        </dependency>
+
+        <!-- eip-zio -->
+        <dependency>
+            <groupId>net.kemitix</groupId>
+            <artifactId>eip-zio_2.13</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>net.alchim31.maven</groupId>
+                <artifactId>scala-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <archive>
+                        <manifest>
+                            <mainClass>net.kemitix.thorp.Main</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

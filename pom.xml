@@ -1,0 +1,53 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>net.kemitix.thorp</groupId>
+    <artifactId>thorp-root</artifactId>
+    <version>DEV-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>parent</module>
+        <module>domain</module>
+        <module>filesystem</module>
+        <module>config</module>
+        <module>console</module>
+        <module>uishell</module>
+        <module>storage</module>
+        <module>lib</module>
+        <module>storage-aws</module>
+        <module>cli</module>
+        <module>app</module>
+    </modules>
+
+    <properties>
+        <maven-graph-plugin.version>1.45</maven-graph-plugin.version>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.fusesource.mvnplugins</groupId>
+                <artifactId>maven-graph-plugin</artifactId>
+                <version>${maven-graph-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>reactor</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <direction>TB</direction>
+                    <hideTransitive>true</hideTransitive>
+                    <hideVersion>true</hideVersion>
+                    <hideOptional>true</hideOptional>
+                    <hideScopes>test,provided</hideScopes>
+                    <target>${project.basedir}/docs/images/reactor-graph.png</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
