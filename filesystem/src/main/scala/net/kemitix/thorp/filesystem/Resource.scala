@@ -8,7 +8,8 @@ final case class Resource(
     file: String
 ) {
 
-  def toPath: Path = Paths.get(cls.getClass.getResource(file).getPath)
-  def toFile: File = toPath.toFile
-  def length: Long = toFile.length()
+  def toPath: Path             = Paths.get(cls.getClass.getResource(file).getPath)
+  def toFile: File             = toPath.toFile
+  def getCanonicalPath: String = toPath.toFile.getCanonicalPath
+  def length: Long             = toFile.length()
 }

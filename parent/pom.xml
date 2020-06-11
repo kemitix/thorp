@@ -65,6 +65,11 @@
                 <artifactId>thorp-storage-aws</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>net.kemitix.thorp</groupId>
+                <artifactId>thorp-cli</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
             <!-- scala - scala -->
             <dependency>
