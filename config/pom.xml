@@ -15,6 +15,10 @@
         <!-- thorp -->
         <dependency>
             <groupId>net.kemitix.thorp</groupId>
+            <artifactId>thorp-domain</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.kemitix.thorp</groupId>
             <artifactId>thorp-filesystem</artifactId>
         </dependency>
 

@@ -21,6 +21,10 @@
             <groupId>net.kemitix.thorp</groupId>
             <artifactId>thorp-console</artifactId>
         </dependency>
+        <dependency>
+            <groupId>net.kemitix.thorp</groupId>
+            <artifactId>thorp-filesystem</artifactId>
+        </dependency>
 
         <!-- scala -->
         <dependency>
