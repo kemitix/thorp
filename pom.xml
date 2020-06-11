@@ -13,6 +13,7 @@
         <module>config</module>
         <module>console</module>
         <module>uishell</module>
+        <module>storage</module>
     </modules>
 
     <properties>
