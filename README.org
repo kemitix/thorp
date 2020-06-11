@@ -85,8 +85,8 @@ When considering a local file, the following table governs what should happen:
 
 * Executable JAR
 
-To build as an executable jar, perform `sbt assembly`
+To build as an executable jar, perform `mvn package`
 
-This will create the file `cli/target/scala-2.13/thorp`
+This will create the file `app/target/thorp-${version}-jar-with-dependencies.jar`
 
-Copy this file to your `PATH`.
+Copy and rename this file into your `PATH`.
