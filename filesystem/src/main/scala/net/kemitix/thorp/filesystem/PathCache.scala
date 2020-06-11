@@ -4,7 +4,7 @@ import java.nio.file.{Path, Paths}
 import java.time.Instant
 import java.util.regex.Pattern
 
-import net.kemitix.thorp.domain.{HashType, MD5Hash}
+import net.kemitix.thorp.domain.{HashType, LastModified, MD5Hash}
 import zio.{UIO, ZIO}
 
 /**
@@ -31,7 +31,7 @@ object PathCache {
         String.join(":",
                     hashType.toString,
                     hash.in,
-                    modified.toEpochMilli.toString,
+                    modified.at.toEpochMilli.toString,
                     path.toString)
       })
     }
@@ -52,7 +52,8 @@ object PathCache {
             .create(
               Map[HashType, MD5Hash](
                 hashType -> MD5Hash(matcher.group("hash"))),
-              Instant.ofEpochMilli(matcher.group("modified").toLong)
+              LastModified.at(
+                Instant.ofEpochMilli(matcher.group("modified").toLong))
             ))
       }
       .catchAll({ _: IllegalArgumentException =>

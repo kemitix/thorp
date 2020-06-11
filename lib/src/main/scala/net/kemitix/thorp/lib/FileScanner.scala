@@ -122,7 +122,7 @@ object FileScanner {
           _        <- MessageChannel.send(fileChannel)(fileMsg)
           modified <- FileSystem.lastModified(file)
           cacheMsg <- Message.create(
-            (path -> FileData.create(hashes, modified)))
+            (path -> FileData.create(hashes, LastModified.at(modified))))
           _ <- MessageChannel.send(cacheChannel)(cacheMsg)
         } yield ()
 

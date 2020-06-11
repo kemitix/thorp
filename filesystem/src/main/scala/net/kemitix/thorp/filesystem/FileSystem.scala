@@ -114,7 +114,7 @@ object FileSystem {
           path: Path,
           fileData: FileData): ZIO[FileSystem, Any, Hashes] = {
         val lastModified = Instant.ofEpochMilli(path.toFile.lastModified())
-        if (lastModified.isAfter(fileData.lastModified)) {
+        if (lastModified.isAfter(fileData.lastModified.at)) {
           ZIO.fail("fileData is out-of-date")
         } else {
           ZIO.succeed(fileData.hashes)
