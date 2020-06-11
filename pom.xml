@@ -14,6 +14,7 @@
         <module>console</module>
         <module>uishell</module>
         <module>storage</module>
+        <module>lib</module>
     </modules>
 
     <properties>
