@@ -10,6 +10,7 @@
         <module>parent</module>
         <module>domain</module>
         <module>filesystem</module>
+        <module>config</module>
     </modules>
 
 </project>

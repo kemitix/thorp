@@ -17,10 +17,14 @@
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-library</artifactId>
         </dependency>
+
+        <!-- eip-zio -->
         <dependency>
             <groupId>net.kemitix</groupId>
             <artifactId>eip-zio_2.13</artifactId>
         </dependency>
+
+        <!-- zio -->
         <dependency>
             <groupId>dev.zio</groupId>
             <artifactId>zio_2.13</artifactId>

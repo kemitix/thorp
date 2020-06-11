@@ -35,13 +35,19 @@
                 <artifactId>throp-filesystem</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>net.kemitix.thorp</groupId>
+                <artifactId>thorp-config</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
-            <!-- scala -->
+            <!-- scala - scala -->
             <dependency>
                 <groupId>org.scala-lang</groupId>
                 <artifactId>scala-library</artifactId>
                 <version>${scala-library.version}</version>
             </dependency>
+            <!-- scala - zio -->
             <dependency>
                 <groupId>dev.zio</groupId>
                 <artifactId>zio_2.13</artifactId>
@@ -52,11 +58,19 @@
                 <artifactId>zio-streams_2.13</artifactId>
                 <version>1.0.0-RC16</version>
             </dependency>
+            <!-- scala - eip-zio -->
             <dependency>
                 <groupId>net.kemitix</groupId>
                 <artifactId>eip-zio_2.13</artifactId>
                 <version>0.3.2</version>
             </dependency>
+            <!-- scala - command line parsing -->
+            <dependency>
+                <groupId>com.github.scopt</groupId>
+                <artifactId>scopt_2.13</artifactId>
+                <version>4.0.0-RC2</version>
+            </dependency>
+            <!-- scala - test -->
             <dependency>
                 <groupId>org.scalatest</groupId>
                 <artifactId>scalatest_2.13</artifactId>
@@ -77,6 +91,17 @@
                     <groupId>net.alchim31.maven</groupId>
                     <artifactId>scala-maven-plugin</artifactId>
                     <version>${scala-maven-plugin.version}</version>
+                    <configuration>
+                        <args>
+                            <arg>-Ywarn-unused:imports</arg>
+                            <arg>-Xfatal-warnings</arg>
+                            <arg>-feature</arg>
+                            <arg>-deprecation</arg>
+                            <arg>-unchecked</arg>
+                            <arg>-language:postfixOps</arg>
+                            <arg>-language:higherKinds</arg>
+                        </args>
+                    </configuration>
                     <executions>
                         <execution>
                             <id>scala-compile-first</id>

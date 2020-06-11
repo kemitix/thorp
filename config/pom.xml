@@ -8,14 +8,20 @@
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>throp-filesystem</artifactId>
-    <name>filesystem</name>
+    <artifactId>throp-config</artifactId>
+    <name>config</name>
 
     <dependencies>
         <!-- thorp -->
         <dependency>
             <groupId>net.kemitix.thorp</groupId>
-            <artifactId>throp-domain</artifactId>
+            <artifactId>throp-filesystem</artifactId>
+        </dependency>
+
+        <!-- command line parsing -->
+        <dependency>
+            <groupId>com.github.scopt</groupId>
+            <artifactId>scopt_2.13</artifactId>
         </dependency>
 
         <!-- scala -->
