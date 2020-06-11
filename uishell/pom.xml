@@ -1,0 +1,69 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>net.kemitix.thorp</groupId>
+        <artifactId>thorp-parent</artifactId>
+        <version>DEV-SNAPSHOT</version>
+        <relativePath>../parent/pom.xml</relativePath>
+    </parent>
+
+    <artifactId>thorp-uishell</artifactId>
+    <name>uishell</name>
+
+    <dependencies>
+        <!-- thorp -->
+        <dependency>
+            <groupId>net.kemitix.thorp</groupId>
+            <artifactId>thorp-config</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.kemitix.thorp</groupId>
+            <artifactId>thorp-console</artifactId>
+        </dependency>
+
+        <!-- scala -->
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+        </dependency>
+
+        <!-- eip-zio -->
+        <dependency>
+            <groupId>net.kemitix</groupId>
+            <artifactId>eip-zio_2.13</artifactId>
+        </dependency>
+
+        <!-- zio -->
+        <dependency>
+            <groupId>dev.zio</groupId>
+            <artifactId>zio_2.13</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dev.zio</groupId>
+            <artifactId>zio-streams_2.13</artifactId>
+        </dependency>
+
+        <!-- scala - testing -->
+        <dependency>
+            <groupId>org.scalatest</groupId>
+            <artifactId>scalatest_2.13</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.scalamock</groupId>
+            <artifactId>scalamock_2.13</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>net.alchim31.maven</groupId>
+                <artifactId>scala-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

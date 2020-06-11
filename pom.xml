@@ -12,6 +12,7 @@
         <module>filesystem</module>
         <module>config</module>
         <module>console</module>
+        <module>uishell</module>
     </modules>
 
     <properties>

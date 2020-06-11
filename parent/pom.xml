@@ -45,6 +45,11 @@
                 <artifactId>thorp-console</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>net.kemitix.thorp</groupId>
+                <artifactId>thorp-uishell</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
             <!-- scala - scala -->
             <dependency>
