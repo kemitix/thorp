@@ -17,6 +17,7 @@
         <module>lib</module>
         <module>storage-aws</module>
         <module>cli</module>
+        <module>app</module>
     </modules>
 
     <properties>

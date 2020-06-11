@@ -70,6 +70,11 @@
                 <artifactId>thorp-cli</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>net.kemitix.thorp</groupId>
+                <artifactId>thorp-app</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
             <!-- scala - scala -->
             <dependency>

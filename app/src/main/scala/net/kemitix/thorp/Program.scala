@@ -22,7 +22,8 @@ import scala.io.AnsiColor.{WHITE, RESET}
 
 trait Program {
 
-  lazy val version = s"${WHITE}Thorp v${thorp.BuildInfo.version}$RESET"
+  val version           = "0.11.0"
+  lazy val versionLabel = s"${WHITE}Thorp v${version}$RESET"
 
   def run(args: List[String]): ZIO[
     Storage with Console with Config with Clock with FileSystem with Hasher with FileScanner,
@@ -32,7 +33,7 @@ trait Program {
       cli    <- CliArgs.parse(args)
       config <- ConfigurationBuilder.buildConfig(cli)
       _      <- Config.set(config)
-      _      <- Console.putStrLn(version)
+      _      <- Console.putStrLn(versionLabel)
       _      <- ZIO.when(!showVersion(cli))(executeWithUI.catchAll(handleErrors))
     } yield ()
   }
