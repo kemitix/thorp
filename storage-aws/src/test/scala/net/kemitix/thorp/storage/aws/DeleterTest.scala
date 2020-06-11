@@ -18,7 +18,7 @@ class DeleterTest extends FreeSpec {
   private val runtime = Runtime(Console.Live, PlatformLive.Default)
 
   "delete" - {
-    val bucket    = Bucket("aBucket")
+    val bucket    = Bucket.named("aBucket")
     val remoteKey = RemoteKey("aRemoteKey")
     "when no errors" in {
       val expected = Right(DeleteEvent(remoteKey))

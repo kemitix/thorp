@@ -20,7 +20,7 @@ object ConfigOption {
   final case class Bucket(name: String) extends ConfigOption {
     override def update(config: Configuration): Configuration =
       if (config.bucket.name.isEmpty)
-        bucket.set(domain.Bucket(name))(config)
+        bucket.set(domain.Bucket.named(name))(config)
       else
         config
   }

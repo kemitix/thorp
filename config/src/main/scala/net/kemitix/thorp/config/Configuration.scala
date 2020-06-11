@@ -14,7 +14,7 @@ private[config] final case class Configuration(
 
 private[config] object Configuration {
   val empty: Configuration = Configuration(
-    bucket = Bucket(""),
+    bucket = Bucket.named(""),
     prefix = RemoteKey(""),
     filters = List.empty,
     debug = false,

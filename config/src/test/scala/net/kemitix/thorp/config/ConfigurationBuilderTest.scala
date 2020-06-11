@@ -11,7 +11,7 @@ import zio.DefaultRuntime
 class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
 
   private val pwd: Path                     = Paths.get(System.getenv("PWD"))
-  private val aBucket                       = Bucket("aBucket")
+  private val aBucket                       = Bucket.named("aBucket")
   private val coBucket: ConfigOption.Bucket = ConfigOption.Bucket(aBucket.name)
   private val thorpConfigFileName           = ".thorp.conf"
 
@@ -42,7 +42,7 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
                     "exclude = an-exclusion")
           val result = invoke(configOptions(ConfigOption.Source(source)))
           it("should have bucket") {
-            val expected = Right(Bucket("a-bucket"))
+            val expected = Right(Bucket.named("a-bucket"))
             assertResult(expected)(result.map(_.bucket))
           }
           it("should have prefix") {
@@ -121,7 +121,7 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
             val expectedSources =
               Right(Sources(List(currentSource, previousSource)))
             // should have bucket from current only
-            val expectedBuckets = Right(Bucket("current-bucket"))
+            val expectedBuckets = Right(Bucket.named("current-bucket"))
             // should have prefix from current only
             val expectedPrefixes = Right(RemoteKey("current-prefix"))
             // should have filters from both sources

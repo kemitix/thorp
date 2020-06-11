@@ -1,6 +1,5 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0">
     <modelVersion>4.0.0</modelVersion>
-
     <parent>
         <groupId>net.kemitix.thorp</groupId>
         <artifactId>thorp-parent</artifactId>
@@ -12,6 +11,19 @@
     <name>domain</name>
 
     <dependencies>
+        <!-- mon -->
+        <dependency>
+            <groupId>net.kemitix</groupId>
+            <artifactId>mon</artifactId>
+        </dependency>
+
+        <!-- lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- scala -->
         <dependency>
             <groupId>org.scala-lang</groupId>

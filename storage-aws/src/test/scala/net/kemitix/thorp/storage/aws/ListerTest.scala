@@ -18,7 +18,7 @@ import zio.{DefaultRuntime, RIO, Task, UIO}
 class ListerTest extends FreeSpec {
 
   "list" - {
-    val bucket = Bucket("aBucket")
+    val bucket = Bucket.named("aBucket")
     val prefix = RemoteKey("aRemoteKey")
     "when no errors" - {
       "when single fetch required" in {

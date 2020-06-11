@@ -37,7 +37,7 @@ class LocalFileSystemTest extends FreeSpec {
   private val source       = Resource(this, "upload")
   private val sourcePath   = source.toPath
   private val sourceOption = ConfigOption.Source(sourcePath)
-  private val bucket       = Bucket("bucket")
+  private val bucket       = Bucket.named("bucket")
   private val bucketOption = ConfigOption.Bucket(bucket.name)
   private val configOptions = ConfigOptions(
     List[ConfigOption](

@@ -14,7 +14,7 @@ class CopierTest extends FreeSpec {
   private val runtime = Runtime(Console.Live, PlatformLive.Default)
 
   "copier" - {
-    val bucket    = Bucket("aBucket")
+    val bucket    = Bucket.named("aBucket")
     val sourceKey = RemoteKey("sourceKey")
     val hash      = MD5Hash("aHash")
     val targetKey = RemoteKey("targetKey")

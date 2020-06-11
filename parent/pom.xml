@@ -20,6 +20,8 @@
         <tiles-maven-plugin.version>2.16</tiles-maven-plugin.version>
         <kemitix-maven-tiles.version>2.7.0</kemitix-maven-tiles.version>
         <scala-library.version>2.13.0</scala-library.version>
+        <lombok.version>1.18.12</lombok.version>
+        <mon.version>1.0.0</mon.version>
     </properties>
 
     <dependencyManagement>
@@ -74,6 +76,20 @@
                 <groupId>net.kemitix.thorp</groupId>
                 <artifactId>thorp-app</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+
+            <!-- mon -->
+            <dependency>
+                <groupId>net.kemitix</groupId>
+                <artifactId>mon</artifactId>
+                <version>${mon.version}</version>
+            </dependency>
+
+            <!-- lombok -->
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
             </dependency>
 
             <!-- scala - scala -->
