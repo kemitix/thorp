@@ -1,20 +1,18 @@
-* thorp
+# thorp
 
 Synchronisation of files with S3 using the hash of the file contents.
 
-[[https://www.codacy.com/app/kemitix/thorp][file:https://img.shields.io/codacy/grade/c1719d44f1f045a8b71e1665a6d3ce6c.svg?style=for-the-badge]]
-[[https://search.maven.org/search?q=net.kemitix.thorp][file:https://img.shields.io/maven-central/v/net.kemitix.thorp/thorp_2.12.svg?style=for-the-badge]]
+[![Maven Central](https://img.shields.io/maven-central/v/net.kemitix.thorp/thorp_2.12.svg?style=for-the-badge)](https://search.maven.org/search?q=net.kemitix.thorp)
 
-Originally based on Alex Kudlick's [[https://github.com/akud/aws-s3-sync-by-hash][aws-s3-sync-by-hash]].
+Originally based on Alex Kudlick's [aws-s3-sync-by-hash](https://github.com/akud/aws-s3-sync-by-hash).
 
-The normal ~aws s3 sync ...~ command only uses the time stamp of files
+The normal `aws s3 sync ...` command only uses the time stamp of files
 to decide what files need to be copied. This utility looks at the md5
 hash of the file contents.
 
-* Usage
+# Usage
 
-  #+begin_example
-    thorp
+    $ thorp
     Usage: thorp [options]
 
       -V, --version         Display the version and quit
@@ -28,62 +26,59 @@ hash of the file contents.
       -d, --debug           Enable debug logging
       --no-global           Ignore global configuration
       --no-user             Ignore user configuration
-  #+end_example
 
-If you don't provide a ~source~ the current diretory will be used.
+If you don't provide a `source` the current directory will be used.
 
-The ~--include~ and ~--exclude~ parameters can be used more than once.
+The `--include` and `--exclude` parameters can be used more than once.
 
-The ~--source~ parameter can be used more than once, in which case,
+The `--source` parameter can be used more than once, in which case,
 all files in all sources will be consolidated into the same
 bucket/prefix.
 
-** Batch mode
+## Batch mode
 
 Batch mode disable the ANSI console display and logs simple messages
 that can be written to a file.
 
-* Configuration
+# Configuration
 
   Configuration will be read from these files:
 
-  - Global: ~/etc/thorp.conf~
-  - User: ~ ~/.config/thorp.conf~
-  - Source: ~${source}/.thorp.conf~
+  - Global: `/etc/thorp.conf`
+  - User: `~/.config/thorp.conf`
+  - Source: `${source}/.thorp.conf`
 
   Command line arguments override those in Source, which override
   those in User, which override those Global, which override any
   built-in config.
 
-  When there is more than one source, only the first ".thorp.conf"
+  When there is more than one source, only the first `.thorp.conf`
   file found will be used.
 
   Built-in config consists of using the current working directory as
-  the ~source~.
+  the `source`.
 
   Note, that ~include~ and ~exclude~ are cumulative across all
   configuration files.
 
-* Caching
+# Caching
 
 The last modified time for files is used to decide whether to calculate the hash values for the file. If a file has not been updated, then the hash values stored in the `.thorp.cache` file located in the root of the source is used. Otherwise the file will be read to caculate the the new hashes.
 
-* Behaviour
+# Behaviour
 
 When considering a local file, the following table governs what should happen:
 
-|---+------------+------------+------------------+--------------------+---------------------|
 | # | local file | remote key | hash of same key | hash of other keys | action              |
-|---+------------+------------+------------------+--------------------+---------------------|
+|---|------------|------------|------------------|--------------------|---------------------|
 | 1 | exists     | exists     | matches          | -                  | do nothing          |
 | 2 | exists     | is missing | -                | matches            | copy from other key |
 | 3 | exists     | is missing | -                | no matches         | upload              |
 | 4 | exists     | exists     | no match         | matches            | copy from other key |
 | 5 | exists     | exists     | no match         | no matches         | upload              |
 | 6 | is missing | exists     | -                | -                  | delete              |
-|---+------------+------------+------------------+--------------------+---------------------|
 
-* Executable JAR
+# Executable JAR
 
 To build as an executable jar, perform `mvn package`
 
