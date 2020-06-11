@@ -39,7 +39,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <direction>LR</direction>
+                    <direction>TB</direction>
                     <hideTransitive>true</hideTransitive>
                     <hideVersion>true</hideVersion>
                     <hideOptional>true</hideOptional>

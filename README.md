@@ -85,3 +85,7 @@ To build as an executable jar, perform `mvn package`
 This will create the file `app/target/thorp-${version}-jar-with-dependencies.jar`
 
 Copy and rename this file into your `PATH`.
+
+# Structure/Dependencies
+
+![Dependency Graph](docs/images/reactor-graph.png)
