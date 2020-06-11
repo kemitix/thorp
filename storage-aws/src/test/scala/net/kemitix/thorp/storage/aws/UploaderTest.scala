@@ -25,8 +25,8 @@ class UploaderTest extends FreeSpec with MockFactory {
   val uiChannel: UChannel[Any, UIEvent] = zioMessage => ()
 
   "upload" - {
-    val aSource: File = Resource(this, "")
-    val aFile: File   = Resource(this, "small-file")
+    val aSource: File = Resource(this, "").toFile
+    val aFile: File   = Resource(this, "small-file").toFile
     val aHash         = MD5Hash("aHash")
     val hashes        = Map[HashType, MD5Hash](MD5 -> aHash)
     val remoteKey     = RemoteKey("aRemoteKey")

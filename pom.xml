@@ -15,6 +15,7 @@
         <module>uishell</module>
         <module>storage</module>
         <module>lib</module>
+        <module>storage-aws</module>
     </modules>
 
     <properties>

@@ -1,10 +1,14 @@
 package net.kemitix.thorp.filesystem
 
-import java.nio.file.Paths
+import java.io.File
+import java.nio.file.{Path, Paths}
 
 final case class Resource(
     cls: Object,
     file: String
 ) {
-  def toPath = Paths.get(cls.getClass.getResource(file).getPath)
+
+  def toPath: Path = Paths.get(cls.getClass.getResource(file).getPath)
+  def toFile: File = toPath.toFile
+  def length: Long = toFile.length()
 }
