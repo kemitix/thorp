@@ -8,7 +8,7 @@
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>throp-domain</artifactId>
+    <artifactId>thorp-domain</artifactId>
     <name>domain</name>
 
     <dependencies>

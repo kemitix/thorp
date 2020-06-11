@@ -8,14 +8,14 @@
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>throp-config</artifactId>
+    <artifactId>thorp-config</artifactId>
     <name>config</name>
 
     <dependencies>
         <!-- thorp -->
         <dependency>
             <groupId>net.kemitix.thorp</groupId>
-            <artifactId>throp-filesystem</artifactId>
+            <artifactId>thorp-filesystem</artifactId>
         </dependency>
 
         <!-- command line parsing -->

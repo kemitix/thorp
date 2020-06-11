@@ -8,14 +8,14 @@
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>throp-console</artifactId>
+    <artifactId>thorp-console</artifactId>
     <name>console</name>
 
     <dependencies>
         <!-- thorp -->
         <dependency>
             <groupId>net.kemitix.thorp</groupId>
-            <artifactId>throp-domain</artifactId>
+            <artifactId>thorp-domain</artifactId>
         </dependency>
 
         <!-- scala -->

@@ -24,15 +24,15 @@
 
     <dependencyManagement>
         <dependencies>
-            <!-- throp -->
+            <!-- thorp -->
             <dependency>
                 <groupId>net.kemitix.thorp</groupId>
-                <artifactId>throp-domain</artifactId>
+                <artifactId>thorp-domain</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>net.kemitix.thorp</groupId>
-                <artifactId>throp-filesystem</artifactId>
+                <artifactId>thorp-filesystem</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
