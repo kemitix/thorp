@@ -206,7 +206,7 @@ class LocalFileSystemTest extends FreeSpec {
     }
     "where file has been renamed" - {
       // renamed from "other/root" to "root-file"
-      val otherRootKey = RemoteKey("other/root")
+      val otherRootKey = RemoteKey.create("other/root")
       val remoteObjects =
         RemoteObjects(
           byHash = MapView(MD5HashData.Root.hash     -> otherRootKey,
@@ -292,7 +292,7 @@ class LocalFileSystemTest extends FreeSpec {
     }
     "where remote has extra objects" - {
       val extraHash   = MD5Hash.create("extra")
-      val extraObject = RemoteKey("extra")
+      val extraObject = RemoteKey.create("extra")
       val remoteObjects = RemoteObjects(
         byHash = MapView(MD5HashData.Root.hash     -> MD5HashData.Root.remoteKey,
                          MD5HashData.Leaf.hash     -> MD5HashData.Leaf.remoteKey,

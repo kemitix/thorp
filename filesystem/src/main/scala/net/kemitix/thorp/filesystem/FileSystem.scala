@@ -3,12 +3,13 @@ package net.kemitix.thorp.filesystem
 import java.io.{File, FileInputStream, FileWriter}
 import java.nio.file.{Files, Path, StandardCopyOption}
 import java.time.Instant
-import java.util.stream
+import java.util.{stream}
 
 import net.kemitix.thorp.domain.{Hashes, RemoteKey, Sources}
 import zio._
 
 import scala.jdk.CollectionConverters._
+import scala.jdk.OptionConverters._
 
 trait FileSystem {
   val filesystem: FileSystem.Service
@@ -94,8 +95,9 @@ object FileSystem {
           prefix: RemoteKey,
           remoteKey: RemoteKey): ZIO[FileSystem, Nothing, Boolean] = {
         ZIO.foldLeft(sources.paths)(false) { (accExists, source) =>
-          RemoteKey
-            .asFile(source, prefix)(remoteKey)
+          remoteKey
+            .asFile(source, prefix)
+            .toScala
             .map(FileSystem.exists)
             .getOrElse(UIO(false))
             .map(_ || accExists)

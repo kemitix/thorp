@@ -19,7 +19,7 @@ class DeleterTest extends FreeSpec {
 
   "delete" - {
     val bucket    = Bucket.named("aBucket")
-    val remoteKey = RemoteKey("aRemoteKey")
+    val remoteKey = RemoteKey.create("aRemoteKey")
     "when no errors" in {
       val expected = Right(DeleteEvent(remoteKey))
       new AmazonS3ClientTestFixture {

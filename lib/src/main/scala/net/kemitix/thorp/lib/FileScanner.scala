@@ -114,9 +114,9 @@ object FileScanner {
           source  <- Sources.forPath(file.toPath)(sources)
           prefix  <- Config.prefix
           path = source.relativize(file.toPath)
-          hashes    <- Hasher.hashObject(file.toPath, pathCache.get(path))
-          remoteKey <- RemoteKey.from(source, prefix, file)
-          size      <- FileSystem.length(file)
+          hashes <- Hasher.hashObject(file.toPath, pathCache.get(path))
+          remoteKey = RemoteKey.from(source, prefix, file)
+          size <- FileSystem.length(file)
           fileMsg <- Message.create(
             LocalFile(file, source.toFile, hashes, remoteKey, size))
           _        <- MessageChannel.send(fileChannel)(fileMsg)

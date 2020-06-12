@@ -46,7 +46,7 @@ class MD5HashGeneratorTest extends FunSpec {
       }
       it("should generate the correct hash for second chunk of the file") {
         val part2    = BigFile.Part2
-        val expected = Right((part2.hash.hash()))
+        val expected = Right(part2.hash.hash())
         val result   = invoke(path, part2.offset, part2.size).map(x => x.hash)
         assertResult(expected)(result)
       }

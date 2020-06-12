@@ -15,9 +15,9 @@ class CopierTest extends FreeSpec {
 
   "copier" - {
     val bucket    = Bucket.named("aBucket")
-    val sourceKey = RemoteKey("sourceKey")
+    val sourceKey = RemoteKey.create("sourceKey")
     val hash      = MD5Hash.create("aHash")
-    val targetKey = RemoteKey("targetKey")
+    val targetKey = RemoteKey.create("targetKey")
     "when source exists" - {
       "when source hash matches" - {
         "copies from source to target" in {
@@ -41,10 +41,11 @@ class CopierTest extends FreeSpec {
               .returns(_ => Task.succeed(None))
             private val result =
               invoke(bucket, sourceKey, hash, targetKey, fixture.amazonS3Client)
+            val key = RemoteKey.create("targetKey")
             result match {
               case Right(
                   ErrorEvent(ActionSummary.Copy("sourceKey => targetKey"),
-                             RemoteKey("targetKey"),
+                             key,
                              e)) =>
                 e match {
                   case HashError => assert(true)
@@ -64,10 +65,11 @@ class CopierTest extends FreeSpec {
               .returns(_ => Task.fail(new AmazonS3Exception(expectedMessage)))
             private val result =
               invoke(bucket, sourceKey, hash, targetKey, fixture.amazonS3Client)
+            val key = RemoteKey.create("targetKey")
             result match {
               case Right(
                   ErrorEvent(ActionSummary.Copy("sourceKey => targetKey"),
-                             RemoteKey("targetKey"),
+                             key,
                              e)) =>
                 e match {
                   case CopyError(cause) =>

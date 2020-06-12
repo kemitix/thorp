@@ -53,8 +53,9 @@ class FileScannerTest extends FreeSpec {
       val completed =
         new DefaultRuntime {}.unsafeRunSync(program.provide(TestEnv)).toEither
       assert(completed.isRight)
-      assertResult(Set(RemoteKey("root-file"), RemoteKey("subdir/leaf-file")))(
-        scannedFiles.get.toSet)
+      assertResult(
+        Set(RemoteKey.create("root-file"),
+            RemoteKey.create("subdir/leaf-file")))(scannedFiles.get.toSet)
     }
 
   }

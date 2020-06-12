@@ -8,8 +8,8 @@ class S3ObjectsByHashSuite extends FunSpec {
 
   describe("grouping s3 object together by their hash values") {
     val hash = MD5Hash.create("hash")
-    val key1 = RemoteKey("key-1")
-    val key2 = RemoteKey("key-2")
+    val key1 = RemoteKey.create("key-1")
+    val key2 = RemoteKey.create("key-2")
     val o1   = s3object(hash, key1)
     val o2   = s3object(hash, key2)
     val os   = LazyList(o1, o2)

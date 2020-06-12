@@ -11,7 +11,7 @@ object S3ObjectsByHash {
       os: LazyList[S3ObjectSummary]
   ): MapView[MD5Hash, RemoteKey] =
     os.map { o =>
-        MD5Hash.create(o.getETag) -> RemoteKey(o.getKey)
+        MD5Hash.create(o.getETag) -> RemoteKey.create(o.getKey)
       }
       .toMap
       .view

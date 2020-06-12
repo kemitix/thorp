@@ -28,7 +28,7 @@ object ConfigOption {
   final case class Prefix(path: String) extends ConfigOption {
     override def update(config: Configuration): Configuration =
       if (config.prefix.key.isEmpty)
-        prefix.set(RemoteKey(path))(config)
+        prefix.set(RemoteKey.create(path))(config)
       else
         config
   }

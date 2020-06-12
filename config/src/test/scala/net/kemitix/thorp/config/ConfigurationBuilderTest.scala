@@ -46,7 +46,7 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
             assertResult(expected)(result.map(_.bucket))
           }
           it("should have prefix") {
-            val expected = Right(RemoteKey("a-prefix"))
+            val expected = Right(RemoteKey.create("a-prefix"))
             assertResult(expected)(result.map(_.prefix))
           }
           it("should have filters") {
@@ -123,7 +123,7 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
             // should have bucket from current only
             val expectedBuckets = Right(Bucket.named("current-bucket"))
             // should have prefix from current only
-            val expectedPrefixes = Right(RemoteKey("current-prefix"))
+            val expectedPrefixes = Right(RemoteKey.create("current-prefix"))
             // should have filters from both sources
             val expectedFilters = Right(
               List[Filter](Filter.Exclude("current-exclude"),

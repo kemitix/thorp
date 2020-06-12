@@ -41,7 +41,7 @@ trait Uploader {
       .map(
         uploadResult =>
           UploadEvent(
-            RemoteKey(uploadResult.getKey),
+            RemoteKey.create(uploadResult.getKey),
             MD5Hash.create(uploadResult.getETag)
         )
       )

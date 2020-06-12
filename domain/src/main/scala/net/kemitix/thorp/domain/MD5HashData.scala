@@ -5,13 +5,13 @@ object MD5HashData {
   object Root {
     val hash: MD5Hash  = MD5Hash.create("a3a6ac11a0eb577b81b3bb5c95cc8a6e")
     val base64: String = "o6asEaDrV3uBs7tclcyKbg=="
-    val remoteKey      = RemoteKey("root-file")
+    val remoteKey      = RemoteKey.create("root-file")
     val size: Long     = 55
   }
   object Leaf {
     val hash: MD5Hash  = MD5Hash.create("208386a650bdec61cfcd7bd8dcb6b542")
     val base64: String = "IIOGplC97GHPzXvY3La1Qg=="
-    val remoteKey      = RemoteKey("subdir/leaf-file")
+    val remoteKey      = RemoteKey.create("subdir/leaf-file")
     val size: Long     = 58
   }
   object BigFile {

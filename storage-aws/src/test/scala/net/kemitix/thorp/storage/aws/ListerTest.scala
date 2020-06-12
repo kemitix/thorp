@@ -19,14 +19,14 @@ class ListerTest extends FreeSpec {
 
   "list" - {
     val bucket = Bucket.named("aBucket")
-    val prefix = RemoteKey("aRemoteKey")
+    val prefix = RemoteKey.create("aRemoteKey")
     "when no errors" - {
       "when single fetch required" in {
         val nowDate         = new Date
         val key             = "key"
         val etag            = "etag"
-        val expectedHashMap = Map(MD5Hash.create(etag) -> RemoteKey(key))
-        val expectedKeyMap  = Map(RemoteKey(key) -> MD5Hash.create(etag))
+        val expectedHashMap = Map(MD5Hash.create(etag) -> RemoteKey.create(key))
+        val expectedKeyMap  = Map(RemoteKey.create(key) -> MD5Hash.create(etag))
         new AmazonS3ClientTestFixture {
           (fixture.amazonS3Client.listObjectsV2 _)
             .when()
@@ -48,12 +48,12 @@ class ListerTest extends FreeSpec {
         val key2    = "key2"
         val etag2   = "etag2"
         val expectedHashMap = Map(
-          MD5Hash.create(etag1) -> RemoteKey(key1),
-          MD5Hash.create(etag2) -> RemoteKey(key2)
+          MD5Hash.create(etag1) -> RemoteKey.create(key1),
+          MD5Hash.create(etag2) -> RemoteKey.create(key2)
         )
         val expectedKeyMap = Map(
-          RemoteKey(key1) -> MD5Hash.create(etag1),
-          RemoteKey(key2) -> MD5Hash.create(etag2)
+          RemoteKey.create(key1) -> MD5Hash.create(etag1),
+          RemoteKey.create(key2) -> MD5Hash.create(etag2)
         )
         new AmazonS3ClientTestFixture {
 
