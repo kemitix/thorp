@@ -28,7 +28,7 @@ class ListerTest extends FreeSpec {
         val expectedHashMap = Map(MD5Hash(etag) -> RemoteKey(key))
         val expectedKeyMap  = Map(RemoteKey(key) -> MD5Hash(etag))
         new AmazonS3ClientTestFixture {
-          (fixture.amazonS3Client.listObjectsV2 _)
+          (() => fixture.amazonS3Client.listObjectsV2)
             .when()
             .returns(_ => {
               UIO.succeed(objectResults(nowDate, key, etag, truncated = false))
@@ -57,13 +57,13 @@ class ListerTest extends FreeSpec {
         )
         new AmazonS3ClientTestFixture {
 
-          (fixture.amazonS3Client.listObjectsV2 _)
+          (() => fixture.amazonS3Client.listObjectsV2)
             .when()
             .returns(_ =>
               UIO(objectResults(nowDate, key1, etag1, truncated = true)))
             .noMoreThanOnce()
 
-          (fixture.amazonS3Client.listObjectsV2 _)
+          (() => fixture.amazonS3Client.listObjectsV2)
             .when()
             .returns(_ =>
               UIO(objectResults(nowDate, key2, etag2, truncated = false)))
@@ -97,7 +97,7 @@ class ListerTest extends FreeSpec {
     "when Amazon Service Exception" in {
       val exception = new AmazonS3Exception("message")
       new AmazonS3ClientTestFixture {
-        (fixture.amazonS3Client.listObjectsV2 _)
+        (() => fixture.amazonS3Client.listObjectsV2)
           .when()
           .returns(_ => Task.fail(exception))
         private val result = invoke(fixture.amazonS3Client)(bucket, prefix)
@@ -107,7 +107,7 @@ class ListerTest extends FreeSpec {
     "when Amazon SDK Client Exception" in {
       val exception = new SdkClientException("message")
       new AmazonS3ClientTestFixture {
-        (fixture.amazonS3Client.listObjectsV2 _)
+        (() => fixture.amazonS3Client.listObjectsV2)
           .when()
           .returns(_ => Task.fail(exception))
         private val result = invoke(fixture.amazonS3Client)(bucket, prefix)
