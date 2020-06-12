@@ -7,7 +7,7 @@ import org.scalatest.FunSpec
 class S3ObjectsByHashSuite extends FunSpec {
 
   describe("grouping s3 object together by their hash values") {
-    val hash = MD5Hash("hash")
+    val hash = MD5Hash.create("hash")
     val key1 = RemoteKey("key-1")
     val key2 = RemoteKey("key-2")
     val o1   = s3object(hash, key1)
@@ -25,7 +25,7 @@ class S3ObjectsByHashSuite extends FunSpec {
   private def s3object(md5Hash: MD5Hash,
                        remoteKey: RemoteKey): S3ObjectSummary = {
     val summary = new S3ObjectSummary()
-    summary.setETag(MD5Hash.hash(md5Hash))
+    summary.setETag(md5Hash.hash())
     summary.setKey(remoteKey.key)
     summary
   }

@@ -291,7 +291,7 @@ class LocalFileSystemTest extends FreeSpec {
       }
     }
     "where remote has extra objects" - {
-      val extraHash   = MD5Hash("extra")
+      val extraHash   = MD5Hash.create("extra")
       val extraObject = RemoteKey("extra")
       val remoteObjects = RemoteObjects(
         byHash = MapView(MD5HashData.Root.hash     -> MD5HashData.Root.remoteKey,

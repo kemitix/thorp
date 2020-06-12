@@ -20,5 +20,5 @@ object LocalFile {
   def matchesHash(localFile: LocalFile)(other: MD5Hash): Boolean =
     localFile.hashes.values.exists(other === _)
   def md5base64(localFile: LocalFile): Option[String] =
-    localFile.hashes.get(MD5).map(MD5Hash.hash64)
+    localFile.hashes.get(MD5).map(h => h.hash64())
 }

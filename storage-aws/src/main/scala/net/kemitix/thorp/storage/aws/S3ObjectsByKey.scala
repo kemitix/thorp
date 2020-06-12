@@ -11,7 +11,7 @@ object S3ObjectsByKey {
     os.map { o =>
         {
           val remoteKey = RemoteKey(o.getKey)
-          val hash      = MD5Hash(o.getETag)
+          val hash      = MD5Hash.create(o.getETag)
           (remoteKey, hash)
         }
       }

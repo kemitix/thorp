@@ -30,7 +30,7 @@ object PathCache {
         val modified = fileData.lastModified
         String.join(":",
                     hashType.toString,
-                    hash.in,
+                    hash.hash,
                     modified.at.toEpochMilli.toString,
                     path.toString)
       })
@@ -48,13 +48,13 @@ object PathCache {
         for {
           hashType <- Hasher.typeFrom(matcher.group("hashtype"))
         } yield
-          (Paths.get(matcher.group("filename")) -> FileData
+          Paths.get(matcher.group("filename")) -> FileData
             .create(
               Map[HashType, MD5Hash](
-                hashType -> MD5Hash(matcher.group("hash"))),
+                hashType -> MD5Hash.create(matcher.group("hash"))),
               LastModified.at(
                 Instant.ofEpochMilli(matcher.group("modified").toLong))
-            ))
+            )
       }
       .catchAll({ _: IllegalArgumentException =>
         UIO(List.empty)

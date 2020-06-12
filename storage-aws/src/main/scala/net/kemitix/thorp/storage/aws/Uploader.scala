@@ -42,7 +42,7 @@ trait Uploader {
         uploadResult =>
           UploadEvent(
             RemoteKey(uploadResult.getKey),
-            MD5Hash(uploadResult.getETag)
+            MD5Hash.create(uploadResult.getETag)
         )
       )
       .catchAll(handleError(remoteKey))

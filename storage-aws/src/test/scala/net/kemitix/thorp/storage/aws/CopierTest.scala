@@ -16,7 +16,7 @@ class CopierTest extends FreeSpec {
   "copier" - {
     val bucket    = Bucket.named("aBucket")
     val sourceKey = RemoteKey("sourceKey")
-    val hash      = MD5Hash("aHash")
+    val hash      = MD5Hash.create("aHash")
     val targetKey = RemoteKey("targetKey")
     "when source exists" - {
       "when source hash matches" - {

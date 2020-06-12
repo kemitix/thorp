@@ -212,7 +212,7 @@ object FileSystem {
     ZIO.accessM(_.filesystem openManagedFileInputStream (file, 0L))
 
   final def lines(file: File): RIO[FileSystem, Seq[String]] =
-    ZIO.accessM(_.filesystem fileLines (file))
+    ZIO.accessM(_.filesystem fileLines file)
 
   final def isDirectory(file: File): RIO[FileSystem, Boolean] =
     ZIO.accessM(_.filesystem.isDirectory(file))
