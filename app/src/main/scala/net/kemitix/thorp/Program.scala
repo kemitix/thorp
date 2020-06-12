@@ -5,7 +5,7 @@ import net.kemitix.eip.zio.{Message, MessageChannel}
 import net.kemitix.thorp.cli.CliArgs
 import net.kemitix.thorp.config._
 import net.kemitix.thorp.console._
-import net.kemitix.thorp.domain.{Counters, SimpleLens, StorageEvent}
+import net.kemitix.thorp.domain.{Counters, StorageEvent}
 import net.kemitix.thorp.domain.StorageEvent.{
   CopyEvent,
   DeleteEvent,
@@ -99,13 +99,11 @@ trait Program {
 
   private def countActivities: (Counters, StorageEvent) => Counters =
     (counters: Counters, s3Action: StorageEvent) => {
-      def increment: SimpleLens[Counters, Int] => Counters =
-        _.modify(_ + 1)(counters)
       s3Action match {
-        case _: UploadEvent => increment(Counters.uploaded)
-        case _: CopyEvent   => increment(Counters.copied)
-        case _: DeleteEvent => increment(Counters.deleted)
-        case _: ErrorEvent  => increment(Counters.errors)
+        case _: UploadEvent => counters.incrementUploaded()
+        case _: CopyEvent   => counters.incrementCopied()
+        case _: DeleteEvent => counters.incrementDeleted()
+        case _: ErrorEvent  => counters.incrementErrors()
         case _              => counters
       }
     }
