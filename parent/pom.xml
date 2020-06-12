@@ -91,7 +91,7 @@
             <dependency>
                 <groupId>dev.zio</groupId>
                 <artifactId>zio-streams_2.13</artifactId>
-                <version>1.0.0-RC16</version>
+                <version>1.0.0-RC20</version>
             </dependency>
             <!-- scala - eip-zio -->
             <dependency>
