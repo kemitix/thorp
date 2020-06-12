@@ -24,7 +24,7 @@ class CopierTest extends FreeSpec {
           val event    = StorageEvent.CopyEvent(sourceKey, targetKey)
           val expected = Right(event)
           new AmazonS3ClientTestFixture {
-            (fixture.amazonS3Client.copyObject _)
+            (() => fixture.amazonS3Client.copyObject)
               .when()
               .returns(_ => Task.succeed(Some(new CopyObjectResult)))
             private val result =
@@ -36,7 +36,7 @@ class CopierTest extends FreeSpec {
       "when source hash does not match" - {
         "skip the file with an error" in {
           new AmazonS3ClientTestFixture {
-            (fixture.amazonS3Client.copyObject _)
+            (() => fixture.amazonS3Client.copyObject)
               .when()
               .returns(_ => Task.succeed(None))
             private val result =
@@ -59,7 +59,7 @@ class CopierTest extends FreeSpec {
         "skip the file with an error" in {
           new AmazonS3ClientTestFixture {
             private val expectedMessage = "The specified key does not exist"
-            (fixture.amazonS3Client.copyObject _)
+            (() => fixture.amazonS3Client.copyObject)
               .when()
               .returns(_ => Task.fail(new AmazonS3Exception(expectedMessage)))
             private val result =
