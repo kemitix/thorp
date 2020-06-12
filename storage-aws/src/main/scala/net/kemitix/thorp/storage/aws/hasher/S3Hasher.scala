@@ -6,7 +6,7 @@ import net.kemitix.thorp.domain.{HashType, Hashes, MD5Hash}
 import net.kemitix.thorp.filesystem.Hasher.Live.{hasher => CoreHasher}
 import net.kemitix.thorp.filesystem.Hasher.Service
 import net.kemitix.thorp.filesystem.{FileData, FileSystem, Hasher}
-import net.kemitix.thorp.storage.aws.ETag
+import net.kemitix.thorp.storage.aws.HashType.ETag
 import zio.{RIO, ZIO}
 
 object S3Hasher {

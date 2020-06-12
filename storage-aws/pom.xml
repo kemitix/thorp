@@ -12,6 +12,13 @@
     <name>storage-aws</name>
 
     <dependencies>
+        <!-- lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- thorp -->
         <dependency>
             <groupId>net.kemitix.thorp</groupId>
