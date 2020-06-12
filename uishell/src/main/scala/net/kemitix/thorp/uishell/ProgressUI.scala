@@ -55,8 +55,8 @@ object ProgressUI {
           s"${GREEN}Uploading:$RESET ${remoteKey.key}$eraseLineForward"
         val line2body = s"($percent%) $transferred of $fileLength "
         val bar =
-          progressBar(state.transferred,
-                      state.fileLength,
+          progressBar(state.transferred.toDouble,
+                      state.fileLength.toDouble,
                       Terminal.width - line2body.length)
         val line2 = s"$GREEN$line2body$RESET$bar$eraseLineForward"
         Console.putStrLn(line1) *>
