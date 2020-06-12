@@ -52,7 +52,8 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
           it("should have filters") {
             val expected =
               Right(
-                List[Filter](Exclude("an-exclusion"), Include("an-inclusion")))
+                List[Filter](Exclude.create("an-exclusion"),
+                             Include.create("an-inclusion")))
             assertResult(expected)(result.map(_.filters))
           }
         })
@@ -126,8 +127,8 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
             val expectedPrefixes = Right(RemoteKey.create("current-prefix"))
             // should have filters from both sources
             val expectedFilters = Right(
-              List[Filter](Filter.Exclude("current-exclude"),
-                           Filter.Include("current-include")))
+              List[Filter](Filter.Exclude.create("current-exclude"),
+                           Filter.Include.create("current-include")))
             val options = configOptions(ConfigOption.Source(currentSource))
             val result  = invoke(options)
             assertResult(expectedSources)(result.map(_.sources))

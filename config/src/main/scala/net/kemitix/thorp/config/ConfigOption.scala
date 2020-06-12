@@ -35,12 +35,12 @@ object ConfigOption {
 
   final case class Include(pattern: String) extends ConfigOption {
     override def update(config: Configuration): Configuration =
-      filters.modify(domain.Filter.Include(pattern) :: _)(config)
+      filters.modify(domain.Filter.include(pattern) :: _)(config)
   }
 
   final case class Exclude(pattern: String) extends ConfigOption {
     override def update(config: Configuration): Configuration =
-      filters.modify(domain.Filter.Exclude(pattern) :: _)(config)
+      filters.modify(domain.Filter.exclude(pattern) :: _)(config)
   }
 
   final case class Debug() extends ConfigOption {
