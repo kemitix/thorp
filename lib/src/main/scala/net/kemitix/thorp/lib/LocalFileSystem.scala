@@ -101,7 +101,7 @@ object LocalFileSystem extends LocalFileSystem {
         _             <- uiFileFound(uiChannel)(localFile)
         action        <- chooseAction(remoteObjects, uploads, uiChannel)(localFile)
         actionCounter <- actionCounterRef.update(_ + 1)
-        bytesCounter  <- bytesCounterRef.update(_ + action.getSize)
+        bytesCounter  <- bytesCounterRef.update(_ + action.size)
         _             <- uiActionChosen(uiChannel)(action)
         sequencedAction = SequencedAction(action, actionCounter)
         event <- archive.update(uiChannel, sequencedAction, bytesCounter)
@@ -263,7 +263,7 @@ object LocalFileSystem extends LocalFileSystem {
               bucket        <- Config.bucket
               action = Action.toDelete(bucket, remoteKey, 0L)
               _            <- uiActionChosen(uiChannel)(action)
-              bytesCounter <- bytesCounterRef.update(_ + action.getSize)
+              bytesCounter <- bytesCounterRef.update(_ + action.size)
               sequencedAction = SequencedAction(action, actionCounter)
               event <- archive.update(uiChannel, sequencedAction, 0L)
               _     <- eventsRef.update(list => event :: list)

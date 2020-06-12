@@ -11,9 +11,7 @@ public class Counters {
     public final int deleted;
     public final int copied;
     public final int errors;
-    public static Counters empty() {
-        return new Counters(0, 0, 0, 0);
-    }
+    public static Counters empty = new Counters(0, 0, 0, 0);
     public Counters incrementUploaded() {
         return withUploaded(uploaded + 1);
     }

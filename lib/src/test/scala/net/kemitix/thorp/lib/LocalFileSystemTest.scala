@@ -56,7 +56,7 @@ class LocalFileSystemTest extends FreeSpec {
                         totalBytesSoFar: Long)
       : ZIO[Storage with Config, Nothing, StorageEvent] = UIO {
       actions.updateAndGet(l => sequencedAction :: l)
-      StorageEvent.DoNothingEvent(sequencedAction.action.getRemoteKey)
+      StorageEvent.DoNothingEvent(sequencedAction.action.remoteKey)
     }
   }
 
@@ -102,7 +102,7 @@ class LocalFileSystemTest extends FreeSpec {
           runtime.unsafeRunSync(program(remoteObjects).provide(TestEnv))
           val actionList: Set[Action] = actions.get.map(_.action).toSet
           actionList.filter(_.isInstanceOf[ToUpload]) should have size 2
-          actionList.map(_.getRemoteKey) shouldEqual Set(
+          actionList.map(_.remoteKey) shouldEqual Set(
             MD5HashData.Root.remoteKey,
             MD5HashData.Leaf.remoteKey)
         }
@@ -169,10 +169,10 @@ class LocalFileSystemTest extends FreeSpec {
           val actionList: Set[Action] = actions.get.map(_.action).toSet
           actionList
             .filter(_.isInstanceOf[DoNothing])
-            .map(_.getRemoteKey) shouldEqual Set(MD5HashData.Root.remoteKey)
+            .map(_.remoteKey) shouldEqual Set(MD5HashData.Root.remoteKey)
           actionList
             .filter(_.isInstanceOf[ToUpload])
-            .map(_.getRemoteKey) shouldEqual Set(MD5HashData.Leaf.remoteKey)
+            .map(_.remoteKey) shouldEqual Set(MD5HashData.Leaf.remoteKey)
         }
         "ui is updated" in {
           uiEvents.set(List.empty)
@@ -221,10 +221,10 @@ class LocalFileSystemTest extends FreeSpec {
         actionList should have size 2
         actionList
           .filter(_.isInstanceOf[DoNothing])
-          .map(_.getRemoteKey) shouldEqual Set(MD5HashData.Leaf.remoteKey)
+          .map(_.remoteKey) shouldEqual Set(MD5HashData.Leaf.remoteKey)
         actionList
           .filter(_.isInstanceOf[ToCopy])
-          .map(_.getRemoteKey) shouldEqual Set(MD5HashData.Root.remoteKey)
+          .map(_.remoteKey) shouldEqual Set(MD5HashData.Root.remoteKey)
       }
       "ui is updated" in {
         uiEvents.set(List.empty)
@@ -309,7 +309,7 @@ class LocalFileSystemTest extends FreeSpec {
           actionList should have size 1
           actionList
             .filter(_.isInstanceOf[ToDelete])
-            .map(_.getRemoteKey) shouldEqual Set(extraObject)
+            .map(_.remoteKey) shouldEqual Set(extraObject)
         }
         "ui is updated" in {
           uiEvents.set(List.empty)
@@ -335,11 +335,11 @@ class LocalFileSystemTest extends FreeSpec {
           String.format("file found : %s", localFile.remoteKey.key)
         case ActionChosen(action) =>
           String.format("action chosen : %s : %s",
-                        action.getRemoteKey.key,
+                        action.remoteKey.key,
                         action.getClass.getSimpleName)
         case ActionFinished(action, actionCounter, bytesCounter, event) =>
           String.format("action finished : %s : %s",
-                        action.getRemoteKey.key,
+                        action.remoteKey.key,
                         action.getClass.getSimpleName)
         case KeyFound(remoteKey) =>
           String.format("key found: %s", remoteKey.key)

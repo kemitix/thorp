@@ -18,21 +18,21 @@ trait UnversionedMirrorArchive extends ThorpArchive {
   ): ZIO[Storage with Config, Nothing, StorageEvent] = {
     val action = sequencedAction.action
     val index  = sequencedAction.index
-    val bucket = action.getBucket
+    val bucket = action.bucket
     action match {
       case upload: ToUpload =>
-        val localFile = upload.getLocalFile
+        val localFile = upload.localFile
         doUpload(uiChannel, index, totalBytesSoFar, bucket, localFile)
       case toCopy: ToCopy =>
-        val sourceKey = toCopy.getSourceKey
-        val hash      = toCopy.getHash
-        val targetKey = toCopy.getTargetKey
+        val sourceKey = toCopy.sourceKey
+        val hash      = toCopy.hash
+        val targetKey = toCopy.targetKey
         Storage.copy(bucket, sourceKey, hash, targetKey)
       case toDelete: ToDelete =>
-        val remoteKey = toDelete.getRemoteKey
+        val remoteKey = toDelete.remoteKey
         Storage.delete(bucket, remoteKey)
       case doNothing: Action.DoNothing =>
-        val remoteKey = doNothing.getRemoteKey
+        val remoteKey = doNothing.remoteKey
         UIO(DoNothingEvent(remoteKey))
     }
   }

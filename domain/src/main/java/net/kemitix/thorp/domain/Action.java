@@ -1,15 +1,13 @@
 package net.kemitix.thorp.domain;
 
 import lombok.AccessLevel;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
-@Getter
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public abstract class Action {
-    private final Bucket bucket;
-    private final Long size;
-    private final RemoteKey remoteKey;
+    public final Bucket bucket;
+    public final Long size;
+    public final RemoteKey remoteKey;
 
     public abstract String asString();
 
@@ -53,12 +51,11 @@ public abstract class Action {
         }
         @Override
         public String asString() {
-            return String.format("Do nothing: %s", getRemoteKey().key());
+            return String.format("Do nothing: %s", remoteKey.key());
         }
     }
-    @Getter
     public static class ToUpload extends Action {
-        private final LocalFile localFile;
+        public final LocalFile localFile;
         private ToUpload(
                 Bucket body,
                 LocalFile localFile,
@@ -72,11 +69,10 @@ public abstract class Action {
             return String.format("Upload: %s", localFile.remoteKey.key());
         }
     }
-    @Getter
     public static class ToCopy extends Action {
-        private final RemoteKey sourceKey;
-        private final MD5Hash hash;
-        private final RemoteKey targetKey;
+        public final RemoteKey sourceKey;
+        public final MD5Hash hash;
+        public final RemoteKey targetKey;
         private ToCopy(
                 Bucket body,
                 RemoteKey sourceKey,
@@ -105,7 +101,7 @@ public abstract class Action {
         }
         @Override
         public String asString() {
-            return String.format("Delete: %s", getRemoteKey().key());
+            return String.format("Delete: %s", remoteKey.key());
         }
     }
 }
