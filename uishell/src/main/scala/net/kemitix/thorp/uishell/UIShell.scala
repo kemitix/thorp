@@ -9,7 +9,6 @@ import net.kemitix.thorp.console.ConsoleOut.{
   UploadComplete
 }
 import net.kemitix.thorp.console.{Console, ConsoleOut}
-import net.kemitix.thorp.domain.Action.ToUpload
 import net.kemitix.thorp.domain.Terminal.{eraseLineForward, eraseToEndOfScreen}
 import net.kemitix.thorp.domain._
 import zio.{UIO, ZIO}
@@ -96,16 +95,6 @@ object UIShell {
       _       <- Console.putMessageLn(ConsoleOut.ValidConfig(bucket, prefix, sources))
     } yield ()
 
-  private def actionAsString(action: Action): String = action match {
-    case Action.DoNothing(bucket, remoteKey, size) =>
-      s"Do nothing: ${remoteKey.key}"
-    case ToUpload(bucket, localFile, size) =>
-      s"Upload: ${localFile.remoteKey.key}"
-    case Action.ToCopy(bucket, sourceKey, hash, targetKey, size) =>
-      s"Copy: ${sourceKey.key} => ${targetKey.key}"
-    case Action.ToDelete(bucket, remoteKey, size) => s"Delete: ${remoteKey.key}"
-  }
-
   def trimHead(str: String): String = {
     val width = Terminal.width
     str.length match {
@@ -117,7 +106,7 @@ object UIShell {
   def actionChosen(action: Action): ZIO[Console with Config, Nothing, Unit] =
     for {
       batch <- Config.batchMode
-      message = trimHead(actionAsString(action)) + eraseLineForward
+      message = trimHead(action.asString()) + eraseLineForward
       _ <- ZIO.when(!batch) { Console.putStr(message + "\r") }
       _ <- ZIO.when(batch) { Console.putStrLn(message) }
     } yield ()

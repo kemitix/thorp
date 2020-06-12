@@ -3,7 +3,6 @@ package net.kemitix.thorp.lib
 import net.kemitix.eip.zio.MessageChannel.UChannel
 import net.kemitix.eip.zio.{Message, MessageChannel}
 import net.kemitix.thorp.config.Config
-import net.kemitix.thorp.domain.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.domain.RemoteObjects.{
   remoteHasHash,
   remoteKeyExists,
@@ -100,7 +99,7 @@ object LocalFileSystem extends LocalFileSystem {
         _             <- uiFileFound(uiChannel)(localFile)
         action        <- chooseAction(remoteObjects, uploads, uiChannel)(localFile)
         actionCounter <- actionCounterRef.update(_ + 1)
-        bytesCounter  <- bytesCounterRef.update(_ + action.size)
+        bytesCounter  <- bytesCounterRef.update(_ + action.getSize)
         _             <- uiActionChosen(uiChannel)(action)
         sequencedAction = SequencedAction(action, actionCounter)
         event <- archive.update(uiChannel, sequencedAction, bytesCounter)
@@ -170,7 +169,7 @@ object LocalFileSystem extends LocalFileSystem {
       localFile: LocalFile,
       bucket: Bucket
   ): UIO[Action] = UIO {
-    DoNothing(bucket, localFile.remoteKey, localFile.length)
+    Action.doNothing(bucket, localFile.remoteKey, localFile.length)
   }
 
   private def doCopy(
@@ -179,7 +178,11 @@ object LocalFileSystem extends LocalFileSystem {
       sourceKey: RemoteKey,
       hash: MD5Hash
   ): UIO[Action] = UIO {
-    ToCopy(bucket, sourceKey, hash, localFile.remoteKey, localFile.length)
+    Action.toCopy(bucket,
+                  sourceKey,
+                  hash,
+                  localFile.remoteKey,
+                  localFile.length)
   }
 
   private def doCopyWithPreviousUpload(
@@ -198,11 +201,11 @@ object LocalFileSystem extends LocalFileSystem {
             _ <- MessageChannel.send(uiChannel)(awaitingMessage)
             action <- previous(hash).await.map(
               remoteKey =>
-                ToCopy(bucket,
-                       remoteKey,
-                       hash,
-                       localFile.remoteKey,
-                       localFile.length))
+                Action.toCopy(bucket,
+                              remoteKey,
+                              hash,
+                              localFile.remoteKey,
+                              localFile.length))
             waitFinishedMessage <- Message.create(
               UIEvent.AnotherUploadWaitComplete(action))
             _ <- MessageChannel.send(uiChannel)(waitFinishedMessage)
@@ -216,7 +219,7 @@ object LocalFileSystem extends LocalFileSystem {
       localFile: LocalFile,
       bucket: Bucket
   ): UIO[Action] = {
-    UIO(ToUpload(bucket, localFile, localFile.length))
+    UIO(Action.toUpload(bucket, localFile, localFile.length))
   }
 
   def keySender(
@@ -248,9 +251,9 @@ object LocalFileSystem extends LocalFileSystem {
             for {
               actionCounter <- actionCounterRef.update(_ + 1)
               bucket        <- Config.bucket
-              action = ToDelete(bucket, remoteKey, 0L)
+              action = Action.toDelete(bucket, remoteKey, 0L)
               _            <- uiActionChosen(uiChannel)(action)
-              bytesCounter <- bytesCounterRef.update(_ + action.size)
+              bytesCounter <- bytesCounterRef.update(_ + action.getSize)
               sequencedAction = SequencedAction(action, actionCounter)
               event <- archive.update(uiChannel, sequencedAction, 0L)
               _     <- eventsRef.update(list => event :: list)

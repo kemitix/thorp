@@ -2,7 +2,7 @@ package net.kemitix.thorp.lib
 
 import net.kemitix.eip.zio.MessageChannel.UChannel
 import net.kemitix.thorp.config.Config
-import net.kemitix.thorp.domain.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
+import net.kemitix.thorp.domain.Action.{ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.domain.StorageEvent.DoNothingEvent
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.Storage
@@ -15,17 +15,27 @@ trait UnversionedMirrorArchive extends ThorpArchive {
       uiChannel: UChannel[Any, UIEvent],
       sequencedAction: SequencedAction,
       totalBytesSoFar: Long
-  ): ZIO[Storage with Config, Nothing, StorageEvent] =
-    sequencedAction match {
-      case SequencedAction(ToUpload(bucket, localFile, _), index) =>
+  ): ZIO[Storage with Config, Nothing, StorageEvent] = {
+    val action = sequencedAction.action
+    val index  = sequencedAction.index
+    val bucket = action.getBucket
+    action match {
+      case upload: ToUpload =>
+        val localFile = upload.getLocalFile
         doUpload(uiChannel, index, totalBytesSoFar, bucket, localFile)
-      case SequencedAction(ToCopy(bucket, sourceKey, hash, targetKey, _), _) =>
+      case toCopy: ToCopy =>
+        val sourceKey = toCopy.getSourceKey
+        val hash      = toCopy.getHash
+        val targetKey = toCopy.getTargetKey
         Storage.copy(bucket, sourceKey, hash, targetKey)
-      case SequencedAction(ToDelete(bucket, remoteKey, _), _) =>
+      case toDelete: ToDelete =>
+        val remoteKey = toDelete.getRemoteKey
         Storage.delete(bucket, remoteKey)
-      case SequencedAction(DoNothing(_, remoteKey, _), _) =>
+      case doNothing: Action.DoNothing =>
+        val remoteKey = doNothing.getRemoteKey
         UIO(DoNothingEvent(remoteKey))
     }
+  }
 
   private def doUpload(
       uiChannel: UChannel[Any, UIEvent],
