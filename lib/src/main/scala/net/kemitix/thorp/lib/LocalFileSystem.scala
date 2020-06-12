@@ -1,5 +1,7 @@
 package net.kemitix.thorp.lib
 
+import scala.jdk.OptionConverters._
+
 import net.kemitix.eip.zio.MessageChannel.UChannel
 import net.kemitix.eip.zio.{Message, MessageChannel}
 import net.kemitix.thorp.config.Config
@@ -161,9 +163,12 @@ object LocalFileSystem extends LocalFileSystem {
       previous: Map[MD5Hash, Promise[Throwable, RemoteKey]],
       hashes: Hashes
   ): Boolean =
-    hashes.exists({
-      case (_, hash) => previous.contains(hash)
-    })
+    hashes
+      .values()
+      .stream()
+      .anyMatch({ hash =>
+        previous.contains(hash)
+      })
 
   private def doNothing(
       localFile: LocalFile,
@@ -192,24 +197,29 @@ object LocalFileSystem extends LocalFileSystem {
       uiChannel: UChannel[Any, UIEvent],
   ): ZIO[Clock, Nothing, Action] = {
     localFile.hashes
-      .find({ case (_, hash) => previous.contains(hash) })
-      .map({
-        case (_, hash) =>
-          for {
-            awaitingMessage <- Message.create(
-              UIEvent.AwaitingAnotherUpload(localFile.remoteKey, hash))
-            _ <- MessageChannel.send(uiChannel)(awaitingMessage)
-            action <- previous(hash).await.map(
-              remoteKey =>
-                Action.toCopy(bucket,
-                              remoteKey,
-                              hash,
-                              localFile.remoteKey,
-                              localFile.length))
-            waitFinishedMessage <- Message.create(
-              UIEvent.AnotherUploadWaitComplete(action))
-            _ <- MessageChannel.send(uiChannel)(waitFinishedMessage)
-          } yield action
+      .values()
+      .stream()
+      .filter({ hash =>
+        previous.contains(hash)
+      })
+      .findFirst()
+      .toScala
+      .map({ hash =>
+        for {
+          awaitingMessage <- Message.create(
+            UIEvent.AwaitingAnotherUpload(localFile.remoteKey, hash))
+          _ <- MessageChannel.send(uiChannel)(awaitingMessage)
+          action <- previous(hash).await.map(
+            remoteKey =>
+              Action.toCopy(bucket,
+                            remoteKey,
+                            hash,
+                            localFile.remoteKey,
+                            localFile.length))
+          waitFinishedMessage <- Message.create(
+            UIEvent.AnotherUploadWaitComplete(action))
+          _ <- MessageChannel.send(uiChannel)(waitFinishedMessage)
+        } yield action
       })
       .getOrElse(doUpload(localFile, bucket))
       .refineToOrDie[Nothing]

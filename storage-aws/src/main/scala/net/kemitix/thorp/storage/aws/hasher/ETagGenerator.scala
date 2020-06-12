@@ -64,6 +64,6 @@ private object ETagGenerator extends ETagGenerator {
   )(chunkNumber: Long) =
     Hasher
       .hashObjectChunk(path, chunkNumber, chunkSize)
-      .map(_(MD5))
+      .map(hashes => hashes.get(MD5).get())
       .map(x => x.digest)
 }

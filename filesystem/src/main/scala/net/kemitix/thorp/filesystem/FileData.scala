@@ -8,7 +8,7 @@ case class FileData(
 ) {
   def +(other: FileData): FileData = {
     FileData(
-      hashes = this.hashes ++ other.hashes,
+      hashes = this.hashes.merge(other.hashes),
       lastModified = lastModified // discards other.lastModified
     )
   }

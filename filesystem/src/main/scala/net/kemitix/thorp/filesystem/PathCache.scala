@@ -4,7 +4,9 @@ import java.nio.file.{Path, Paths}
 import java.time.Instant
 import java.util.regex.Pattern
 
-import net.kemitix.thorp.domain.{HashType, LastModified, MD5Hash}
+import scala.jdk.CollectionConverters._
+import scala.jdk.OptionConverters._
+import net.kemitix.thorp.domain.{Hashes, LastModified, MD5Hash}
 import zio.{UIO, ZIO}
 
 /**
@@ -25,12 +27,12 @@ object PathCache {
 
   def create(path: Path, fileData: FileData): UIO[Iterable[String]] =
     UIO {
-      fileData.hashes.keys.map(hashType => {
-        val hash     = fileData.hashes(hashType)
+      fileData.hashes.keys.asScala.map(hashType => {
+        val hash     = fileData.hashes.get(hashType).toScala
         val modified = fileData.lastModified
         String.join(":",
                     hashType.toString,
-                    hash.hash,
+                    hash.get.hash,
                     modified.at.toEpochMilli.toString,
                     path.toString)
       })
@@ -50,8 +52,7 @@ object PathCache {
         } yield
           Paths.get(matcher.group("filename")) -> FileData
             .create(
-              Map[HashType, MD5Hash](
-                hashType -> MD5Hash.create(matcher.group("hash"))),
+              Hashes.create(hashType, MD5Hash.create(matcher.group("hash"))),
               LastModified.at(
                 Instant.ofEpochMilli(matcher.group("modified").toLong))
             )

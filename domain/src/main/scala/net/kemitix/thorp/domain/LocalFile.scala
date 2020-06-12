@@ -2,8 +2,9 @@ package net.kemitix.thorp.domain
 
 import java.io.File
 
+import scala.jdk.OptionConverters._
+
 import net.kemitix.thorp.domain.HashType.MD5
-import net.kemitix.thorp.domain.Implicits._
 
 final case class LocalFile private (
     file: File,
@@ -18,7 +19,7 @@ object LocalFile {
     SimpleLens[LocalFile, RemoteKey](_.remoteKey,
                                      b => a => b.copy(remoteKey = a))
   def matchesHash(localFile: LocalFile)(other: MD5Hash): Boolean =
-    localFile.hashes.values.exists(other === _)
+    localFile.hashes.values.contains(other)
   def md5base64(localFile: LocalFile): Option[String] =
-    localFile.hashes.get(MD5).map(h => h.hash64())
+    localFile.hashes.get(MD5).toScala.map(h => h.hash64())
 }

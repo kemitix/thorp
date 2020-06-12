@@ -28,7 +28,7 @@ object S3Hasher {
           .orElse(for {
             base <- CoreHasher.hashObject(path, cachedFileData)
             etag <- ETagGenerator.eTag(path).map(MD5Hash.create)
-          } yield base + (ETag -> etag))
+          } yield base.withKeyValue(ETag, etag))
 
       override def hashObjectChunk(
           path: Path,

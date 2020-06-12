@@ -43,7 +43,7 @@ class ETagGeneratorTest extends FreeSpec {
           val result  = runtime.unsafeRunSync(program.provide(TestEnv)).toEither
           assertResult(Right(hash))(
             result
-              .map(_(MD5))
+              .map(hashes => hashes.get(MD5).get())
               .map(x => x.hash))
       }
     }
