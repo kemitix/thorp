@@ -28,11 +28,12 @@ object RemoteObjects {
   def remoteMatchesLocalFile(
       remoteObjects: RemoteObjects,
       localFile: LocalFile
-  ): UIO[Boolean] =
+  ): UIO[Boolean] = {
     UIO(
       remoteObjects.byKey
         .get(localFile.remoteKey)
-        .exists(LocalFile.matchesHash(localFile)))
+        .exists(localFile.matchesHash))
+  }
 
   def remoteHasHash(
       remoteObjects: RemoteObjects,

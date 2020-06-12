@@ -9,7 +9,7 @@ import net.kemitix.thorp.config.{
   ConfigOptions,
   ConfigurationBuilder
 }
-import net.kemitix.thorp.domain.{LocalFile, RemoteKey}
+import net.kemitix.thorp.domain.RemoteKey
 import net.kemitix.thorp.filesystem.{FileSystem, Hasher, Resource}
 import net.kemitix.thorp.lib.FileScanner.ScannedFile
 import org.scalatest.FreeSpec
@@ -23,7 +23,7 @@ class FileScannerTest extends FreeSpec {
       def receiver(scanned: Ref[List[RemoteKey]])
         : UIO[MessageChannel.UReceiver[Any, ScannedFile]] = UIO { message =>
         for {
-          _ <- scanned.update(l => LocalFile.remoteKey.get(message.body) :: l)
+          _ <- scanned.update(l => message.body.remoteKey :: l)
         } yield ()
       }
       val scannedFiles =

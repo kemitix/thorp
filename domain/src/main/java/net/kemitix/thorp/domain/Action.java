@@ -64,12 +64,12 @@ public abstract class Action {
                 LocalFile localFile,
                 Long size
         ) {
-            super(body, size, localFile.remoteKey());
+            super(body, size, localFile.remoteKey);
             this.localFile = localFile;
         }
         @Override
         public String asString() {
-            return String.format("Upload: %s", localFile.remoteKey().key());
+            return String.format("Upload: %s", localFile.remoteKey.key());
         }
     }
     @Getter

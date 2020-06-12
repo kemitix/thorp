@@ -118,7 +118,7 @@ object FileScanner {
           remoteKey = RemoteKey.from(source, prefix, file)
           size <- FileSystem.length(file)
           fileMsg <- Message.create(
-            LocalFile(file, source.toFile, hashes, remoteKey, size))
+            LocalFile.create(file, source.toFile, hashes, remoteKey, size))
           _        <- MessageChannel.send(fileChannel)(fileMsg)
           modified <- FileSystem.lastModified(file)
           cacheMsg <- Message.create(

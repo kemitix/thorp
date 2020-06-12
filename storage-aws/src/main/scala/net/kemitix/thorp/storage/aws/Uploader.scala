@@ -20,6 +20,7 @@ import net.kemitix.thorp.uishell.UploadProgressEvent.{
 }
 import net.kemitix.thorp.uishell.{UploadEventListener, UploadProgressEvent}
 import zio.UIO
+import scala.jdk.OptionConverters._
 
 trait Uploader {
 
@@ -69,7 +70,7 @@ trait Uploader {
 
   private def metadata: LocalFile => ObjectMetadata = localFile => {
     val metadata = new ObjectMetadata()
-    LocalFile.md5base64(localFile).foreach(metadata.setContentMD5)
+    localFile.md5base64.toScala.foreach(metadata.setContentMD5)
     metadata
   }
 
