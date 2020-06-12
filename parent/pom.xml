@@ -19,7 +19,7 @@
         <scala-maven-plugin.version>4.4.0</scala-maven-plugin.version>
         <tiles-maven-plugin.version>2.17</tiles-maven-plugin.version>
         <kemitix-maven-tiles.version>2.7.0</kemitix-maven-tiles.version>
-        <scala-library.version>2.13.0</scala-library.version>
+        <scala-library.version>2.13.2</scala-library.version>
     </properties>
 
     <dependencyManagement>
