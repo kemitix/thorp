@@ -45,7 +45,7 @@ class UploaderTest extends FreeSpec with MockFactory {
           Task(uploadResult)
       }
       new AmazonS3ClientTestFixture {
-        (fixture.amazonS3TransferManager.upload _)
+        (() => fixture.amazonS3TransferManager.upload)
           .when()
           .returns(_ => UIO.succeed(inProgress))
         private val result =
@@ -67,7 +67,7 @@ class UploaderTest extends FreeSpec with MockFactory {
           Task.fail(exception)
       }
       new AmazonS3ClientTestFixture {
-        (fixture.amazonS3TransferManager.upload _)
+        (() => fixture.amazonS3TransferManager.upload)
           .when()
           .returns(_ => UIO.succeed(inProgress))
         private val result =
@@ -89,7 +89,7 @@ class UploaderTest extends FreeSpec with MockFactory {
           Task.fail(exception)
       }
       new AmazonS3ClientTestFixture {
-        (fixture.amazonS3TransferManager.upload _)
+        (() => fixture.amazonS3TransferManager.upload)
           .when()
           .returns(_ => UIO.succeed(inProgress))
         private val result =

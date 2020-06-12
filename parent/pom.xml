@@ -17,9 +17,9 @@
 
     <properties>
         <scala-maven-plugin.version>4.4.0</scala-maven-plugin.version>
-        <tiles-maven-plugin.version>2.16</tiles-maven-plugin.version>
+        <tiles-maven-plugin.version>2.17</tiles-maven-plugin.version>
         <kemitix-maven-tiles.version>2.7.0</kemitix-maven-tiles.version>
-        <scala-library.version>2.13.0</scala-library.version>
+        <scala-library.version>2.13.2</scala-library.version>
         <lombok.version>1.18.12</lombok.version>
         <mon.version>1.0.0</mon.version>
     </properties>
@@ -107,7 +107,7 @@
             <dependency>
                 <groupId>dev.zio</groupId>
                 <artifactId>zio-streams_2.13</artifactId>
-                <version>1.0.0-RC16</version>
+                <version>1.0.0-RC20</version>
             </dependency>
             <!-- scala - eip-zio -->
             <dependency>

@@ -23,7 +23,7 @@ class DeleterTest extends FreeSpec {
     "when no errors" in {
       val expected = Right(DeleteEvent(remoteKey))
       new AmazonS3ClientTestFixture {
-        (fixture.amazonS3Client.deleteObject _)
+        (() => fixture.amazonS3Client.deleteObject)
           .when()
           .returns(_ => UIO.succeed(()))
         private val result = invoke(fixture.amazonS3Client)(bucket, remoteKey)
@@ -36,7 +36,7 @@ class DeleterTest extends FreeSpec {
         Right(
           ErrorEvent(ActionSummary.Delete(remoteKey.key), remoteKey, exception))
       new AmazonS3ClientTestFixture {
-        (fixture.amazonS3Client.deleteObject _)
+        (() => fixture.amazonS3Client.deleteObject)
           .when()
           .returns(_ => Task.fail(exception))
         private val result = invoke(fixture.amazonS3Client)(bucket, remoteKey)
@@ -49,7 +49,7 @@ class DeleterTest extends FreeSpec {
         Right(
           ErrorEvent(ActionSummary.Delete(remoteKey.key), remoteKey, exception))
       new AmazonS3ClientTestFixture {
-        (fixture.amazonS3Client.deleteObject _)
+        (() => fixture.amazonS3Client.deleteObject)
           .when()
           .returns(_ => Task.fail(exception))
         private val result = invoke(fixture.amazonS3Client)(bucket, remoteKey)
