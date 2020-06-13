@@ -2,11 +2,7 @@ package net.kemitix.thorp.storage.aws
 
 import com.amazonaws.SdkClientException
 import com.amazonaws.services.s3.model.{CopyObjectRequest, CopyObjectResult}
-import net.kemitix.thorp.domain.StorageEvent.{
-  ActionSummary,
-  CopyEvent,
-  ErrorEvent
-}
+import net.kemitix.thorp.domain.StorageEvent.{ActionSummary, ErrorEvent}
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.aws.S3ClientException.{CopyError, HashError}
 import zio.{IO, Task, UIO}
@@ -40,7 +36,7 @@ trait Copier {
       copyRequest.sourceKey.key,
       copyRequest.bucket.name,
       copyRequest.targetKey.key
-    ).withMatchingETagConstraint(MD5Hash.hash(copyRequest.hash))
+    ).withMatchingETagConstraint(copyRequest.hash.hash())
 
   private def foldFailure(sourceKey: RemoteKey,
                           targetKey: RemoteKey): Throwable => StorageEvent = {
@@ -56,18 +52,18 @@ trait Copier {
       targetKey: RemoteKey): CopyObjectResult => StorageEvent =
     result =>
       Option(result) match {
-        case Some(_) => CopyEvent(sourceKey, targetKey)
+        case Some(_) => StorageEvent.copyEvent(sourceKey, targetKey)
         case None =>
           errorEvent(sourceKey, targetKey, HashError)
     }
 
   private def errorEvent: (RemoteKey, RemoteKey, Throwable) => ErrorEvent =
     (sourceKey, targetKey, error) =>
-      ErrorEvent(action(sourceKey, targetKey), targetKey, error)
+      StorageEvent.errorEvent(action(sourceKey, targetKey), targetKey, error)
 
   private def action(sourceKey: RemoteKey,
                      targetKey: RemoteKey): ActionSummary =
-    ActionSummary.Copy(s"${sourceKey.key} => ${targetKey.key}")
+    ActionSummary.copy(s"${sourceKey.key} => ${targetKey.key}")
 
 }
 

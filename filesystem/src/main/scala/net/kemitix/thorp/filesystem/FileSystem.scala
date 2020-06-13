@@ -3,12 +3,13 @@ package net.kemitix.thorp.filesystem
 import java.io.{File, FileInputStream, FileWriter}
 import java.nio.file.{Files, Path, StandardCopyOption}
 import java.time.Instant
-import java.util.stream
+import java.util.{stream}
 
 import net.kemitix.thorp.domain.{Hashes, RemoteKey, Sources}
 import zio._
 
 import scala.jdk.CollectionConverters._
+import scala.jdk.OptionConverters._
 
 trait FileSystem {
   val filesystem: FileSystem.Service
@@ -93,9 +94,10 @@ object FileSystem {
           sources: Sources,
           prefix: RemoteKey,
           remoteKey: RemoteKey): ZIO[FileSystem, Nothing, Boolean] = {
-        ZIO.foldLeft(sources.paths)(false) { (accExists, source) =>
-          RemoteKey
-            .asFile(source, prefix)(remoteKey)
+        ZIO.foldLeft(sources.paths.asScala)(false) { (accExists, source) =>
+          remoteKey
+            .asFile(source, prefix)
+            .toScala
             .map(FileSystem.exists)
             .getOrElse(UIO(false))
             .map(_ || accExists)
@@ -114,7 +116,7 @@ object FileSystem {
           path: Path,
           fileData: FileData): ZIO[FileSystem, Any, Hashes] = {
         val lastModified = Instant.ofEpochMilli(path.toFile.lastModified())
-        if (lastModified.isAfter(fileData.lastModified)) {
+        if (lastModified.isAfter(fileData.lastModified.at)) {
           ZIO.fail("fileData is out-of-date")
         } else {
           ZIO.succeed(fileData.hashes)
@@ -212,7 +214,7 @@ object FileSystem {
     ZIO.accessM(_.filesystem openManagedFileInputStream (file, 0L))
 
   final def lines(file: File): RIO[FileSystem, Seq[String]] =
-    ZIO.accessM(_.filesystem fileLines (file))
+    ZIO.accessM(_.filesystem fileLines file)
 
   final def isDirectory(file: File): RIO[FileSystem, Boolean] =
     ZIO.accessM(_.filesystem.isDirectory(file))

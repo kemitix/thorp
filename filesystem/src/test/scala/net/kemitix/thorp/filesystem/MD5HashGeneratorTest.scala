@@ -2,7 +2,6 @@ package net.kemitix.thorp.filesystem
 
 import java.nio.file.Path
 
-import net.kemitix.thorp.domain.MD5Hash
 import net.kemitix.thorp.domain.MD5HashData.{BigFile, Root}
 import org.scalatest.FunSpec
 import zio.DefaultRuntime
@@ -40,15 +39,17 @@ class MD5HashGeneratorTest extends FunSpec {
     describe("read chunks of file") {
       val path = Resource(this, "big-file").toPath
       it("should generate the correct hash for first chunk of the file") {
-        val part1    = BigFile.Part1
-        val expected = Right(MD5Hash.hash(part1.hash))
-        val result   = invoke(path, part1.offset, part1.size).map(MD5Hash.hash)
+        val expected = Right(BigFile.Part1.hash.hash())
+        val result =
+          invoke(path, BigFile.Part1.offset, BigFile.Part1.size).map(x =>
+            x.hash)
         assertResult(expected)(result)
       }
       it("should generate the correct hash for second chunk of the file") {
-        val part2    = BigFile.Part2
-        val expected = Right(MD5Hash.hash(part2.hash))
-        val result   = invoke(path, part2.offset, part2.size).map(MD5Hash.hash)
+        val expected = Right(BigFile.Part2.hash.hash())
+        val result =
+          invoke(path, BigFile.Part2.offset, BigFile.Part2.size).map(x =>
+            x.hash)
         assertResult(expected)(result)
       }
     }

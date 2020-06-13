@@ -27,7 +27,7 @@ class FiltersSuite extends FunSpec {
       }
     }
     describe("directory exact match include '/upload/subdir/'") {
-      val include = Include("/upload/subdir/")
+      val include = Include.create("/upload/subdir/")
       it("include matching directory") {
         val matching = Paths.get("/upload/subdir/leaf-file")
         assertResult(true)(Filters.isIncludedByFilter(matching)(include))
@@ -38,7 +38,7 @@ class FiltersSuite extends FunSpec {
       }
     }
     describe("file partial match 'root'") {
-      val include = Include("root")
+      val include = Include.create("root")
       it("include matching file '/upload/root-file") {
         val matching = Paths.get("/upload/root-file")
         assertResult(true)(Filters.isIncludedByFilter(matching)(include))
@@ -64,7 +64,7 @@ class FiltersSuite extends FunSpec {
 //      }
 //    }
     describe("directory exact match exclude '/upload/subdir/'") {
-      val exclude = Exclude("/upload/subdir/")
+      val exclude = Exclude.create("/upload/subdir/")
       it("exclude matching directory") {
         val matching = Paths.get("/upload/subdir/leaf-file")
         assertResult(true)(Filters.isExcludedByFilter(matching)(exclude))
@@ -75,7 +75,7 @@ class FiltersSuite extends FunSpec {
       }
     }
     describe("file partial match 'root'") {
-      val exclude = Exclude("root")
+      val exclude = Exclude.create("root")
       it("exclude matching file '/upload/root-file") {
         val matching = Paths.get("/upload/root-file")
         assertResult(true)(Filters.isExcludedByFilter(matching)(exclude))
@@ -104,7 +104,7 @@ class FiltersSuite extends FunSpec {
       }
     }
     describe("when a single include") {
-      val filters = List(Include(".txt"))
+      val filters = List(Include.create(".txt"))
       it("should only include two matching paths") {
         val expected = List(path2, path3).map(Paths.get(_))
         val result   = invoke(filters)
@@ -112,7 +112,7 @@ class FiltersSuite extends FunSpec {
       }
     }
     describe("when a single exclude") {
-      val filters = List(Exclude("path"))
+      val filters = List(Exclude.create("path"))
       it("should include only other paths") {
         val expected = List(path1, path2, path5, path6).map(Paths.get(_))
         val result   = invoke(filters)
@@ -120,7 +120,7 @@ class FiltersSuite extends FunSpec {
       }
     }
     describe("when include .txt files, but then exclude everything trumps all") {
-      val filters = List[Filter](Include(".txt"), Exclude(".*"))
+      val filters = List[Filter](Include.create(".txt"), Exclude.create(".*"))
       it("should include nothing") {
         val expected = List()
         val result   = invoke(filters)
@@ -128,7 +128,7 @@ class FiltersSuite extends FunSpec {
       }
     }
     describe("when exclude everything except .txt files") {
-      val filters = List[Filter](Exclude(".*"), Include(".txt"))
+      val filters = List[Filter](Exclude.create(".*"), Include.create(".txt"))
       it("should include only the .txt files") {
         val expected = List(path2, path3).map(Paths.get(_))
         val result   = invoke(filters)

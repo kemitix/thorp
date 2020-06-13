@@ -1,6 +1,7 @@
 package net.kemitix.thorp.config
 
 import java.nio.file.Path
+import scala.jdk.CollectionConverters._
 
 import net.kemitix.thorp.domain.{Bucket, Sources}
 import zio.IO
@@ -22,7 +23,7 @@ sealed trait ConfigValidator {
 
   def validateSources(
       sources: Sources): Either[List[ConfigValidation], Sources] =
-    sources.paths.foldLeft(List[ConfigValidation]()) {
+    sources.paths.asScala.foldLeft(List[ConfigValidation]()) {
       (acc: List[ConfigValidation], path) =>
         {
           validateSource(path) match {

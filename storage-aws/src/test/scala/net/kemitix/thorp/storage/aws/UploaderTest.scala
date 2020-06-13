@@ -8,11 +8,7 @@ import com.amazonaws.services.s3.transfer.model.UploadResult
 import net.kemitix.eip.zio.MessageChannel.UChannel
 import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.domain.HashType.MD5
-import net.kemitix.thorp.domain.StorageEvent.{
-  ActionSummary,
-  ErrorEvent,
-  UploadEvent
-}
+import net.kemitix.thorp.domain.StorageEvent.ActionSummary
 import net.kemitix.thorp.domain._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.FreeSpec
@@ -27,19 +23,20 @@ class UploaderTest extends FreeSpec with MockFactory {
   "upload" - {
     val aSource: File = Resource(this, "").toFile
     val aFile: File   = Resource(this, "small-file").toFile
-    val aHash         = MD5Hash("aHash")
-    val hashes        = Map[HashType, MD5Hash](MD5 -> aHash)
-    val remoteKey     = RemoteKey("aRemoteKey")
-    val localFile     = LocalFile(aFile, aSource, hashes, remoteKey, aFile.length)
-    val bucket        = Bucket("aBucket")
-    val uploadResult  = new UploadResult
+    val aHash         = MD5Hash.create("aHash")
+    val hashes        = Hashes.create(MD5, aHash)
+    val remoteKey     = RemoteKey.create("aRemoteKey")
+    val localFile =
+      LocalFile.create(aFile, aSource, hashes, remoteKey, aFile.length)
+    val bucket       = Bucket.named("aBucket")
+    val uploadResult = new UploadResult
     uploadResult.setKey(remoteKey.key)
-    uploadResult.setETag(MD5Hash.hash(aHash))
+    uploadResult.setETag(aHash.hash())
     val listenerSettings =
       UploadEventListener.Settings(uiChannel, localFile, 0, 0, batchMode = true)
     "when no error" in {
       val expected =
-        Right(UploadEvent(remoteKey, aHash))
+        Right(StorageEvent.uploadEvent(remoteKey, aHash))
       val inProgress = new AmazonUpload.InProgress {
         override def waitForUploadResult: Task[UploadResult] =
           Task(uploadResult)
@@ -61,7 +58,9 @@ class UploaderTest extends FreeSpec with MockFactory {
       val exception = new AmazonS3Exception("message")
       val expected =
         Right(
-          ErrorEvent(ActionSummary.Upload(remoteKey.key), remoteKey, exception))
+          StorageEvent.errorEvent(ActionSummary.upload(remoteKey.key),
+                                  remoteKey,
+                                  exception))
       val inProgress = new AmazonUpload.InProgress {
         override def waitForUploadResult: Task[UploadResult] =
           Task.fail(exception)
@@ -83,7 +82,9 @@ class UploaderTest extends FreeSpec with MockFactory {
       val exception = new SdkClientException("message")
       val expected =
         Right(
-          ErrorEvent(ActionSummary.Upload(remoteKey.key), remoteKey, exception))
+          StorageEvent.errorEvent(ActionSummary.upload(remoteKey.key),
+                                  remoteKey,
+                                  exception))
       val inProgress = new AmazonUpload.InProgress {
         override def waitForUploadResult: Task[UploadResult] =
           Task.fail(exception)

@@ -3,7 +3,6 @@ package net.kemitix.thorp.storage.aws
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder
 import net.kemitix.thorp.console.Console
-import net.kemitix.thorp.domain.StorageEvent.ShutdownEvent
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.Storage
 import net.kemitix.thorp.storage.Storage.Service
@@ -45,7 +44,7 @@ object S3Storage {
 
       override def shutdown: UIO[StorageEvent] = {
         transferManager.shutdownNow(true) *>
-          client.shutdown().map(_ => ShutdownEvent())
+          client.shutdown().map(_ => StorageEvent.shutdownEvent())
       }
     }
   }

@@ -14,13 +14,13 @@ object ConfigOption {
 
   final case class Source(path: Path) extends ConfigOption {
     override def update(config: Configuration): Configuration =
-      sources.modify(_ + path)(config)
+      sources.modify(s => s.append(path))(config)
   }
 
   final case class Bucket(name: String) extends ConfigOption {
     override def update(config: Configuration): Configuration =
       if (config.bucket.name.isEmpty)
-        bucket.set(domain.Bucket(name))(config)
+        bucket.set(domain.Bucket.named(name))(config)
       else
         config
   }
@@ -28,19 +28,19 @@ object ConfigOption {
   final case class Prefix(path: String) extends ConfigOption {
     override def update(config: Configuration): Configuration =
       if (config.prefix.key.isEmpty)
-        prefix.set(RemoteKey(path))(config)
+        prefix.set(RemoteKey.create(path))(config)
       else
         config
   }
 
   final case class Include(pattern: String) extends ConfigOption {
     override def update(config: Configuration): Configuration =
-      filters.modify(domain.Filter.Include(pattern) :: _)(config)
+      filters.modify(domain.Filter.include(pattern) :: _)(config)
   }
 
   final case class Exclude(pattern: String) extends ConfigOption {
     override def update(config: Configuration): Configuration =
-      filters.modify(domain.Filter.Exclude(pattern) :: _)(config)
+      filters.modify(domain.Filter.exclude(pattern) :: _)(config)
   }
 
   final case class Debug() extends ConfigOption {

@@ -1,6 +1,6 @@
 package net.kemitix.thorp.config
 
-import net.kemitix.thorp.domain.{Bucket, Filter, RemoteKey, SimpleLens, Sources}
+import net.kemitix.thorp.domain.{Bucket, Filter, RemoteKey, Sources}
 
 private[config] final case class Configuration(
     bucket: Bucket,
@@ -14,13 +14,13 @@ private[config] final case class Configuration(
 
 private[config] object Configuration {
   val empty: Configuration = Configuration(
-    bucket = Bucket(""),
-    prefix = RemoteKey(""),
+    bucket = Bucket.named(""),
+    prefix = RemoteKey.create(""),
     filters = List.empty,
     debug = false,
     batchMode = false,
     parallel = 1,
-    sources = Sources(List.empty)
+    sources = Sources.emptySources
   )
   val sources: SimpleLens[Configuration, Sources] =
     SimpleLens[Configuration, Sources](_.sources, b => a => b.copy(sources = a))

@@ -2,6 +2,7 @@ package net.kemitix.thorp.lib
 
 import java.io.File
 import java.nio.file.Path
+import scala.jdk.CollectionConverters._
 
 import net.kemitix.eip.zio.MessageChannel.{EChannel, ESender}
 import net.kemitix.eip.zio.{Message, MessageChannel}
@@ -45,7 +46,7 @@ object FileScanner {
         RIO { fileChannel =>
           (for {
             sources <- Config.sources
-            _ <- ZIO.foreach(sources.paths) { sourcePath =>
+            _ <- ZIO.foreach(sources.paths.asScala) { sourcePath =>
               for {
                 cacheSender   <- scanSource(fileChannel)(sourcePath)
                 cacheReceiver <- cacheReceiver(sourcePath)
@@ -111,18 +112,18 @@ object FileScanner {
       )(file: File, pathCache: PathCache) =
         for {
           sources <- Config.sources
-          source  <- Sources.forPath(file.toPath)(sources)
-          prefix  <- Config.prefix
+          source = sources.forPath(file.toPath)
+          prefix <- Config.prefix
           path = source.relativize(file.toPath)
-          hashes    <- Hasher.hashObject(file.toPath, pathCache.get(path))
-          remoteKey <- RemoteKey.from(source, prefix, file)
-          size      <- FileSystem.length(file)
+          hashes <- Hasher.hashObject(file.toPath, pathCache.get(path))
+          remoteKey = RemoteKey.from(source, prefix, file)
+          size <- FileSystem.length(file)
           fileMsg <- Message.create(
-            LocalFile(file, source.toFile, hashes, remoteKey, size))
+            LocalFile.create(file, source.toFile, hashes, remoteKey, size))
           _        <- MessageChannel.send(fileChannel)(fileMsg)
           modified <- FileSystem.lastModified(file)
           cacheMsg <- Message.create(
-            (path -> FileData.create(hashes, modified)))
+            (path -> FileData.create(hashes, LastModified.at(modified))))
           _ <- MessageChannel.send(cacheChannel)(cacheMsg)
         } yield ()
 

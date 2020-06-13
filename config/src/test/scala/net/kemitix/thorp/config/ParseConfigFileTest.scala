@@ -3,8 +3,7 @@ package net.kemitix.thorp.config
 import java.io.File
 import java.nio.file.Paths
 
-import net.kemitix.thorp.domain.TemporaryFolder
-import net.kemitix.thorp.filesystem.FileSystem
+import net.kemitix.thorp.filesystem.{FileSystem, TemporaryFolder}
 import org.scalatest.FunSpec
 import zio.DefaultRuntime
 

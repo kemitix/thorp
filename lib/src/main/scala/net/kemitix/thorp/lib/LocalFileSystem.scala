@@ -1,14 +1,12 @@
 package net.kemitix.thorp.lib
 
+import scala.jdk.OptionConverters._
+import scala.jdk.CollectionConverters._
+
 import net.kemitix.eip.zio.MessageChannel.UChannel
 import net.kemitix.eip.zio.{Message, MessageChannel}
 import net.kemitix.thorp.config.Config
-import net.kemitix.thorp.domain.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
-import net.kemitix.thorp.domain.RemoteObjects.{
-  remoteHasHash,
-  remoteKeyExists,
-  remoteMatchesLocalFile
-}
+import net.kemitix.thorp.domain.RemoteObjects
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.filesystem.{FileSystem, Hasher}
 import net.kemitix.thorp.storage.Storage
@@ -71,7 +69,7 @@ object LocalFileSystem extends LocalFileSystem {
       actionCounter <- Ref.make(0)
       bytesCounter  <- Ref.make(0L)
       eventsRef     <- Ref.make(List.empty[StorageEvent])
-      keySender     <- keySender(remoteData.byKey.keys)
+      keySender     <- keySender(remoteData.byKey.keys.asScala)
       keyReceiver <- keyReceiver(uiChannel,
                                  archive,
                                  actionCounter,
@@ -138,17 +136,21 @@ object LocalFileSystem extends LocalFileSystem {
       uiChannel: UChannel[Any, UIEvent],
   )(localFile: LocalFile): ZIO[Config with Clock, Nothing, Action] = {
     for {
-      remoteExists  <- remoteKeyExists(remoteObjects, localFile.remoteKey)
-      remoteMatches <- remoteMatchesLocalFile(remoteObjects, localFile)
-      remoteForHash <- remoteHasHash(remoteObjects, localFile.hashes)
-      previous      <- uploads.get
-      bucket        <- Config.bucket
+      remoteExists  <- UIO(remoteObjects.remoteKeyExists(localFile.remoteKey))
+      remoteMatches <- UIO(remoteObjects.remoteMatchesLocalFile(localFile))
+      remoteForHash <- UIO(
+        remoteObjects.remoteHasHash(localFile.hashes).toScala)
+      previous <- uploads.get
+      bucket   <- Config.bucket
       action <- if (remoteExists && remoteMatches)
         doNothing(localFile, bucket)
       else {
         remoteForHash match {
-          case Some((sourceKey, hash)) =>
+          case pair: Some[Tuple[RemoteKey, MD5Hash]] => {
+            val sourceKey = pair.value.a
+            val hash      = pair.value.b
             doCopy(localFile, bucket, sourceKey, hash)
+          }
           case _ if matchesPreviousUpload(previous, localFile.hashes) =>
             doCopyWithPreviousUpload(localFile, bucket, previous, uiChannel)
           case _ =>
@@ -162,15 +164,18 @@ object LocalFileSystem extends LocalFileSystem {
       previous: Map[MD5Hash, Promise[Throwable, RemoteKey]],
       hashes: Hashes
   ): Boolean =
-    hashes.exists({
-      case (_, hash) => previous.contains(hash)
-    })
+    hashes
+      .values()
+      .stream()
+      .anyMatch({ hash =>
+        previous.contains(hash)
+      })
 
   private def doNothing(
       localFile: LocalFile,
       bucket: Bucket
   ): UIO[Action] = UIO {
-    DoNothing(bucket, localFile.remoteKey, localFile.length)
+    Action.doNothing(bucket, localFile.remoteKey, localFile.length)
   }
 
   private def doCopy(
@@ -179,7 +184,11 @@ object LocalFileSystem extends LocalFileSystem {
       sourceKey: RemoteKey,
       hash: MD5Hash
   ): UIO[Action] = UIO {
-    ToCopy(bucket, sourceKey, hash, localFile.remoteKey, localFile.length)
+    Action.toCopy(bucket,
+                  sourceKey,
+                  hash,
+                  localFile.remoteKey,
+                  localFile.length)
   }
 
   private def doCopyWithPreviousUpload(
@@ -189,24 +198,29 @@ object LocalFileSystem extends LocalFileSystem {
       uiChannel: UChannel[Any, UIEvent],
   ): ZIO[Clock, Nothing, Action] = {
     localFile.hashes
-      .find({ case (_, hash) => previous.contains(hash) })
-      .map({
-        case (_, hash) =>
-          for {
-            awaitingMessage <- Message.create(
-              UIEvent.AwaitingAnotherUpload(localFile.remoteKey, hash))
-            _ <- MessageChannel.send(uiChannel)(awaitingMessage)
-            action <- previous(hash).await.map(
-              remoteKey =>
-                ToCopy(bucket,
-                       remoteKey,
-                       hash,
-                       localFile.remoteKey,
-                       localFile.length))
-            waitFinishedMessage <- Message.create(
-              UIEvent.AnotherUploadWaitComplete(action))
-            _ <- MessageChannel.send(uiChannel)(waitFinishedMessage)
-          } yield action
+      .values()
+      .stream()
+      .filter({ hash =>
+        previous.contains(hash)
+      })
+      .findFirst()
+      .toScala
+      .map({ hash =>
+        for {
+          awaitingMessage <- Message.create(
+            UIEvent.AwaitingAnotherUpload(localFile.remoteKey, hash))
+          _ <- MessageChannel.send(uiChannel)(awaitingMessage)
+          action <- previous(hash).await.map(
+            remoteKey =>
+              Action.toCopy(bucket,
+                            remoteKey,
+                            hash,
+                            localFile.remoteKey,
+                            localFile.length))
+          waitFinishedMessage <- Message.create(
+            UIEvent.AnotherUploadWaitComplete(action))
+          _ <- MessageChannel.send(uiChannel)(waitFinishedMessage)
+        } yield action
       })
       .getOrElse(doUpload(localFile, bucket))
       .refineToOrDie[Nothing]
@@ -216,7 +230,7 @@ object LocalFileSystem extends LocalFileSystem {
       localFile: LocalFile,
       bucket: Bucket
   ): UIO[Action] = {
-    UIO(ToUpload(bucket, localFile, localFile.length))
+    UIO(Action.toUpload(bucket, localFile, localFile.length))
   }
 
   def keySender(
@@ -248,7 +262,7 @@ object LocalFileSystem extends LocalFileSystem {
             for {
               actionCounter <- actionCounterRef.update(_ + 1)
               bucket        <- Config.bucket
-              action = ToDelete(bucket, remoteKey, 0L)
+              action = Action.toDelete(bucket, remoteKey, 0L)
               _            <- uiActionChosen(uiChannel)(action)
               bytesCounter <- bytesCounterRef.update(_ + action.size)
               sequencedAction = SequencedAction(action, actionCounter)

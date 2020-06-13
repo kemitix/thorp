@@ -1,6 +1,7 @@
 package net.kemitix.thorp.storage.aws
 
 import java.util.Date
+import scala.jdk.CollectionConverters._
 
 import com.amazonaws.SdkClientException
 import com.amazonaws.services.s3.model.{
@@ -18,24 +19,26 @@ import zio.{DefaultRuntime, RIO, Task, UIO}
 class ListerTest extends FreeSpec {
 
   "list" - {
-    val bucket = Bucket("aBucket")
-    val prefix = RemoteKey("aRemoteKey")
+    val bucket = Bucket.named("aBucket")
+    val prefix = RemoteKey.create("aRemoteKey")
     "when no errors" - {
       "when single fetch required" in {
         val nowDate         = new Date
         val key             = "key"
         val etag            = "etag"
-        val expectedHashMap = Map(MD5Hash(etag) -> RemoteKey(key))
-        val expectedKeyMap  = Map(RemoteKey(key) -> MD5Hash(etag))
+        val expectedHashMap = Map(MD5Hash.create(etag) -> RemoteKey.create(key))
+        val expectedKeyMap  = Map(RemoteKey.create(key) -> MD5Hash.create(etag))
         new AmazonS3ClientTestFixture {
           (() => fixture.amazonS3Client.listObjectsV2)
             .when()
             .returns(_ => {
               UIO.succeed(objectResults(nowDate, key, etag, truncated = false))
             })
-          private val result  = invoke(fixture.amazonS3Client)(bucket, prefix)
-          private val hashMap = result.map(_.byHash).map(m => Map.from(m))
-          private val keyMap  = result.map(_.byKey).map(m => Map.from(m))
+          private val result = invoke(fixture.amazonS3Client)(bucket, prefix)
+          private val hashMap =
+            result.map(_.byHash).map(m => Map.from(m.asMap.asScala))
+          private val keyMap =
+            result.map(_.byKey).map(m => Map.from(m.asMap.asScala))
           hashMap should be(Right(expectedHashMap))
           keyMap should be(Right(expectedKeyMap))
         }
@@ -48,12 +51,12 @@ class ListerTest extends FreeSpec {
         val key2    = "key2"
         val etag2   = "etag2"
         val expectedHashMap = Map(
-          MD5Hash(etag1) -> RemoteKey(key1),
-          MD5Hash(etag2) -> RemoteKey(key2)
+          MD5Hash.create(etag1) -> RemoteKey.create(key1),
+          MD5Hash.create(etag2) -> RemoteKey.create(key2)
         )
         val expectedKeyMap = Map(
-          RemoteKey(key1) -> MD5Hash(etag1),
-          RemoteKey(key2) -> MD5Hash(etag2)
+          RemoteKey.create(key1) -> MD5Hash.create(etag1),
+          RemoteKey.create(key2) -> MD5Hash.create(etag2)
         )
         new AmazonS3ClientTestFixture {
 
@@ -67,9 +70,11 @@ class ListerTest extends FreeSpec {
             .when()
             .returns(_ =>
               UIO(objectResults(nowDate, key2, etag2, truncated = false)))
-          private val result  = invoke(fixture.amazonS3Client)(bucket, prefix)
-          private val hashMap = result.map(_.byHash).map(m => Map.from(m))
-          private val keyMap  = result.map(_.byKey).map(m => Map.from(m))
+          private val result = invoke(fixture.amazonS3Client)(bucket, prefix)
+          private val hashMap =
+            result.map(_.byHash).map(m => Map.from(m.asMap.asScala))
+          private val keyMap =
+            result.map(_.byKey).map(m => Map.from(m.asMap.asScala))
           hashMap should be(Right(expectedHashMap))
           keyMap should be(Right(expectedKeyMap))
         }

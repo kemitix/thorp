@@ -53,7 +53,8 @@ trait Lister {
 
     fetch(request)
       .map(summaries => {
-        RemoteObjects.create(byHash(summaries), byKey(summaries))
+        RemoteObjects.create(byHash(summaries).toMap.asJava,
+                             byKey(summaries).toMap.asJava)
       })
   }
 

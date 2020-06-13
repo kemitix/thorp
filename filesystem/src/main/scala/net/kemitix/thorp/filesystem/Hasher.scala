@@ -36,7 +36,7 @@ object Hasher {
           .flatMap(fileData => FileSystem.getHashes(path, fileData))
           .orElse(for {
             md5 <- MD5HashGenerator.md5File(path)
-          } yield Map(MD5 -> md5))
+          } yield Hashes.create(MD5, md5))
 
       override def hashObjectChunk(
           path: Path,
@@ -46,7 +46,7 @@ object Hasher {
           md5 <- MD5HashGenerator.md5FileChunk(path,
                                                chunkNumber * chunkSize,
                                                chunkSize)
-        } yield Map(MD5 -> md5)
+        } yield Hashes.create(MD5, md5)
 
       override def hex(in: Array[Byte]): RIO[Hasher, String] =
         ZIO(MD5HashGenerator.hex(in))

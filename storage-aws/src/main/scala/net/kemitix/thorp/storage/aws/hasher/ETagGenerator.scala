@@ -6,7 +6,6 @@ import com.amazonaws.services.s3.model.PutObjectRequest
 import com.amazonaws.services.s3.transfer.TransferManagerConfiguration
 import com.amazonaws.services.s3.transfer.internal.TransferManagerUtils
 import net.kemitix.thorp.domain.HashType.MD5
-import net.kemitix.thorp.domain.MD5Hash
 import net.kemitix.thorp.filesystem.{FileSystem, Hasher}
 import zio.{RIO, ZIO}
 
@@ -65,6 +64,6 @@ private object ETagGenerator extends ETagGenerator {
   )(chunkNumber: Long) =
     Hasher
       .hashObjectChunk(path, chunkNumber, chunkSize)
-      .map(_(MD5))
-      .map(MD5Hash.digest)
+      .map(hashes => hashes.get(MD5).get())
+      .map(x => x.digest)
 }

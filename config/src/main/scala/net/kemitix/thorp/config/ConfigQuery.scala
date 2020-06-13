@@ -1,6 +1,7 @@
 package net.kemitix.thorp.config
 
 import java.nio.file.Paths
+import scala.jdk.CollectionConverters._
 
 import net.kemitix.thorp.domain.Sources
 
@@ -27,7 +28,7 @@ trait ConfigQuery {
       case List() => List(Paths.get(System.getenv("PWD")))
       case _      => explicitPaths
     }
-    Sources(paths)
+    Sources.create(paths.asJava)
   }
 
 }

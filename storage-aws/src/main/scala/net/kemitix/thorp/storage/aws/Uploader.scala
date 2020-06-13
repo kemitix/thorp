@@ -5,12 +5,7 @@ import java.util.concurrent.locks.StampedLock
 import com.amazonaws.event.ProgressEventType.RESPONSE_BYTE_TRANSFER_EVENT
 import com.amazonaws.event.{ProgressEvent, ProgressListener}
 import com.amazonaws.services.s3.model.{ObjectMetadata, PutObjectRequest}
-import net.kemitix.thorp.domain.Implicits._
-import net.kemitix.thorp.domain.StorageEvent.{
-  ActionSummary,
-  ErrorEvent,
-  UploadEvent
-}
+import net.kemitix.thorp.domain.StorageEvent.ActionSummary
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.aws.Uploader.Request
 import net.kemitix.thorp.uishell.UploadProgressEvent.{
@@ -20,6 +15,7 @@ import net.kemitix.thorp.uishell.UploadProgressEvent.{
 }
 import net.kemitix.thorp.uishell.{UploadEventListener, UploadProgressEvent}
 import zio.UIO
+import scala.jdk.OptionConverters._
 
 trait Uploader {
 
@@ -40,9 +36,9 @@ trait Uploader {
       .flatMap(_.waitForUploadResult)
       .map(
         uploadResult =>
-          UploadEvent(
-            RemoteKey(uploadResult.getKey),
-            MD5Hash(uploadResult.getETag)
+          StorageEvent.uploadEvent(
+            RemoteKey.create(uploadResult.getKey),
+            MD5Hash.create(uploadResult.getETag)
         )
       )
       .catchAll(handleError(remoteKey))
@@ -51,7 +47,9 @@ trait Uploader {
   private def handleError(
       remoteKey: RemoteKey
   )(e: Throwable): UIO[StorageEvent] =
-    UIO(ErrorEvent(ActionSummary.Upload(remoteKey.key), remoteKey, e))
+    UIO(
+      StorageEvent
+        .errorEvent(ActionSummary.upload(remoteKey.key), remoteKey, e))
 
   private def putObjectRequest(request: Request) = {
     val putRequest =
@@ -69,7 +67,7 @@ trait Uploader {
 
   private def metadata: LocalFile => ObjectMetadata = localFile => {
     val metadata = new ObjectMetadata()
-    LocalFile.md5base64(localFile).foreach(metadata.setContentMD5)
+    localFile.md5base64.toScala.foreach(metadata.setContentMD5)
     metadata
   }
 
@@ -90,7 +88,7 @@ trait Uploader {
             def isTransfer: ProgressEvent => Boolean =
               _.getEventType.isTransferEvent
             def isByteTransfer: ProgressEvent => Boolean =
-              (_.getEventType === RESPONSE_BYTE_TRANSFER_EVENT)
+              (_.getEventType == RESPONSE_BYTE_TRANSFER_EVENT)
             progressEvent match {
               case e: ProgressEvent if isTransfer(e) =>
                 TransferEvent(e.getEventType.name)

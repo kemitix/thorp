@@ -10,8 +10,8 @@ object S3ObjectsByKey {
   def byKey(os: LazyList[S3ObjectSummary]): MapView[RemoteKey, MD5Hash] =
     os.map { o =>
         {
-          val remoteKey = RemoteKey(o.getKey)
-          val hash      = MD5Hash(o.getETag)
+          val remoteKey = RemoteKey.create(o.getKey)
+          val hash      = MD5Hash.create(o.getETag)
           (remoteKey, hash)
         }
       }

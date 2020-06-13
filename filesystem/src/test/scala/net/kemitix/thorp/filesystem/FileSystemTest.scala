@@ -1,6 +1,7 @@
 package net.kemitix.thorp.filesystem
 
-import net.kemitix.thorp.domain.{RemoteKey, Sources, TemporaryFolder}
+import scala.jdk.CollectionConverters._
+import net.kemitix.thorp.domain.{RemoteKey, Sources}
 import org.scalatest.FreeSpec
 import zio.DefaultRuntime
 
@@ -12,9 +13,9 @@ class FileSystemTest extends FreeSpec with TemporaryFolder {
         withDirectory(dir => {
           val filename = "filename"
           createFile(dir, filename, contents = "")
-          val remoteKey = RemoteKey(filename)
-          val sources   = Sources(List(dir))
-          val prefix    = RemoteKey("")
+          val remoteKey = RemoteKey.create(filename)
+          val sources   = Sources.create(List(dir).asJava)
+          val prefix    = RemoteKey.create("")
           val program   = FileSystem.hasLocalFile(sources, prefix, remoteKey)
           val result = new DefaultRuntime {}
             .unsafeRunSync(program.provide(FileSystem.Live))
@@ -26,9 +27,9 @@ class FileSystemTest extends FreeSpec with TemporaryFolder {
       "file does not exist" in {
         withDirectory(dir => {
           val filename  = "filename"
-          val remoteKey = RemoteKey(filename)
-          val sources   = Sources(List(dir))
-          val prefix    = RemoteKey("")
+          val remoteKey = RemoteKey.create(filename)
+          val sources   = Sources.create(List(dir).asJava)
+          val prefix    = RemoteKey.create("")
           val program   = FileSystem.hasLocalFile(sources, prefix, remoteKey)
           val result = new DefaultRuntime {}
             .unsafeRunSync(program.provide(FileSystem.Live))
