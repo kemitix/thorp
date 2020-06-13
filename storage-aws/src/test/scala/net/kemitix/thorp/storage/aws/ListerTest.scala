@@ -1,6 +1,7 @@
 package net.kemitix.thorp.storage.aws
 
 import java.util.Date
+import scala.jdk.CollectionConverters._
 
 import com.amazonaws.SdkClientException
 import com.amazonaws.services.s3.model.{
@@ -33,9 +34,11 @@ class ListerTest extends FreeSpec {
             .returns(_ => {
               UIO.succeed(objectResults(nowDate, key, etag, truncated = false))
             })
-          private val result  = invoke(fixture.amazonS3Client)(bucket, prefix)
-          private val hashMap = result.map(_.byHash).map(m => Map.from(m))
-          private val keyMap  = result.map(_.byKey).map(m => Map.from(m))
+          private val result = invoke(fixture.amazonS3Client)(bucket, prefix)
+          private val hashMap =
+            result.map(_.byHash).map(m => Map.from(m.asMap.asScala))
+          private val keyMap =
+            result.map(_.byKey).map(m => Map.from(m.asMap.asScala))
           hashMap should be(Right(expectedHashMap))
           keyMap should be(Right(expectedKeyMap))
         }
@@ -67,9 +70,11 @@ class ListerTest extends FreeSpec {
             .when()
             .returns(_ =>
               UIO(objectResults(nowDate, key2, etag2, truncated = false)))
-          private val result  = invoke(fixture.amazonS3Client)(bucket, prefix)
-          private val hashMap = result.map(_.byHash).map(m => Map.from(m))
-          private val keyMap  = result.map(_.byKey).map(m => Map.from(m))
+          private val result = invoke(fixture.amazonS3Client)(bucket, prefix)
+          private val hashMap =
+            result.map(_.byHash).map(m => Map.from(m.asMap.asScala))
+          private val keyMap =
+            result.map(_.byKey).map(m => Map.from(m.asMap.asScala))
           hashMap should be(Right(expectedHashMap))
           keyMap should be(Right(expectedKeyMap))
         }
