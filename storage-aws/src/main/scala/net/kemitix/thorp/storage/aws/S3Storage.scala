@@ -15,10 +15,10 @@ object S3Storage {
 
       private val client: AmazonS3Client =
         AmazonS3Client.create(AmazonS3ClientBuilder.standard().build())
-      private val transferManager: AmazonTransferManager =
-        AmazonTransferManager.Wrapper(
-          TransferManagerBuilder.defaultTransferManager)
-      private val copier = S3Copier.copier(client)
+      private val transferManager: S3TransferManager =
+        S3TransferManager.create(TransferManagerBuilder.defaultTransferManager)
+      private val copier   = S3Copier.copier(client)
+      private val uploader = S3Uploader.uploader(transferManager)
 
       override def listObjects(
           bucket: Bucket,
@@ -30,16 +30,16 @@ object S3Storage {
           bucket: Bucket,
           listenerSettings: UploadEventListener.Settings,
       ): UIO[StorageEvent] =
-        Uploader.upload(transferManager)(
-          Uploader.Request(localFile, bucket, listenerSettings))
+        UIO {
+          uploader(S3Uploader.request(localFile, bucket))
+        }
 
       override def copy(bucket: Bucket,
                         sourceKey: RemoteKey,
                         hash: MD5Hash,
                         targetKey: RemoteKey): UIO[StorageEvent] =
         UIO {
-          val request = S3Copier.request(bucket, sourceKey, hash, targetKey)
-          copier(request)
+          copier(S3Copier.request(bucket, sourceKey, hash, targetKey))
         }
 
       override def delete(bucket: Bucket,
@@ -47,8 +47,8 @@ object S3Storage {
         Deleter.delete(client)(bucket, remoteKey)
 
       override def shutdown: UIO[StorageEvent] = {
-        transferManager.shutdownNow(true) *>
-          UIO(client.shutdown()).map(_ => StorageEvent.shutdownEvent())
+        UIO(transferManager.shutdownNow(true)) *> UIO(client.shutdown())
+          .map(_ => StorageEvent.shutdownEvent())
       }
     }
   }

@@ -10,6 +10,7 @@ public interface AmazonS3Client {
     void deleteObject(DeleteObjectRequest request);
     Optional<CopyObjectResult> copyObject(CopyObjectRequest request);
     ListObjectsV2Result listObjects(ListObjectsV2Request request);
+    PutObjectResult uploadObject(PutObjectRequest request);
 
     static AmazonS3Client create(AmazonS3 amazonS3) {
         return new AmazonS3Client() {
@@ -28,6 +29,10 @@ public interface AmazonS3Client {
             @Override
             public ListObjectsV2Result listObjects(ListObjectsV2Request request) {
                 return amazonS3.listObjectsV2(request);
+            }
+            @Override
+            public PutObjectResult uploadObject(PutObjectRequest request) {
+                return amazonS3.putObject(request);
             }
         };
     }
