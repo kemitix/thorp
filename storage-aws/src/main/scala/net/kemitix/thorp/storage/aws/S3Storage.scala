@@ -18,6 +18,7 @@ object S3Storage {
       private val transferManager: AmazonTransferManager =
         AmazonTransferManager.Wrapper(
           TransferManagerBuilder.defaultTransferManager)
+      private val copier = S3Copier.copier(client)
 
       override def listObjects(
           bucket: Bucket,
@@ -36,7 +37,10 @@ object S3Storage {
                         sourceKey: RemoteKey,
                         hash: MD5Hash,
                         targetKey: RemoteKey): UIO[StorageEvent] =
-        Copier.copy(client)(Copier.Request(bucket, sourceKey, hash, targetKey))
+        UIO {
+          val request = S3Copier.request(bucket, sourceKey, hash, targetKey)
+          copier(request)
+        }
 
       override def delete(bucket: Bucket,
                           remoteKey: RemoteKey): UIO[StorageEvent] =

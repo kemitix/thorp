@@ -8,7 +8,7 @@ public class StorageEvent {
     public static DoNothingEvent doNothingEvent(RemoteKey remoteKey) {
         return new DoNothingEvent(remoteKey);
     }
-    public static CopyEvent copyEvent(RemoteKey sourceKey, RemoteKey targetKey) {
+    public static StorageEvent copyEvent(RemoteKey sourceKey, RemoteKey targetKey) {
         return new CopyEvent(sourceKey, targetKey);
     }
     public static UploadEvent uploadEvent(RemoteKey remoteKey, MD5Hash md5Hash) {

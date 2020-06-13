@@ -45,8 +45,10 @@ trait AmazonS3ClientTestFixture extends MockFactory {
             hash: MD5Hash,
             targetKey: RemoteKey
         ): UIO[StorageEvent] =
-          Copier.copy(client)(
-            Copier.Request(bucket, sourceKey, hash, targetKey))
+          UIO {
+            val request = S3Copier.request(bucket, sourceKey, hash, targetKey)
+            S3Copier.copier(client)(request)
+          }
 
         override def delete(
             bucket: Bucket,
