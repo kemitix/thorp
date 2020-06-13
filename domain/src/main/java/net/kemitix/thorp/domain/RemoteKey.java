@@ -36,7 +36,7 @@ public class RemoteKey extends TypeAlias<String> {
     public RemoteKey resolve(String path) {
         return RemoteKey.create(
                 Stream.of(key(), path)
-                        .filter(String::isEmpty)
+                        .filter(s -> !s.isEmpty())
                         .collect(Collectors.joining("/")));
     }
     public static RemoteKey fromSourcePath(Path source, Path path) {
