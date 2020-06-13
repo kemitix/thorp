@@ -67,8 +67,8 @@ public class Terminal {
     public static String enableAlternateBuffer  = csi + "?1049h";
     public static String disableAlternateBuffer = csi + "?1049l";
 
-    private static final Map<Integer, String> subBars = new HashMap<>();
-    {
+    private static Map<Integer, String> getSubBars() {
+        Map<Integer, String> subBars = new HashMap<>();
         subBars.put(0, " ");
         subBars.put(1, "▏");
         subBars.put(2, "▎");
@@ -77,6 +77,7 @@ public class Terminal {
         subBars.put(5, "▋");
         subBars.put(6, "▊");
         subBars.put(7, "▉");
+        return subBars;
     }
 
     /**
@@ -165,7 +166,7 @@ public class Terminal {
      * @return the number of columns in the terminal
      */
     public static int width() {
-         return Optional.ofNullable(System.getenv("COLUMNS"))
+        return Optional.ofNullable(System.getenv("COLUMNS"))
                 .map(Integer::parseInt)
                 .map(x -> Math.max(x, 10))
                 .orElse(80);
@@ -176,23 +177,24 @@ public class Terminal {
             double max,
             int width
     ) {
+        Map<Integer, String> subBars = getSubBars();
         int barWidth          = width - 2;
         int phases            = subBars.values().size();
         int pxWidth           = barWidth * phases;
         double ratio          = pos / max;
-        double pxDone         = pxWidth * ratio;
-        int fullHeadSize      = (int)(pxDone / phases);
-        int part              = (int)(pxDone % phases);
+        int pxDone            = (int) (ratio * pxWidth);
+        int fullHeadSize      = pxDone / phases;
+        int part              = pxDone % phases;
         String partial        = part != 0 ? subBars.getOrDefault(part, "") : "";
         String head           = repeat("█", fullHeadSize) + partial;
         int tailSize          = barWidth - head.length();
         String tail           = repeat(" ", tailSize);
-        return head + tail;
+        return "[" + head + tail + "]";
     }
 
     private static String repeat(String s, int times) {
         StringBuilder sb = new StringBuilder();
-        IntStream.of(times).forEach(x -> sb.append(s));
+        IntStream.range(0, times).forEach(x -> sb.append(s));
         return sb.toString();
     }
 }
