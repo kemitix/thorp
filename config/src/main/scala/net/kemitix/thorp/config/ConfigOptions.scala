@@ -1,7 +1,5 @@
 package net.kemitix.thorp.config
 
-import net.kemitix.thorp.domain.SimpleLens
-
 final case class ConfigOptions(options: List[ConfigOption]) {
 
   def ++(other: ConfigOptions): ConfigOptions =

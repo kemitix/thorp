@@ -1,6 +1,6 @@
 package net.kemitix.thorp.config
 
-import net.kemitix.thorp.domain.{Bucket, Filter, RemoteKey, SimpleLens, Sources}
+import net.kemitix.thorp.domain.{Bucket, Filter, RemoteKey, Sources}
 
 private[config] final case class Configuration(
     bucket: Bucket,

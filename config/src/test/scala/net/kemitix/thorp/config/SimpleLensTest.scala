@@ -1,4 +1,4 @@
-package net.kemitix.thorp.domain
+package net.kemitix.thorp.config
 
 import org.scalatest.FreeSpec
 

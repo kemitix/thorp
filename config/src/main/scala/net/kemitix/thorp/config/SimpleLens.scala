@@ -1,4 +1,4 @@
-package net.kemitix.thorp.domain
+package net.kemitix.thorp.config
 
 final case class SimpleLens[A, B](field: A => B, update: A => B => A) {
 
