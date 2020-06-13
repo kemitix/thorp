@@ -5,7 +5,6 @@ import java.util.concurrent.locks.StampedLock
 import com.amazonaws.event.ProgressEventType.RESPONSE_BYTE_TRANSFER_EVENT
 import com.amazonaws.event.{ProgressEvent, ProgressListener}
 import com.amazonaws.services.s3.model.{ObjectMetadata, PutObjectRequest}
-import net.kemitix.thorp.domain.Implicits._
 import net.kemitix.thorp.domain.StorageEvent.ActionSummary
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.aws.Uploader.Request
@@ -89,7 +88,7 @@ trait Uploader {
             def isTransfer: ProgressEvent => Boolean =
               _.getEventType.isTransferEvent
             def isByteTransfer: ProgressEvent => Boolean =
-              (_.getEventType === RESPONSE_BYTE_TRANSFER_EVENT)
+              (_.getEventType == RESPONSE_BYTE_TRANSFER_EVENT)
             progressEvent match {
               case e: ProgressEvent if isTransfer(e) =>
                 TransferEvent(e.getEventType.name)
