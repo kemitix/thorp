@@ -1,6 +1,7 @@
 package net.kemitix.thorp.cli
 
 import java.nio.file.Paths
+import scala.jdk.CollectionConverters._
 
 import net.kemitix.thorp.config.ConfigOption.Debug
 import net.kemitix.thorp.config.{ConfigOptions, ConfigQuery}
@@ -36,7 +37,8 @@ class CliArgsTest extends FunSpec {
       it("should get multiple sources") {
         val expected      = Some(Set("path1", "path2").map(Paths.get(_)))
         val configOptions = invoke(args)
-        val result        = configOptions.map(ConfigQuery.sources(_).paths.toSet)
+        val result =
+          configOptions.map(ConfigQuery.sources(_).paths.asScala.toSet)
         assertResult(expected)(result)
       }
     }

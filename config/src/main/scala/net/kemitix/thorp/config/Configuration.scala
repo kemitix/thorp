@@ -20,7 +20,7 @@ private[config] object Configuration {
     debug = false,
     batchMode = false,
     parallel = 1,
-    sources = Sources(List.empty)
+    sources = Sources.emptySources
   )
   val sources: SimpleLens[Configuration, Sources] =
     SimpleLens[Configuration, Sources](_.sources, b => a => b.copy(sources = a))

@@ -94,7 +94,7 @@ object FileSystem {
           sources: Sources,
           prefix: RemoteKey,
           remoteKey: RemoteKey): ZIO[FileSystem, Nothing, Boolean] = {
-        ZIO.foldLeft(sources.paths)(false) { (accExists, source) =>
+        ZIO.foldLeft(sources.paths.asScala)(false) { (accExists, source) =>
           remoteKey
             .asFile(source, prefix)
             .toScala

@@ -1,6 +1,7 @@
 package net.kemitix.thorp.config
 
 import java.nio.file.{Path, Paths}
+import scala.jdk.CollectionConverters._
 
 import net.kemitix.thorp.domain.Filter.{Exclude, Include}
 import net.kemitix.thorp.domain._
@@ -24,7 +25,7 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
 
   describe("when no source") {
     it("should use the current (PWD) directory") {
-      val expected = Right(Sources(List(pwd)))
+      val expected = Right(Sources.create(List(pwd).asJava))
       val options  = configOptions(coBucket)
       val result   = invoke(options).map(_.sources)
       assertResult(expected)(result)
@@ -63,7 +64,7 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
   describe("when has a single source with no .thorp.conf") {
     it("should only include the source once") {
       withDirectory(aSource => {
-        val expected = Right(Sources(List(aSource)))
+        val expected = Right(Sources.create(List(aSource).asJava))
         val options  = configOptions(ConfigOption.Source(aSource), coBucket)
         val result   = invoke(options).map(_.sources)
         assertResult(expected)(result)
@@ -120,7 +121,7 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
                       "exclude = previous-exclude")
             // should have both sources in order
             val expectedSources =
-              Right(Sources(List(currentSource, previousSource)))
+              Right(Sources.create(List(currentSource, previousSource).asJava))
             // should have bucket from current only
             val expectedBuckets = Right(Bucket.named("current-bucket"))
             // should have prefix from current only

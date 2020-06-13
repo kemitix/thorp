@@ -1,6 +1,7 @@
 package net.kemitix.thorp.config
 
 import java.nio.file.Paths
+import scala.jdk.CollectionConverters._
 
 import net.kemitix.thorp.domain.Sources
 import org.scalatest.FreeSpec
@@ -73,14 +74,14 @@ class ConfigQueryTest extends FreeSpec {
     "when not set" - {
       "should have current dir" - {
         val pwd      = Paths.get(System.getenv("PWD"))
-        val expected = Sources(List(pwd))
+        val expected = Sources.create(List(pwd).asJava)
         val result   = ConfigQuery.sources(ConfigOptions(List()))
         assertResult(expected)(result)
       }
     }
     "when is set once" - {
       "should have one source" in {
-        val expected = Sources(List(pathA))
+        val expected = Sources.create(List(pathA).asJava)
         val result =
           ConfigQuery.sources(ConfigOptions(List(ConfigOption.Source(pathA))))
         assertResult(expected)(result)
@@ -88,7 +89,7 @@ class ConfigQueryTest extends FreeSpec {
     }
     "when is set twice" - {
       "should have two sources" in {
-        val expected = Sources(List(pathA, pathB))
+        val expected = Sources.create(List(pathA, pathB).asJava)
         val result = ConfigQuery.sources(
           ConfigOptions(
             List(ConfigOption.Source(pathA), ConfigOption.Source(pathB))))

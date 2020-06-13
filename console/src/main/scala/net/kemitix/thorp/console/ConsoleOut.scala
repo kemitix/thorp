@@ -1,5 +1,6 @@
 package net.kemitix.thorp.console
 
+import scala.jdk.CollectionConverters._
 import net.kemitix.thorp.domain.StorageEvent.ActionSummary
 import net.kemitix.thorp.domain.Terminal._
 import net.kemitix.thorp.domain.{Bucket, RemoteKey, Sources}
@@ -27,7 +28,7 @@ object ConsoleOut {
       prefix: RemoteKey,
       sources: Sources
   ) extends ConsoleOut {
-    private val sourcesList = sources.paths.mkString(", ")
+    private val sourcesList = sources.paths.asScala.mkString(", ")
     override def en: String =
       List(s"Bucket: ${bucket.name}",
            s"Prefix: ${prefix.key}",

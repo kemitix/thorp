@@ -1,5 +1,7 @@
 package net.kemitix.thorp.config
 
+import scala.jdk.CollectionConverters._
+
 import net.kemitix.thorp.domain.{Sources, TemporaryFolder}
 import net.kemitix.thorp.filesystem.FileSystem
 import org.scalatest.FunSpec
@@ -19,7 +21,7 @@ class ConfigOptionTest extends FunSpec with TemporaryFolder {
               ConfigOption.IgnoreGlobalOptions,
               ConfigOption.IgnoreUserOptions
             ))
-          val expected = Sources(List(path1, path2))
+          val expected = Sources.create(List(path1, path2).asJava)
           val result   = invoke(configOptions)
           assert(result.isRight, result)
           assertResult(expected)(ConfigQuery.sources(configOptions))
