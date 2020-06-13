@@ -55,7 +55,7 @@ trait AmazonS3ClientTestFixture extends MockFactory {
             bucket: Bucket,
             remoteKey: RemoteKey
         ): UIO[StorageEvent] =
-          Deleter.delete(client)(bucket, remoteKey)
+          UIO(S3Deleter.deleter(client)(S3Deleter.request(bucket, remoteKey)))
 
         override def shutdown: UIO[StorageEvent] = {
           UIO(transferManager.shutdownNow(true)) *> UIO(client.shutdown())

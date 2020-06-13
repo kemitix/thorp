@@ -19,6 +19,7 @@ object S3Storage {
         S3TransferManager.create(TransferManagerBuilder.defaultTransferManager)
       private val copier   = S3Copier.copier(client)
       private val uploader = S3Uploader.uploader(transferManager)
+      private val deleter  = S3Deleter.deleter(client)
 
       override def listObjects(
           bucket: Bucket,
@@ -44,7 +45,9 @@ object S3Storage {
 
       override def delete(bucket: Bucket,
                           remoteKey: RemoteKey): UIO[StorageEvent] =
-        Deleter.delete(client)(bucket, remoteKey)
+        UIO {
+          deleter(S3Deleter.request(bucket, remoteKey))
+        }
 
       override def shutdown: UIO[StorageEvent] = {
         UIO(transferManager.shutdownNow(true)) *> UIO(client.shutdown())
