@@ -27,22 +27,31 @@ trait ThorpArchive {
     for {
       batchMode <- Config.batchMode
       sqe <- event match {
-        case UploadEvent(remoteKey, _) =>
+        case uploadEvent: UploadEvent => {
+          val remoteKey = uploadEvent.remoteKey
           ZIO(event) <* Console.putMessageLnB(UploadComplete(remoteKey),
                                               batchMode)
-        case CopyEvent(sourceKey, targetKey) =>
+        }
+        case copyEvent: CopyEvent => {
+          val sourceKey = copyEvent.sourceKey
+          val targetKey = copyEvent.targetKey
           ZIO(event) <* Console.putMessageLnB(
             CopyComplete(sourceKey, targetKey),
             batchMode)
-        case DeleteEvent(remoteKey) =>
+        }
+        case deleteEvent: DeleteEvent => {
+          val remoteKey = deleteEvent.remoteKey
           ZIO(event) <* Console.putMessageLnB(DeleteComplete(remoteKey),
                                               batchMode)
-        case ErrorEvent(action, _, e) =>
+        }
+        case errorEvent: ErrorEvent => {
+          val action = errorEvent.action
+          val e      = errorEvent.e
           ZIO(event) <* Console.putMessageLnB(
             ErrorQueueEventOccurred(action, e),
             batchMode)
-        case DoNothingEvent(_) => ZIO(event)
-        case ShutdownEvent()   => ZIO(event)
+        }
+        case _ => ZIO(event)
       }
     } yield sqe
 

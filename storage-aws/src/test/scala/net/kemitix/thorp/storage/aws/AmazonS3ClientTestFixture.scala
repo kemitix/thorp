@@ -1,7 +1,6 @@
 package net.kemitix.thorp.storage.aws
 
 import net.kemitix.thorp.console.Console
-import net.kemitix.thorp.domain.StorageEvent.ShutdownEvent
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.Storage
 import net.kemitix.thorp.uishell.UploadEventListener
@@ -57,7 +56,7 @@ trait AmazonS3ClientTestFixture extends MockFactory {
 
         override def shutdown: UIO[StorageEvent] = {
           transferManager.shutdownNow(true) *>
-            client.shutdown().map(_ => ShutdownEvent())
+            client.shutdown().map(_ => StorageEvent.shutdownEvent())
         }
       }
   }

@@ -6,11 +6,7 @@ import com.amazonaws.event.ProgressEventType.RESPONSE_BYTE_TRANSFER_EVENT
 import com.amazonaws.event.{ProgressEvent, ProgressListener}
 import com.amazonaws.services.s3.model.{ObjectMetadata, PutObjectRequest}
 import net.kemitix.thorp.domain.Implicits._
-import net.kemitix.thorp.domain.StorageEvent.{
-  ActionSummary,
-  ErrorEvent,
-  UploadEvent
-}
+import net.kemitix.thorp.domain.StorageEvent.ActionSummary
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.aws.Uploader.Request
 import net.kemitix.thorp.uishell.UploadProgressEvent.{
@@ -41,7 +37,7 @@ trait Uploader {
       .flatMap(_.waitForUploadResult)
       .map(
         uploadResult =>
-          UploadEvent(
+          StorageEvent.uploadEvent(
             RemoteKey.create(uploadResult.getKey),
             MD5Hash.create(uploadResult.getETag)
         )
@@ -52,7 +48,9 @@ trait Uploader {
   private def handleError(
       remoteKey: RemoteKey
   )(e: Throwable): UIO[StorageEvent] =
-    UIO(ErrorEvent(ActionSummary.Upload(remoteKey.key), remoteKey, e))
+    UIO(
+      StorageEvent
+        .errorEvent(ActionSummary.upload(remoteKey.key), remoteKey, e))
 
   private def putObjectRequest(request: Request) = {
     val putRequest =

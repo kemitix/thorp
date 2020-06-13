@@ -57,7 +57,7 @@ class LocalFileSystemTest extends FreeSpec {
                         totalBytesSoFar: Long)
       : ZIO[Storage with Config, Nothing, StorageEvent] = UIO {
       actions.updateAndGet(l => sequencedAction :: l)
-      StorageEvent.DoNothingEvent(sequencedAction.action.remoteKey)
+      StorageEvent.doNothingEvent(sequencedAction.action.remoteKey)
     }
   }
 

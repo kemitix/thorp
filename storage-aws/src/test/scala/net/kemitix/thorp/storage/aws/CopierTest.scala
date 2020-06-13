@@ -2,7 +2,7 @@ package net.kemitix.thorp.storage.aws
 
 import com.amazonaws.services.s3.model.{AmazonS3Exception, CopyObjectResult}
 import net.kemitix.thorp.console.Console
-import net.kemitix.thorp.domain.StorageEvent.{ActionSummary, ErrorEvent}
+import net.kemitix.thorp.domain.StorageEvent.ErrorEvent
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.aws.S3ClientException.{CopyError, HashError}
 import org.scalatest.FreeSpec
@@ -21,7 +21,7 @@ class CopierTest extends FreeSpec {
     "when source exists" - {
       "when source hash matches" - {
         "copies from source to target" in {
-          val event    = StorageEvent.CopyEvent(sourceKey, targetKey)
+          val event    = StorageEvent.copyEvent(sourceKey, targetKey)
           val expected = Right(event)
           new AmazonS3ClientTestFixture {
             (() => fixture.amazonS3Client.copyObject)
@@ -41,16 +41,14 @@ class CopierTest extends FreeSpec {
               .returns(_ => Task.succeed(None))
             private val result =
               invoke(bucket, sourceKey, hash, targetKey, fixture.amazonS3Client)
-            val key = RemoteKey.create("targetKey")
             result match {
-              case Right(
-                  ErrorEvent(ActionSummary.Copy("sourceKey => targetKey"),
-                             key,
-                             e)) =>
+              case right: Right[Throwable, StorageEvent] => {
+                val e = right.value.asInstanceOf[ErrorEvent].e
                 e match {
                   case HashError => assert(true)
                   case _         => fail(s"Not a HashError: ${e.getMessage}")
                 }
+              }
               case e => fail(s"Not an ErrorQueueEvent: $e")
             }
           }
@@ -67,15 +65,14 @@ class CopierTest extends FreeSpec {
               invoke(bucket, sourceKey, hash, targetKey, fixture.amazonS3Client)
             val key = RemoteKey.create("targetKey")
             result match {
-              case Right(
-                  ErrorEvent(ActionSummary.Copy("sourceKey => targetKey"),
-                             key,
-                             e)) =>
+              case right: Right[Throwable, StorageEvent] => {
+                val e = right.value.asInstanceOf[ErrorEvent].e
                 e match {
                   case CopyError(cause) =>
                     assert(cause.getMessage.startsWith(expectedMessage))
                   case _ => fail(s"Not a CopyError: ${e.getMessage}")
                 }
+              }
               case e => fail(s"Not an ErrorQueueEvent: ${e}")
             }
           }

@@ -3,12 +3,8 @@ package net.kemitix.thorp.storage.aws
 import com.amazonaws.SdkClientException
 import com.amazonaws.services.s3.model.AmazonS3Exception
 import net.kemitix.thorp.console._
-import net.kemitix.thorp.domain.StorageEvent.{
-  ActionSummary,
-  DeleteEvent,
-  ErrorEvent
-}
-import net.kemitix.thorp.domain.{Bucket, RemoteKey}
+import net.kemitix.thorp.domain.StorageEvent.ActionSummary
+import net.kemitix.thorp.domain.{Bucket, RemoteKey, StorageEvent}
 import org.scalatest.FreeSpec
 import zio.internal.PlatformLive
 import zio.{Runtime, Task, UIO}
@@ -21,7 +17,7 @@ class DeleterTest extends FreeSpec {
     val bucket    = Bucket.named("aBucket")
     val remoteKey = RemoteKey.create("aRemoteKey")
     "when no errors" in {
-      val expected = Right(DeleteEvent(remoteKey))
+      val expected = Right(StorageEvent.deleteEvent(remoteKey))
       new AmazonS3ClientTestFixture {
         (() => fixture.amazonS3Client.deleteObject)
           .when()
@@ -34,7 +30,9 @@ class DeleterTest extends FreeSpec {
       val exception = new AmazonS3Exception("message")
       val expected =
         Right(
-          ErrorEvent(ActionSummary.Delete(remoteKey.key), remoteKey, exception))
+          StorageEvent.errorEvent(ActionSummary.delete(remoteKey.key),
+                                  remoteKey,
+                                  exception))
       new AmazonS3ClientTestFixture {
         (() => fixture.amazonS3Client.deleteObject)
           .when()
@@ -47,7 +45,9 @@ class DeleterTest extends FreeSpec {
       val exception = new SdkClientException("message")
       val expected =
         Right(
-          ErrorEvent(ActionSummary.Delete(remoteKey.key), remoteKey, exception))
+          StorageEvent.errorEvent(ActionSummary.delete(remoteKey.key),
+                                  remoteKey,
+                                  exception))
       new AmazonS3ClientTestFixture {
         (() => fixture.amazonS3Client.deleteObject)
           .when()

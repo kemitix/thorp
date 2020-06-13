@@ -46,18 +46,29 @@ object UIShell {
     for {
       batchMode <- Config.batchMode
       _ <- event match {
-        case StorageEvent.DoNothingEvent(remoteKey) => UIO.unit
-        case StorageEvent.CopyEvent(sourceKey, targetKey) =>
+        case _: StorageEvent.DoNothingEvent => UIO.unit
+        case copyEvent: StorageEvent.CopyEvent => {
+          val sourceKey = copyEvent.sourceKey
+          val targetKey = copyEvent.targetKey
           Console.putMessageLnB(CopyComplete(sourceKey, targetKey), batchMode)
-        case StorageEvent.UploadEvent(remoteKey, md5Hash) =>
+        }
+        case uploadEvent: StorageEvent.UploadEvent => {
+          val remoteKey = uploadEvent.remoteKey
           ProgressUI.finishedUploading(remoteKey) *>
             Console.putMessageLnB(UploadComplete(remoteKey), batchMode)
-        case StorageEvent.DeleteEvent(remoteKey) =>
+        }
+        case deleteEvent: StorageEvent.DeleteEvent => {
+          val remoteKey = deleteEvent.remoteKey
           Console.putMessageLnB(DeleteComplete(remoteKey), batchMode)
-        case StorageEvent.ErrorEvent(action, remoteKey, e) =>
+        }
+        case errorEvent: StorageEvent.ErrorEvent => {
+          val remoteKey = errorEvent.remoteKey
+          val action    = errorEvent.action
+          val e         = errorEvent.e
           ProgressUI.finishedUploading(remoteKey) *>
             Console.putMessageLnB(ErrorQueueEventOccurred(action, e), batchMode)
-        case StorageEvent.ShutdownEvent() => UIO.unit
+        }
+        case _: StorageEvent.ShutdownEvent => UIO.unit
       }
     } yield ()
 

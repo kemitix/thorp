@@ -3,7 +3,6 @@ package net.kemitix.thorp.lib
 import net.kemitix.eip.zio.MessageChannel.UChannel
 import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.domain.Action.{ToCopy, ToDelete, ToUpload}
-import net.kemitix.thorp.domain.StorageEvent.DoNothingEvent
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.Storage
 import net.kemitix.thorp.uishell.{UIEvent, UploadEventListener}
@@ -33,7 +32,7 @@ trait UnversionedMirrorArchive extends ThorpArchive {
         Storage.delete(bucket, remoteKey)
       case doNothing: Action.DoNothing =>
         val remoteKey = doNothing.remoteKey
-        UIO(DoNothingEvent(remoteKey))
+        UIO(StorageEvent.doNothingEvent(remoteKey))
     }
   }
 
