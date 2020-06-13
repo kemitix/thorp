@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
 
-public class HexEncoderTestJ
+public class HexEncoderTest
         implements WithAssertions {
 
     private String text = "test text to encode to hex";
