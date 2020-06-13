@@ -12,11 +12,11 @@ trait AmazonS3ClientTestFixture extends MockFactory {
   @SuppressWarnings(Array("org.wartremover.warts.PublicInference"))
   private val manager = stub[AmazonTransferManager]
   @SuppressWarnings(Array("org.wartremover.warts.PublicInference"))
-  private val client   = stub[AmazonS3.Client]
+  private val client   = stub[AmazonS3Client]
   val fixture: Fixture = Fixture(client, manager)
 
   case class Fixture(
-      amazonS3Client: AmazonS3.Client,
+      amazonS3Client: AmazonS3Client,
       amazonS3TransferManager: AmazonTransferManager,
   ) {
     lazy val storageService: Storage.Service =
@@ -56,7 +56,7 @@ trait AmazonS3ClientTestFixture extends MockFactory {
 
         override def shutdown: UIO[StorageEvent] = {
           transferManager.shutdownNow(true) *>
-            client.shutdown().map(_ => StorageEvent.shutdownEvent())
+            UIO(client.shutdown()).map(_ => StorageEvent.shutdownEvent())
         }
       }
   }

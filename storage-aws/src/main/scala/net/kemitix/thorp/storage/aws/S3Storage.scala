@@ -13,8 +13,8 @@ object S3Storage {
   trait Live extends Storage {
     val storage: Service = new Service {
 
-      private val client: AmazonS3.Client =
-        AmazonS3.ClientImpl(AmazonS3ClientBuilder.defaultClient)
+      private val client: AmazonS3Client =
+        AmazonS3Client.create(AmazonS3ClientBuilder.standard().build())
       private val transferManager: AmazonTransferManager =
         AmazonTransferManager.Wrapper(
           TransferManagerBuilder.defaultTransferManager)
@@ -44,7 +44,7 @@ object S3Storage {
 
       override def shutdown: UIO[StorageEvent] = {
         transferManager.shutdownNow(true) *>
-          client.shutdown().map(_ => StorageEvent.shutdownEvent())
+          UIO(client.shutdown()).map(_ => StorageEvent.shutdownEvent())
       }
     }
   }

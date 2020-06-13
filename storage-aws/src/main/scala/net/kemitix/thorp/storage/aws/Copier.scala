@@ -1,5 +1,7 @@
 package net.kemitix.thorp.storage.aws
 
+import scala.jdk.OptionConverters._
+
 import com.amazonaws.SdkClientException
 import com.amazonaws.services.s3.model.{CopyObjectRequest, CopyObjectResult}
 import net.kemitix.thorp.domain.StorageEvent.{ActionSummary, ErrorEvent}
@@ -9,7 +11,7 @@ import zio.{IO, Task, UIO}
 
 trait Copier {
 
-  def copy(amazonS3: AmazonS3.Client)(request: Request): UIO[StorageEvent] =
+  def copy(amazonS3: AmazonS3Client)(request: Request): UIO[StorageEvent] =
     copyObject(amazonS3)(request)
       .fold(foldFailure(request.sourceKey, request.targetKey),
             foldSuccess(request.sourceKey, request.targetKey))
@@ -21,9 +23,8 @@ trait Copier {
       targetKey: RemoteKey
   )
 
-  private def copyObject(amazonS3: AmazonS3.Client)(request: Request) =
-    amazonS3
-      .copyObject(copyObjectRequest(request))
+  private def copyObject(amazonS3: AmazonS3Client)(request: Request) =
+    Task(amazonS3.copyObject(copyObjectRequest(request)).toScala)
       .fold(
         error => Task.fail(CopyError(error)),
         result => IO.fromEither(result.toRight(HashError))

@@ -7,7 +7,7 @@ import zio.{Task, UIO, ZIO}
 
 trait Deleter {
 
-  def delete(amazonS3: AmazonS3.Client)(
+  def delete(amazonS3: AmazonS3Client)(
       bucket: Bucket,
       remoteKey: RemoteKey
   ): UIO[StorageEvent] =
@@ -18,12 +18,14 @@ trait Deleter {
             StorageEvent
               .errorEvent(ActionSummary.delete(remoteKey.key), remoteKey, e)))
 
-  private def deleteObject(amazonS3: AmazonS3.Client)(
+  private def deleteObject(amazonS3: AmazonS3Client)(
       bucket: Bucket,
       remoteKey: RemoteKey
   ): Task[StorageEvent] =
-    (amazonS3.deleteObject(new DeleteObjectRequest(bucket.name, remoteKey.key))
-      *> ZIO(StorageEvent.deleteEvent(remoteKey)))
+    Task {
+      val request = new DeleteObjectRequest(bucket.name, remoteKey.key)
+      amazonS3.deleteObject(request)
+    } *> ZIO(StorageEvent.deleteEvent(remoteKey))
 }
 
 object Deleter extends Deleter

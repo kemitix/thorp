@@ -19,7 +19,7 @@ trait Lister {
   private type Token = String
   case class Batch(summaries: LazyList[S3ObjectSummary], more: Option[Token])
 
-  def listObjects(amazonS3: AmazonS3.Client)(
+  def listObjects(amazonS3: AmazonS3Client)(
       bucket: Bucket,
       prefix: RemoteKey
   ): RIO[Storage with Console, RemoteObjects] = {
@@ -59,10 +59,9 @@ trait Lister {
   }
 
   private def tryFetchBatch(
-      amazonS3: AmazonS3.Client): ListObjectsV2Request => Task[Batch] =
+      amazonS3: AmazonS3Client): ListObjectsV2Request => Task[Batch] =
     request =>
-      amazonS3
-        .listObjectsV2(request)
+      Task(amazonS3.listObjects(request))
         .map(result => Batch(objectSummaries(result), moreToken(result)))
 
   private def objectSummaries(
