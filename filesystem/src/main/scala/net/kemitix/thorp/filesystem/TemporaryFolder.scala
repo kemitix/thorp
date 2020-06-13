@@ -1,4 +1,4 @@
-package net.kemitix.thorp.domain
+package net.kemitix.thorp.filesystem
 
 import java.io.{File, IOException, PrintWriter}
 import java.nio.file.attribute.BasicFileAttributes

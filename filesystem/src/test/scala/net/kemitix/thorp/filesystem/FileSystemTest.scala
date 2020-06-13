@@ -1,7 +1,7 @@
 package net.kemitix.thorp.filesystem
 
 import scala.jdk.CollectionConverters._
-import net.kemitix.thorp.domain.{RemoteKey, Sources, TemporaryFolder}
+import net.kemitix.thorp.domain.{RemoteKey, Sources}
 import org.scalatest.FreeSpec
 import zio.DefaultRuntime
 

@@ -1,11 +1,11 @@
 package net.kemitix.thorp.config
 
 import java.nio.file.{Path, Paths}
-import scala.jdk.CollectionConverters._
 
+import scala.jdk.CollectionConverters._
 import net.kemitix.thorp.domain.Filter.{Exclude, Include}
 import net.kemitix.thorp.domain._
-import net.kemitix.thorp.filesystem.FileSystem
+import net.kemitix.thorp.filesystem.{FileSystem, TemporaryFolder}
 import org.scalatest.FunSpec
 import zio.DefaultRuntime
 

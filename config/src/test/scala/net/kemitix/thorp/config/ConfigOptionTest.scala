@@ -1,9 +1,8 @@
 package net.kemitix.thorp.config
 
 import scala.jdk.CollectionConverters._
-
-import net.kemitix.thorp.domain.{Sources, TemporaryFolder}
-import net.kemitix.thorp.filesystem.FileSystem
+import net.kemitix.thorp.domain.Sources
+import net.kemitix.thorp.filesystem.{FileSystem, TemporaryFolder}
 import org.scalatest.FunSpec
 import zio.DefaultRuntime
 
