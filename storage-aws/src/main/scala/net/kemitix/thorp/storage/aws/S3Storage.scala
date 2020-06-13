@@ -20,11 +20,14 @@ object S3Storage {
       private val copier   = S3Copier.copier(client)
       private val uploader = S3Uploader.uploader(transferManager)
       private val deleter  = S3Deleter.deleter(client)
+      private val lister   = S3Lister.lister(client)
 
       override def listObjects(
           bucket: Bucket,
           prefix: RemoteKey): RIO[Storage with Console, RemoteObjects] =
-        Lister.listObjects(client)(bucket, prefix)
+        UIO {
+          lister(S3Lister.request(bucket, prefix))
+        }
 
       override def upload(
           localFile: LocalFile,
