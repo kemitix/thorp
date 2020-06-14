@@ -5,7 +5,7 @@ import java.nio.file.Path
 import java.security.MessageDigest
 
 import net.kemitix.thorp.domain.MD5Hash
-import zio.{RIO, Task}
+import zio.{RIO, Task, ZIO}
 
 import scala.collection.immutable.NumericRange
 
@@ -38,7 +38,7 @@ private object MD5HashGenerator {
     val endOffset = Math.min(offset + size, file.length)
     for {
       digest <- readFile(file, offset, endOffset)
-      hash = MD5Hash.create(digest.toString)
+      hash = MD5Hash.fromDigest(digest)
     } yield hash
   }
 
@@ -46,7 +46,7 @@ private object MD5HashGenerator {
       file: File,
       offset: Long,
       endOffset: Long
-  ) =
+  ): ZIO[FileSystem, Throwable, Array[Byte]] =
     FileSystem.openAtOffset(file, offset) >>= { managedFileInputStream =>
       managedFileInputStream.use { fileInputStream =>
         digestFile(fileInputStream, offset, endOffset)

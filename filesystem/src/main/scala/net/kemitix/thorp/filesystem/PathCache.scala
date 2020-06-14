@@ -26,17 +26,22 @@ object PathCache {
   val tempFileName = ".thorp.cache.tmp"
 
   def create(path: Path, fileData: FileData): UIO[Iterable[String]] =
-    UIO {
-      fileData.hashes.keys.asScala.map(hashType => {
+    UIO(unsafeCreate(path, fileData))
+
+  def unsafeCreate(path: Path, fileData: FileData): Set[String] = {
+    fileData.hashes.keys.asScala
+      .map(hashType => {
         val hash     = fileData.hashes.get(hashType).toScala
         val modified = fileData.lastModified
+        val hashHash = hash.get.hash
         String.join(":",
-                    hashType.toString,
-                    hash.get.hash,
+                    hashType.label,
+                    hashHash,
                     modified.at.toEpochMilli.toString,
                     path.toString)
       })
-    }
+      .toSet
+  }
 
   private val pattern =
     "^(?<hashtype>.+):(?<hash>.+):(?<modified>\\d+):(?<filename>.+)$"

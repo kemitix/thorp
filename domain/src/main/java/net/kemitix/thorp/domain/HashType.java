@@ -2,8 +2,10 @@ package net.kemitix.thorp.domain;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public class HashType {
-    public static HashType MD5 = new HashType();
+    public final String label;
+    public static HashType MD5 = new HashType("MD5");
 }
