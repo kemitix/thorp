@@ -38,7 +38,7 @@ private object MD5HashGenerator {
     val endOffset = Math.min(offset + size, file.length)
     for {
       digest <- readFile(file, offset, endOffset)
-      hash = MD5Hash.create(digest.mkString)
+      hash = MD5Hash.fromDigest(digest)
     } yield hash
   }
 
