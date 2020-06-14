@@ -1,22 +1,22 @@
 package net.kemitix.thorp.config
 
 import java.io.File
+import java.nio.file.Files
 
-import net.kemitix.thorp.filesystem.FileSystem
-import zio.{IO, RIO, ZIO}
+import zio.{IO, Task, ZIO}
+
+import scala.jdk.CollectionConverters._
 
 trait ParseConfigFile {
 
-  def parseFile(
-      file: File): ZIO[FileSystem, Seq[ConfigValidation], ConfigOptions] =
-    (FileSystem.exists(file) >>= readLines(file) >>= ParseConfigLines.parseLines)
+  def parseFile(file: File): ZIO[Any, Seq[ConfigValidation], ConfigOptions] =
+    (ZIO(file.exists()) >>= readLines(file) >>= ParseConfigLines.parseLines)
       .catchAll(h =>
         IO.fail(List(ConfigValidation.ErrorReadingFile(file, h.getMessage))))
 
-  private def readLines(file: File)(
-      exists: Boolean): RIO[FileSystem, Seq[String]] =
-    if (exists) FileSystem.lines(file)
-    else ZIO.succeed(Seq.empty)
+  private def readLines(file: File)(exists: Boolean): Task[Seq[String]] =
+    if (exists) Task(Files.readAllLines(file.toPath).asScala.toSeq)
+    else ZIO.succeed(List.empty)
 
 }
 

@@ -1,10 +1,11 @@
 package net.kemitix.thorp.config
 
-import scala.jdk.CollectionConverters._
 import net.kemitix.thorp.domain.Sources
-import net.kemitix.thorp.filesystem.{FileSystem, TemporaryFolder}
+import net.kemitix.thorp.filesystem.TemporaryFolder
 import org.scalatest.FunSpec
 import zio.DefaultRuntime
+
+import scala.jdk.CollectionConverters._
 
 class ConfigOptionTest extends FunSpec with TemporaryFolder {
 
@@ -31,9 +32,7 @@ class ConfigOptionTest extends FunSpec with TemporaryFolder {
 
   private def invoke(configOptions: ConfigOptions) = {
     new DefaultRuntime {}.unsafeRunSync {
-      ConfigurationBuilder
-        .buildConfig(configOptions)
-        .provide(FileSystem.Live)
+      ConfigurationBuilder.buildConfig(configOptions)
     }.toEither
   }
 }

@@ -16,6 +16,14 @@ public class Hashes extends TypeAlias<Map<HashType, MD5Hash>> {
         hashes.getValue().put(key, value);
         return hashes;
     }
+
+    public static Hashes mergeAll(List<Hashes> hashesList) {
+        Hashes hashes = Hashes.create();
+        Map<HashType, MD5Hash> values = hashes.getValue();
+        hashesList.stream().map(TypeAlias::getValue).forEach(values::putAll);
+        return hashes;
+    }
+
     public Hashes withKeyValue(HashType key, MD5Hash value) {
         Hashes hashes = Hashes.create();
         hashes.getValue().putAll(getValue());

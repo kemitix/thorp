@@ -3,7 +3,7 @@ package net.kemitix.thorp.uishell
 import net.kemitix.eip.zio.MessageChannel
 import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.console.Console
-import net.kemitix.thorp.filesystem.{FileSystem, Hasher}
+import net.kemitix.thorp.filesystem.FileSystem
 import zio.clock.Clock
 
 sealed trait ProgressEvent
@@ -11,7 +11,7 @@ sealed trait ProgressEvent
 object ProgressEvent {
   type Env = Console
   type ProgressSender =
-    MessageChannel.ESender[Config with Clock with Hasher with FileSystem,
+    MessageChannel.ESender[Config with Clock with FileSystem,
                            Throwable,
                            ProgressEvent]
   type ProgressReceiver =

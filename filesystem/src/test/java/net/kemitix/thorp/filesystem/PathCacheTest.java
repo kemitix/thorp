@@ -6,8 +6,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import java.util.Set;
 
-import scala.jdk.CollectionConverters;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
@@ -26,7 +24,7 @@ public class PathCacheTest
         LastModified lastModified = LastModified.at(now);
         FileData fileData = FileData.create(hashes, lastModified);
         //when
-        Set<String> result = setAsJava(PathCache.unsafeCreate(path, fileData));
+        Set<String> result = PathCache.export(path, fileData);
         //then
         assertThat(result).containsExactly(String.join(":",
                 HashType.MD5.label, MD5HashData.Root.hashString,
@@ -34,7 +32,4 @@ public class PathCacheTest
         ));
     }
 
-    public Set<String> setAsJava(scala.collection.immutable.Set<String> set) {
-        return CollectionConverters.SetHasAsJava(set).asJava();
-    }
 }

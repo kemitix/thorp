@@ -18,14 +18,18 @@ public class MD5Hash extends TypeAlias<String> {
         return new MD5Hash(in);
     }
     public static MD5Hash fromDigest(byte[] digest) {
-        return new MD5Hash(
-                IntStream.range(0, digest.length)
-                        .map(i -> digest[i])
-                        .mapToObj(b -> String.format("%02x", b))
-                        .map(s -> s.substring(s.length()-2, s.length()))
-                        .flatMap(x -> Stream.of(x.split("")))
-                        .collect(Collectors.joining()));
+        return new MD5Hash(digestAsString(digest));
     }
+
+    public static String digestAsString(byte[] digest) {
+        return IntStream.range(0, digest.length)
+                .map(i -> digest[i])
+                .mapToObj(b -> String.format("%02x", b))
+                .map(s -> s.substring(s.length() - 2, s.length()))
+                .flatMap(x -> Stream.of(x.split("")))
+                .collect(Collectors.joining());
+    }
+
     public String hash() {
         return QuoteStripper.stripQuotes(String.join("", getValue()));
     }

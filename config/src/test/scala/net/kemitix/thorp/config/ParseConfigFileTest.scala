@@ -2,10 +2,13 @@ package net.kemitix.thorp.config
 
 import java.io.File
 import java.nio.file.Paths
+import java.util
 
-import net.kemitix.thorp.filesystem.{FileSystem, TemporaryFolder}
+import net.kemitix.thorp.filesystem.TemporaryFolder
 import org.scalatest.FunSpec
 import zio.DefaultRuntime
+
+import scala.jdk.CollectionConverters._
 
 class ParseConfigFileTest extends FunSpec with TemporaryFolder {
 
@@ -20,7 +23,7 @@ class ParseConfigFileTest extends FunSpec with TemporaryFolder {
   describe("parse an empty file") {
     it("should return no options") {
       withDirectory(dir => {
-        val file = createFile(dir, "empty-file")
+        val file = createFile(dir, "empty-file", List.empty[String].asJava)
         assertResult(empty)(invoke(file))
       })
     }
@@ -28,7 +31,9 @@ class ParseConfigFileTest extends FunSpec with TemporaryFolder {
   describe("parse a file with no valid entries") {
     it("should return no options") {
       withDirectory(dir => {
-        val file = createFile(dir, "invalid-config", "no valid = config items")
+        val file = createFile(dir,
+                              "invalid-config",
+                              util.Arrays.asList("no valid = config items"))
         assertResult(empty)(invoke(file))
       })
     }
@@ -42,8 +47,8 @@ class ParseConfigFileTest extends FunSpec with TemporaryFolder {
       withDirectory(dir => {
         val file = createFile(dir,
                               "simple-config",
-                              "source = /path/to/source",
-                              "bucket = bucket-name")
+                              util.Arrays.asList("source = /path/to/source",
+                                                 "bucket = bucket-name"))
         assertResult(expected)(invoke(file))
       })
     }
@@ -51,9 +56,7 @@ class ParseConfigFileTest extends FunSpec with TemporaryFolder {
 
   private def invoke(file: File) = {
     new DefaultRuntime {}.unsafeRunSync {
-      ParseConfigFile
-        .parseFile(file)
-        .provide(FileSystem.Live)
+      ParseConfigFile.parseFile(file)
     }.toEither
   }
 }

@@ -79,7 +79,7 @@ public interface S3Lister {
 
     static Optional<String> moreToken(ListObjectsV2Result result) {
         if (result.isTruncated()) {
-            return Optional.of(result.getContinuationToken());
+            return Optional.of(result.getNextContinuationToken());
         }
         return Optional.empty();
     }
