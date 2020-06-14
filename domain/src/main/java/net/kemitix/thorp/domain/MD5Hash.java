@@ -21,9 +21,7 @@ public class MD5Hash extends TypeAlias<List<String>> {
                         .collect(Collectors.toList()));
     }
     public String hash() {
-        return getValue().stream()
-                .map(QuoteStripper::stripQuotes)
-                .collect(Collectors.joining());
+        return QuoteStripper.stripQuotes(String.join("", getValue()));
     }
     public byte[] digest() {
         return HexEncoder.decode(hash());
