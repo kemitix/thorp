@@ -20,10 +20,10 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
 
   private def configOptions(options: ConfigOption*): ConfigOptions =
     ConfigOptions(
-      List[ConfigOption](
+      (List[ConfigOption](
         ConfigOption.IgnoreUserOptions,
         ConfigOption.IgnoreGlobalOptions
-      ) ++ options)
+      ) ++ options).asJava)
 
   describe("when no source") {
     it("should use the current (PWD) directory") {

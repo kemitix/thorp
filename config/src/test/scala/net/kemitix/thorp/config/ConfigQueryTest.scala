@@ -1,24 +1,31 @@
 package net.kemitix.thorp.config
 
 import java.nio.file.Paths
-import scala.jdk.CollectionConverters._
+import java.util
 
+import scala.jdk.CollectionConverters._
 import net.kemitix.thorp.domain.Sources
 import org.scalatest.FreeSpec
 
 class ConfigQueryTest extends FreeSpec {
 
+  def list(): util.List[ConfigOption]                     = List.empty.asJava
+  def list(option: ConfigOption): util.List[ConfigOption] = List(option).asJava
+  def list(option1: ConfigOption,
+           option2: ConfigOption): util.List[ConfigOption] =
+    List(option1, option2).asJava
+
   "show version" - {
     "when is set" - {
       "should be true" in {
         val result =
-          ConfigQuery.showVersion(ConfigOptions(List(ConfigOption.Version)))
+          ConfigQuery.showVersion(ConfigOptions(list(ConfigOption.Version)))
         assertResult(true)(result)
       }
     }
     "when not set" - {
       "should be false" in {
-        val result = ConfigQuery.showVersion(ConfigOptions(List()))
+        val result = ConfigQuery.showVersion(ConfigOptions(list()))
         assertResult(false)(result)
       }
     }
@@ -27,13 +34,13 @@ class ConfigQueryTest extends FreeSpec {
     "when is set" - {
       "should be true" in {
         val result =
-          ConfigQuery.batchMode(ConfigOptions(List(ConfigOption.BatchMode)))
+          ConfigQuery.batchMode(ConfigOptions(list(ConfigOption.BatchMode)))
         assertResult(true)(result)
       }
     }
     "when not set" - {
       "should be false" in {
-        val result = ConfigQuery.batchMode(ConfigOptions(List()))
+        val result = ConfigQuery.batchMode(ConfigOptions(list()))
         assertResult(false)(result)
       }
     }
@@ -42,13 +49,13 @@ class ConfigQueryTest extends FreeSpec {
     "when is set" - {
       "should be true" in {
         val result = ConfigQuery.ignoreUserOptions(
-          ConfigOptions(List(ConfigOption.IgnoreUserOptions)))
+          ConfigOptions(list(ConfigOption.IgnoreUserOptions)))
         assertResult(true)(result)
       }
     }
     "when not set" - {
       "should be false" in {
-        val result = ConfigQuery.ignoreUserOptions(ConfigOptions(List()))
+        val result = ConfigQuery.ignoreUserOptions(ConfigOptions(list()))
         assertResult(false)(result)
       }
     }
@@ -57,13 +64,13 @@ class ConfigQueryTest extends FreeSpec {
     "when is set" - {
       "should be true" in {
         val result = ConfigQuery.ignoreGlobalOptions(
-          ConfigOptions(List(ConfigOption.IgnoreGlobalOptions)))
+          ConfigOptions(list(ConfigOption.IgnoreGlobalOptions)))
         assertResult(true)(result)
       }
     }
     "when not set" - {
       "should be false" in {
-        val result = ConfigQuery.ignoreGlobalOptions(ConfigOptions(List()))
+        val result = ConfigQuery.ignoreGlobalOptions(ConfigOptions(list()))
         assertResult(false)(result)
       }
     }
@@ -72,10 +79,10 @@ class ConfigQueryTest extends FreeSpec {
     val pathA = Paths.get("a-path")
     val pathB = Paths.get("b-path")
     "when not set" - {
-      "should have current dir" - {
+      "should have current dir" in {
         val pwd      = Paths.get(System.getenv("PWD"))
         val expected = Sources.create(List(pwd).asJava)
-        val result   = ConfigQuery.sources(ConfigOptions(List()))
+        val result   = ConfigQuery.sources(ConfigOptions(list()))
         assertResult(expected)(result)
       }
     }
@@ -83,7 +90,7 @@ class ConfigQueryTest extends FreeSpec {
       "should have one source" in {
         val expected = Sources.create(List(pathA).asJava)
         val result =
-          ConfigQuery.sources(ConfigOptions(List(ConfigOption.Source(pathA))))
+          ConfigQuery.sources(ConfigOptions(list(ConfigOption.Source(pathA))))
         assertResult(expected)(result)
       }
     }
@@ -92,7 +99,7 @@ class ConfigQueryTest extends FreeSpec {
         val expected = Sources.create(List(pathA, pathB).asJava)
         val result = ConfigQuery.sources(
           ConfigOptions(
-            List(ConfigOption.Source(pathA), ConfigOption.Source(pathB))))
+            list(ConfigOption.Source(pathA), ConfigOption.Source(pathB))))
         assertResult(expected)(result)
       }
     }

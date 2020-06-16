@@ -20,7 +20,7 @@ trait ConfigQuery {
     ConfigOptions.contains(ConfigOption.IgnoreGlobalOptions)(configOptions)
 
   def sources(configOptions: ConfigOptions): Sources = {
-    val explicitPaths = configOptions.options.flatMap {
+    val explicitPaths = configOptions.options.asScala.flatMap {
       case ConfigOption.Source(sourcePath) => List(sourcePath)
       case _                               => List.empty
     }

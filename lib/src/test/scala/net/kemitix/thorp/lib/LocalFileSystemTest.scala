@@ -46,7 +46,7 @@ class LocalFileSystemTest extends FreeSpec {
       bucketOption,
       IgnoreGlobalOptions,
       IgnoreUserOptions
-    ))
+    ).asJava)
 
   private val uiEvents = new AtomicReference[List[UIEvent]](List.empty)
   private val actions  = new AtomicReference[List[SequencedAction]](List.empty)

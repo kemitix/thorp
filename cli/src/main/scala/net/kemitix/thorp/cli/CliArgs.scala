@@ -2,6 +2,8 @@ package net.kemitix.thorp.cli
 
 import java.nio.file.Paths
 
+import scala.jdk.CollectionConverters._
+
 import net.kemitix.thorp.config.{ConfigOption, ConfigOptions}
 import scopt.OParser
 import zio.Task
@@ -11,7 +13,7 @@ object CliArgs {
   def parse(args: List[String]): Task[ConfigOptions] = Task {
     OParser
       .parse(configParser, args, List())
-      .map(ConfigOptions(_))
+      .map(options => ConfigOptions(options.asJava))
       .getOrElse(ConfigOptions.empty)
   }
 

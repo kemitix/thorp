@@ -2,6 +2,8 @@ package net.kemitix.thorp.lib
 
 import java.util.concurrent.atomic.AtomicReference
 
+import scala.jdk.CollectionConverters._
+
 import net.kemitix.eip.zio.MessageChannel
 import net.kemitix.thorp.config.{
   Config,
@@ -37,7 +39,7 @@ class FileScannerTest extends FreeSpec {
       val program: ZIO[Clock with Config with FileScanner, Throwable, Unit] =
         for {
           config <- ConfigurationBuilder.buildConfig(
-            ConfigOptions(configOptions))
+            ConfigOptions(configOptions.asJava))
           _          <- Config.set(config)
           scanner    <- FileScanner.scanSources
           scannedRef <- Ref.make[List[RemoteKey]](List.empty)

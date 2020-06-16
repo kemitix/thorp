@@ -3,14 +3,16 @@ package net.kemitix.thorp.config
 import java.io.File
 import java.nio.file.Files
 
-import zio.{IO, Task, ZIO}
+import zio.{IO, Task, UIO, ZIO}
 
 import scala.jdk.CollectionConverters._
 
 trait ParseConfigFile {
 
   def parseFile(file: File): ZIO[Any, Seq[ConfigValidation], ConfigOptions] =
-    (ZIO(file.exists()) >>= readLines(file) >>= ParseConfigLines.parseLines)
+    ZIO(file.exists())
+      .flatMap(readLines(file))
+      .flatMap(lines => UIO((new ParseConfigLines).parseLines(lines.asJava)))
       .catchAll(h =>
         IO.fail(List(ConfigValidation.ErrorReadingFile(file, h.getMessage))))
 
