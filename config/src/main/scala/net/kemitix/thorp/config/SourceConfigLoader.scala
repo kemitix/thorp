@@ -1,18 +1,18 @@
 package net.kemitix.thorp.config
 
 import java.io.File
-import scala.jdk.CollectionConverters._
 
 import net.kemitix.thorp.domain.Sources
-import net.kemitix.thorp.filesystem.FileSystem
 import zio.ZIO
+
+import scala.jdk.CollectionConverters._
 
 trait SourceConfigLoader {
 
   val thorpConfigFileName = ".thorp.conf"
 
   def loadSourceConfigs(
-      sources: Sources): ZIO[FileSystem, Seq[ConfigValidation], ConfigOptions] =
+      sources: Sources): ZIO[Any, Seq[ConfigValidation], ConfigOptions] =
     ZIO
       .foreach(sources.paths.asScala) { path =>
         ParseConfigFile.parseFile(new File(path.toFile, thorpConfigFileName))

@@ -16,7 +16,7 @@ import net.kemitix.thorp.config.{
 }
 import net.kemitix.thorp.domain.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.domain._
-import net.kemitix.thorp.filesystem.{FileSystem, Hasher, Resource}
+import net.kemitix.thorp.filesystem.Resource
 import net.kemitix.thorp.storage.Storage
 import net.kemitix.thorp.uishell.UIEvent
 import net.kemitix.thorp.uishell.UIEvent.{
@@ -35,7 +35,7 @@ import scala.jdk.CollectionConverters._
 
 class LocalFileSystemTest extends FreeSpec {
 
-  private val source       = Resource(this, "upload")
+  private val source       = Resource.select(this, "upload")
   private val sourcePath   = source.toPath
   private val sourceOption = ConfigOption.Source(sourcePath)
   private val bucket       = Bucket.named("bucket")
@@ -65,15 +65,13 @@ class LocalFileSystemTest extends FreeSpec {
 
   private object TestEnv
       extends Clock.Live
-      with Hasher.Live
-      with FileSystem.Live
       with Config.Live
       with FileScanner.Live
       with Storage.Test
 
   "scanCopyUpload" - {
     def sender(objects: RemoteObjects): UIO[MessageChannel.ESender[
-      Clock with Hasher with FileSystem with Config with FileScanner with Config with Storage,
+      Clock with Config with FileScanner with Config with Storage,
       Throwable,
       UIEvent]] =
       UIO { uiChannel =>
@@ -205,7 +203,7 @@ class LocalFileSystemTest extends FreeSpec {
         )
       "copy files" - {
         "archive swaps objects" ignore {
-          // TODO this is not supported
+          // not supported
         }
       }
     }
@@ -251,10 +249,10 @@ class LocalFileSystemTest extends FreeSpec {
   }
 
   "scanDelete" - {
-    def sender(objects: RemoteObjects): UIO[
-      MessageChannel.ESender[Clock with Config with FileSystem with Storage,
-                             Throwable,
-                             UIEvent]] =
+    def sender(objects: RemoteObjects)
+      : UIO[MessageChannel.ESender[Clock with Config with Storage,
+                                   Throwable,
+                                   UIEvent]] =
       UIO { uiChannel =>
         (for {
           _ <- LocalFileSystem.scanDelete(uiChannel, objects, archive)

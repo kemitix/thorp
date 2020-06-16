@@ -15,7 +15,7 @@ class CliArgsTest extends FunSpec {
 
   private val runtime = new DefaultRuntime {}
 
-  val source = Resource(this, "")
+  val source = Resource.select(this, "")
 
   describe("parse - source") {
     def invokeWithSource(path: String) =
@@ -98,7 +98,7 @@ class CliArgsTest extends FunSpec {
   }
 
   private def pathTo(value: String): String =
-    Try(Resource(this, value))
+    Try(Resource.select(this, value))
       .map(_.getCanonicalPath)
       .getOrElse("[not-found]")
 

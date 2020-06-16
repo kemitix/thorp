@@ -8,4 +8,5 @@ import lombok.RequiredArgsConstructor;
 public class HashType {
     public final String label;
     public static HashType MD5 = new HashType("MD5");
+    public static HashType DUMMY = new HashType("Dummy"); // testing only
 }

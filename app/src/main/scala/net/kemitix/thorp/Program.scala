@@ -12,7 +12,6 @@ import net.kemitix.thorp.domain.StorageEvent.{
   ErrorEvent,
   UploadEvent
 }
-import net.kemitix.thorp.filesystem.{FileSystem, Hasher}
 import net.kemitix.thorp.lib._
 import net.kemitix.thorp.storage.Storage
 import net.kemitix.thorp.uishell.{UIEvent, UIShell}
@@ -25,10 +24,10 @@ trait Program {
   val version           = "0.11.0"
   lazy val versionLabel = s"${WHITE}Thorp v${version}$RESET"
 
-  def run(args: List[String]): ZIO[
-    Storage with Console with Config with Clock with FileSystem with Hasher with FileScanner,
-    Throwable,
-    Unit] = {
+  def run(args: List[String])
+    : ZIO[Storage with Console with Config with Clock with FileScanner,
+          Throwable,
+          Unit] = {
     for {
       cli    <- CliArgs.parse(args)
       config <- ConfigurationBuilder.buildConfig(cli)
@@ -54,7 +53,7 @@ trait Program {
     : ZIO[Any,
           Nothing,
           MessageChannel.ESender[
-            Storage with Config with FileSystem with Hasher with Clock with FileScanner with Console,
+            Storage with Config with Clock with FileScanner with Console,
             Throwable,
             UIEvent]] = UIO { uiChannel =>
     (for {

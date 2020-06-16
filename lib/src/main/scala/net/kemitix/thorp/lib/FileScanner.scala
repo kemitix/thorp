@@ -21,16 +21,12 @@ object FileScanner {
   type RemoteHashes = Map[MD5Hash, RemoteKey]
   type ScannedFile  = LocalFile
   type FileSender =
-    ESender[Clock with Hasher with FileSystem with Config with FileScanner,
-            Throwable,
-            ScannedFile]
+    ESender[Clock with Config with FileScanner, Throwable, ScannedFile]
   type ScannerChannel = EChannel[Any, Throwable, ScannedFile]
   type CacheData      = (Path, FileData)
   type CacheChannel   = EChannel[Any, Throwable, CacheData]
   type CacheSender =
-    ESender[Clock with FileSystem with Hasher with FileScanner with Config,
-            Throwable,
-            CacheData]
+    ESender[Clock with FileScanner with Config, Throwable, CacheData]
 
   final def scanSources: RIO[FileScanner, FileSender] =
     ZIO.accessM(_.fileScanner.scanSources)
@@ -43,29 +39,32 @@ object FileScanner {
     val fileScanner: Service = new Service {
 
       override def scanSources: RIO[FileScanner, FileSender] =
-        RIO { fileChannel =>
-          (for {
-            sources <- Config.sources
-            _ <- ZIO.foreach(sources.paths.asScala) { sourcePath =>
-              for {
-                cacheSender   <- scanSource(fileChannel)(sourcePath)
-                cacheReceiver <- cacheReceiver(sourcePath)
-                _ <- MessageChannel
-                  .pointToPoint(cacheSender)(cacheReceiver)
-                  .runDrain
-                _ <- FileSystem.moveFile(
-                  sourcePath.resolve(PathCache.tempFileName),
-                  sourcePath.resolve(PathCache.fileName))
-              } yield ()
-            }
-          } yield ()) <* MessageChannel.endChannel(fileChannel)
+        RIO {
+          fileChannel: EChannel[Clock with Config with FileScanner,
+                                Throwable,
+                                ScannedFile] =>
+            (for {
+              sources <- Config.sources
+              _ <- ZIO.foreach(sources.paths.asScala) { sourcePath =>
+                for {
+                  cacheSender   <- scanSource(fileChannel)(sourcePath)
+                  cacheReceiver <- cacheReceiver(sourcePath)
+                  _ <- MessageChannel
+                    .pointToPoint(cacheSender)(cacheReceiver)
+                    .runDrain
+                  _ = FileSystem.moveFile(
+                    sourcePath.resolve(PathCache.tempFileName),
+                    sourcePath.resolve(PathCache.fileName))
+                } yield ()
+              }
+            } yield ()) <* MessageChannel.endChannel(fileChannel)
         }
 
       private def scanSource(fileChannel: ScannerChannel)(
           sourcePath: Path): RIO[FileScanner, CacheSender] =
         RIO { cacheChannel =>
           (for {
-            cache <- FileSystem.findCache(sourcePath)
+            cache <- UIO(FileSystem.findCache(sourcePath))
             _     <- scanPath(fileChannel, cacheChannel)(sourcePath, cache)
           } yield ()) <* MessageChannel.endChannel(cacheChannel)
         }
@@ -73,14 +72,13 @@ object FileScanner {
       private def scanPath(
           fileChannel: ScannerChannel,
           cacheChannel: CacheChannel)(path: Path, cache: PathCache)
-        : ZIO[Clock with FileSystem with Hasher with FileScanner with Config,
-              Throwable,
-              Unit] =
+        : ZIO[Clock with FileScanner with Config, Throwable, Unit] =
         for {
-          dirs  <- FileSystem.listDirs(path)
-          _     <- ZIO.foreach(dirs)(scanPath(fileChannel, cacheChannel)(_, cache))
-          files <- FileSystem.listFiles(path)
-          _     <- handleFiles(fileChannel, cacheChannel, cache, files)
+          dirs <- UIO(FileSystem.listDirs(path))
+          _ <- ZIO.foreach(dirs.asScala)(
+            scanPath(fileChannel, cacheChannel)(_, cache))
+          files = FileSystem.listFiles(path).asScala.toList
+          _ <- handleFiles(fileChannel, cacheChannel, cache, files)
         } yield ()
 
       private def handleFiles(
@@ -88,7 +86,7 @@ object FileScanner {
           cacheChannel: CacheChannel,
           pathCache: PathCache,
           files: List[File]
-      ) =
+      ): ZIO[Clock with Config, Throwable, List[Unit]] =
         ZIO.foreach(files) {
           handleFile(fileChannel, cacheChannel, pathCache)
         }
@@ -97,8 +95,7 @@ object FileScanner {
           fileChannel: ScannerChannel,
           cacheChannel: CacheChannel,
           cache: PathCache
-      )(file: File)
-        : ZIO[Clock with FileSystem with Hasher with Config, Throwable, Unit] =
+      )(file: File): ZIO[Clock with Config, Throwable, Unit] =
         for {
           isIncluded <- Filters.isIncluded(file)
           _ <- ZIO.when(isIncluded) {
@@ -114,27 +111,27 @@ object FileScanner {
           sources <- Config.sources
           source = sources.forPath(file.toPath)
           prefix <- Config.prefix
-          path = source.relativize(file.toPath)
-          hashes <- Hasher.hashObject(file.toPath, pathCache.get(path))
+          path      = source.relativize(file.toPath)
+          hashes    = HashGenerator.hashObject(file.toPath)
           remoteKey = RemoteKey.from(source, prefix, file)
-          size <- FileSystem.length(file)
+          size      = file.length()
           fileMsg <- Message.create(
             LocalFile.create(file, source.toFile, hashes, remoteKey, size))
           _        <- MessageChannel.send(fileChannel)(fileMsg)
-          modified <- FileSystem.lastModified(file)
+          modified <- UIO(FileSystem.lastModified(file))
           cacheMsg <- Message.create(
-            (path -> FileData.create(hashes, LastModified.at(modified))))
+            path -> FileData.create(hashes, LastModified.at(modified)))
           _ <- MessageChannel.send(cacheChannel)(cacheMsg)
         } yield ()
 
-      def cacheReceiver(sourcePath: Path)
-        : UIO[MessageChannel.UReceiver[FileSystem, CacheData]] = {
+      def cacheReceiver(
+          sourcePath: Path): UIO[MessageChannel.UReceiver[Any, CacheData]] = {
         val tempFile = sourcePath.resolve(PathCache.tempFileName).toFile
         UIO { message =>
           val (path, fileData) = message.body
           for {
-            line <- PathCache.create(path, fileData)
-            _    <- FileSystem.appendLines(line, tempFile)
+            line <- UIO(PathCache.export(path, fileData).asScala)
+            _    <- UIO(FileSystem.appendLines(line.toList.asJava, tempFile))
           } yield ()
         }
       }

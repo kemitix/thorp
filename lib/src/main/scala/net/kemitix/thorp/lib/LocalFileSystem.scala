@@ -2,13 +2,12 @@ package net.kemitix.thorp.lib
 
 import scala.jdk.OptionConverters._
 import scala.jdk.CollectionConverters._
-
 import net.kemitix.eip.zio.MessageChannel.UChannel
 import net.kemitix.eip.zio.{Message, MessageChannel}
 import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.domain.RemoteObjects
 import net.kemitix.thorp.domain._
-import net.kemitix.thorp.filesystem.{FileSystem, Hasher}
+import net.kemitix.thorp.filesystem.FileSystem
 import net.kemitix.thorp.storage.Storage
 import net.kemitix.thorp.uishell.UIEvent
 import zio._
@@ -20,15 +19,13 @@ trait LocalFileSystem {
       uiChannel: UChannel[Any, UIEvent],
       remoteObjects: RemoteObjects,
       archive: ThorpArchive
-  ): RIO[
-    Clock with Config with Hasher with FileSystem with FileScanner with Storage,
-    Seq[StorageEvent]]
+  ): RIO[Clock with Config with FileScanner with Storage, Seq[StorageEvent]]
 
   def scanDelete(
       uiChannel: UChannel[Any, UIEvent],
       remoteData: RemoteObjects,
       archive: ThorpArchive
-  ): RIO[Clock with Config with FileSystem with Storage, Seq[StorageEvent]]
+  ): RIO[Clock with Config with Storage, Seq[StorageEvent]]
 
 }
 object LocalFileSystem extends LocalFileSystem {
@@ -37,9 +34,7 @@ object LocalFileSystem extends LocalFileSystem {
       uiChannel: UChannel[Any, UIEvent],
       remoteObjects: RemoteObjects,
       archive: ThorpArchive
-  ): RIO[
-    Clock with Hasher with FileSystem with Config with FileScanner with Storage,
-    Seq[StorageEvent]] =
+  ): RIO[Clock with Config with FileScanner with Storage, Seq[StorageEvent]] =
     for {
       actionCounter <- Ref.make(0)
       bytesCounter  <- Ref.make(0L)
@@ -64,7 +59,7 @@ object LocalFileSystem extends LocalFileSystem {
       uiChannel: UChannel[Any, UIEvent],
       remoteData: RemoteObjects,
       archive: ThorpArchive
-  ): RIO[Clock with Config with FileSystem with Storage, Seq[StorageEvent]] =
+  ): RIO[Clock with Config with Storage, Seq[StorageEvent]] =
     for {
       actionCounter <- Ref.make(0)
       bytesCounter  <- Ref.make(0L)
@@ -247,9 +242,7 @@ object LocalFileSystem extends LocalFileSystem {
       actionCounterRef: Ref[Int],
       bytesCounterRef: Ref[Long],
       eventsRef: Ref[List[StorageEvent]]
-  ): UIO[
-    MessageChannel.UReceiver[Clock with Config with FileSystem with Storage,
-                             RemoteKey]] =
+  ): UIO[MessageChannel.UReceiver[Clock with Config with Storage, RemoteKey]] =
     UIO { message =>
       {
         val remoteKey = message.body
@@ -257,7 +250,7 @@ object LocalFileSystem extends LocalFileSystem {
           _       <- uiKeyFound(uiChannel)(remoteKey)
           sources <- Config.sources
           prefix  <- Config.prefix
-          exists  <- FileSystem.hasLocalFile(sources, prefix, remoteKey)
+          exists = FileSystem.hasLocalFile(sources, prefix, remoteKey)
           _ <- ZIO.when(!exists) {
             for {
               actionCounter <- actionCounterRef.update(_ + 1)
