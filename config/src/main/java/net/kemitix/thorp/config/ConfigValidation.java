@@ -6,12 +6,12 @@ import java.io.File;
 public interface ConfigValidation {
     String errorMessage();
 
-    static ConfigValidation sourceIsNotADirectory() {
-        return () -> "Source must be a directory";
+    static ConfigValidation sourceIsNotADirectory(File file) {
+        return () -> "Source must be a directory: " + file;
     }
 
-    static ConfigValidation sourceIsNotReadable() {
-        return () -> "Source must be readable";
+    static ConfigValidation sourceIsNotReadable(File file) {
+        return () -> "Source must be readable: " + file;
     }
 
     static ConfigValidation bucketNameIsMissing() {
