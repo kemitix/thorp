@@ -2,6 +2,8 @@ package net.kemitix.thorp.config
 
 import java.util.concurrent.atomic.AtomicReference
 
+import scala.jdk.CollectionConverters._
+
 import net.kemitix.thorp.domain.{Bucket, Filter, RemoteKey, Sources}
 import zio.{UIO, ZIO}
 
@@ -24,7 +26,7 @@ object Config {
   trait Live extends Config {
 
     val config: Service = new Service {
-      private val configRef = new AtomicReference(Configuration.empty)
+      private val configRef = new AtomicReference(Configuration.create())
       override def setConfiguration(
           config: Configuration): ZIO[Config, Nothing, Unit] =
         UIO(configRef.set(config))
@@ -42,7 +44,7 @@ object Config {
         UIO(configRef.get).map(_.batchMode)
 
       override def filters: ZIO[Config, Nothing, List[Filter]] =
-        UIO(configRef.get).map(_.filters)
+        UIO(configRef.get).map(_.filters.asScala.toList)
 
       override def parallel: UIO[Int] = UIO(configRef.get).map(_.parallel)
     }
