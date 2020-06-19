@@ -6,13 +6,12 @@ import java.util
 
 import net.kemitix.thorp.filesystem.TemporaryFolder
 import org.scalatest.FunSpec
-import zio.DefaultRuntime
 
 import scala.jdk.CollectionConverters._
 
 class ParseConfigFileTest extends FunSpec with TemporaryFolder {
 
-  private val empty = Right(ConfigOptions.empty)
+  private val empty = ConfigOptions.empty
 
   describe("parse a missing file") {
     val file = new File("/path/to/missing/file")
@@ -55,8 +54,6 @@ class ParseConfigFileTest extends FunSpec with TemporaryFolder {
   }
 
   private def invoke(file: File) = {
-    new DefaultRuntime {}.unsafeRunSync {
-      ParseConfigFile.parseFile(file)
-    }.toEither
+    ParseConfigFile.parseFile(file)
   }
 }

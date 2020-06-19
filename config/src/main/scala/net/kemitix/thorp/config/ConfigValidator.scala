@@ -1,21 +1,21 @@
 package net.kemitix.thorp.config
 
 import java.nio.file.Path
-import scala.jdk.CollectionConverters._
 
 import net.kemitix.thorp.domain.{Bucket, Sources}
-import zio.IO
+import zio.Task
+
+import scala.jdk.CollectionConverters._
 
 sealed trait ConfigValidator {
 
   def validateConfig(
       config: Configuration
-  ): IO[List[ConfigValidation], Configuration] = IO.fromEither {
-    for {
+  ): Task[Configuration] =
+    Task((for {
       _ <- validateSources(config.sources)
       _ <- validateBucket(config.bucket)
-    } yield config
-  }
+    } yield config).toOption.get)
 
   def validateBucket(bucket: Bucket): Either[List[ConfigValidation], Bucket] =
     if (bucket.name.isEmpty) Left(List(ConfigValidation.BucketNameIsMissing))

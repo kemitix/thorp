@@ -2,7 +2,7 @@ package net.kemitix.thorp.config
 
 import java.io.File
 
-import zio.ZIO
+import zio.Task
 
 /**
   * Builds a configuration from settings in a file within the
@@ -14,31 +14,27 @@ trait ConfigurationBuilder {
   private val globalConfig   = new File("/etc/thorp.conf")
   private val userHome       = new File(System.getProperty("user.home"))
 
-  def buildConfig(priorityOpts: ConfigOptions)
-    : ZIO[Any, ConfigValidationException, Configuration] =
+  def buildConfig(priorityOpts: ConfigOptions): Task[Configuration] =
     (getConfigOptions(priorityOpts).map(collateOptions) >>=
       ConfigValidator.validateConfig)
-      .catchAll(errors => ZIO.fail(ConfigValidationException(errors)))
 
-  private def getConfigOptions(priorityOpts: ConfigOptions)
-    : ZIO[Any, Seq[ConfigValidation], ConfigOptions] =
-    for {
-      sourceOpts <- SourceConfigLoader.loadSourceConfigs(
-        ConfigQuery.sources(priorityOpts))
-      userOpts   <- userOptions(priorityOpts ++ sourceOpts)
-      globalOpts <- globalOptions(priorityOpts ++ sourceOpts ++ userOpts)
-    } yield priorityOpts ++ sourceOpts ++ userOpts ++ globalOpts
+  private def getConfigOptions(
+      priorityOpts: ConfigOptions): Task[ConfigOptions] = {
+    val sourceOpts =
+      SourceConfigLoader.loadSourceConfigs(ConfigQuery.sources(priorityOpts))
+    val userOpts   = userOptions(priorityOpts ++ sourceOpts)
+    val globalOpts = globalOptions(priorityOpts ++ sourceOpts ++ userOpts)
+    Task(priorityOpts ++ sourceOpts ++ userOpts ++ globalOpts)
+  }
 
-  private val emptyConfig = ZIO.succeed(ConfigOptions.empty)
-
-  private def userOptions(priorityOpts: ConfigOptions)
-    : ZIO[Any, Seq[ConfigValidation], ConfigOptions] =
-    if (ConfigQuery.ignoreUserOptions(priorityOpts)) emptyConfig
+  private def userOptions(priorityOpts: ConfigOptions): ConfigOptions =
+    if (ConfigQuery.ignoreUserOptions(priorityOpts))
+      ConfigOptions.empty
     else ParseConfigFile.parseFile(new File(userHome, userConfigFile))
 
-  private def globalOptions(priorityOpts: ConfigOptions)
-    : ZIO[Any, Seq[ConfigValidation], ConfigOptions] =
-    if (ConfigQuery.ignoreGlobalOptions(priorityOpts)) emptyConfig
+  private def globalOptions(priorityOpts: ConfigOptions): ConfigOptions =
+    if (ConfigQuery.ignoreGlobalOptions(priorityOpts))
+      ConfigOptions.empty
     else ParseConfigFile.parseFile(globalConfig)
 
   private def collateOptions(configOptions: ConfigOptions): Configuration =

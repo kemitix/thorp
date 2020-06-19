@@ -4,7 +4,6 @@ import java.io.File
 import java.util
 
 import net.kemitix.thorp.domain.Sources
-import zio.ZIO
 
 import scala.jdk.CollectionConverters._
 
@@ -12,17 +11,15 @@ trait SourceConfigLoader {
 
   val thorpConfigFileName = ".thorp.conf"
 
-  def loadSourceConfigs(
-      sources: Sources): ZIO[Any, Seq[ConfigValidation], ConfigOptions] =
-    ZIO
-      .foreach(sources.paths.asScala) { path =>
-        ParseConfigFile.parseFile(new File(path.toFile, thorpConfigFileName))
-      }
-      .map(
-        _.foldLeft(
-          ConfigOptions(
-            sourceConfigOptions(sources)
-          ))((acc, co) => acc ++ co))
+  def loadSourceConfigs(sources: Sources): ConfigOptions =
+    sources
+      .paths()
+      .asScala
+      .toList
+      .map(path =>
+        ParseConfigFile.parseFile(new File(path.toFile, thorpConfigFileName)))
+      .foldLeft(ConfigOptions(sourceConfigOptions(sources)))((acc, co) =>
+        acc ++ co)
 
   private def sourceConfigOptions(
       sources: Sources): java.util.List[ConfigOption] = {

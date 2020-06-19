@@ -23,7 +23,7 @@ trait ConfigQuery {
     val explicitPaths = configOptions.options.asScala.flatMap {
       case ConfigOption.Source(sourcePath) => List(sourcePath)
       case _                               => List.empty
-    }
+    }.toList
     val paths = explicitPaths match {
       case List() => List(Paths.get(System.getenv("PWD")))
       case _      => explicitPaths
