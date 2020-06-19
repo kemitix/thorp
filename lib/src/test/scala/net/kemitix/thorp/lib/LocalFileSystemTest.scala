@@ -83,9 +83,9 @@ class LocalFileSystemTest extends FreeSpec {
       }
     def program(remoteObjects: RemoteObjects) =
       for {
-        config   <- ConfigurationBuilder.buildConfig(configOptions)
+        sender <- sender(remoteObjects)
+        config = ConfigurationBuilder.buildConfig(configOptions)
         _        <- Config.set(config)
-        sender   <- sender(remoteObjects)
         receiver <- receiver()
         _        <- MessageChannel.pointToPoint(sender)(receiver).runDrain
       } yield ()
@@ -262,9 +262,9 @@ class LocalFileSystemTest extends FreeSpec {
       }
     def program(remoteObjects: RemoteObjects) = {
       for {
-        config   <- ConfigurationBuilder.buildConfig(configOptions)
+        sender <- sender(remoteObjects)
+        config = ConfigurationBuilder.buildConfig(configOptions)
         _        <- Config.set(config)
-        sender   <- sender(remoteObjects)
         receiver <- receiver()
         _        <- MessageChannel.pointToPoint(sender)(receiver).runDrain
       } yield ()

@@ -38,10 +38,10 @@ class FileScannerTest extends FreeSpec {
                            ConfigOption.ignoreUserOptions())
       val program: ZIO[Clock with Config with FileScanner, Throwable, Unit] =
         for {
-          config <- ConfigurationBuilder.buildConfig(
+          scanner <- FileScanner.scanSources
+          config = ConfigurationBuilder.buildConfig(
             ConfigOptions.create(configOptions.asJava))
           _          <- Config.set(config)
-          scanner    <- FileScanner.scanSources
           scannedRef <- Ref.make[List[RemoteKey]](List.empty)
           receiver   <- receiver(scannedRef)
           _          <- MessageChannel.pointToPoint(scanner)(receiver).runDrain

@@ -30,11 +30,11 @@ trait Program {
           Throwable,
           Unit] = {
     for {
-      cli    <- CliArgs.parse(args)
-      config <- ConfigurationBuilder.buildConfig(cli)
-      _      <- Config.set(config)
-      _      <- Console.putStrLn(versionLabel)
-      _      <- ZIO.when(!showVersion(cli))(executeWithUI.catchAll(handleErrors))
+      cli <- CliArgs.parse(args)
+      config = ConfigurationBuilder.buildConfig(cli)
+      _ <- Config.set(config)
+      _ <- Console.putStrLn(versionLabel)
+      _ <- ZIO.when(!showVersion(cli))(executeWithUI.catchAll(handleErrors))
     } yield ()
   }
 
