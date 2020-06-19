@@ -18,6 +18,7 @@ import net.kemitix.thorp.uishell.{UIEvent, UIShell}
 import zio.clock.Clock
 import zio.{RIO, UIO, ZIO}
 import scala.io.AnsiColor.{WHITE, RESET}
+import scala.jdk.CollectionConverters._
 
 trait Program {
 
@@ -85,8 +86,9 @@ trait Program {
 
   private def logValidationErrors(throwable: Throwable) =
     throwable match {
-      case ConfigValidationException(errors) =>
-        ZIO.foreach_(errors)(error => Console.putStrLn(s"- $error"))
+      case validateError: ConfigValidationException =>
+        ZIO.foreach_(validateError.getErrors.asScala)(error =>
+          Console.putStrLn(s"- $error"))
     }
 
   private def showSummary(uiChannel: UIChannel)(
