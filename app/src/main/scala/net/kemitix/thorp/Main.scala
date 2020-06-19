@@ -1,6 +1,5 @@
 package net.kemitix.thorp
 
-import net.kemitix.thorp.config.Config
 import net.kemitix.thorp.console.Console
 import net.kemitix.thorp.lib.FileScanner
 import net.kemitix.thorp.storage.aws.S3Storage
@@ -13,7 +12,6 @@ object Main extends App {
       extends S3Storage.Live
       with Console.Live
       with Clock.Live
-      with Config.Live
       with FileScanner.Live
 
   override def run(args: List[String]): ZIO[ZEnv, Nothing, Int] =

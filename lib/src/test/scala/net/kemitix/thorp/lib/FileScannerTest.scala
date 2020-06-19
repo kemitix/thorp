@@ -6,7 +6,6 @@ import scala.jdk.CollectionConverters._
 
 import net.kemitix.eip.zio.MessageChannel
 import net.kemitix.thorp.config.{
-  Config,
   ConfigOption,
   ConfigOptions,
   ConfigurationBuilder
@@ -36,19 +35,19 @@ class FileScannerTest extends FreeSpec {
                            ConfigOption.bucket("bucket"),
                            ConfigOption.ignoreGlobalOptions(),
                            ConfigOption.ignoreUserOptions())
-      val program: ZIO[Clock with Config with FileScanner, Throwable, Unit] =
+      val program: ZIO[Clock with FileScanner, Throwable, Unit] = {
+        val configuration = ConfigurationBuilder.buildConfig(
+          ConfigOptions.create(configOptions.asJava))
         for {
-          scanner <- FileScanner.scanSources
-          config = ConfigurationBuilder.buildConfig(
-            ConfigOptions.create(configOptions.asJava))
-          _          <- Config.set(config)
+          scanner    <- FileScanner.scanSources(configuration)
           scannedRef <- Ref.make[List[RemoteKey]](List.empty)
           receiver   <- receiver(scannedRef)
           _          <- MessageChannel.pointToPoint(scanner)(receiver).runDrain
           scanned    <- scannedRef.get
           _          <- UIO(scannedFiles.set(scanned))
         } yield ()
-      object TestEnv extends FileScanner.Live with Clock.Live with Config.Live
+      }
+      object TestEnv extends FileScanner.Live with Clock.Live
       val completed =
         new DefaultRuntime {}.unsafeRunSync(program.provide(TestEnv)).toEither
       assert(completed.isRight)
