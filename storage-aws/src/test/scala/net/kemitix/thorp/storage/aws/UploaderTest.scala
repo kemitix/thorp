@@ -15,12 +15,12 @@ import net.kemitix.thorp.domain.StorageEvent.{
 }
 import net.kemitix.thorp.domain._
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.FreeSpec
 import zio.{DefaultRuntime, Task, UIO}
 import net.kemitix.thorp.filesystem.Resource
 import net.kemitix.thorp.uishell.{UIEvent, UploadEventListener}
+import org.scalatest.freespec.AnyFreeSpec
 
-class UploaderTest extends FreeSpec with MockFactory {
+class UploaderTest extends AnyFreeSpec with MockFactory {
 
   val uiChannel: UChannel[Any, UIEvent] = zioMessage => ()
 

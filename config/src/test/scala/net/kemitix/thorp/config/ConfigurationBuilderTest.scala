@@ -5,10 +5,10 @@ import java.nio.file.{Path, Paths}
 import net.kemitix.thorp.domain.Filter.{Exclude, Include}
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.filesystem.FileSystem
-import org.scalatest.FunSpec
 import zio.DefaultRuntime
+import org.scalatest.funspec.AnyFunSpec
 
-class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
+class ConfigurationBuilderTest extends AnyFunSpec with TemporaryFolder {
 
   private val pwd: Path                     = Paths.get(System.getenv("PWD"))
   private val aBucket                       = Bucket("aBucket")

@@ -1,8 +1,8 @@
 package net.kemitix.thorp.domain
 
-import org.scalatest.FunSpec
+import org.scalatest.funspec.AnyFunSpec
 
-class SizeTranslationTest extends FunSpec {
+class SizeTranslationTest extends AnyFunSpec {
 
   describe("sizeInEnglish") {
     describe("when size is less the 1Kb") {

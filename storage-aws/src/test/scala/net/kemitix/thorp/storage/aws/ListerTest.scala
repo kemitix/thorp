@@ -11,11 +11,12 @@ import com.amazonaws.services.s3.model.{
 import net.kemitix.thorp.console.Console
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.Storage
-import org.scalatest.FreeSpec
-import org.scalatest.Matchers._
+import matchers.should.Matchers._
 import zio.{DefaultRuntime, RIO, Task, UIO}
+import org.scalatest.matchers
+import org.scalatest.freespec.AnyFreeSpec
 
-class ListerTest extends FreeSpec {
+class ListerTest extends AnyFreeSpec {
 
   "list" - {
     val bucket = Bucket("aBucket")

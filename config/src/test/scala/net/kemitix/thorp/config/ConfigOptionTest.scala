@@ -2,10 +2,10 @@ package net.kemitix.thorp.config
 
 import net.kemitix.thorp.domain.{Sources, TemporaryFolder}
 import net.kemitix.thorp.filesystem.FileSystem
-import org.scalatest.FunSpec
 import zio.DefaultRuntime
+import org.scalatest.funspec.AnyFunSpec
 
-class ConfigOptionTest extends FunSpec with TemporaryFolder {
+class ConfigOptionTest extends AnyFunSpec with TemporaryFolder {
 
   describe("when more than one source") {
     it("should preserve their order") {
