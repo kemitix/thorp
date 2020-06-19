@@ -13,7 +13,7 @@ class ConfigOptionTest extends FunSpec with TemporaryFolder {
     it("should preserve their order") {
       withDirectory(path1 => {
         withDirectory(path2 => {
-          val configOptions = ConfigOptions(
+          val configOptions = ConfigOptions.create(
             List[ConfigOption](
               ConfigOption.source(path1),
               ConfigOption.source(path2),

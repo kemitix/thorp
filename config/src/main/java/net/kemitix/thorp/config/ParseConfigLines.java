@@ -12,7 +12,7 @@ public class ParseConfigLines {
     private static final Pattern format = Pattern.compile(pattern);
 
     ConfigOptions parseLines(List<String> lines) {
-        return ConfigOptions.apply(
+        return ConfigOptions.create(
                 lines.stream()
                         .flatMap(this::parseLine)
                         .collect(Collectors.toList()));

@@ -13,7 +13,7 @@ object CliArgs {
   def parse(args: List[String]): Task[ConfigOptions] = Task {
     OParser
       .parse(configParser, args, List())
-      .map(options => ConfigOptions(options.asJava))
+      .map(options => ConfigOptions.create(options.asJava))
       .getOrElse(ConfigOptions.empty)
   }
 

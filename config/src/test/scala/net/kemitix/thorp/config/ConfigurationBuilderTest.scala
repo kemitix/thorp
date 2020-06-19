@@ -19,7 +19,7 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
   private val thorpConfigFileName    = ".thorp.conf"
 
   private def configOptions(options: ConfigOption*): ConfigOptions =
-    ConfigOptions(
+    ConfigOptions.create(
       (List[ConfigOption](
         ConfigOption.ignoreUserOptions(),
         ConfigOption.ignoreGlobalOptions()

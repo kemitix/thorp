@@ -19,13 +19,14 @@ class ConfigQueryTest extends FreeSpec {
     "when is set" - {
       "should be true" in {
         val result =
-          ConfigQuery.showVersion(ConfigOptions(list(ConfigOption.version())))
+          ConfigQuery.showVersion(
+            ConfigOptions.create(list(ConfigOption.version())))
         assertResult(true)(result)
       }
     }
     "when not set" - {
       "should be false" in {
-        val result = ConfigQuery.showVersion(ConfigOptions(list()))
+        val result = ConfigQuery.showVersion(ConfigOptions.create(list()))
         assertResult(false)(result)
       }
     }
@@ -34,13 +35,14 @@ class ConfigQueryTest extends FreeSpec {
     "when is set" - {
       "should be true" in {
         val result =
-          ConfigQuery.batchMode(ConfigOptions(list(ConfigOption.batchMode())))
+          ConfigQuery.batchMode(
+            ConfigOptions.create(list(ConfigOption.batchMode())))
         assertResult(true)(result)
       }
     }
     "when not set" - {
       "should be false" in {
-        val result = ConfigQuery.batchMode(ConfigOptions(list()))
+        val result = ConfigQuery.batchMode(ConfigOptions.empty())
         assertResult(false)(result)
       }
     }
@@ -49,13 +51,13 @@ class ConfigQueryTest extends FreeSpec {
     "when is set" - {
       "should be true" in {
         val result = ConfigQuery.ignoreUserOptions(
-          ConfigOptions(list(ConfigOption.ignoreUserOptions())))
+          ConfigOptions.create(list(ConfigOption.ignoreUserOptions())))
         assertResult(true)(result)
       }
     }
     "when not set" - {
       "should be false" in {
-        val result = ConfigQuery.ignoreUserOptions(ConfigOptions(list()))
+        val result = ConfigQuery.ignoreUserOptions(ConfigOptions.empty())
         assertResult(false)(result)
       }
     }
@@ -64,13 +66,13 @@ class ConfigQueryTest extends FreeSpec {
     "when is set" - {
       "should be true" in {
         val result = ConfigQuery.ignoreGlobalOptions(
-          ConfigOptions(list(ConfigOption.ignoreGlobalOptions())))
+          ConfigOptions.create(list(ConfigOption.ignoreGlobalOptions())))
         assertResult(true)(result)
       }
     }
     "when not set" - {
       "should be false" in {
-        val result = ConfigQuery.ignoreGlobalOptions(ConfigOptions(list()))
+        val result = ConfigQuery.ignoreGlobalOptions(ConfigOptions.empty())
         assertResult(false)(result)
       }
     }
@@ -82,7 +84,7 @@ class ConfigQueryTest extends FreeSpec {
       "should have current dir" in {
         val pwd      = Paths.get(System.getenv("PWD"))
         val expected = Sources.create(List(pwd).asJava)
-        val result   = ConfigQuery.sources(ConfigOptions(list()))
+        val result   = ConfigQuery.sources(ConfigOptions.empty())
         assertResult(expected)(result)
       }
     }
@@ -90,7 +92,8 @@ class ConfigQueryTest extends FreeSpec {
       "should have one source" in {
         val expected = Sources.create(List(pathA).asJava)
         val result =
-          ConfigQuery.sources(ConfigOptions(list(ConfigOption.source(pathA))))
+          ConfigQuery.sources(
+            ConfigOptions.create(list(ConfigOption.source(pathA))))
         assertResult(expected)(result)
       }
     }
@@ -98,7 +101,7 @@ class ConfigQueryTest extends FreeSpec {
       "should have two sources" in {
         val expected = Sources.create(List(pathA, pathB).asJava)
         val result = ConfigQuery.sources(
-          ConfigOptions(
+          ConfigOptions.create(
             list(ConfigOption.source(pathA), ConfigOption.source(pathB))))
         assertResult(expected)(result)
       }

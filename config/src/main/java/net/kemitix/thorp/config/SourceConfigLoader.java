@@ -12,14 +12,14 @@ public interface SourceConfigLoader {
     static ConfigOptions loadSourceConfigs(Sources sources) throws IOException {
         // add each source as an option
         ConfigOptions configOptions =
-                ConfigOptions.apply(
+                ConfigOptions.create(
                         sources.paths()
                                 .stream()
                                 .map(ConfigOption::source)
                                 .collect(Collectors.toList()));
         // add settings from each source as options
         for (Path path : sources.paths()) {
-            configOptions = configOptions.$plus$plus(
+            configOptions = configOptions.merge(
                     ParseConfigFile.parseFile(
                             new File(path.toFile(), ".thorp.conf")));
         }

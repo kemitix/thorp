@@ -2,6 +2,8 @@ package net.kemitix.thorp.config
 
 import java.io.File
 
+import scala.jdk.CollectionConverters._
+
 import zio.Task
 
 /**
@@ -15,16 +17,16 @@ trait ConfigurationBuilder {
   private val userHome       = new File(System.getProperty("user.home"))
 
   def buildConfig(priorityOpts: ConfigOptions): Task[Configuration] =
-    (getConfigOptions(priorityOpts).map(collateOptions) >>=
-      ConfigValidator.validateConfig)
+    getConfigOptions(priorityOpts).map(collateOptions) >>=
+      ConfigValidator.validateConfig
 
   private def getConfigOptions(
       priorityOpts: ConfigOptions): Task[ConfigOptions] = {
     val sourceOpts =
       SourceConfigLoader.loadSourceConfigs(ConfigQuery.sources(priorityOpts))
-    val userOpts   = userOptions(priorityOpts ++ sourceOpts)
-    val globalOpts = globalOptions(priorityOpts ++ sourceOpts ++ userOpts)
-    Task(priorityOpts ++ sourceOpts ++ userOpts ++ globalOpts)
+    val userOpts   = userOptions(priorityOpts merge sourceOpts)
+    val globalOpts = globalOptions(priorityOpts merge sourceOpts merge userOpts)
+    Task(priorityOpts merge sourceOpts merge userOpts merge globalOpts)
   }
 
   private def userOptions(priorityOpts: ConfigOptions): ConfigOptions =
@@ -38,8 +40,7 @@ trait ConfigurationBuilder {
     else ParseConfigFile.parseFile(globalConfig)
 
   private def collateOptions(configOptions: ConfigOptions): Configuration =
-    ConfigOptions.options
-      .get(configOptions)
+    configOptions.options.asScala
       .foldLeft(Configuration.create()) { (config, configOption) =>
         configOption.update(config)
       }
