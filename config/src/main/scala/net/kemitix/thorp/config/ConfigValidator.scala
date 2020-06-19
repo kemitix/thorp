@@ -18,7 +18,7 @@ sealed trait ConfigValidator {
     } yield config).toOption.get)
 
   def validateBucket(bucket: Bucket): Either[List[ConfigValidation], Bucket] =
-    if (bucket.name.isEmpty) Left(List(ConfigValidation.BucketNameIsMissing))
+    if (bucket.name.isEmpty) Left(List(ConfigValidation.bucketNameIsMissing))
     else Right(bucket)
 
   def validateSources(
@@ -45,12 +45,12 @@ sealed trait ConfigValidator {
   def validateSourceIsDirectory(
       source: Path): Either[List[ConfigValidation], Path] =
     if (source.toFile.isDirectory) Right(source)
-    else Left(List(ConfigValidation.SourceIsNotADirectory))
+    else Left(List(ConfigValidation.sourceIsNotADirectory))
 
   def validateSourceIsReadable(
       source: Path): Either[List[ConfigValidation], Path] =
     if (source.toFile.canRead) Right(source)
-    else Left(List(ConfigValidation.SourceIsNotReadable))
+    else Left(List(ConfigValidation.sourceIsNotReadable))
 
 }
 
