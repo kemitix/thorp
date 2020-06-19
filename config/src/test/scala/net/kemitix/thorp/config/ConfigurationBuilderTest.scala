@@ -13,16 +13,16 @@ import scala.jdk.CollectionConverters._
 
 class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
 
-  private val pwd: Path                     = Paths.get(System.getenv("PWD"))
-  private val aBucket                       = Bucket.named("aBucket")
-  private val coBucket: ConfigOption.Bucket = ConfigOption.Bucket(aBucket.name)
-  private val thorpConfigFileName           = ".thorp.conf"
+  private val pwd: Path              = Paths.get(System.getenv("PWD"))
+  private val aBucket                = Bucket.named("aBucket")
+  private val coBucket: ConfigOption = ConfigOption.bucket(aBucket.name)
+  private val thorpConfigFileName    = ".thorp.conf"
 
   private def configOptions(options: ConfigOption*): ConfigOptions =
     ConfigOptions(
       (List[ConfigOption](
-        ConfigOption.IgnoreUserOptions,
-        ConfigOption.IgnoreGlobalOptions
+        ConfigOption.ignoreUserOptions(),
+        ConfigOption.ignoreGlobalOptions()
       ) ++ options).asJava)
 
   describe("when no source") {
@@ -43,7 +43,7 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
                                         "prefix = a-prefix",
                                         "include = an-inclusion",
                                         "exclude = an-exclusion"))
-          val result = invoke(configOptions(ConfigOption.Source(source)))
+          val result = invoke(configOptions(ConfigOption.source(source)))
           it("should have bucket") {
             val expected = Right(Bucket.named("a-bucket"))
             assertResult(expected)(result.map(_.bucket))
@@ -67,7 +67,7 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
     it("should only include the source once") {
       withDirectory(aSource => {
         val expected = Right(Sources.create(List(aSource).asJava))
-        val options  = configOptions(ConfigOption.Source(aSource), coBucket)
+        val options  = configOptions(ConfigOption.source(aSource), coBucket)
         val result   = invoke(options).map(_.sources)
         assertResult(expected)(result)
       })
@@ -78,8 +78,8 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
       withDirectory(currentSource => {
         withDirectory(previousSource => {
           val expected = Right(List(currentSource, previousSource))
-          val options = configOptions(ConfigOption.Source(currentSource),
-                                      ConfigOption.Source(previousSource),
+          val options = configOptions(ConfigOption.source(currentSource),
+                                      ConfigOption.source(previousSource),
                                       coBucket)
           val result = invoke(options).map(_.sources.paths)
           assertResult(expected)(result)
@@ -96,7 +96,7 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
                      util.Arrays.asList(s"source = $previousSource"))
           val expected = Right(List(currentSource, previousSource))
           val options =
-            configOptions(ConfigOption.Source(currentSource), coBucket)
+            configOptions(ConfigOption.source(currentSource), coBucket)
           val result = invoke(options).map(_.sources.paths)
           assertResult(expected)(result)
         })
@@ -134,7 +134,7 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
             val expectedFilters = Right(
               List[Filter](Filter.Exclude.create("current-exclude"),
                            Filter.Include.create("current-include")))
-            val options = configOptions(ConfigOption.Source(currentSource))
+            val options = configOptions(ConfigOption.source(currentSource))
             val result  = invoke(options)
             assertResult(expectedSources)(result.map(_.sources))
             assertResult(expectedBuckets)(result.map(_.bucket))
@@ -160,7 +160,7 @@ class ConfigurationBuilderTest extends FunSpec with TemporaryFolder {
                        util.Arrays.asList(s"source = $grandParentSource"))
             val expected = Right(List(currentSource, parentSource))
             val options =
-              configOptions(ConfigOption.Source(currentSource), coBucket)
+              configOptions(ConfigOption.source(currentSource), coBucket)
             val result = invoke(options).map(_.sources.paths)
             assertResult(expected)(result)
           })

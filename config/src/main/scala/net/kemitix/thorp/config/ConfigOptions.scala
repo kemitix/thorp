@@ -17,7 +17,7 @@ object ConfigOptions {
   def parallel(configOptions: ConfigOptions): Int = {
     configOptions.options.asScala
       .collectFirst {
-        case ConfigOption.Parallel(factor) => factor
+        case parallel: ConfigOption.Parallel => parallel.factor
       }
       .getOrElse(defaultParallel)
   }
@@ -35,5 +35,7 @@ object ConfigOptions {
 
   def contains[A1 >: ConfigOption](elem: A1)(
       configOptions: ConfigOptions): Boolean =
-    configOptions.options.contains(elem)
+    configOptions.options
+      .stream()
+      .anyMatch(option => option.isInstanceOf[elem.type])
 }

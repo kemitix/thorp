@@ -15,8 +15,7 @@ public interface SourceConfigLoader {
                 ConfigOptions.apply(
                         sources.paths()
                                 .stream()
-                                .map(ConfigOption.Source::new)
-                                .map(ConfigOption.class::cast)
+                                .map(ConfigOption::source)
                                 .collect(Collectors.toList()));
         // add settings from each source as options
         for (Path path : sources.paths()) {

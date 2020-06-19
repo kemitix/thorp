@@ -40,7 +40,7 @@ trait ConfigurationBuilder {
   private def collateOptions(configOptions: ConfigOptions): Configuration =
     ConfigOptions.options
       .get(configOptions)
-      .foldLeft(Configuration.empty) { (config, configOption) =>
+      .foldLeft(Configuration.create()) { (config, configOption) =>
         configOption.update(config)
       }
 

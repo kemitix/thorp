@@ -19,7 +19,7 @@ class ConfigQueryTest extends FreeSpec {
     "when is set" - {
       "should be true" in {
         val result =
-          ConfigQuery.showVersion(ConfigOptions(list(ConfigOption.Version)))
+          ConfigQuery.showVersion(ConfigOptions(list(ConfigOption.version())))
         assertResult(true)(result)
       }
     }
@@ -34,7 +34,7 @@ class ConfigQueryTest extends FreeSpec {
     "when is set" - {
       "should be true" in {
         val result =
-          ConfigQuery.batchMode(ConfigOptions(list(ConfigOption.BatchMode)))
+          ConfigQuery.batchMode(ConfigOptions(list(ConfigOption.batchMode())))
         assertResult(true)(result)
       }
     }
@@ -49,7 +49,7 @@ class ConfigQueryTest extends FreeSpec {
     "when is set" - {
       "should be true" in {
         val result = ConfigQuery.ignoreUserOptions(
-          ConfigOptions(list(ConfigOption.IgnoreUserOptions)))
+          ConfigOptions(list(ConfigOption.ignoreUserOptions())))
         assertResult(true)(result)
       }
     }
@@ -64,7 +64,7 @@ class ConfigQueryTest extends FreeSpec {
     "when is set" - {
       "should be true" in {
         val result = ConfigQuery.ignoreGlobalOptions(
-          ConfigOptions(list(ConfigOption.IgnoreGlobalOptions)))
+          ConfigOptions(list(ConfigOption.ignoreGlobalOptions())))
         assertResult(true)(result)
       }
     }
@@ -90,7 +90,7 @@ class ConfigQueryTest extends FreeSpec {
       "should have one source" in {
         val expected = Sources.create(List(pathA).asJava)
         val result =
-          ConfigQuery.sources(ConfigOptions(list(ConfigOption.Source(pathA))))
+          ConfigQuery.sources(ConfigOptions(list(ConfigOption.source(pathA))))
         assertResult(expected)(result)
       }
     }
@@ -99,7 +99,7 @@ class ConfigQueryTest extends FreeSpec {
         val expected = Sources.create(List(pathA, pathB).asJava)
         val result = ConfigQuery.sources(
           ConfigOptions(
-            list(ConfigOption.Source(pathA), ConfigOption.Source(pathB))))
+            list(ConfigOption.source(pathA), ConfigOption.source(pathB))))
         assertResult(expected)(result)
       }
     }

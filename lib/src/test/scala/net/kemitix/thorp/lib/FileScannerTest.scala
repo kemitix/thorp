@@ -32,10 +32,10 @@ class FileScannerTest extends FreeSpec {
         new AtomicReference[List[RemoteKey]](List.empty)
       val sourcePath = Resource.select(this, "upload").toPath
       val configOptions: List[ConfigOption] =
-        List[ConfigOption](ConfigOption.Source(sourcePath),
-                           ConfigOption.Bucket("bucket"),
-                           ConfigOption.IgnoreGlobalOptions,
-                           ConfigOption.IgnoreUserOptions)
+        List[ConfigOption](ConfigOption.source(sourcePath),
+                           ConfigOption.bucket("bucket"),
+                           ConfigOption.ignoreGlobalOptions(),
+                           ConfigOption.ignoreUserOptions())
       val program: ZIO[Clock with Config with FileScanner, Throwable, Unit] =
         for {
           config <- ConfigurationBuilder.buildConfig(

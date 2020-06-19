@@ -14,7 +14,7 @@ class ParseConfigLinesTest extends FunSpec {
         val expected =
           ConfigOptions(
             List[ConfigOption](
-              ConfigOption.Source(Paths.get("/path/to/source"))).asJava)
+              ConfigOption.source(Paths.get("/path/to/source"))).asJava)
         val result = invoke(List("source = /path/to/source"))
         assertResult(expected)(result)
       }
@@ -23,7 +23,7 @@ class ParseConfigLinesTest extends FunSpec {
       it("should parse") {
         val expected =
           ConfigOptions(
-            List[ConfigOption](ConfigOption.Bucket("bucket-name")).asJava)
+            List[ConfigOption](ConfigOption.bucket("bucket-name")).asJava)
         val result = invoke(List("bucket = bucket-name"))
         assertResult(expected)(result)
       }
@@ -32,7 +32,7 @@ class ParseConfigLinesTest extends FunSpec {
       it("should parse") {
         val expected =
           ConfigOptions(
-            List[ConfigOption](ConfigOption.Prefix("prefix/to/files")).asJava)
+            List[ConfigOption](ConfigOption.prefix("prefix/to/files")).asJava)
         val result = invoke(List("prefix = prefix/to/files"))
         assertResult(expected)(result)
       }
@@ -41,7 +41,7 @@ class ParseConfigLinesTest extends FunSpec {
       it("should parse") {
         val expected =
           ConfigOptions(
-            List[ConfigOption](ConfigOption.Include("path/to/include")).asJava)
+            List[ConfigOption](ConfigOption.include("path/to/include")).asJava)
         val result = invoke(List("include = path/to/include"))
         assertResult(expected)(result)
       }
@@ -50,7 +50,7 @@ class ParseConfigLinesTest extends FunSpec {
       it("should parse") {
         val expected =
           ConfigOptions(
-            List[ConfigOption](ConfigOption.Exclude("path/to/exclude")).asJava)
+            List[ConfigOption](ConfigOption.exclude("path/to/exclude")).asJava)
         val result = invoke(List("exclude = path/to/exclude"))
         assertResult(expected)(result)
       }
@@ -59,7 +59,7 @@ class ParseConfigLinesTest extends FunSpec {
       describe("when valid") {
         it("should parse") {
           val expected =
-            ConfigOptions(List[ConfigOption](ConfigOption.Parallel(3)).asJava)
+            ConfigOptions(List[ConfigOption](ConfigOption.parallel(3)).asJava)
           val result = invoke(List("parallel = 3"))
           assertResult(expected)(result)
         }
@@ -76,7 +76,7 @@ class ParseConfigLinesTest extends FunSpec {
     describe("debug - true") {
       it("should parse") {
         val expected =
-          ConfigOptions(List[ConfigOption](ConfigOption.Debug()).asJava)
+          ConfigOptions(List[ConfigOption](ConfigOption.debug()).asJava)
         val result = invoke(List("debug = true"))
         assertResult(expected)(result)
       }

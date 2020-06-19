@@ -41,8 +41,8 @@ class ParseConfigFileTest extends FunSpec with TemporaryFolder {
     it("should return some options") {
       val expected = Right(
         ConfigOptions(
-          List[ConfigOption](ConfigOption.Source(Paths.get("/path/to/source")),
-                             ConfigOption.Bucket("bucket-name")).asJava))
+          List[ConfigOption](ConfigOption.source(Paths.get("/path/to/source")),
+                             ConfigOption.bucket("bucket-name")).asJava))
       withDirectory(dir => {
         val file = createFile(dir,
                               "simple-config",

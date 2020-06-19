@@ -29,20 +29,20 @@ public class ParseConfigLines {
     private Stream<ConfigOption> parseKeyValue(String key, String value) {
         switch (key.toLowerCase()) {
             case "parallel":
-                return Stream.of(new ConfigOption.Parallel(Integer.parseInt(value)));
+                return Stream.of(ConfigOption.parallel(Integer.parseInt(value)));
             case "source":
-                return Stream.of(new ConfigOption.Source(Paths.get(value)));
+                return Stream.of(ConfigOption.source(Paths.get(value)));
             case "bucket":
-                return Stream.of(new ConfigOption.Bucket(value));
+                return Stream.of(ConfigOption.bucket(value));
             case "prefix":
-                return Stream.of(new ConfigOption.Prefix(value));
+                return Stream.of(ConfigOption.prefix(value));
             case "include":
-                return Stream.of(new ConfigOption.Include(value));
+                return Stream.of(ConfigOption.include(value));
             case "exclude":
-                return Stream.of(new ConfigOption.Exclude(value));
+                return Stream.of(ConfigOption.exclude(value));
             case "debug":
                 if (truthy(value))
-                    return Stream.of(new ConfigOption.Debug());
+                    return Stream.of(ConfigOption.debug());
                 // fall through to default
             default:
                 return Stream.empty();

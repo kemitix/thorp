@@ -4,10 +4,6 @@ import java.util.concurrent.atomic.AtomicReference
 
 import net.kemitix.eip.zio.MessageChannel
 import net.kemitix.eip.zio.MessageChannel.UChannel
-import net.kemitix.thorp.config.ConfigOption.{
-  IgnoreGlobalOptions,
-  IgnoreUserOptions
-}
 import net.kemitix.thorp.config.{
   Config,
   ConfigOption,
@@ -37,15 +33,15 @@ class LocalFileSystemTest extends FreeSpec {
 
   private val source       = Resource.select(this, "upload")
   private val sourcePath   = source.toPath
-  private val sourceOption = ConfigOption.Source(sourcePath)
+  private val sourceOption = ConfigOption.source(sourcePath)
   private val bucket       = Bucket.named("bucket")
-  private val bucketOption = ConfigOption.Bucket(bucket.name)
+  private val bucketOption = ConfigOption.bucket(bucket.name)
   private val configOptions = ConfigOptions(
     List[ConfigOption](
       sourceOption,
       bucketOption,
-      IgnoreGlobalOptions,
-      IgnoreUserOptions
+      ConfigOption.ignoreGlobalOptions(),
+      ConfigOption.ignoreUserOptions()
     ).asJava)
 
   private val uiEvents = new AtomicReference[List[UIEvent]](List.empty)
