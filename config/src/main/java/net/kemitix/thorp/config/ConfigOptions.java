@@ -1,5 +1,6 @@
 package net.kemitix.thorp.config;
 
+import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 
 import java.util.*;
@@ -24,6 +25,7 @@ public interface ConfigOptions {
     static ConfigOptions create(List<ConfigOption> options) {
         return new ConfigOptionsImpl(options);
     }
+    @EqualsAndHashCode
     @RequiredArgsConstructor
     class ConfigOptionsImpl implements ConfigOptions {
         private final List<ConfigOption> options;
