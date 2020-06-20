@@ -16,7 +16,7 @@ public interface ConfigOptions {
                 .filter(option -> option instanceof ConfigOption.Parallel)
                 .map(ConfigOption.Parallel.class::cast)
                 .findFirst()
-                .map(p -> p.factor)
+                .map(ConfigOption.Parallel::factor)
                 .orElse(1);
     }
     static ConfigOptions empty() {

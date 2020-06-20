@@ -1,7 +1,6 @@
 package net.kemitix.thorp.config;
 
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
+import lombok.EqualsAndHashCode;
 import net.kemitix.mon.TypeAlias;
 import net.kemitix.thorp.domain.Filter;
 import net.kemitix.thorp.domain.RemoteKey;
@@ -89,6 +88,7 @@ public interface ConfigOption {
     static ConfigOption debug() {
         return new Debug();
     }
+    @EqualsAndHashCode
     class Debug implements ConfigOption {
         @Override
         public Configuration update(Configuration config) {
@@ -106,9 +106,8 @@ public interface ConfigOption {
     class BatchMode implements ConfigOption {
         @Override
         public Configuration update(Configuration config) {
-            return config.withDebug(true);
+            return config.withBatchMode(true);
         }
-
         @Override
         public String toString() {
             return "BatchMode";
@@ -151,7 +150,6 @@ public interface ConfigOption {
         public Configuration update(Configuration config) {
             return config;
         }
-
         @Override
         public String toString() {
             return "Ignore Global Options";
@@ -161,16 +159,20 @@ public interface ConfigOption {
     static ConfigOption parallel(int factor) {
         return new Parallel(factor);
     }
-    @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-    class Parallel implements ConfigOption {
-        public final int factor;
+    class Parallel extends TypeAlias<Integer> implements ConfigOption {
+        protected Parallel(Integer value) {
+            super(value);
+        }
         @Override
         public Configuration update(Configuration config) {
-            return config.withParallel(factor);
+            return config.withParallel(getValue());
+        }
+        public int factor() {
+            return getValue();
         }
         @Override
         public String toString() {
-            return "Parallel: " + factor;
+            return "Parallel: " + getValue();
         }
     }
 }

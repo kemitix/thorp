@@ -1,6 +1,7 @@
 package net.kemitix.thorp.config;
 
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -29,7 +30,7 @@ public class ParseConfigLines {
     private Stream<ConfigOption> parseKeyValue(String key, String value) {
         switch (key.toLowerCase()) {
             case "parallel":
-                return Stream.of(ConfigOption.parallel(Integer.parseInt(value)));
+                return parseInt(value).map(ConfigOption::parallel);
             case "source":
                 return Stream.of(ConfigOption.source(Paths.get(value)));
             case "bucket":
@@ -46,6 +47,14 @@ public class ParseConfigLines {
                 // fall through to default
             default:
                 return Stream.empty();
+        }
+    }
+
+    private Stream<Integer> parseInt(String value) {
+        try {
+            return Stream.of(Integer.parseInt(value));
+        } catch (NumberFormatException e) {
+            return Stream.empty();
         }
     }
 

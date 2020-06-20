@@ -195,6 +195,15 @@ public class ConfigurationBuilderTest
         }
     }
 
+    @Test
+    @DisplayName("when batch mode option then batch mode in configuration")
+    public void whenBatchMode_thenBatchMode() {
+        Configuration result= invoke(configOptions(Arrays.asList(
+                ConfigOption.batchMode(),
+                coBucket)));
+        assertThat(result.batchMode).isTrue();
+    }
+
     public Configuration invoke(ConfigOptions configOptions) {
         try {
             return ConfigurationBuilder.buildConfig(configOptions);
