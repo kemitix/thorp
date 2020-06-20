@@ -54,11 +54,5 @@ public interface ConfigOptions {
                     .anyMatch(option ->
                             type.isAssignableFrom(option.getClass()));
         }
-        @Override
-        public String toString() {
-            return "ConfigOptionsImpl{" +
-                    "options=" + options +
-                    '}';
-        }
     }
 }

@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 public interface TemporaryFolder {
@@ -50,12 +51,26 @@ public interface TemporaryFolder {
             throw new RuntimeException(e);
         }
     }
-    default File createFile(Path directory, String name, List<String> contents) throws FileNotFoundException, UnsupportedEncodingException {
+    default File createFile(Path directory, String name, List<String> contents) {
         boolean x = directory.toFile().mkdirs();
         File file = directory.resolve(name).toFile();
-        PrintWriter writer = new PrintWriter(file, "UTF-8");
-        contents.forEach(writer::println);
-        writer.close();
+        PrintWriter writer = null;
+        try {
+            writer = getWriter(file);
+            contents.forEach(writer::println);
+        } finally {
+            if (Objects.nonNull(writer)) {
+                writer.close();
+            }
+        }
         return file;
+    }
+
+    default PrintWriter getWriter(File file) {
+        try {
+            return new PrintWriter(file, "UTF-8");
+        } catch (FileNotFoundException | UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

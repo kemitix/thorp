@@ -2,6 +2,7 @@ package net.kemitix.thorp.domain;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import net.kemitix.mon.TypeAlias;
 
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -14,9 +15,10 @@ public interface Filter {
         return Exclude.create(exclude);
     }
     Predicate<String> predicate();
-    @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-    class Include implements Filter {
-        private final Pattern include;
+    class Include extends TypeAlias<Pattern> implements Filter {
+        private Include(Pattern value) {
+            super(value);
+        }
         public static Include create(String include) {
             return new Include(Pattern.compile(include));
         }
@@ -25,18 +27,19 @@ public interface Filter {
         }
         @Override
         public Predicate<String> predicate() {
-            return include.asPredicate();
+            return getValue().asPredicate();
         }
     }
-    @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-    class Exclude implements Filter {
-        private final Pattern exclude;
+    class Exclude extends TypeAlias<Pattern> implements Filter {
+        private Exclude(Pattern value) {
+            super(value);
+        }
         public static Exclude create(String exclude) {
             return new Exclude(Pattern.compile(exclude));
         }
         @Override
         public Predicate<String> predicate() {
-            return exclude.asPredicate();
+            return getValue().asPredicate();
         }
     }
 }
