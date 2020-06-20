@@ -2,18 +2,13 @@ package net.kemitix.thorp.config;
 
 import lombok.RequiredArgsConstructor;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public interface ConfigOptions {
-
     List<ConfigOption> options();
-
     ConfigOptions merge(ConfigOptions other);
     ConfigOptions prepend(ConfigOption configOption);
     boolean containsInstanceOf(Class<? extends ConfigOption> type);
-
     static int parallel(ConfigOptions configOptions) {
         return configOptions.options()
                 .stream()
@@ -23,11 +18,9 @@ public interface ConfigOptions {
                 .map(p -> p.factor)
                 .orElse(1);
     }
-
     static ConfigOptions empty() {
         return create(Collections.emptyList());
     }
-
     static ConfigOptions create(List<ConfigOption> options) {
         return new ConfigOptionsImpl(options);
     }
@@ -40,23 +33,32 @@ public interface ConfigOptions {
         }
         @Override
         public ConfigOptions merge(ConfigOptions other) {
-            List<ConfigOption> options = options();
-            options.addAll(other.options());
-            return ConfigOptions.create(options);
+            List<ConfigOption> optionList = options();
+            other.options().stream()
+                    .filter(o -> !optionList.contains(o))
+                    .forEach(optionList::add);
+            return ConfigOptions.create(optionList);
         }
         @Override
         public ConfigOptions prepend(ConfigOption configOption) {
-            List<ConfigOption> options = new ArrayList<>();
-            options.add(configOption);
-            options.addAll(options());
-            return ConfigOptions.create(options);
+            List<ConfigOption> optionList = new ArrayList<>();
+            optionList.add(configOption);
+            options().stream()
+                    .filter(o -> !optionList.contains(0))
+                    .forEach(optionList::add);
+            return ConfigOptions.create(optionList);
         }
-
         @Override
         public boolean containsInstanceOf(Class<? extends ConfigOption> type) {
             return options.stream()
                     .anyMatch(option ->
                             type.isAssignableFrom(option.getClass()));
+        }
+        @Override
+        public String toString() {
+            return "ConfigOptionsImpl{" +
+                    "options=" + options +
+                    '}';
         }
     }
 }

@@ -8,8 +8,13 @@ import java.util.List;
 public interface ParseConfigFile {
     static ConfigOptions parseFile(File file) throws IOException {
         if (file.exists()) {
-            return new ParseConfigLines()
+            System.out.println("Reading config: " + file);
+            ConfigOptions configOptions = new ParseConfigLines()
                     .parseLines(Files.readAllLines(file.toPath()));
+            configOptions.options().forEach(configOption -> {
+                System.out.println(" - Config: " + configOption);
+            });
+            return configOptions;
         }
         return ConfigOptions.empty();
     }

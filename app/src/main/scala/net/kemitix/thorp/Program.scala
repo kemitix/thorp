@@ -5,18 +5,18 @@ import net.kemitix.eip.zio.{Message, MessageChannel}
 import net.kemitix.thorp.cli.CliArgs
 import net.kemitix.thorp.config._
 import net.kemitix.thorp.console._
-import net.kemitix.thorp.domain.{Counters, RemoteObjects, StorageEvent}
 import net.kemitix.thorp.domain.StorageEvent.{
   CopyEvent,
   DeleteEvent,
   ErrorEvent,
   UploadEvent
 }
+import net.kemitix.thorp.domain.{Counters, RemoteObjects, StorageEvent}
 import net.kemitix.thorp.lib._
 import net.kemitix.thorp.storage.Storage
 import net.kemitix.thorp.uishell.{UIEvent, UIShell}
 import zio.clock.Clock
-import zio.{RIO, UIO, ZIO}
+import zio.{IO, RIO, UIO, ZIO}
 
 import scala.io.AnsiColor.{RESET, WHITE}
 import scala.jdk.CollectionConverters._
@@ -27,14 +27,19 @@ trait Program {
   lazy val versionLabel = s"${WHITE}Thorp v$version$RESET"
 
   def run(args: List[String])
-    : ZIO[Storage with Console with Clock with FileScanner, Throwable, Unit] = {
-    for {
-      cli <- CliArgs.parse(args)
-      config = ConfigurationBuilder.buildConfig(cli)
-      _ <- Console.putStrLn(versionLabel)
+    : ZIO[Storage with Console with Clock with FileScanner, Nothing, Unit] = {
+    (for {
+      cli    <- CliArgs.parse(args)
+      config <- IO(ConfigurationBuilder.buildConfig(cli))
+      _      <- Console.putStrLn(versionLabel)
       _ <- ZIO.when(!showVersion(cli))(
         executeWithUI(config).catchAll(handleErrors))
-    } yield ()
+    } yield ())
+      .catchAll(e => {
+        Console.putStrLn("An ERROR occurred:")
+        Console.putStrLn(e.getMessage)
+      })
+
   }
 
   private def showVersion: ConfigOptions => Boolean =

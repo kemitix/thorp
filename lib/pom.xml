@@ -34,12 +34,6 @@
             <artifactId>thorp-storage</artifactId>
         </dependency>
 
-        <!-- command line parsing -->
-        <dependency>
-            <groupId>com.github.scopt</groupId>
-            <artifactId>scopt_2.13</artifactId>
-        </dependency>
-
         <!-- scala -->
         <dependency>
             <groupId>org.scala-lang</groupId>
@@ -50,11 +44,6 @@
         <dependency>
             <groupId>org.scalatest</groupId>
             <artifactId>scalatest_2.13</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.scalamock</groupId>
-            <artifactId>scalamock_2.13</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

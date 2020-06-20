@@ -54,11 +54,6 @@
             <artifactId>scalatest_2.13</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.scalamock</groupId>
-            <artifactId>scalamock_2.13</artifactId>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
 
     <build>

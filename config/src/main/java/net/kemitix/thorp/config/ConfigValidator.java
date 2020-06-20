@@ -19,6 +19,7 @@ public interface ConfigValidator {
 
     static void validateBucket(Bucket bucket) throws ConfigValidationException {
         if (bucket.name().isEmpty()) {
+            System.out.println("Bucket name is missing: " + bucket);
             throw new ConfigValidationException(
                     Collections.singletonList(
                             ConfigValidation.bucketNameIsMissing()));

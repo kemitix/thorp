@@ -148,7 +148,7 @@
                 <artifactId>scalatest_2.13</artifactId>
                 <version>3.0.8</version>
             </dependency>
-            <dependency>
+            <dependency><!-- only used by storage-aws -->
                 <groupId>org.scalamock</groupId>
                 <artifactId>scalamock_2.13</artifactId>
                 <version>4.4.0</version>

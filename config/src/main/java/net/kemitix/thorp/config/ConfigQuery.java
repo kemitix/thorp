@@ -39,7 +39,7 @@ public interface ConfigQuery {
                 .filter(configOption ->
                         configOption instanceof ConfigOption.Source)
                 .map(ConfigOption.Source.class::cast)
-                .map(source -> source.path)
+                .map(ConfigOption.Source::path)
                 .collect(Collectors.toList());
         if (explicitPaths.isEmpty()) {
             return Sources.create(Collections.singletonList(Paths.get(System.getenv("PWD"))));
