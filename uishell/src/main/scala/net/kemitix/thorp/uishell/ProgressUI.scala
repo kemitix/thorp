@@ -24,52 +24,57 @@ object ProgressUI {
                    localFile: LocalFile,
                    bytesTransferred: Long,
                    index: Int,
-                   totalBytesSoFar: Long): ZIO[Console, Nothing, Unit] =
+                   totalBytesSoFar: Long): UIO[Unit] =
     for {
       _ <- ZIO.when(bytesTransferred < localFile.file.length())(
-        stillUploading(localFile.remoteKey,
-                       localFile.file.length(),
-                       bytesTransferred))
+        stillUploading(
+          localFile.remoteKey,
+          localFile.file.length(),
+          bytesTransferred
+        )
+      )
       _ <- ZIO.when(bytesTransferred >= localFile.file.length()) {
         finishedUploading(localFile.remoteKey)
       }
     } yield ()
 
-  private def stillUploading(
-      remoteKey: RemoteKey,
-      fileLength: Long,
-      bytesTransferred: Long
-  ): ZIO[Console, Nothing, Unit] = {
+  private def stillUploading(remoteKey: RemoteKey,
+                             fileLength: Long,
+                             bytesTransferred: Long): UIO[Unit] = {
     val current: Map[RemoteKey, UploadState] =
-      uploads.updateAndGet((m: Map[RemoteKey, UploadState]) =>
-        m.updated(remoteKey, UploadState(bytesTransferred, fileLength)))
+      uploads.updateAndGet(
+        (m: Map[RemoteKey, UploadState]) =>
+          m.updated(remoteKey, UploadState(bytesTransferred, fileLength))
+      )
     val resetCursor = s"${Terminal.cursorPrevLine(statusHeight) * current.size}"
     ZIO.foreach(current) { entry =>
       {
         val (remoteKey, state) = entry
 
-        val percent     = f"${(state.transferred * 100) / state.fileLength}%2d"
+        val percent = f"${(state.transferred * 100) / state.fileLength}%2d"
         val transferred = sizeInEnglish(state.transferred)
-        val fileLength  = sizeInEnglish(state.fileLength)
+        val fileLength = sizeInEnglish(state.fileLength)
         val line1 =
           s"${GREEN}Uploading:$RESET ${remoteKey.key}$eraseLineForward"
         val line2body = s"($percent%) $transferred of $fileLength "
         val bar =
-          progressBar(state.transferred.toDouble,
-                      state.fileLength.toDouble,
-                      Terminal.width - line2body.length)
+          progressBar(
+            state.transferred.toDouble,
+            state.fileLength.toDouble,
+            Terminal.width - line2body.length
+          )
         val line2 = s"$GREEN$line2body$RESET$bar$eraseLineForward"
-        Console.putStrLn(line1) *>
-          Console.putStrLn(line2)
+        UIO(Console.putStrLn(line1)) *>
+          UIO(Console.putStrLn(line2))
       }
-    } *> Console.putStr(resetCursor)
+    } *> UIO(Console.putStr(resetCursor))
   }
 
-  def finishedUploading(
-      remoteKey: RemoteKey
-  ): ZIO[Any, Nothing, Unit] = {
-    UIO(uploads.updateAndGet((m: Map[RemoteKey, UploadState]) =>
-      m.removed(remoteKey))) *> UIO.unit
+  def finishedUploading(remoteKey: RemoteKey): ZIO[Any, Nothing, Unit] = {
+    UIO(
+      uploads
+        .updateAndGet((m: Map[RemoteKey, UploadState]) => m.removed(remoteKey))
+    ) *> UIO.unit
   }
 
 }

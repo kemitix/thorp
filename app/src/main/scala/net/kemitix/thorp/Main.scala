@@ -1,6 +1,5 @@
 package net.kemitix.thorp
 
-import net.kemitix.thorp.console.Console
 import net.kemitix.thorp.lib.FileScanner
 import net.kemitix.thorp.storage.aws.S3Storage
 import zio.clock.Clock
@@ -10,7 +9,6 @@ object Main extends App {
 
   object LiveThorpApp
       extends S3Storage.Live
-      with Console.Live
       with Clock.Live
       with FileScanner.Live
 

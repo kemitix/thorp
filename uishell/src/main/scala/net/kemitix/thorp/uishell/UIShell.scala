@@ -11,7 +11,7 @@ object UIShell {
 
   def receiver(
     configuration: Configuration
-  ): UIO[MessageChannel.UReceiver[Console, UIEvent]] =
+  ): UIO[MessageChannel.UReceiver[Any, UIEvent]] =
     UIO { uiEventMessage =>
       uiEventMessage.body match {
         case UIEvent.ShowValidConfig         => showValidConfig(configuration)
@@ -42,10 +42,8 @@ object UIShell {
       }
     }
 
-  private def actionFinished(
-    configuration: Configuration,
-    event: StorageEvent
-  ): ZIO[Console, Nothing, Unit] = {
+  private def actionFinished(configuration: Configuration,
+                             event: StorageEvent): UIO[Unit] = {
     val batchMode = configuration.batchMode
     for {
       _ <- event match {
@@ -57,58 +55,65 @@ object UIShell {
             ConsoleOut.copyComplete(sourceKey, targetKey),
             batchMode
           )
+          UIO.unit
         case uploadEvent: StorageEvent.UploadEvent =>
           val remoteKey = uploadEvent.remoteKey
-          ProgressUI.finishedUploading(remoteKey) *>
-            Console.putMessageLnB(
-              ConsoleOut.uploadComplete(remoteKey),
-              batchMode
-            )
+          Console
+            .putMessageLnB(ConsoleOut.uploadComplete(remoteKey), batchMode)
+          ProgressUI.finishedUploading(remoteKey)
         case deleteEvent: StorageEvent.DeleteEvent =>
           val remoteKey = deleteEvent.remoteKey
           Console.putMessageLnB(ConsoleOut.deleteComplete(remoteKey), batchMode)
+          UIO.unit
         case errorEvent: StorageEvent.ErrorEvent =>
           val remoteKey = errorEvent.remoteKey
           val action = errorEvent.action
           val e = errorEvent.e
           ProgressUI.finishedUploading(remoteKey) *>
-            Console.putMessageLnB(
-              ConsoleOut.errorQueueEventOccurred(action, e),
-              batchMode
+            UIO(
+              Console.putMessageLnB(
+                ConsoleOut.errorQueueEventOccurred(action, e),
+                batchMode
+              )
             )
         case _: StorageEvent.ShutdownEvent => UIO.unit
       }
     } yield ()
   }
 
-  private def uploadWaitComplete(action: Action): ZIO[Console, Nothing, Unit] =
+  private def uploadWaitComplete(action: Action): UIO[Unit] = {
     Console.putStrLn(s"Finished waiting to other upload - now $action")
+    UIO.unit
+  }
 
-  private def awaitingUpload(remoteKey: RemoteKey,
-                             hash: MD5Hash): ZIO[Console, Nothing, Unit] =
+  private def awaitingUpload(remoteKey: RemoteKey, hash: MD5Hash): UIO[Unit] = {
     Console.putStrLn(
       s"Awaiting another upload of $hash before copying it to $remoteKey"
     )
-
+    UIO.unit
+  }
   private def fileFound(configuration: Configuration,
-                        localFile: LocalFile): ZIO[Console, Nothing, Unit] =
-    ZIO.when(configuration.batchMode)(
+                        localFile: LocalFile): UIO[Unit] =
+    ZIO.when(configuration.batchMode) {
       Console.putStrLn(s"Found: ${localFile.file}")
-    )
+      UIO.unit
+    }
 
-  private def showSummary(counters: Counters): ZIO[Console, Nothing, Unit] =
-    Console.putStrLn(eraseToEndOfScreen) *>
-      Console.putStrLn(s"Uploaded ${counters.uploaded} files") *>
-      Console.putStrLn(s"Copied   ${counters.copied} files") *>
-      Console.putStrLn(s"Deleted  ${counters.deleted} files") *>
-      Console.putStrLn(s"Errors   ${counters.errors}")
+  private def showSummary(counters: Counters): UIO[Unit] = {
+    Console.putStrLn(eraseToEndOfScreen)
+    Console.putStrLn(s"Uploaded ${counters.uploaded} files")
+    Console.putStrLn(s"Copied   ${counters.copied} files")
+    Console.putStrLn(s"Deleted  ${counters.deleted} files")
+    Console.putStrLn(s"Errors   ${counters.errors}")
+    UIO.unit
+  }
 
-  private def remoteDataFetched(size: Int): ZIO[Console, Nothing, Unit] =
+  private def remoteDataFetched(size: Int): UIO[Unit] = {
     Console.putStrLn(s"Found $size remote objects")
+    UIO.unit
+  }
 
-  private def showValidConfig(
-    configuration: Configuration
-  ): ZIO[Console, Nothing, Unit] =
+  private def showValidConfig(configuration: Configuration): UIO[Unit] = {
     Console.putMessageLn(
       ConsoleOut.validConfig(
         configuration.bucket,
@@ -116,6 +121,8 @@ object UIShell {
         configuration.sources
       )
     )
+    UIO.unit
+  }
 
   def trimHead(str: String): String = {
     val width = Terminal.width
@@ -125,14 +132,11 @@ object UIShell {
     }
   }
 
-  def actionChosen(configuration: Configuration,
-                   action: Action): ZIO[Console, Nothing, Unit] = {
+  def actionChosen(configuration: Configuration, action: Action): UIO[Unit] = {
     val message = trimHead(action.asString()) + eraseLineForward
-    val batch = configuration.batchMode
-    for {
-      _ <- ZIO.when(!batch) { Console.putStr(message + "\r") }
-      _ <- ZIO.when(batch) { Console.putStrLn(message) }
-    } yield ()
+    if (configuration.batchMode) Console.putStr(message + "\r")
+    else Console.putStrLn(message)
+    UIO.unit
   }
 
 }

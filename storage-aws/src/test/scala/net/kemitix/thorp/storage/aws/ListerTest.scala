@@ -107,8 +107,8 @@ class ListerTest extends FreeSpec {
 //    }
 //    def invoke(amazonS3Client: AmazonS3Client.Client)(bucket: Bucket,
 //                                                      prefix: RemoteKey) = {
-//      object TestEnv extends Storage.Test with Console.Test
-//      val program: RIO[Storage with Console, RemoteObjects] = Lister
+//      object TestEnv extends Storage.Test
+//      val program: RIO[Storage, RemoteObjects] = Lister
 //        .listObjects(amazonS3Client)(bucket, prefix)
 //      val runtime = new DefaultRuntime {}
 //      runtime.unsafeRunSync(program.provide(TestEnv)).toEither
