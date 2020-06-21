@@ -1,0 +1,2 @@
+net.kemitix.thorp.filesystem.MD5HashGenerator
+net.kemitix.thorp.storage.aws.S3ETagGenerator

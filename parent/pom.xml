@@ -20,6 +20,12 @@
         <tiles-maven-plugin.version>2.17</tiles-maven-plugin.version>
         <kemitix-maven-tiles.version>2.7.0</kemitix-maven-tiles.version>
         <scala-library.version>2.13.2</scala-library.version>
+        <lombok.version>1.18.12</lombok.version>
+        <mon.version>2.2.0</mon.version>
+        <junit.version>5.6.2</junit.version>
+        <assertj.version>3.16.1</assertj.version>
+        <mockito.version>3.3.3</mockito.version>
+        <zio.version>1.0.0-RC16</zio.version>
     </properties>
 
     <dependencyManagement>
@@ -76,6 +82,37 @@
                 <version>${project.version}</version>
             </dependency>
 
+            <!-- mon -->
+            <dependency>
+                <groupId>net.kemitix</groupId>
+                <artifactId>mon</artifactId>
+                <version>${mon.version}</version>
+            </dependency>
+
+            <!-- lombok -->
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+            </dependency>
+
+            <!-- testing -->
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter</artifactId>
+                <version>${junit.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-junit-jupiter</artifactId>
+                <version>${mockito.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.assertj</groupId>
+                <artifactId>assertj-core</artifactId>
+                <version>${assertj.version}</version>
+            </dependency>
+
             <!-- scala - scala -->
             <dependency>
                 <groupId>org.scala-lang</groupId>
@@ -86,12 +123,12 @@
             <dependency>
                 <groupId>dev.zio</groupId>
                 <artifactId>zio_2.13</artifactId>
-                <version>1.0.0-RC16</version>
+                <version>${zio.version}</version>
             </dependency>
             <dependency>
                 <groupId>dev.zio</groupId>
                 <artifactId>zio-streams_2.13</artifactId>
-                <version>1.0.0-RC20</version>
+                <version>${zio.version}</version>
             </dependency>
             <!-- scala - eip-zio -->
             <dependency>
@@ -111,7 +148,7 @@
                 <artifactId>scalatest_2.13</artifactId>
                 <version>3.0.8</version>
             </dependency>
-            <dependency>
+            <dependency><!-- only used by storage-aws -->
                 <groupId>org.scalamock</groupId>
                 <artifactId>scalamock_2.13</artifactId>
                 <version>4.4.0</version>

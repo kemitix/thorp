@@ -2,19 +2,19 @@ package net.kemitix.thorp.cli
 
 import java.nio.file.Paths
 
-import net.kemitix.thorp.config.ConfigOption.Debug
-import net.kemitix.thorp.config.{ConfigOptions, ConfigQuery}
+import net.kemitix.thorp.config.{ConfigOption, ConfigOptions, ConfigQuery}
 import net.kemitix.thorp.filesystem.Resource
 import org.scalatest.FunSpec
 import zio.DefaultRuntime
 
+import scala.jdk.CollectionConverters._
 import scala.util.Try
 
 class CliArgsTest extends FunSpec {
 
   private val runtime = new DefaultRuntime {}
 
-  val source = Resource(this, "")
+  val source = Resource.select(this, "")
 
   describe("parse - source") {
     def invokeWithSource(path: String) =
@@ -36,7 +36,8 @@ class CliArgsTest extends FunSpec {
       it("should get multiple sources") {
         val expected      = Some(Set("path1", "path2").map(Paths.get(_)))
         val configOptions = invoke(args)
-        val result        = configOptions.map(ConfigQuery.sources(_).paths.toSet)
+        val result =
+          configOptions.map(ConfigQuery.sources(_).paths.asScala.toSet)
         assertResult(expected)(result)
       }
     }
@@ -50,7 +51,8 @@ class CliArgsTest extends FunSpec {
       maybeOptions.getOrElse(ConfigOptions.empty)
     }
 
-    val containsDebug = ConfigOptions.contains(Debug())(_)
+    val containsDebug = (options: ConfigOptions) =>
+      options.options.stream().anyMatch(_.isInstanceOf[ConfigOption.Debug])
 
     describe("when no debug flag") {
       val configOptions = invokeWithArgument("")
@@ -96,7 +98,7 @@ class CliArgsTest extends FunSpec {
   }
 
   private def pathTo(value: String): String =
-    Try(Resource(this, value))
+    Try(Resource.select(this, value))
       .map(_.getCanonicalPath)
       .getOrElse("[not-found]")
 

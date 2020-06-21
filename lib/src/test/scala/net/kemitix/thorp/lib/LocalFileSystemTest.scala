@@ -4,19 +4,15 @@ import java.util.concurrent.atomic.AtomicReference
 
 import net.kemitix.eip.zio.MessageChannel
 import net.kemitix.eip.zio.MessageChannel.UChannel
-import net.kemitix.thorp.config.ConfigOption.{
-  IgnoreGlobalOptions,
-  IgnoreUserOptions
-}
 import net.kemitix.thorp.config.{
-  Config,
   ConfigOption,
   ConfigOptions,
+  Configuration,
   ConfigurationBuilder
 }
 import net.kemitix.thorp.domain.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.domain._
-import net.kemitix.thorp.filesystem.{FileSystem, Hasher, Resource}
+import net.kemitix.thorp.filesystem.Resource
 import net.kemitix.thorp.storage.Storage
 import net.kemitix.thorp.uishell.UIEvent
 import net.kemitix.thorp.uishell.UIEvent.{
@@ -31,32 +27,34 @@ import zio.clock.Clock
 import zio.{DefaultRuntime, UIO, ZIO}
 
 import scala.collection.MapView
+import scala.jdk.CollectionConverters._
 
 class LocalFileSystemTest extends FreeSpec {
 
-  private val source       = Resource(this, "upload")
+  private val source       = Resource.select(this, "upload")
   private val sourcePath   = source.toPath
-  private val sourceOption = ConfigOption.Source(sourcePath)
-  private val bucket       = Bucket("bucket")
-  private val bucketOption = ConfigOption.Bucket(bucket.name)
-  private val configOptions = ConfigOptions(
+  private val sourceOption = ConfigOption.source(sourcePath)
+  private val bucket       = Bucket.named("bucket")
+  private val bucketOption = ConfigOption.bucket(bucket.name)
+  private val configOptions = ConfigOptions.create(
     List[ConfigOption](
       sourceOption,
       bucketOption,
-      IgnoreGlobalOptions,
-      IgnoreUserOptions
-    ))
+      ConfigOption.ignoreGlobalOptions(),
+      ConfigOption.ignoreUserOptions()
+    ).asJava)
 
   private val uiEvents = new AtomicReference[List[UIEvent]](List.empty)
   private val actions  = new AtomicReference[List[SequencedAction]](List.empty)
 
   private def archive: ThorpArchive = new ThorpArchive {
-    override def update(uiChannel: UChannel[Any, UIEvent],
-                        sequencedAction: SequencedAction,
-                        totalBytesSoFar: Long)
-      : ZIO[Storage with Config, Nothing, StorageEvent] = UIO {
+    override def update(
+        configuration: Configuration,
+        uiChannel: UChannel[Any, UIEvent],
+        sequencedAction: SequencedAction,
+        totalBytesSoFar: Long): ZIO[Storage, Nothing, StorageEvent] = UIO {
       actions.updateAndGet(l => sequencedAction :: l)
-      StorageEvent.DoNothingEvent(sequencedAction.action.remoteKey)
+      StorageEvent.doNothingEvent(sequencedAction.action.remoteKey)
     }
   }
 
@@ -64,20 +62,20 @@ class LocalFileSystemTest extends FreeSpec {
 
   private object TestEnv
       extends Clock.Live
-      with Hasher.Live
-      with FileSystem.Live
-      with Config.Live
       with FileScanner.Live
       with Storage.Test
 
   "scanCopyUpload" - {
-    def sender(objects: RemoteObjects): UIO[MessageChannel.ESender[
-      Clock with Hasher with FileSystem with Config with FileScanner with Config with Storage,
-      Throwable,
-      UIEvent]] =
+    def sender(configuration: Configuration, objects: RemoteObjects)
+      : UIO[MessageChannel.ESender[Clock with FileScanner with Storage,
+                                   Throwable,
+                                   UIEvent]] =
       UIO { uiChannel =>
         (for {
-          _ <- LocalFileSystem.scanCopyUpload(uiChannel, objects, archive)
+          _ <- LocalFileSystem.scanCopyUpload(configuration,
+                                              uiChannel,
+                                              objects,
+                                              archive)
         } yield ()) <* MessageChannel.endChannel(uiChannel)
       }
     def receiver(): UIO[MessageChannel.UReceiver[Any, UIEvent]] =
@@ -86,14 +84,14 @@ class LocalFileSystemTest extends FreeSpec {
         uiEvents.updateAndGet(l => uiEvent :: l)
         UIO(())
       }
-    def program(remoteObjects: RemoteObjects) =
+    def program(remoteObjects: RemoteObjects) = {
+      val configuration = ConfigurationBuilder.buildConfig(configOptions)
       for {
-        config   <- ConfigurationBuilder.buildConfig(configOptions)
-        _        <- Config.set(config)
-        sender   <- sender(remoteObjects)
+        sender   <- sender(configuration, remoteObjects)
         receiver <- receiver()
         _        <- MessageChannel.pointToPoint(sender)(receiver).runDrain
       } yield ()
+    }
     "where remote has no objects" - {
       val remoteObjects = RemoteObjects.empty
       "upload all files" - {
@@ -125,11 +123,13 @@ class LocalFileSystemTest extends FreeSpec {
     }
     "where remote has all object" - {
       val remoteObjects =
-        RemoteObjects(
-          byHash = MapView(MD5HashData.Root.hash     -> MD5HashData.Root.remoteKey,
-                           MD5HashData.Leaf.hash     -> MD5HashData.Leaf.remoteKey),
-          byKey = MapView(MD5HashData.Root.remoteKey -> MD5HashData.Root.hash,
-                          MD5HashData.Leaf.remoteKey -> MD5HashData.Leaf.hash)
+        RemoteObjects.create(
+          MapView(
+            MD5HashData.Root.hash -> MD5HashData.Root.remoteKey,
+            MD5HashData.Leaf.hash -> MD5HashData.Leaf.remoteKey).toMap.asJava,
+          MapView(
+            MD5HashData.Root.remoteKey -> MD5HashData.Root.hash,
+            MD5HashData.Leaf.remoteKey -> MD5HashData.Leaf.hash).toMap.asJava
         )
       "do nothing for all files" - {
         "all archive actions do nothing" in {
@@ -158,9 +158,9 @@ class LocalFileSystemTest extends FreeSpec {
     }
     "where remote has some objects" - {
       val remoteObjects =
-        RemoteObjects(
-          byHash = MapView(MD5HashData.Root.hash     -> MD5HashData.Root.remoteKey),
-          byKey = MapView(MD5HashData.Root.remoteKey -> MD5HashData.Root.hash)
+        RemoteObjects.create(
+          MapView(MD5HashData.Root.hash      -> MD5HashData.Root.remoteKey).toMap.asJava,
+          MapView(MD5HashData.Root.remoteKey -> MD5HashData.Root.hash).toMap.asJava
         )
       "upload leaf, do nothing for root" - {
         "archive actions upload leaf" in {
@@ -192,27 +192,31 @@ class LocalFileSystemTest extends FreeSpec {
     }
     "where remote objects are swapped" ignore {
       val remoteObjects =
-        RemoteObjects(
-          byHash = MapView(MD5HashData.Root.hash     -> MD5HashData.Leaf.remoteKey,
-                           MD5HashData.Leaf.hash     -> MD5HashData.Root.remoteKey),
-          byKey = MapView(MD5HashData.Root.remoteKey -> MD5HashData.Leaf.hash,
-                          MD5HashData.Leaf.remoteKey -> MD5HashData.Root.hash)
+        RemoteObjects.create(
+          MapView(
+            MD5HashData.Root.hash -> MD5HashData.Leaf.remoteKey,
+            MD5HashData.Leaf.hash -> MD5HashData.Root.remoteKey).toMap.asJava,
+          MapView(
+            MD5HashData.Root.remoteKey -> MD5HashData.Leaf.hash,
+            MD5HashData.Leaf.remoteKey -> MD5HashData.Root.hash).toMap.asJava
         )
       "copy files" - {
         "archive swaps objects" ignore {
-          // TODO this is not supported
+          // not supported
         }
       }
     }
     "where file has been renamed" - {
       // renamed from "other/root" to "root-file"
-      val otherRootKey = RemoteKey("other/root")
+      val otherRootKey = RemoteKey.create("other/root")
       val remoteObjects =
-        RemoteObjects(
-          byHash = MapView(MD5HashData.Root.hash     -> otherRootKey,
-                           MD5HashData.Leaf.hash     -> MD5HashData.Leaf.remoteKey),
-          byKey = MapView(otherRootKey               -> MD5HashData.Root.hash,
-                          MD5HashData.Leaf.remoteKey -> MD5HashData.Leaf.hash)
+        RemoteObjects.create(
+          MapView(
+            MD5HashData.Root.hash -> otherRootKey,
+            MD5HashData.Leaf.hash -> MD5HashData.Leaf.remoteKey).toMap.asJava,
+          MapView(
+            otherRootKey               -> MD5HashData.Root.hash,
+            MD5HashData.Leaf.remoteKey -> MD5HashData.Leaf.hash).toMap.asJava
         )
       "copy object and delete original" in {
         actions.set(List.empty)
@@ -244,13 +248,14 @@ class LocalFileSystemTest extends FreeSpec {
   }
 
   "scanDelete" - {
-    def sender(objects: RemoteObjects): UIO[
-      MessageChannel.ESender[Clock with Config with FileSystem with Storage,
-                             Throwable,
-                             UIEvent]] =
+    def sender(configuration: Configuration, objects: RemoteObjects)
+      : UIO[MessageChannel.ESender[Clock with Storage, Throwable, UIEvent]] =
       UIO { uiChannel =>
         (for {
-          _ <- LocalFileSystem.scanDelete(uiChannel, objects, archive)
+          _ <- LocalFileSystem.scanDelete(configuration,
+                                          uiChannel,
+                                          objects,
+                                          archive)
         } yield ()) <* MessageChannel.endChannel(uiChannel)
       }
     def receiver(): UIO[MessageChannel.UReceiver[Any, UIEvent]] =
@@ -260,20 +265,23 @@ class LocalFileSystemTest extends FreeSpec {
         UIO(())
       }
     def program(remoteObjects: RemoteObjects) = {
-      for {
-        config   <- ConfigurationBuilder.buildConfig(configOptions)
-        _        <- Config.set(config)
-        sender   <- sender(remoteObjects)
-        receiver <- receiver()
-        _        <- MessageChannel.pointToPoint(sender)(receiver).runDrain
-      } yield ()
+      {
+        val configuration = ConfigurationBuilder.buildConfig(configOptions)
+        for {
+          sender   <- sender(configuration, remoteObjects)
+          receiver <- receiver()
+          _        <- MessageChannel.pointToPoint(sender)(receiver).runDrain
+        } yield ()
+      }
     }
     "where remote has no extra objects" - {
-      val remoteObjects = RemoteObjects(
-        byHash = MapView(MD5HashData.Root.hash     -> MD5HashData.Root.remoteKey,
-                         MD5HashData.Leaf.hash     -> MD5HashData.Leaf.remoteKey),
-        byKey = MapView(MD5HashData.Root.remoteKey -> MD5HashData.Root.hash,
-                        MD5HashData.Leaf.remoteKey -> MD5HashData.Leaf.hash)
+      val remoteObjects = RemoteObjects.create(
+        MapView(
+          MD5HashData.Root.hash -> MD5HashData.Root.remoteKey,
+          MD5HashData.Leaf.hash -> MD5HashData.Leaf.remoteKey).toMap.asJava,
+        MapView(
+          MD5HashData.Root.remoteKey -> MD5HashData.Root.hash,
+          MD5HashData.Leaf.remoteKey -> MD5HashData.Leaf.hash).toMap.asJava
       )
       "do nothing for all files" - {
         "no archive actions" in {
@@ -291,15 +299,15 @@ class LocalFileSystemTest extends FreeSpec {
       }
     }
     "where remote has extra objects" - {
-      val extraHash   = MD5Hash("extra")
-      val extraObject = RemoteKey("extra")
-      val remoteObjects = RemoteObjects(
-        byHash = MapView(MD5HashData.Root.hash     -> MD5HashData.Root.remoteKey,
-                         MD5HashData.Leaf.hash     -> MD5HashData.Leaf.remoteKey,
-                         extraHash                 -> extraObject),
-        byKey = MapView(MD5HashData.Root.remoteKey -> MD5HashData.Root.hash,
-                        MD5HashData.Leaf.remoteKey -> MD5HashData.Leaf.hash,
-                        extraObject                -> extraHash)
+      val extraHash   = MD5Hash.create("extra")
+      val extraObject = RemoteKey.create("extra")
+      val remoteObjects = RemoteObjects.create(
+        MapView(MD5HashData.Root.hash      -> MD5HashData.Root.remoteKey,
+                MD5HashData.Leaf.hash      -> MD5HashData.Leaf.remoteKey,
+                extraHash                  -> extraObject).toMap.asJava,
+        MapView(MD5HashData.Root.remoteKey -> MD5HashData.Root.hash,
+                MD5HashData.Leaf.remoteKey -> MD5HashData.Leaf.hash,
+                extraObject                -> extraHash).toMap.asJava
       )
       "remove the extra object" - {
         "archive delete action" in {

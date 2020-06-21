@@ -12,6 +12,19 @@
     <name>config</name>
 
     <dependencies>
+        <!-- mon -->
+        <dependency>
+            <groupId>net.kemitix</groupId>
+            <artifactId>mon</artifactId>
+        </dependency>
+
+        <!-- lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- thorp -->
         <dependency>
             <groupId>net.kemitix.thorp</groupId>
@@ -22,48 +35,16 @@
             <artifactId>thorp-filesystem</artifactId>
         </dependency>
 
-        <!-- command line parsing -->
+        <!-- testing -->
         <dependency>
-            <groupId>com.github.scopt</groupId>
-            <artifactId>scopt_2.13</artifactId>
-        </dependency>
-
-        <!-- scala -->
-        <dependency>
-            <groupId>org.scala-lang</groupId>
-            <artifactId>scala-library</artifactId>
-        </dependency>
-
-        <!-- zio -->
-        <dependency>
-            <groupId>dev.zio</groupId>
-            <artifactId>zio_2.13</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>dev.zio</groupId>
-            <artifactId>zio-streams_2.13</artifactId>
-        </dependency>
-
-        <!-- scala - testing -->
-        <dependency>
-            <groupId>org.scalatest</groupId>
-            <artifactId>scalatest_2.13</artifactId>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.scalamock</groupId>
-            <artifactId>scalamock_2.13</artifactId>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>net.alchim31.maven</groupId>
-                <artifactId>scala-maven-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
-
 </project>
