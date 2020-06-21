@@ -6,16 +6,42 @@ The format is based on [[https://keepachangelog.com/en/1.0.0/][Keep a Changelog]
 [[https://semver.org/spec/v2.0.0.html][Semantic Versioning]].
 
 
-* [1.0.0] - ???
+* [1.0.0] - 2020-06-21
 
-** Added
+Features
 
-   - Create and use a cache of hashes for local files (#249)
+-    Convert to Java (domain, config, storage-aws and filesystem) @kemitix (#446)
+-    Create and use a cache of hashes for local files @kemitix (#249)
 
-** Dependencies
+Maintenance
 
-   - Revert "[sbt] Rollback ~sbt-ci-release~ to ~1.3.2~ (#231)"
-   - Update ~sbt~ to ~1.3.3~ (#238)
+-    Add release drafter configuration @kemitix (#462)
+-    Bump aws-java-sdk-s3 from 1.11.805 to 1.11.806 @dependabot-preview (#457)
+-    Bump aws-java-sdk-s3 from 1.11.804 to 1.11.805 @dependabot-preview (#454)
+-    Bump aws-java-sdk-s3 from 1.11.803 to 1.11.804 @dependabot-preview (#452)
+-    Bump aws-java-sdk-s3 from 1.11.802 to 1.11.803 @dependabot-preview (#449)
+-    Bump aws-java-sdk-s3 from 1.11.801 to 1.11.802 @dependabot-preview (#447)
+-    Bump scala-library from 2.13.0 to 2.13.2 @dependabot-preview (#439)
+-    Bump aws-java-sdk-s3 from 1.11.800 to 1.11.801 @dependabot-preview (#442)
+-    Bump zio-streams_2.13 from 1.0.0-RC16 to 1.0.0-RC20 @dependabot-preview (#440)
+-    Bump tiles-maven-plugin from 2.16 to 2.17 @dependabot-preview (#441)
+-    Bump aws-java-sdk-s3 from 1.11.792 to 1.11.800 @dependabot-preview (#436)
+-    Bump jackson-dataformat-cbor from 2.10.4 to 2.11.0 @dependabot-preview (#432)
+-    Java rewrite - step 1 - build with Maven @kemitix (#431)
+-    Update jackson-dataformat-cbor to 2.10.4 @scala-steward (#389)
+-    Update jackson-databind to 2.10.4 @scala-steward (#388)
+-    Update sbt-scoverage to 1.6.1 @scala-steward (#272)
+-    Update sbt-ci-release to 1.5.3 @scala-steward (#379)
+-    Update sbt-bloop to 1.4.1 @scala-steward (#402)
+-    Update sbt-wartremover, wartremover to 2.4.9 @scala-steward (#417)
+-    Update sbt to 1.3.12 @scala-steward (#418)
+-    Update aws-java-sdk-s3 to 1.11.797 @kemitix (#425)
+-    Run Github Actions on pull requests @kemitix (#424)
+-    Update aws-java-sdk-s3 to 1.11.661 @scala-steward (#250)
+-    Update zio, zio-streams to 1.0.0-RC16 @scala-steward (#251)
+-    Update zio, zio-streams to 1.0.0-RC15 @scala-steward (#241)
+-    Update sbt-bloop to 1.3.5 @scala-steward (#247)
+-    Update sbt to 1.3.3 @scala-steward (#238)
 
 * [0.10.0] - 2019-10-08
 

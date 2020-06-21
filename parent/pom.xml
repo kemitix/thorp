@@ -12,7 +12,7 @@
 
     <groupId>net.kemitix.thorp</groupId>
     <artifactId>thorp-parent</artifactId>
-    <version>DEV-SNAPSHOT</version>
+    <version>1.0.0</version>
     <packaging>pom</packaging>
 
     <properties>
