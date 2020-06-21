@@ -22,16 +22,18 @@ object Console {
   trait Live extends Console {
     val console: Service = new Service {
       override def putMessageLn(line: ConsoleOut): ZIO[Console, Nothing, Unit] =
-        putStrLn(line.en)
+        putStrLn(line.en())
       override def putStrLn(line: String): ZIO[Console, Nothing, Unit] =
         putStrLnPrintStream(SConsole.out)(line)
       override def putStr(line: String): ZIO[Console, Nothing, Unit] =
         putStrPrintStream(SConsole.out)(line)
-      final def putStrLnPrintStream(stream: PrintStream)(
-          line: String): ZIO[Console, Nothing, Unit] =
+      final def putStrLnPrintStream(
+        stream: PrintStream
+      )(line: String): ZIO[Console, Nothing, Unit] =
         UIO(SConsole.withOut(stream)(SConsole.println(line)))
-      final def putStrPrintStream(stream: PrintStream)(
-          line: String): ZIO[Console, Nothing, Unit] =
+      final def putStrPrintStream(
+        stream: PrintStream
+      )(line: String): ZIO[Console, Nothing, Unit] =
         UIO(SConsole.withOut(stream)(SConsole.print(line)))
 
     }
@@ -41,7 +43,7 @@ object Console {
 
   trait Test extends Console {
 
-    private val output          = new AtomicReference(List.empty[String])
+    private val output = new AtomicReference(List.empty[String])
     def getOutput: List[String] = output.get
 
     val console: Service = new Service {
@@ -76,6 +78,6 @@ object Console {
 
   final def putMessageLnB(line: ConsoleOut.WithBatchMode,
                           batchMode: Boolean): ZIO[Console, Nothing, Unit] =
-    ZIO.accessM(line(batchMode) >>= _.console.putStrLn)
+    ZIO.accessM(UIO(line(batchMode)) >>= _.console.putStrLn)
 
 }
