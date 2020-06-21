@@ -3,7 +3,6 @@ package net.kemitix.thorp.console;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import net.kemitix.thorp.domain.*;
-import scala.io.AnsiColor;
 
 import java.nio.file.Path;
 import java.util.Arrays;
