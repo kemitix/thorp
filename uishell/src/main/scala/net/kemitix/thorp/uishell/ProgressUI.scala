@@ -2,7 +2,7 @@ package net.kemitix.thorp.uishell
 
 import java.util.concurrent.atomic.AtomicReference
 
-import net.kemitix.thorp.config.Config
+import net.kemitix.thorp.config.Configuration
 import net.kemitix.thorp.console.Console
 import net.kemitix.thorp.domain.SizeTranslation.sizeInEnglish
 import net.kemitix.thorp.domain.Terminal.{eraseLineForward, progressBar}
@@ -20,11 +20,11 @@ object ProgressUI {
 
   private val statusHeight = 2
 
-  def requestCycle(
-      localFile: LocalFile,
-      bytesTransferred: Long,
-      index: Int,
-      totalBytesSoFar: Long): ZIO[Console with Config, Nothing, Unit] =
+  def requestCycle(configuration: Configuration,
+                   localFile: LocalFile,
+                   bytesTransferred: Long,
+                   index: Int,
+                   totalBytesSoFar: Long): ZIO[Console, Nothing, Unit] =
     for {
       _ <- ZIO.when(bytesTransferred < localFile.file.length())(
         stillUploading(localFile.remoteKey,

@@ -4,14 +4,10 @@ import java.util.concurrent.atomic.AtomicReference
 
 import net.kemitix.eip.zio.MessageChannel
 import net.kemitix.eip.zio.MessageChannel.UChannel
-import net.kemitix.thorp.config.ConfigOption.{
-  IgnoreGlobalOptions,
-  IgnoreUserOptions
-}
 import net.kemitix.thorp.config.{
-  Config,
   ConfigOption,
   ConfigOptions,
+  Configuration,
   ConfigurationBuilder
 }
 import net.kemitix.thorp.domain.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
@@ -37,25 +33,26 @@ class LocalFileSystemTest extends FreeSpec {
 
   private val source       = Resource.select(this, "upload")
   private val sourcePath   = source.toPath
-  private val sourceOption = ConfigOption.Source(sourcePath)
+  private val sourceOption = ConfigOption.source(sourcePath)
   private val bucket       = Bucket.named("bucket")
-  private val bucketOption = ConfigOption.Bucket(bucket.name)
-  private val configOptions = ConfigOptions(
+  private val bucketOption = ConfigOption.bucket(bucket.name)
+  private val configOptions = ConfigOptions.create(
     List[ConfigOption](
       sourceOption,
       bucketOption,
-      IgnoreGlobalOptions,
-      IgnoreUserOptions
-    ))
+      ConfigOption.ignoreGlobalOptions(),
+      ConfigOption.ignoreUserOptions()
+    ).asJava)
 
   private val uiEvents = new AtomicReference[List[UIEvent]](List.empty)
   private val actions  = new AtomicReference[List[SequencedAction]](List.empty)
 
   private def archive: ThorpArchive = new ThorpArchive {
-    override def update(uiChannel: UChannel[Any, UIEvent],
-                        sequencedAction: SequencedAction,
-                        totalBytesSoFar: Long)
-      : ZIO[Storage with Config, Nothing, StorageEvent] = UIO {
+    override def update(
+        configuration: Configuration,
+        uiChannel: UChannel[Any, UIEvent],
+        sequencedAction: SequencedAction,
+        totalBytesSoFar: Long): ZIO[Storage, Nothing, StorageEvent] = UIO {
       actions.updateAndGet(l => sequencedAction :: l)
       StorageEvent.doNothingEvent(sequencedAction.action.remoteKey)
     }
@@ -65,18 +62,20 @@ class LocalFileSystemTest extends FreeSpec {
 
   private object TestEnv
       extends Clock.Live
-      with Config.Live
       with FileScanner.Live
       with Storage.Test
 
   "scanCopyUpload" - {
-    def sender(objects: RemoteObjects): UIO[MessageChannel.ESender[
-      Clock with Config with FileScanner with Config with Storage,
-      Throwable,
-      UIEvent]] =
+    def sender(configuration: Configuration, objects: RemoteObjects)
+      : UIO[MessageChannel.ESender[Clock with FileScanner with Storage,
+                                   Throwable,
+                                   UIEvent]] =
       UIO { uiChannel =>
         (for {
-          _ <- LocalFileSystem.scanCopyUpload(uiChannel, objects, archive)
+          _ <- LocalFileSystem.scanCopyUpload(configuration,
+                                              uiChannel,
+                                              objects,
+                                              archive)
         } yield ()) <* MessageChannel.endChannel(uiChannel)
       }
     def receiver(): UIO[MessageChannel.UReceiver[Any, UIEvent]] =
@@ -85,14 +84,14 @@ class LocalFileSystemTest extends FreeSpec {
         uiEvents.updateAndGet(l => uiEvent :: l)
         UIO(())
       }
-    def program(remoteObjects: RemoteObjects) =
+    def program(remoteObjects: RemoteObjects) = {
+      val configuration = ConfigurationBuilder.buildConfig(configOptions)
       for {
-        config   <- ConfigurationBuilder.buildConfig(configOptions)
-        _        <- Config.set(config)
-        sender   <- sender(remoteObjects)
+        sender   <- sender(configuration, remoteObjects)
         receiver <- receiver()
         _        <- MessageChannel.pointToPoint(sender)(receiver).runDrain
       } yield ()
+    }
     "where remote has no objects" - {
       val remoteObjects = RemoteObjects.empty
       "upload all files" - {
@@ -249,13 +248,14 @@ class LocalFileSystemTest extends FreeSpec {
   }
 
   "scanDelete" - {
-    def sender(objects: RemoteObjects)
-      : UIO[MessageChannel.ESender[Clock with Config with Storage,
-                                   Throwable,
-                                   UIEvent]] =
+    def sender(configuration: Configuration, objects: RemoteObjects)
+      : UIO[MessageChannel.ESender[Clock with Storage, Throwable, UIEvent]] =
       UIO { uiChannel =>
         (for {
-          _ <- LocalFileSystem.scanDelete(uiChannel, objects, archive)
+          _ <- LocalFileSystem.scanDelete(configuration,
+                                          uiChannel,
+                                          objects,
+                                          archive)
         } yield ()) <* MessageChannel.endChannel(uiChannel)
       }
     def receiver(): UIO[MessageChannel.UReceiver[Any, UIEvent]] =
@@ -265,13 +265,14 @@ class LocalFileSystemTest extends FreeSpec {
         UIO(())
       }
     def program(remoteObjects: RemoteObjects) = {
-      for {
-        config   <- ConfigurationBuilder.buildConfig(configOptions)
-        _        <- Config.set(config)
-        sender   <- sender(remoteObjects)
-        receiver <- receiver()
-        _        <- MessageChannel.pointToPoint(sender)(receiver).runDrain
-      } yield ()
+      {
+        val configuration = ConfigurationBuilder.buildConfig(configOptions)
+        for {
+          sender   <- sender(configuration, remoteObjects)
+          receiver <- receiver()
+          _        <- MessageChannel.pointToPoint(sender)(receiver).runDrain
+        } yield ()
+      }
     }
     "where remote has no extra objects" - {
       val remoteObjects = RemoteObjects.create(

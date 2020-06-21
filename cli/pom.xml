@@ -22,21 +22,28 @@
             <artifactId>thorp-filesystem</artifactId>
         </dependency>
 
+        <!-- command line parsing -->
+        <dependency>
+            <groupId>com.github.scopt</groupId>
+            <artifactId>scopt_2.13</artifactId>
+        </dependency>
+
         <!-- scala -->
         <dependency>
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-library</artifactId>
         </dependency>
 
+        <!-- zio -->
+        <dependency>
+            <groupId>dev.zio</groupId>
+            <artifactId>zio_2.13</artifactId>
+        </dependency>
+
         <!-- scala - testing -->
         <dependency>
             <groupId>org.scalatest</groupId>
             <artifactId>scalatest_2.13</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.scalamock</groupId>
-            <artifactId>scalamock_2.13</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

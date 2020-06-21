@@ -3,17 +3,17 @@ package net.kemitix.thorp.lib
 import java.io.File
 import java.nio.file.Path
 
-import net.kemitix.thorp.config.Config
+import net.kemitix.thorp.config.Configuration
 import net.kemitix.thorp.domain.Filter
 import net.kemitix.thorp.domain.Filter.{Exclude, Include}
-import zio.ZIO
+import zio.UIO
+
+import scala.jdk.CollectionConverters._
 
 object Filters {
 
-  def isIncluded(file: File): ZIO[Config, Nothing, Boolean] =
-    for {
-      filters <- Config.filters
-    } yield isIncluded(file.toPath)(filters)
+  def isIncluded(configuration: Configuration, file: File): UIO[Boolean] =
+    UIO(isIncluded(file.toPath)(configuration.filters.asScala.toList))
 
   def isIncluded(p: Path)(filters: List[Filter]): Boolean = {
     sealed trait State

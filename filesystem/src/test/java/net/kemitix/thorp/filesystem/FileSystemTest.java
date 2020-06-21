@@ -19,16 +19,12 @@ public class FileSystemTest
     public void fileExists() throws IOException {
         withDirectory(dir -> {
             String filename = "filename";
-            try {
-                createFile(dir, filename, Collections.emptyList());
-                RemoteKey remoteKey = RemoteKey.create(filename);
-                Sources sources = Sources.create(Collections.singletonList(dir));
-                RemoteKey prefix = RemoteKey.create("");
-                boolean result = FileSystem.hasLocalFile(sources, prefix, remoteKey);
-                assertThat(result).isTrue();
-            } catch (FileNotFoundException | UnsupportedEncodingException e) {
-                throw new RuntimeException(e);
-            }
+            createFile(dir, filename, Collections.emptyList());
+            RemoteKey remoteKey = RemoteKey.create(filename);
+            Sources sources = Sources.create(Collections.singletonList(dir));
+            RemoteKey prefix = RemoteKey.create("");
+            boolean result = FileSystem.hasLocalFile(sources, prefix, remoteKey);
+            assertThat(result).isTrue();
         });
     }
     @Test

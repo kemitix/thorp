@@ -4,7 +4,7 @@ import scala.jdk.OptionConverters._
 import scala.jdk.CollectionConverters._
 import net.kemitix.eip.zio.MessageChannel.UChannel
 import net.kemitix.eip.zio.{Message, MessageChannel}
-import net.kemitix.thorp.config.Config
+import net.kemitix.thorp.config.Configuration
 import net.kemitix.thorp.domain.RemoteObjects
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.filesystem.FileSystem
@@ -16,39 +16,43 @@ import zio.clock.Clock
 trait LocalFileSystem {
 
   def scanCopyUpload(
+      configuration: Configuration,
       uiChannel: UChannel[Any, UIEvent],
       remoteObjects: RemoteObjects,
       archive: ThorpArchive
-  ): RIO[Clock with Config with FileScanner with Storage, Seq[StorageEvent]]
+  ): RIO[Clock with FileScanner with Storage, Seq[StorageEvent]]
 
   def scanDelete(
+      configuration: Configuration,
       uiChannel: UChannel[Any, UIEvent],
       remoteData: RemoteObjects,
       archive: ThorpArchive
-  ): RIO[Clock with Config with Storage, Seq[StorageEvent]]
+  ): RIO[Clock with Storage, Seq[StorageEvent]]
 
 }
 object LocalFileSystem extends LocalFileSystem {
 
   override def scanCopyUpload(
+      configuration: Configuration,
       uiChannel: UChannel[Any, UIEvent],
       remoteObjects: RemoteObjects,
       archive: ThorpArchive
-  ): RIO[Clock with Config with FileScanner with Storage, Seq[StorageEvent]] =
+  ): RIO[Clock with FileScanner with Storage, Seq[StorageEvent]] =
     for {
       actionCounter <- Ref.make(0)
       bytesCounter  <- Ref.make(0L)
       uploads       <- Ref.make(Map.empty[MD5Hash, Promise[Throwable, RemoteKey]])
       eventsRef     <- Ref.make(List.empty[StorageEvent])
-      fileSender    <- FileScanner.scanSources
-      fileReceiver <- fileReceiver(uiChannel,
+      fileSender    <- FileScanner.scanSources(configuration)
+      fileReceiver <- fileReceiver(configuration,
+                                   uiChannel,
                                    remoteObjects,
                                    archive,
                                    uploads,
                                    actionCounter,
                                    bytesCounter,
                                    eventsRef)
-      parallel <- Config.parallel
+      parallel = configuration.parallel
       _ <- MessageChannel
         .pointToPointPar(parallel)(fileSender)(fileReceiver)
         .runDrain
@@ -56,21 +60,23 @@ object LocalFileSystem extends LocalFileSystem {
     } yield events
 
   override def scanDelete(
+      configuration: Configuration,
       uiChannel: UChannel[Any, UIEvent],
       remoteData: RemoteObjects,
       archive: ThorpArchive
-  ): RIO[Clock with Config with Storage, Seq[StorageEvent]] =
+  ): RIO[Clock with Storage, Seq[StorageEvent]] =
     for {
       actionCounter <- Ref.make(0)
       bytesCounter  <- Ref.make(0L)
       eventsRef     <- Ref.make(List.empty[StorageEvent])
       keySender     <- keySender(remoteData.byKey.keys.asScala)
-      keyReceiver <- keyReceiver(uiChannel,
+      keyReceiver <- keyReceiver(configuration,
+                                 uiChannel,
                                  archive,
                                  actionCounter,
                                  bytesCounter,
                                  eventsRef)
-      parallel <- Config.parallel
+      parallel = configuration.parallel
       _ <- MessageChannel
         .pointToPointPar(parallel)(keySender)(keyReceiver)
         .runDrain
@@ -78,6 +84,7 @@ object LocalFileSystem extends LocalFileSystem {
     } yield events
 
   private def fileReceiver(
+      configuration: Configuration,
       uiChannel: UChannel[Any, UIEvent],
       remoteObjects: RemoteObjects,
       archive: ThorpArchive,
@@ -85,19 +92,25 @@ object LocalFileSystem extends LocalFileSystem {
       actionCounterRef: Ref[Int],
       bytesCounterRef: Ref[Long],
       eventsRef: Ref[List[StorageEvent]]
-  ): UIO[MessageChannel.UReceiver[Clock with Config with Storage,
-                                  FileScanner.ScannedFile]] =
+  ): UIO[
+    MessageChannel.UReceiver[Clock with Storage, FileScanner.ScannedFile]] =
     UIO { message =>
       val localFile = message.body
       for {
-        _             <- uiFileFound(uiChannel)(localFile)
-        action        <- chooseAction(remoteObjects, uploads, uiChannel)(localFile)
+        _ <- uiFileFound(uiChannel)(localFile)
+        action <- chooseAction(configuration,
+                               remoteObjects,
+                               uploads,
+                               uiChannel)(localFile)
         actionCounter <- actionCounterRef.update(_ + 1)
         bytesCounter  <- bytesCounterRef.update(_ + action.size)
         _             <- uiActionChosen(uiChannel)(action)
         sequencedAction = SequencedAction(action, actionCounter)
-        event <- archive.update(uiChannel, sequencedAction, bytesCounter)
-        _     <- eventsRef.update(list => event :: list)
+        event <- archive.update(configuration,
+                                uiChannel,
+                                sequencedAction,
+                                bytesCounter)
+        _ <- eventsRef.update(list => event :: list)
         _ <- uiActionFinished(uiChannel)(action,
                                          actionCounter,
                                          bytesCounter,
@@ -126,26 +139,26 @@ object LocalFileSystem extends LocalFileSystem {
       MessageChannel.send(uiChannel)
 
   private def chooseAction(
+      configuration: Configuration,
       remoteObjects: RemoteObjects,
       uploads: Ref[Map[MD5Hash, Promise[Throwable, RemoteKey]]],
       uiChannel: UChannel[Any, UIEvent],
-  )(localFile: LocalFile): ZIO[Config with Clock, Nothing, Action] = {
+  )(localFile: LocalFile): ZIO[Clock, Nothing, Action] = {
     for {
       remoteExists  <- UIO(remoteObjects.remoteKeyExists(localFile.remoteKey))
       remoteMatches <- UIO(remoteObjects.remoteMatchesLocalFile(localFile))
       remoteForHash <- UIO(
         remoteObjects.remoteHasHash(localFile.hashes).toScala)
       previous <- uploads.get
-      bucket   <- Config.bucket
+      bucket = configuration.bucket
       action <- if (remoteExists && remoteMatches)
         doNothing(localFile, bucket)
       else {
         remoteForHash match {
-          case pair: Some[Tuple[RemoteKey, MD5Hash]] => {
+          case pair: Some[Tuple[RemoteKey, MD5Hash]] =>
             val sourceKey = pair.value.a
             val hash      = pair.value.b
             doCopy(localFile, bucket, sourceKey, hash)
-          }
           case _ if matchesPreviousUpload(previous, localFile.hashes) =>
             doCopyWithPreviousUpload(localFile, bucket, previous, uiChannel)
           case _ =>
@@ -237,30 +250,34 @@ object LocalFileSystem extends LocalFileSystem {
     }
 
   def keyReceiver(
+      configuration: Configuration,
       uiChannel: UChannel[Any, UIEvent],
       archive: ThorpArchive,
       actionCounterRef: Ref[Int],
       bytesCounterRef: Ref[Long],
       eventsRef: Ref[List[StorageEvent]]
-  ): UIO[MessageChannel.UReceiver[Clock with Config with Storage, RemoteKey]] =
+  ): UIO[MessageChannel.UReceiver[Clock with Storage, RemoteKey]] =
     UIO { message =>
       {
         val remoteKey = message.body
         for {
-          _       <- uiKeyFound(uiChannel)(remoteKey)
-          sources <- Config.sources
-          prefix  <- Config.prefix
-          exists = FileSystem.hasLocalFile(sources, prefix, remoteKey)
+          _ <- uiKeyFound(uiChannel)(remoteKey)
+          sources = configuration.sources
+          prefix  = configuration.prefix
+          exists  = FileSystem.hasLocalFile(sources, prefix, remoteKey)
           _ <- ZIO.when(!exists) {
             for {
               actionCounter <- actionCounterRef.update(_ + 1)
-              bucket        <- Config.bucket
+              bucket = configuration.bucket
               action = Action.toDelete(bucket, remoteKey, 0L)
               _            <- uiActionChosen(uiChannel)(action)
               bytesCounter <- bytesCounterRef.update(_ + action.size)
               sequencedAction = SequencedAction(action, actionCounter)
-              event <- archive.update(uiChannel, sequencedAction, 0L)
-              _     <- eventsRef.update(list => event :: list)
+              event <- archive.update(configuration,
+                                      uiChannel,
+                                      sequencedAction,
+                                      0L)
+              _ <- eventsRef.update(list => event :: list)
               _ <- uiActionFinished(uiChannel)(action,
                                                actionCounter,
                                                bytesCounter,
