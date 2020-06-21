@@ -12,36 +12,17 @@
     <name>console</name>
 
     <dependencies>
+        <!-- lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- thorp -->
         <dependency>
             <groupId>net.kemitix.thorp</groupId>
             <artifactId>thorp-domain</artifactId>
         </dependency>
-
-        <!-- scala -->
-        <dependency>
-            <groupId>org.scala-lang</groupId>
-            <artifactId>scala-library</artifactId>
-        </dependency>
-
-        <!-- zio -->
-        <dependency>
-            <groupId>dev.zio</groupId>
-            <artifactId>zio_2.13</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>dev.zio</groupId>
-            <artifactId>zio-streams_2.13</artifactId>
-        </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>net.alchim31.maven</groupId>
-                <artifactId>scala-maven-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
-
 </project>

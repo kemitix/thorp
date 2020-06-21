@@ -23,21 +23,24 @@ import scala.jdk.CollectionConverters._
 
 trait Program {
 
-  val version           = "0.11.0"
+  val version = "0.11.0"
   lazy val versionLabel = s"${WHITE}Thorp v$version$RESET"
 
-  def run(args: List[String])
-    : ZIO[Storage with Console with Clock with FileScanner, Nothing, Unit] = {
+  def run(
+    args: List[String]
+  ): ZIO[Storage with Clock with FileScanner, Nothing, Unit] = {
     (for {
-      cli    <- CliArgs.parse(args)
+      cli <- CliArgs.parse(args)
       config <- IO(ConfigurationBuilder.buildConfig(cli))
-      _      <- Console.putStrLn(versionLabel)
+      _ <- UIO(Console.putStrLn(versionLabel))
       _ <- ZIO.when(!showVersion(cli))(
-        executeWithUI(config).catchAll(handleErrors))
+        executeWithUI(config).catchAll(handleErrors)
+      )
     } yield ())
       .catchAll(e => {
         Console.putStrLn("An ERROR occurred:")
         Console.putStrLn(e.getMessage)
+        UIO.unit
       })
 
   }
@@ -45,33 +48,30 @@ trait Program {
   private def showVersion: ConfigOptions => Boolean =
     cli => ConfigQuery.showVersion(cli)
 
-  private def executeWithUI(configuration: Configuration) =
+  private def executeWithUI(
+    configuration: Configuration
+  ): ZIO[Storage with Clock with FileScanner, Throwable, Unit] =
     for {
-      uiEventSender   <- execute(configuration)
+      uiEventSender <- execute(configuration)
       uiEventReceiver <- UIShell.receiver(configuration)
-      _               <- MessageChannel.pointToPoint(uiEventSender)(uiEventReceiver).runDrain
+      _ <- MessageChannel.pointToPoint(uiEventSender)(uiEventReceiver).runDrain
     } yield ()
 
   type UIChannel = UChannel[Any, UIEvent]
 
-  private def execute(configuration: Configuration): ZIO[
-    Any,
-    Nothing,
-    MessageChannel.ESender[Storage with Clock with FileScanner with Console,
-                           Throwable,
-                           UIEvent]] = UIO { uiChannel =>
+  private def execute(
+    configuration: Configuration
+  ): UIO[MessageChannel.ESender[Storage with Clock with FileScanner,
+                                Throwable,
+                                UIEvent]] = UIO { uiChannel =>
     (for {
-      _          <- showValidConfig(uiChannel)
+      _ <- showValidConfig(uiChannel)
       remoteData <- fetchRemoteData(configuration, uiChannel)
-      archive    <- UIO(UnversionedMirrorArchive)
-      copyUploadEvents <- LocalFileSystem.scanCopyUpload(configuration,
-                                                         uiChannel,
-                                                         remoteData,
-                                                         archive)
-      deleteEvents <- LocalFileSystem.scanDelete(configuration,
-                                                 uiChannel,
-                                                 remoteData,
-                                                 archive)
+      archive <- UIO(UnversionedMirrorArchive)
+      copyUploadEvents <- LocalFileSystem
+        .scanCopyUpload(configuration, uiChannel, remoteData, archive)
+      deleteEvents <- LocalFileSystem
+        .scanDelete(configuration, uiChannel, remoteData, archive)
       _ <- showSummary(uiChannel)(copyUploadEvents ++ deleteEvents)
     } yield ()) <* MessageChannel.endChannel(uiChannel)
   }
@@ -79,9 +79,10 @@ trait Program {
   private def showValidConfig(uiChannel: UIChannel) =
     Message.create(UIEvent.ShowValidConfig) >>= MessageChannel.send(uiChannel)
 
-  private def fetchRemoteData(configuration: Configuration,
-                              uiChannel: UIChannel)
-    : ZIO[Clock with Storage with Console, Throwable, RemoteObjects] = {
+  private def fetchRemoteData(
+    configuration: Configuration,
+    uiChannel: UIChannel
+  ): ZIO[Clock with Storage, Throwable, RemoteObjects] = {
     val bucket = configuration.bucket
     val prefix = configuration.prefix
     for {
@@ -92,17 +93,21 @@ trait Program {
   }
 
   private def handleErrors(throwable: Throwable) =
-    Console.putStrLn("There were errors:") *> logValidationErrors(throwable)
+    UIO(Console.putStrLn("There were errors:")) *> logValidationErrors(
+      throwable
+    )
 
   private def logValidationErrors(throwable: Throwable) =
     throwable match {
       case validateError: ConfigValidationException =>
-        ZIO.foreach_(validateError.getErrors.asScala)(error =>
-          Console.putStrLn(s"- $error"))
+        ZIO.foreach_(validateError.getErrors.asScala)(
+          error => UIO(Console.putStrLn(s"- $error"))
+        )
     }
 
-  private def showSummary(uiChannel: UIChannel)(
-      events: Seq[StorageEvent]): RIO[Clock, Unit] = {
+  private def showSummary(
+    uiChannel: UIChannel
+  )(events: Seq[StorageEvent]): RIO[Clock, Unit] = {
     val counters = events.foldLeft(Counters.empty)(countActivities)
     Message.create(UIEvent.ShowSummary(counters)) >>=
       MessageChannel.send(uiChannel)

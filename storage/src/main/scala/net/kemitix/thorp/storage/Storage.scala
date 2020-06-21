@@ -1,6 +1,5 @@
 package net.kemitix.thorp.storage
 
-import net.kemitix.thorp.console.Console
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.uishell.UploadEventListener
 import zio.{RIO, Task, UIO, ZIO}
@@ -12,28 +11,20 @@ trait Storage {
 object Storage {
   trait Service {
 
-    def listObjects(
-        bucket: Bucket,
-        prefix: RemoteKey
-    ): RIO[Storage with Console, RemoteObjects]
+    def listObjects(bucket: Bucket,
+                    prefix: RemoteKey): RIO[Storage, RemoteObjects]
 
-    def upload(
-        localFile: LocalFile,
-        bucket: Bucket,
-        listenerSettings: UploadEventListener.Settings,
+    def upload(localFile: LocalFile,
+               bucket: Bucket,
+               listenerSettings: UploadEventListener.Settings,
     ): ZIO[Storage, Nothing, StorageEvent]
 
-    def copy(
-        bucket: Bucket,
-        sourceKey: RemoteKey,
-        hash: MD5Hash,
-        targetKey: RemoteKey
-    ): ZIO[Storage, Nothing, StorageEvent]
+    def copy(bucket: Bucket,
+             sourceKey: RemoteKey,
+             hash: MD5Hash,
+             targetKey: RemoteKey): ZIO[Storage, Nothing, StorageEvent]
 
-    def delete(
-        bucket: Bucket,
-        remoteKey: RemoteKey
-    ): UIO[StorageEvent]
+    def delete(bucket: Bucket, remoteKey: RemoteKey): UIO[StorageEvent]
 
     def shutdown: UIO[StorageEvent]
   }
@@ -58,17 +49,18 @@ object Storage {
         listResult
 
       override def upload(
-          localFile: LocalFile,
-          bucket: Bucket,
-          listenerSettings: UploadEventListener.Settings
+        localFile: LocalFile,
+        bucket: Bucket,
+        listenerSettings: UploadEventListener.Settings
       ): ZIO[Storage, Nothing, StorageEvent] =
         uploadResult
 
       override def copy(
-          bucket: Bucket,
-          sourceKey: RemoteKey,
-          hash: MD5Hash,
-          targetKey: RemoteKey): ZIO[Storage, Nothing, StorageEvent] =
+        bucket: Bucket,
+        sourceKey: RemoteKey,
+        hash: MD5Hash,
+        targetKey: RemoteKey
+      ): ZIO[Storage, Nothing, StorageEvent] =
         copyResult
 
       override def delete(bucket: Bucket,
@@ -84,28 +76,24 @@ object Storage {
   object Test extends Test
 
   final def list(bucket: Bucket,
-                 prefix: RemoteKey): RIO[Storage with Console, RemoteObjects] =
+                 prefix: RemoteKey): RIO[Storage, RemoteObjects] =
     ZIO.accessM(_.storage listObjects (bucket, prefix))
 
   final def upload(
-      localFile: LocalFile,
-      bucket: Bucket,
-      listenerSettings: UploadEventListener.Settings
+    localFile: LocalFile,
+    bucket: Bucket,
+    listenerSettings: UploadEventListener.Settings
   ): ZIO[Storage, Nothing, StorageEvent] =
     ZIO.accessM(_.storage upload (localFile, bucket, listenerSettings))
 
-  final def copy(
-      bucket: Bucket,
-      sourceKey: RemoteKey,
-      hash: MD5Hash,
-      targetKey: RemoteKey
-  ): ZIO[Storage, Nothing, StorageEvent] =
+  final def copy(bucket: Bucket,
+                 sourceKey: RemoteKey,
+                 hash: MD5Hash,
+                 targetKey: RemoteKey): ZIO[Storage, Nothing, StorageEvent] =
     ZIO.accessM(_.storage copy (bucket, sourceKey, hash, targetKey))
 
-  final def delete(
-      bucket: Bucket,
-      remoteKey: RemoteKey
-  ): ZIO[Storage, Nothing, StorageEvent] =
+  final def delete(bucket: Bucket,
+                   remoteKey: RemoteKey): ZIO[Storage, Nothing, StorageEvent] =
     ZIO.accessM(_.storage delete (bucket, remoteKey))
 
 }
