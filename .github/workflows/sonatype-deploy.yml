@@ -1,8 +1,9 @@
 name: sonatype-deploy
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - "v*"
 
 jobs:
   deploy:
@@ -37,3 +38,10 @@ jobs:
           NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
           GPG_KEYNAME: ${{ secrets.GPG_KEYNAME }}
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest"
+          prerelease: false
+          files: |
+            app/target/thorp-*.jar
