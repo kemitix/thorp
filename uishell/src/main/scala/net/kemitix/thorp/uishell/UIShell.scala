@@ -14,7 +14,7 @@ object UIShell {
   ): UIO[MessageChannel.UReceiver[Any, UIEvent]] =
     UIO { uiEventMessage =>
       uiEventMessage.body match {
-        case uie: UIEvent.ShowValidConfig   => showValidConfig(configuration)
+        case _: UIEvent.ShowValidConfig     => showValidConfig(configuration)
         case uie: UIEvent.RemoteDataFetched => remoteDataFetched(uie.size)
         case uie: UIEvent.ShowSummary       => showSummary(uie.counters)
         case uie: UIEvent.FileFound         => fileFound(configuration, uie.localFile)
@@ -26,7 +26,7 @@ object UIShell {
           uploadWaitComplete(uie.action)
         case uie: UIEvent.ActionFinished =>
           actionFinished(configuration, uie.event)
-        case uie: UIEvent.KeyFound => UIO(())
+        case _: UIEvent.KeyFound => UIO.unit
         case uie: UIEvent.RequestCycle =>
           ProgressUI.requestCycle(
             configuration,
@@ -35,6 +35,7 @@ object UIShell {
             uie.index,
             uie.totalBytesSoFar
           )
+          UIO.unit
       }
     }
 
@@ -57,6 +58,7 @@ object UIShell {
           Console
             .putMessageLnB(ConsoleOut.uploadComplete(remoteKey), batchMode)
           ProgressUI.finishedUploading(remoteKey)
+          UIO.unit
         case deleteEvent: StorageEvent.DeleteEvent =>
           val remoteKey = deleteEvent.remoteKey
           Console.putMessageLnB(ConsoleOut.deleteComplete(remoteKey), batchMode)
@@ -65,13 +67,13 @@ object UIShell {
           val remoteKey = errorEvent.remoteKey
           val action = errorEvent.action
           val e = errorEvent.e
-          ProgressUI.finishedUploading(remoteKey) *>
-            UIO(
-              Console.putMessageLnB(
-                ConsoleOut.errorQueueEventOccurred(action, e),
-                batchMode
-              )
+          ProgressUI.finishedUploading(remoteKey)
+          UIO(
+            Console.putMessageLnB(
+              ConsoleOut.errorQueueEventOccurred(action, e),
+              batchMode
             )
+          )
         case _: StorageEvent.ShutdownEvent => UIO.unit
       }
     } yield ()
