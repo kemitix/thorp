@@ -103,6 +103,7 @@ public interface ConfigOption {
     static ConfigOption batchMode() {
         return new BatchMode();
     }
+    @EqualsAndHashCode
     class BatchMode implements ConfigOption {
         @Override
         public Configuration update(Configuration config) {
@@ -117,6 +118,7 @@ public interface ConfigOption {
     static ConfigOption version() {
         return new Version();
     }
+    @EqualsAndHashCode
     class Version implements ConfigOption {
         @Override
         public Configuration update(Configuration config) {
@@ -131,6 +133,7 @@ public interface ConfigOption {
     static ConfigOption ignoreUserOptions() {
         return new IgnoreUserOptions();
     }
+    @EqualsAndHashCode
     class IgnoreUserOptions implements ConfigOption {
         @Override
         public Configuration update(Configuration config) {
@@ -145,6 +148,7 @@ public interface ConfigOption {
     static ConfigOption ignoreGlobalOptions() {
         return new IgnoreGlobalOptions();
     }
+    @EqualsAndHashCode
     class IgnoreGlobalOptions implements ConfigOption {
         @Override
         public Configuration update(Configuration config) {

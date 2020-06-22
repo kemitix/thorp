@@ -30,7 +30,7 @@ trait Program {
     args: List[String]
   ): ZIO[Storage with Clock with FileScanner, Nothing, Unit] = {
     (for {
-      cli <- CliArgs.parse(args)
+      cli <- UIO(CliArgs.parse(args.toArray))
       config <- IO(ConfigurationBuilder.buildConfig(cli))
       _ <- UIO(Console.putStrLn(versionLabel))
       _ <- ZIO.when(!showVersion(cli))(
