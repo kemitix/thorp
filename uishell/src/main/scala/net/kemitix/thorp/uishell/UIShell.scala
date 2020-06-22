@@ -14,30 +14,26 @@ object UIShell {
   ): UIO[MessageChannel.UReceiver[Any, UIEvent]] =
     UIO { uiEventMessage =>
       uiEventMessage.body match {
-        case UIEvent.ShowValidConfig         => showValidConfig(configuration)
-        case UIEvent.RemoteDataFetched(size) => remoteDataFetched(size)
-        case UIEvent.ShowSummary(counters)   => showSummary(counters)
-        case UIEvent.FileFound(localFile)    => fileFound(configuration, localFile)
-        case UIEvent.ActionChosen(action)    => actionChosen(configuration, action)
-        case UIEvent.AwaitingAnotherUpload(remoteKey, hash) =>
-          awaitingUpload(remoteKey, hash)
-        case UIEvent.AnotherUploadWaitComplete(action) =>
-          uploadWaitComplete(action)
-        case UIEvent.ActionFinished(_, _, _, event) =>
-          actionFinished(configuration, event)
-        case UIEvent.KeyFound(_) => UIO(())
-        case UIEvent.RequestCycle(
-            localFile,
-            bytesTransferred,
-            index,
-            totalBytesSoFar
-            ) =>
+        case uie: UIEvent.ShowValidConfig   => showValidConfig(configuration)
+        case uie: UIEvent.RemoteDataFetched => remoteDataFetched(uie.size)
+        case uie: UIEvent.ShowSummary       => showSummary(uie.counters)
+        case uie: UIEvent.FileFound         => fileFound(configuration, uie.localFile)
+        case uie: UIEvent.ActionChosen =>
+          actionChosen(configuration, uie.action)
+        case uie: UIEvent.AwaitingAnotherUpload =>
+          awaitingUpload(uie.remoteKey, uie.hash)
+        case uie: UIEvent.AnotherUploadWaitComplete =>
+          uploadWaitComplete(uie.action)
+        case uie: UIEvent.ActionFinished =>
+          actionFinished(configuration, uie.event)
+        case uie: UIEvent.KeyFound => UIO(())
+        case uie: UIEvent.RequestCycle =>
           ProgressUI.requestCycle(
             configuration,
-            localFile,
-            bytesTransferred,
-            index,
-            totalBytesSoFar
+            uie.localFile,
+            uie.bytesTransferred,
+            uie.index,
+            uie.totalBytesSoFar
           )
       }
     }

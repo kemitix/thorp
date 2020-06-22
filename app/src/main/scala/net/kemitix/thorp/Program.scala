@@ -77,7 +77,7 @@ trait Program {
   }
 
   private def showValidConfig(uiChannel: UIChannel) =
-    Message.create(UIEvent.ShowValidConfig) >>= MessageChannel.send(uiChannel)
+    Message.create(UIEvent.showValidConfig) >>= MessageChannel.send(uiChannel)
 
   private def fetchRemoteData(
     configuration: Configuration,
@@ -87,7 +87,7 @@ trait Program {
     val prefix = configuration.prefix
     for {
       objects <- Storage.list(bucket, prefix)
-      _ <- Message.create(UIEvent.RemoteDataFetched(objects.byKey.size)) >>= MessageChannel
+      _ <- Message.create(UIEvent.remoteDataFetched(objects.byKey.size)) >>= MessageChannel
         .send(uiChannel)
     } yield objects
   }
@@ -109,7 +109,7 @@ trait Program {
     uiChannel: UIChannel
   )(events: Seq[StorageEvent]): RIO[Clock, Unit] = {
     val counters = events.foldLeft(Counters.empty)(countActivities)
-    Message.create(UIEvent.ShowSummary(counters)) >>=
+    Message.create(UIEvent.showSummary(counters)) >>=
       MessageChannel.send(uiChannel)
   }
 
