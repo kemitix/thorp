@@ -1,4 +1,4 @@
-package net.kemitix.thorp.lib;
+package net.kemitix.thorp.domain;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
