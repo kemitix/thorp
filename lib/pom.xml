@@ -12,6 +12,12 @@
     <name>lib</name>
 
     <dependencies>
+        <!-- lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+        </dependency>
+
         <!-- thorp -->
         <dependency>
             <groupId>net.kemitix.thorp</groupId>
