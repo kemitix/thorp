@@ -13,7 +13,6 @@ import net.kemitix.thorp.config.{
 import net.kemitix.thorp.domain.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.filesystem.Resource
-import net.kemitix.thorp.storage.Storage
 import net.kemitix.thorp.uishell.UIEvent
 import net.kemitix.thorp.uishell.UIEvent.{
   ActionChosen,
@@ -24,7 +23,7 @@ import net.kemitix.thorp.uishell.UIEvent.{
 import org.scalatest.FreeSpec
 import org.scalatest.Matchers._
 import zio.clock.Clock
-import zio.{DefaultRuntime, UIO, ZIO}
+import zio.{DefaultRuntime, UIO}
 
 import scala.collection.MapView
 import scala.jdk.CollectionConverters._
@@ -49,12 +48,10 @@ class LocalFileSystemTest extends FreeSpec {
   private val actions = new AtomicReference[List[SequencedAction]](List.empty)
 
   private def archive: ThorpArchive = new ThorpArchive {
-    override def update(
-      configuration: Configuration,
-      uiChannel: UChannel[Any, UIEvent],
-      sequencedAction: SequencedAction,
-      totalBytesSoFar: Long
-    ): ZIO[Storage, Nothing, StorageEvent] = UIO {
+    override def update(configuration: Configuration,
+                        uiChannel: UChannel[Any, UIEvent],
+                        sequencedAction: SequencedAction,
+                        totalBytesSoFar: Long): UIO[StorageEvent] = UIO {
       actions.updateAndGet(l => sequencedAction :: l)
       StorageEvent.doNothingEvent(sequencedAction.action.remoteKey)
     }
@@ -62,18 +59,13 @@ class LocalFileSystemTest extends FreeSpec {
 
   private val runtime = new DefaultRuntime {}
 
-  private object TestEnv
-      extends Clock.Live
-      with FileScanner.Live
-      with Storage.Test
+  private object TestEnv extends Clock.Live with FileScanner.Live
 
   "scanCopyUpload" - {
     def sender(
       configuration: Configuration,
       objects: RemoteObjects
-    ): UIO[MessageChannel.ESender[Clock with FileScanner with Storage,
-                                  Throwable,
-                                  UIEvent]] =
+    ): UIO[MessageChannel.ESender[Clock with FileScanner, Throwable, UIEvent]] =
       UIO { uiChannel =>
         (for {
           _ <- LocalFileSystem.scanCopyUpload(
@@ -268,7 +260,7 @@ class LocalFileSystemTest extends FreeSpec {
     def sender(
       configuration: Configuration,
       objects: RemoteObjects
-    ): UIO[MessageChannel.ESender[Clock with Storage, Throwable, UIEvent]] =
+    ): UIO[MessageChannel.ESender[Clock, Throwable, UIEvent]] =
       UIO { uiChannel =>
         (for {
           _ <- LocalFileSystem.scanDelete(

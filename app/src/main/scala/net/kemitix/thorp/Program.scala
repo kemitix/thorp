@@ -26,9 +26,7 @@ trait Program {
   val version = "0.11.0"
   lazy val versionLabel = s"${WHITE}Thorp v$version$RESET"
 
-  def run(
-    args: List[String]
-  ): ZIO[Storage with Clock with FileScanner, Nothing, Unit] = {
+  def run(args: List[String]): ZIO[Clock with FileScanner, Nothing, Unit] = {
     (for {
       cli <- UIO(CliArgs.parse(args.toArray))
       config <- IO(ConfigurationBuilder.buildConfig(cli))
@@ -50,7 +48,7 @@ trait Program {
 
   private def executeWithUI(
     configuration: Configuration
-  ): ZIO[Storage with Clock with FileScanner, Throwable, Unit] =
+  ): ZIO[Clock with FileScanner, Throwable, Unit] =
     for {
       uiEventSender <- execute(configuration)
       uiEventReceiver <- UIShell.receiver(configuration)
@@ -61,20 +59,19 @@ trait Program {
 
   private def execute(
     configuration: Configuration
-  ): UIO[MessageChannel.ESender[Storage with Clock with FileScanner,
-                                Throwable,
-                                UIEvent]] = UIO { uiChannel =>
-    (for {
-      _ <- showValidConfig(uiChannel)
-      remoteData <- fetchRemoteData(configuration, uiChannel)
-      archive <- UIO(UnversionedMirrorArchive)
-      copyUploadEvents <- LocalFileSystem
-        .scanCopyUpload(configuration, uiChannel, remoteData, archive)
-      deleteEvents <- LocalFileSystem
-        .scanDelete(configuration, uiChannel, remoteData, archive)
-      _ <- showSummary(uiChannel)(copyUploadEvents ++ deleteEvents)
-    } yield ()) <* MessageChannel.endChannel(uiChannel)
-  }
+  ): UIO[MessageChannel.ESender[Clock with FileScanner, Throwable, UIEvent]] =
+    UIO { uiChannel =>
+      (for {
+        _ <- showValidConfig(uiChannel)
+        remoteData <- fetchRemoteData(configuration, uiChannel)
+        archive <- UIO(UnversionedMirrorArchive)
+        copyUploadEvents <- LocalFileSystem
+          .scanCopyUpload(configuration, uiChannel, remoteData, archive)
+        deleteEvents <- LocalFileSystem
+          .scanDelete(configuration, uiChannel, remoteData, archive)
+        _ <- showSummary(uiChannel)(copyUploadEvents ++ deleteEvents)
+      } yield ()) <* MessageChannel.endChannel(uiChannel)
+    }
 
   private def showValidConfig(uiChannel: UIChannel) =
     Message.create(UIEvent.showValidConfig) >>= MessageChannel.send(uiChannel)
@@ -82,11 +79,11 @@ trait Program {
   private def fetchRemoteData(
     configuration: Configuration,
     uiChannel: UIChannel
-  ): ZIO[Clock with Storage, Throwable, RemoteObjects] = {
+  ): ZIO[Clock, Throwable, RemoteObjects] = {
     val bucket = configuration.bucket
     val prefix = configuration.prefix
+    val objects = Storage.getInstance().list(bucket, prefix)
     for {
-      objects <- Storage.list(bucket, prefix)
       _ <- Message.create(UIEvent.remoteDataFetched(objects.byKey.size)) >>= MessageChannel
         .send(uiChannel)
     } yield objects

@@ -37,7 +37,7 @@ object LocalFileSystem extends LocalFileSystem {
     uiChannel: UChannel[Any, UIEvent],
     remoteObjects: RemoteObjects,
     archive: ThorpArchive
-  ): RIO[Clock with FileScanner with Storage, Seq[StorageEvent]] =
+  ): RIO[Clock with FileScanner, Seq[StorageEvent]] =
     for {
       actionCounter <- Ref.make(0)
       bytesCounter <- Ref.make(0L)
@@ -66,7 +66,7 @@ object LocalFileSystem extends LocalFileSystem {
     uiChannel: UChannel[Any, UIEvent],
     remoteData: RemoteObjects,
     archive: ThorpArchive
-  ): RIO[Clock with Storage, Seq[StorageEvent]] =
+  ): RIO[Clock, Seq[StorageEvent]] =
     for {
       actionCounter <- Ref.make(0)
       bytesCounter <- Ref.make(0L)
@@ -96,9 +96,7 @@ object LocalFileSystem extends LocalFileSystem {
     actionCounterRef: Ref[Int],
     bytesCounterRef: Ref[Long],
     eventsRef: Ref[List[StorageEvent]]
-  ): UIO[
-    MessageChannel.UReceiver[Clock with Storage, FileScanner.ScannedFile]
-  ] =
+  ): UIO[MessageChannel.UReceiver[Clock, FileScanner.ScannedFile]] =
     UIO { message =>
       val localFile = message.body
       for {
@@ -267,7 +265,7 @@ object LocalFileSystem extends LocalFileSystem {
     actionCounterRef: Ref[Int],
     bytesCounterRef: Ref[Long],
     eventsRef: Ref[List[StorageEvent]]
-  ): UIO[MessageChannel.UReceiver[Clock with Storage, RemoteKey]] =
+  ): UIO[MessageChannel.UReceiver[Clock, RemoteKey]] =
     UIO { message =>
       {
         val remoteKey = message.body

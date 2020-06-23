@@ -5,16 +5,15 @@ import net.kemitix.thorp.config.Configuration
 import net.kemitix.thorp.console._
 import net.kemitix.thorp.domain.StorageEvent
 import net.kemitix.thorp.domain.StorageEvent._
-import net.kemitix.thorp.storage.Storage
 import net.kemitix.thorp.uishell.UIEvent
-import zio.{UIO, ZIO}
+import zio.UIO
 
 trait ThorpArchive {
 
   def update(configuration: Configuration,
              uiChannel: UChannel[Any, UIEvent],
              sequencedAction: SequencedAction,
-             totalBytesSoFar: Long): ZIO[Storage, Nothing, StorageEvent]
+             totalBytesSoFar: Long): UIO[StorageEvent]
 
   def logEvent(configuration: Configuration,
                event: StorageEvent): UIO[StorageEvent] = {
