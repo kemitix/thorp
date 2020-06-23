@@ -13,7 +13,6 @@ import net.kemitix.thorp.config.{
 import net.kemitix.thorp.domain.Action.{DoNothing, ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.filesystem.Resource
-import net.kemitix.thorp.storage.Storage
 import net.kemitix.thorp.uishell.UIEvent
 import net.kemitix.thorp.uishell.UIEvent.{
   ActionChosen,
@@ -24,17 +23,17 @@ import net.kemitix.thorp.uishell.UIEvent.{
 import org.scalatest.FreeSpec
 import org.scalatest.Matchers._
 import zio.clock.Clock
-import zio.{DefaultRuntime, UIO, ZIO}
+import zio.{DefaultRuntime, UIO}
 
 import scala.collection.MapView
 import scala.jdk.CollectionConverters._
 
 class LocalFileSystemTest extends FreeSpec {
 
-  private val source       = Resource.select(this, "upload")
-  private val sourcePath   = source.toPath
+  private val source = Resource.select(this, "upload")
+  private val sourcePath = source.toPath
   private val sourceOption = ConfigOption.source(sourcePath)
-  private val bucket       = Bucket.named("bucket")
+  private val bucket = Bucket.named("bucket")
   private val bucketOption = ConfigOption.bucket(bucket.name)
   private val configOptions = ConfigOptions.create(
     List[ConfigOption](
@@ -42,17 +41,17 @@ class LocalFileSystemTest extends FreeSpec {
       bucketOption,
       ConfigOption.ignoreGlobalOptions(),
       ConfigOption.ignoreUserOptions()
-    ).asJava)
+    ).asJava
+  )
 
   private val uiEvents = new AtomicReference[List[UIEvent]](List.empty)
-  private val actions  = new AtomicReference[List[SequencedAction]](List.empty)
+  private val actions = new AtomicReference[List[SequencedAction]](List.empty)
 
   private def archive: ThorpArchive = new ThorpArchive {
-    override def update(
-        configuration: Configuration,
-        uiChannel: UChannel[Any, UIEvent],
-        sequencedAction: SequencedAction,
-        totalBytesSoFar: Long): ZIO[Storage, Nothing, StorageEvent] = UIO {
+    override def update(configuration: Configuration,
+                        uiChannel: UChannel[Any, UIEvent],
+                        sequencedAction: SequencedAction,
+                        totalBytesSoFar: Long): UIO[StorageEvent] = UIO {
       actions.updateAndGet(l => sequencedAction :: l)
       StorageEvent.doNothingEvent(sequencedAction.action.remoteKey)
     }
@@ -60,22 +59,21 @@ class LocalFileSystemTest extends FreeSpec {
 
   private val runtime = new DefaultRuntime {}
 
-  private object TestEnv
-      extends Clock.Live
-      with FileScanner.Live
-      with Storage.Test
+  private object TestEnv extends Clock.Live with FileScanner.Live
 
   "scanCopyUpload" - {
-    def sender(configuration: Configuration, objects: RemoteObjects)
-      : UIO[MessageChannel.ESender[Clock with FileScanner with Storage,
-                                   Throwable,
-                                   UIEvent]] =
+    def sender(
+      configuration: Configuration,
+      objects: RemoteObjects
+    ): UIO[MessageChannel.ESender[Clock with FileScanner, Throwable, UIEvent]] =
       UIO { uiChannel =>
         (for {
-          _ <- LocalFileSystem.scanCopyUpload(configuration,
-                                              uiChannel,
-                                              objects,
-                                              archive)
+          _ <- LocalFileSystem.scanCopyUpload(
+            configuration,
+            uiChannel,
+            objects,
+            archive
+          )
         } yield ()) <* MessageChannel.endChannel(uiChannel)
       }
     def receiver(): UIO[MessageChannel.UReceiver[Any, UIEvent]] =
@@ -87,9 +85,9 @@ class LocalFileSystemTest extends FreeSpec {
     def program(remoteObjects: RemoteObjects) = {
       val configuration = ConfigurationBuilder.buildConfig(configOptions)
       for {
-        sender   <- sender(configuration, remoteObjects)
+        sender <- sender(configuration, remoteObjects)
         receiver <- receiver()
-        _        <- MessageChannel.pointToPoint(sender)(receiver).runDrain
+        _ <- MessageChannel.pointToPoint(sender)(receiver).runDrain
       } yield ()
     }
     "where remote has no objects" - {
@@ -102,7 +100,8 @@ class LocalFileSystemTest extends FreeSpec {
           actionList.filter(_.isInstanceOf[ToUpload]) should have size 2
           actionList.map(_.remoteKey) shouldEqual Set(
             MD5HashData.Root.remoteKey,
-            MD5HashData.Leaf.remoteKey)
+            MD5HashData.Leaf.remoteKey
+          )
         }
         "ui is updated" in {
           uiEvents.set(List.empty)
@@ -112,7 +111,8 @@ class LocalFileSystemTest extends FreeSpec {
           summary should contain inOrderElementsOf List(
             "file found : root-file",
             "action chosen : root-file : ToUpload",
-            "action finished : root-file : ToUpload")
+            "action finished : root-file : ToUpload"
+          )
           summary should contain inOrderElementsOf List(
             "file found : subdir/leaf-file",
             "action chosen : subdir/leaf-file : ToUpload",
@@ -126,10 +126,12 @@ class LocalFileSystemTest extends FreeSpec {
         RemoteObjects.create(
           MapView(
             MD5HashData.Root.hash -> MD5HashData.Root.remoteKey,
-            MD5HashData.Leaf.hash -> MD5HashData.Leaf.remoteKey).toMap.asJava,
+            MD5HashData.Leaf.hash -> MD5HashData.Leaf.remoteKey
+          ).toMap.asJava,
           MapView(
             MD5HashData.Root.remoteKey -> MD5HashData.Root.hash,
-            MD5HashData.Leaf.remoteKey -> MD5HashData.Leaf.hash).toMap.asJava
+            MD5HashData.Leaf.remoteKey -> MD5HashData.Leaf.hash
+          ).toMap.asJava
         )
       "do nothing for all files" - {
         "all archive actions do nothing" in {
@@ -147,7 +149,8 @@ class LocalFileSystemTest extends FreeSpec {
           summary should contain inOrderElementsOf List(
             "file found : root-file",
             "action chosen : root-file : DoNothing",
-            "action finished : root-file : DoNothing")
+            "action finished : root-file : DoNothing"
+          )
           summary should contain inOrderElementsOf List(
             "file found : subdir/leaf-file",
             "action chosen : subdir/leaf-file : DoNothing",
@@ -159,7 +162,7 @@ class LocalFileSystemTest extends FreeSpec {
     "where remote has some objects" - {
       val remoteObjects =
         RemoteObjects.create(
-          MapView(MD5HashData.Root.hash      -> MD5HashData.Root.remoteKey).toMap.asJava,
+          MapView(MD5HashData.Root.hash -> MD5HashData.Root.remoteKey).toMap.asJava,
           MapView(MD5HashData.Root.remoteKey -> MD5HashData.Root.hash).toMap.asJava
         )
       "upload leaf, do nothing for root" - {
@@ -181,7 +184,8 @@ class LocalFileSystemTest extends FreeSpec {
           summary should contain inOrderElementsOf List(
             "file found : root-file",
             "action chosen : root-file : DoNothing",
-            "action finished : root-file : DoNothing")
+            "action finished : root-file : DoNothing"
+          )
           summary should contain inOrderElementsOf List(
             "file found : subdir/leaf-file",
             "action chosen : subdir/leaf-file : ToUpload",
@@ -195,10 +199,12 @@ class LocalFileSystemTest extends FreeSpec {
         RemoteObjects.create(
           MapView(
             MD5HashData.Root.hash -> MD5HashData.Leaf.remoteKey,
-            MD5HashData.Leaf.hash -> MD5HashData.Root.remoteKey).toMap.asJava,
+            MD5HashData.Leaf.hash -> MD5HashData.Root.remoteKey
+          ).toMap.asJava,
           MapView(
             MD5HashData.Root.remoteKey -> MD5HashData.Leaf.hash,
-            MD5HashData.Leaf.remoteKey -> MD5HashData.Root.hash).toMap.asJava
+            MD5HashData.Leaf.remoteKey -> MD5HashData.Root.hash
+          ).toMap.asJava
         )
       "copy files" - {
         "archive swaps objects" ignore {
@@ -213,10 +219,12 @@ class LocalFileSystemTest extends FreeSpec {
         RemoteObjects.create(
           MapView(
             MD5HashData.Root.hash -> otherRootKey,
-            MD5HashData.Leaf.hash -> MD5HashData.Leaf.remoteKey).toMap.asJava,
+            MD5HashData.Leaf.hash -> MD5HashData.Leaf.remoteKey
+          ).toMap.asJava,
           MapView(
-            otherRootKey               -> MD5HashData.Root.hash,
-            MD5HashData.Leaf.remoteKey -> MD5HashData.Leaf.hash).toMap.asJava
+            otherRootKey -> MD5HashData.Root.hash,
+            MD5HashData.Leaf.remoteKey -> MD5HashData.Leaf.hash
+          ).toMap.asJava
         )
       "copy object and delete original" in {
         actions.set(List.empty)
@@ -237,7 +245,8 @@ class LocalFileSystemTest extends FreeSpec {
         summary should contain inOrderElementsOf List(
           "file found : root-file",
           "action chosen : root-file : ToCopy",
-          "action finished : root-file : ToCopy")
+          "action finished : root-file : ToCopy"
+        )
         summary should contain inOrderElementsOf List(
           "file found : subdir/leaf-file",
           "action chosen : subdir/leaf-file : DoNothing",
@@ -248,14 +257,18 @@ class LocalFileSystemTest extends FreeSpec {
   }
 
   "scanDelete" - {
-    def sender(configuration: Configuration, objects: RemoteObjects)
-      : UIO[MessageChannel.ESender[Clock with Storage, Throwable, UIEvent]] =
+    def sender(
+      configuration: Configuration,
+      objects: RemoteObjects
+    ): UIO[MessageChannel.ESender[Clock, Throwable, UIEvent]] =
       UIO { uiChannel =>
         (for {
-          _ <- LocalFileSystem.scanDelete(configuration,
-                                          uiChannel,
-                                          objects,
-                                          archive)
+          _ <- LocalFileSystem.scanDelete(
+            configuration,
+            uiChannel,
+            objects,
+            archive
+          )
         } yield ()) <* MessageChannel.endChannel(uiChannel)
       }
     def receiver(): UIO[MessageChannel.UReceiver[Any, UIEvent]] =
@@ -268,9 +281,9 @@ class LocalFileSystemTest extends FreeSpec {
       {
         val configuration = ConfigurationBuilder.buildConfig(configOptions)
         for {
-          sender   <- sender(configuration, remoteObjects)
+          sender <- sender(configuration, remoteObjects)
           receiver <- receiver()
-          _        <- MessageChannel.pointToPoint(sender)(receiver).runDrain
+          _ <- MessageChannel.pointToPoint(sender)(receiver).runDrain
         } yield ()
       }
     }
@@ -278,10 +291,12 @@ class LocalFileSystemTest extends FreeSpec {
       val remoteObjects = RemoteObjects.create(
         MapView(
           MD5HashData.Root.hash -> MD5HashData.Root.remoteKey,
-          MD5HashData.Leaf.hash -> MD5HashData.Leaf.remoteKey).toMap.asJava,
+          MD5HashData.Leaf.hash -> MD5HashData.Leaf.remoteKey
+        ).toMap.asJava,
         MapView(
           MD5HashData.Root.remoteKey -> MD5HashData.Root.hash,
-          MD5HashData.Leaf.remoteKey -> MD5HashData.Leaf.hash).toMap.asJava
+          MD5HashData.Leaf.remoteKey -> MD5HashData.Leaf.hash
+        ).toMap.asJava
       )
       "do nothing for all files" - {
         "no archive actions" in {
@@ -293,21 +308,27 @@ class LocalFileSystemTest extends FreeSpec {
         "ui is updated" in {
           uiEvents.set(List.empty)
           runtime.unsafeRunSync(program(remoteObjects).provide(TestEnv))
-          uiEventsSummary shouldEqual List("key found: root-file",
-                                           "key found: subdir/leaf-file")
+          uiEventsSummary shouldEqual List(
+            "key found: root-file",
+            "key found: subdir/leaf-file"
+          )
         }
       }
     }
     "where remote has extra objects" - {
-      val extraHash   = MD5Hash.create("extra")
+      val extraHash = MD5Hash.create("extra")
       val extraObject = RemoteKey.create("extra")
       val remoteObjects = RemoteObjects.create(
-        MapView(MD5HashData.Root.hash      -> MD5HashData.Root.remoteKey,
-                MD5HashData.Leaf.hash      -> MD5HashData.Leaf.remoteKey,
-                extraHash                  -> extraObject).toMap.asJava,
-        MapView(MD5HashData.Root.remoteKey -> MD5HashData.Root.hash,
-                MD5HashData.Leaf.remoteKey -> MD5HashData.Leaf.hash,
-                extraObject                -> extraHash).toMap.asJava
+        MapView(
+          MD5HashData.Root.hash -> MD5HashData.Root.remoteKey,
+          MD5HashData.Leaf.hash -> MD5HashData.Leaf.remoteKey,
+          extraHash -> extraObject
+        ).toMap.asJava,
+        MapView(
+          MD5HashData.Root.remoteKey -> MD5HashData.Root.hash,
+          MD5HashData.Leaf.remoteKey -> MD5HashData.Leaf.hash,
+          extraObject -> extraHash
+        ).toMap.asJava
       )
       "remove the extra object" - {
         "archive delete action" in {
@@ -339,18 +360,22 @@ class LocalFileSystemTest extends FreeSpec {
       .get()
       .reverse
       .map {
-        case FileFound(localFile) =>
-          String.format("file found : %s", localFile.remoteKey.key)
-        case ActionChosen(action) =>
-          String.format("action chosen : %s : %s",
-                        action.remoteKey.key,
-                        action.getClass.getSimpleName)
-        case ActionFinished(action, actionCounter, bytesCounter, event) =>
-          String.format("action finished : %s : %s",
-                        action.remoteKey.key,
-                        action.getClass.getSimpleName)
-        case KeyFound(remoteKey) =>
-          String.format("key found: %s", remoteKey.key)
+        case uie: FileFound =>
+          String.format("file found : %s", uie.localFile.remoteKey.key)
+        case uie: ActionChosen =>
+          String.format(
+            "action chosen : %s : %s",
+            uie.action.remoteKey.key,
+            uie.action.getClass.getSimpleName
+          )
+        case uie: ActionFinished =>
+          String.format(
+            "action finished : %s : %s",
+            uie.action.remoteKey.key,
+            uie.action.getClass.getSimpleName
+          )
+        case uie: KeyFound =>
+          String.format("key found: %s", uie.remoteKey.key)
         case x => String.format("unknown : %s", x.getClass.getSimpleName)
       }
   }

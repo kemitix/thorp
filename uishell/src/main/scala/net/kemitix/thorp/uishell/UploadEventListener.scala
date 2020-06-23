@@ -9,13 +9,11 @@ import net.kemitix.thorp.uishell.UploadProgressEvent.RequestEvent
 
 object UploadEventListener {
 
-  final case class Settings(
-      uiChannel: UChannel[Any, UIEvent],
-      localFile: LocalFile,
-      index: Int,
-      totalBytesSoFar: Long,
-      batchMode: Boolean
-  )
+  final case class Settings(uiChannel: UChannel[Any, UIEvent],
+                            localFile: LocalFile,
+                            index: Int,
+                            totalBytesSoFar: Long,
+                            batchMode: Boolean)
 
   def listener(settings: Settings): UploadProgressEvent => Unit = {
     val bytesTransferred = new AtomicLong(0L)
@@ -25,10 +23,14 @@ object UploadEventListener {
           case e: RequestEvent =>
             settings.uiChannel(
               Message.withBody(
-                UIEvent.RequestCycle(settings.localFile,
-                                     bytesTransferred.addAndGet(e.transferred),
-                                     settings.index,
-                                     settings.totalBytesSoFar)))
+                UIEvent.requestCycle(
+                  settings.localFile,
+                  bytesTransferred.addAndGet(e.transferred),
+                  settings.index,
+                  settings.totalBytesSoFar
+                )
+              )
+            )
           case _ => ()
         }
       }

@@ -11,18 +11,6 @@ import java.util.stream.Collectors;
 
 public interface ConsoleOut {
     String en();
-    default String eraseToEndOfScreen() {
-        return Terminal.eraseToEndOfScreen;
-    }
-    default String reset() {
-        return "\u001B[0m";
-    }
-    default String red() {
-        return "\u001B[31m";
-    }
-    default String green() {
-        return "\u001B[32m";
-    }
     interface WithBatchMode extends ConsoleOut, Function<Boolean, String> {
         String enBatch();
         default String selectLine(boolean batchMode) {
@@ -69,9 +57,9 @@ public interface ConsoleOut {
         @Override
         public String en() {
             return String.format("%sUploaded:%s %s%s",
-                    green(), reset(),
+                    Terminal.green, Terminal.reset,
                     remoteKey.key(),
-                    eraseToEndOfScreen());
+                    Terminal.eraseToEndOfScreen);
         }
         @Override
         public String enBatch() {
@@ -89,10 +77,10 @@ public interface ConsoleOut {
         @Override
         public String en() {
             return String.format("%sCopied:%s %s => %s%s",
-                    green(), reset(),
+                    Terminal.green, Terminal.reset,
                     sourceKey.key(),
                     targetKey.key(),
-                    eraseToEndOfScreen());
+                    Terminal.eraseToEndOfScreen);
         }
         @Override
         public String enBatch() {
@@ -113,9 +101,9 @@ public interface ConsoleOut {
         @Override
         public String enBatch() {
             return String.format("%sDeleted%s: %s%s",
-                    green(), reset(),
+                    Terminal.green, Terminal.reset,
                     remoteKey,
-                    eraseToEndOfScreen());
+                    Terminal.eraseToEndOfScreen);
         }
     }
     static ConsoleOut.WithBatchMode errorQueueEventOccurred(
@@ -138,11 +126,11 @@ public interface ConsoleOut {
         @Override
         public String enBatch() {
             return String.format("%sERROR%s: %s %s: %s%s",
-                    red(), reset(),
+                    Terminal.red, Terminal.reset,
                     actionSummary.name(),
                     actionSummary.keys(),
                     error.getMessage(),
-                    eraseToEndOfScreen());
+                    Terminal.eraseToEndOfScreen);
         }
     }
 

@@ -3,7 +3,6 @@ package net.kemitix.thorp.domain;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.IntStream;
 
 public class Terminal {
 
@@ -66,6 +65,10 @@ public class Terminal {
     public static String restoreCursorPosition  = csi + "u";
     public static String enableAlternateBuffer  = csi + "?1049h";
     public static String disableAlternateBuffer = csi + "?1049l";
+
+    public static String red = "\u001B[31m";
+    public static String green = "\u001B[32m";
+    public static String reset = "\u001B[0m";
 
     private static Map<Integer, String> getSubBars() {
         Map<Integer, String> subBars = new HashMap<>();
@@ -186,15 +189,10 @@ public class Terminal {
         int fullHeadSize      = pxDone / phases;
         int part              = pxDone % phases;
         String partial        = part != 0 ? subBars.getOrDefault(part, "") : "";
-        String head           = repeat("█", fullHeadSize) + partial;
+        String head           = StringUtil.repeat("█", fullHeadSize) + partial;
         int tailSize          = barWidth - head.length();
-        String tail           = repeat(" ", tailSize);
+        String tail           = StringUtil.repeat(" ", tailSize);
         return "[" + head + tail + "]";
     }
 
-    private static String repeat(String s, int times) {
-        StringBuilder sb = new StringBuilder();
-        IntStream.range(0, times).forEach(x -> sb.append(s));
-        return sb.toString();
-    }
 }
