@@ -3,14 +3,13 @@ package net.kemitix.thorp.storage.aws.hasher
 import com.amazonaws.services.s3.transfer.TransferManagerConfiguration
 import net.kemitix.thorp.filesystem.Resource
 import org.scalatest.FreeSpec
-import zio.DefaultRuntime
 
 class ETagGeneratorTest extends FreeSpec {
 
-  private val bigFile       = Resource.select(this, "../big-file")
-  private val bigFilePath   = bigFile.toPath
+  private val bigFile = Resource.select(this, "../big-file")
+  private val bigFilePath = bigFile.toPath
   private val configuration = new TransferManagerConfiguration
-  private val chunkSize     = 1200000
+  private val chunkSize = 1200000
   configuration.setMinimumUploadPartSize(chunkSize)
 
 //  "Create offsets" - {
@@ -23,9 +22,6 @@ class ETagGeneratorTest extends FreeSpec {
 //        offsets)
 //    }
 //  }
-
-  private val runtime: DefaultRuntime = new DefaultRuntime {}
-  object TestEnv
 
 //  "create md5 hash for each chunk" - {
 //    "should create expected hash for chunks" in {

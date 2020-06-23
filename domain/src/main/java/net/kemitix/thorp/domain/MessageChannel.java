@@ -4,8 +4,10 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedTransferQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -14,16 +16,53 @@ public class MessageChannel<T> {
 
     private final MessageSupplier<T> messageSupplier;
     private final List<MessageConsumer<T>> messageConsumers;
-    private final Thread channelThread;
+    private final ChannelRunner<T> channelRunner;
+    private Thread channelThread;
 
-    static <T> MessageChannel<T> create(MessageSupplier<T> supplier) {
+    public static <T> MessageChannel<T> create(MessageSupplier<T> supplier) {
         List<MessageConsumer<T>> consumers = new ArrayList<>();
         return new MessageChannel<T>(supplier, consumers,
-                new Thread(new ChannelRunner<T>(supplier, consumers)));
+                new ChannelRunner<T>(supplier, consumers));
     }
 
-    public static <T> BlockingQueue<T> createMessageSupplier(Class<T> messageClass) {
-        return new LinkedTransferQueue<>();
+    public static <T> MessageSupplier<T> createMessageSupplier(
+            Collection<T> source
+    ) {
+        BlockingQueue<T> queue = new LinkedTransferQueue<T>(source);
+        return new MessageSupplier<T>() {
+            @Override
+            public T take() throws InterruptedException {
+                return queue.take();
+            }
+            @Override
+            public boolean isComplete() {
+                return queue.isEmpty();
+            }
+        };
+    }
+
+    public static <T> MessageSink<T> createSink() {
+        MessageSink<T> sink = new MessageSink<T>(){
+            private final BlockingQueue<T> queue = new LinkedTransferQueue<>();
+            private final AtomicBoolean completed = new AtomicBoolean(false);
+            @Override
+            public void accept(T message) {
+                queue.add(message);
+            }
+            @Override
+            public T take() throws InterruptedException {
+                return queue.take();
+            }
+            @Override
+            public boolean isComplete() {
+                return queue.isEmpty() && completed.get();
+            }
+            @Override
+            public void shutdown() {
+                completed.set(true);
+            }
+        };
+        return sink;
     }
 
     public void addMessageConsumer(MessageConsumer<T> consumer) {
@@ -31,11 +70,14 @@ public class MessageChannel<T> {
     }
 
     public void startChannel() {
-        channelThread.start();
+        if (channelThread == null) {
+            channelThread = new Thread(channelRunner);
+            channelThread.start();
+        }
     }
 
-    public void shutdownChannel() {
-        channelThread.interrupt();
+    public void waitForShutdown() {
+        channelRunner.shutdownLatch.countDown();
     }
 
     public interface MessageSupplier<T> {
@@ -45,27 +87,37 @@ public class MessageChannel<T> {
     public interface MessageConsumer<T> {
         void accept(T message);
     }
+    public interface MessageSink<T>
+            extends MessageSupplier<T>, MessageConsumer<T> {
+        void shutdown();
+    }
 
     @RequiredArgsConstructor
     private static class ChannelRunner<T> implements Runnable {
         AtomicBoolean shutdownTrigger = new AtomicBoolean(false);
+        final CountDownLatch shutdownLatch = new CountDownLatch(1);
         private final MessageSupplier<T> supplier;
         private final List<MessageConsumer<T>> consumers;
         @Override
         public void run() {
             while (!shutdownTrigger.get()) {
+                if (supplier.isComplete()) {
+                    shutdown();
+                }
                 try {
                     T message = supplier.take();
                     for (MessageConsumer<T> consumer : consumers) {
                         consumer.accept(message);
                     }
-                    if (supplier.isComplete()) {
-                        shutdownTrigger.set(true);
-                    }
                 } catch (InterruptedException e) {
-                    shutdownTrigger.set(true);
+                    shutdown();
                 }
             }
+            shutdownLatch.countDown();
+        }
+
+        public void shutdown() {
+            shutdownTrigger.set(true);
         }
     }
 }
