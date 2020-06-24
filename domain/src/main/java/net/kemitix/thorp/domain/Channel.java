@@ -29,11 +29,12 @@ public interface Channel<T> {
 
     class ChannelImpl<T> implements Channel<T> {
         private final BlockingQueue<T> queue = new LinkedTransferQueue<>();
-        private final Runner<T> runner = new Runner<T>(queue);
+        private final Runner<T> runner;
         private final Thread thread;
         private List<Thread> threads = new ArrayList<>();
 
         public ChannelImpl(String name) {
+            runner = new Runner<T>(name, queue);
             thread = new Thread(runner, name);
         }
 
@@ -99,6 +100,7 @@ public interface Channel<T> {
 
     @RequiredArgsConstructor
     class Runner<T> implements Runnable, Sink<T> {
+        private final String name;
         private final BlockingQueue<T> queue;
         private final AtomicBoolean shutdown = new AtomicBoolean(false);
         private final List<Listener<T>> listeners = new ArrayList<>();
@@ -126,6 +128,7 @@ public interface Channel<T> {
         }
 
         public Optional<T> takeItem() {
+            if (shutdown.get()) return Optional.empty();
             try {
                 return Optional.of(queue.take());
             } catch (InterruptedException e) {
