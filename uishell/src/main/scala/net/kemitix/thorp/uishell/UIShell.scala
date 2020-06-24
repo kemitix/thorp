@@ -2,6 +2,7 @@ package net.kemitix.thorp.uishell
 
 import net.kemitix.thorp.config.Configuration
 import net.kemitix.thorp.console.{Console, ConsoleOut}
+import net.kemitix.thorp.domain.Action.DoNothing
 import net.kemitix.thorp.domain.Channel.Listener
 import net.kemitix.thorp.domain.Terminal.{eraseLineForward, eraseToEndOfScreen}
 import net.kemitix.thorp.domain._
@@ -116,6 +117,9 @@ object UIShell {
     if (configuration.batchMode)
       Console.putStr(action.asString())
     else
-      Console.putStrLn(action.asString() + eraseLineForward + "\r")
+      action match {
+        case _: DoNothing => ()
+        case _            => Console.putStrLn(action.asString() + eraseLineForward + "\r")
+      }
 
 }
