@@ -31,7 +31,6 @@ public interface Channel<T> {
         private final BlockingQueue<T> queue = new LinkedTransferQueue<>();
         private final Runner<T> runner;
         private final Thread thread;
-        private final List<Thread> threads = new ArrayList<>();
 
         public ChannelImpl(String name) {
             runner = new Runner<T>(name, queue);
@@ -41,7 +40,6 @@ public interface Channel<T> {
         @Override
         public void start() {
             thread.start();
-            threads.add(thread);
         }
 
         @Override
@@ -84,7 +82,7 @@ public interface Channel<T> {
                     }
                 }
             }, name);
-            threads.add(thread);
+            thread.setDaemon(true);
             thread.start();
             return this;
         }
@@ -97,7 +95,6 @@ public interface Channel<T> {
         @Override
         public void shutdownNow() throws InterruptedException {
             runner.shutdownNow();
-            threads.forEach(Thread::interrupt);
         }
 
         @Override
