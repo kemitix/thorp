@@ -85,10 +85,10 @@ object LocalFileSystem extends LocalFileSystem {
       )
     )
 
-    deletionsChannel.run(
-      sink => remoteData.byKey.keys().forEach(key => sink.accept(key)),
-      "delete-source"
-    )
+    deletionsChannel.run(sink => {
+      remoteData.byKey.keys().forEach(key => sink.accept(key))
+      sink.shutdown()
+    }, "delete-source")
 
     deletionsChannel.start()
     deletionsChannel.waitForShutdown()
