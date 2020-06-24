@@ -128,7 +128,6 @@ public interface Channel<T> {
         }
 
         public Optional<T> takeItem() {
-            if (shutdown.get()) return Optional.empty();
             try {
                 return Optional.of(queue.take());
             } catch (InterruptedException e) {
@@ -138,7 +137,11 @@ public interface Channel<T> {
         }
 
         private boolean isRunning() {
-            return !shutdown.get();
+            return !isShutdown();
+        }
+
+        private boolean isShutdown() {
+            return shutdown.get() && queue.isEmpty();
         }
 
         @Override
