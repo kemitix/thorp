@@ -1,190 +1,179 @@
 package net.kemitix.thorp.lib
 
-import scala.jdk.OptionConverters._
-import scala.jdk.CollectionConverters._
-import net.kemitix.eip.zio.MessageChannel.UChannel
-import net.kemitix.eip.zio.{Message, MessageChannel}
+import java.util
+import java.util.concurrent.atomic.{AtomicInteger, AtomicLong}
+
 import net.kemitix.thorp.config.Configuration
-import net.kemitix.thorp.domain.RemoteObjects
-import net.kemitix.thorp.domain._
+import net.kemitix.thorp.domain.Channel.{Listener, Sink}
+import net.kemitix.thorp.domain.{RemoteObjects, _}
 import net.kemitix.thorp.filesystem.FileSystem
-import net.kemitix.thorp.storage.Storage
 import net.kemitix.thorp.uishell.UIEvent
-import zio._
-import zio.clock.Clock
+
+import scala.jdk.CollectionConverters._
+import scala.jdk.OptionConverters._
 
 trait LocalFileSystem {
 
-  def scanCopyUpload(
-    configuration: Configuration,
-    uiChannel: UChannel[Any, UIEvent],
-    remoteObjects: RemoteObjects,
-    archive: ThorpArchive
-  ): RIO[Clock with FileScanner with Storage, Seq[StorageEvent]]
+  def scanCopyUpload(configuration: Configuration,
+                     uiSink: Channel.Sink[UIEvent],
+                     remoteObjects: RemoteObjects,
+                     archive: ThorpArchive): Seq[StorageEvent]
 
-  def scanDelete(
-    configuration: Configuration,
-    uiChannel: UChannel[Any, UIEvent],
-    remoteData: RemoteObjects,
-    archive: ThorpArchive
-  ): RIO[Clock with Storage, Seq[StorageEvent]]
+  def scanDelete(configuration: Configuration,
+                 uiSink: Channel.Sink[UIEvent],
+                 remoteData: RemoteObjects,
+                 archive: ThorpArchive): Seq[StorageEvent]
 
 }
 object LocalFileSystem extends LocalFileSystem {
 
-  override def scanCopyUpload(
-    configuration: Configuration,
-    uiChannel: UChannel[Any, UIEvent],
-    remoteObjects: RemoteObjects,
-    archive: ThorpArchive
-  ): RIO[Clock with FileScanner, Seq[StorageEvent]] =
-    for {
-      actionCounter <- Ref.make(0)
-      bytesCounter <- Ref.make(0L)
-      uploads <- Ref.make(Map.empty[MD5Hash, Promise[Throwable, RemoteKey]])
-      eventsRef <- Ref.make(List.empty[StorageEvent])
-      fileSender <- FileScanner.scanSources(configuration)
-      fileReceiver <- fileReceiver(
+  override def scanCopyUpload(configuration: Configuration,
+                              uiSink: Channel.Sink[UIEvent],
+                              remoteObjects: RemoteObjects,
+                              archive: ThorpArchive): Seq[StorageEvent] = {
+
+    val fileChannel: Channel[LocalFile] = Channel.create("files")
+
+    // state for the file receiver
+    val actionCounter = new AtomicInteger()
+    val bytesCounter = new AtomicLong()
+    val uploads = Map.empty[MD5Hash, RemoteKey]
+    val events = new util.LinkedList[StorageEvent]
+
+    fileChannel.addListener(
+      fileReceiver(
         configuration,
-        uiChannel,
+        uiSink,
         remoteObjects,
         archive,
         uploads,
         actionCounter,
         bytesCounter,
-        eventsRef
+        events
       )
-      parallel = configuration.parallel
-      _ <- MessageChannel
-        .pointToPointPar(parallel)(fileSender)(fileReceiver)
-        .runDrain
-      events <- eventsRef.get
-    } yield events
+    )
 
-  override def scanDelete(
-    configuration: Configuration,
-    uiChannel: UChannel[Any, UIEvent],
-    remoteData: RemoteObjects,
-    archive: ThorpArchive
-  ): RIO[Clock, Seq[StorageEvent]] =
-    for {
-      actionCounter <- Ref.make(0)
-      bytesCounter <- Ref.make(0L)
-      eventsRef <- Ref.make(List.empty[StorageEvent])
-      keySender <- keySender(remoteData.byKey.keys.asScala)
-      keyReceiver <- keyReceiver(
+    fileChannel.run(
+      sink => FileScanner.scanSources(configuration, sink),
+      "scan-sources"
+    )
+
+    fileChannel.start()
+    fileChannel.waitForShutdown()
+    events.asScala.toList
+  }
+
+  override def scanDelete(configuration: Configuration,
+                          uiSink: Channel.Sink[UIEvent],
+                          remoteData: RemoteObjects,
+                          archive: ThorpArchive): Seq[StorageEvent] = {
+    val deletionsChannel: Channel[RemoteKey] = Channel.create("deletions")
+
+    // state for the file receiver
+    val actionCounter = new AtomicInteger()
+    val bytesCounter = new AtomicLong()
+    val events = new util.LinkedList[StorageEvent]
+
+    deletionsChannel.addListener(
+      keyReceiver(
         configuration,
-        uiChannel,
+        uiSink,
         archive,
         actionCounter,
         bytesCounter,
-        eventsRef
+        events
       )
-      parallel = configuration.parallel
-      _ <- MessageChannel
-        .pointToPointPar(parallel)(keySender)(keyReceiver)
-        .runDrain
-      events <- eventsRef.get
-    } yield events
+    )
+
+    deletionsChannel.run(sink => {
+      remoteData.byKey.keys().forEach(key => sink.accept(key))
+      sink.shutdown()
+    }, "delete-source")
+
+    deletionsChannel.start()
+    deletionsChannel.waitForShutdown()
+    events.asScala.toList
+  }
 
   private def fileReceiver(
     configuration: Configuration,
-    uiChannel: UChannel[Any, UIEvent],
+    uiSink: Channel.Sink[UIEvent],
     remoteObjects: RemoteObjects,
     archive: ThorpArchive,
-    uploads: Ref[Map[MD5Hash, Promise[Throwable, RemoteKey]]],
-    actionCounterRef: Ref[Int],
-    bytesCounterRef: Ref[Long],
-    eventsRef: Ref[List[StorageEvent]]
-  ): UIO[MessageChannel.UReceiver[Clock, FileScanner.ScannedFile]] =
-    UIO { message =>
-      val localFile = message.body
-      for {
-        _ <- uiFileFound(uiChannel)(localFile)
-        action <- chooseAction(
-          configuration,
-          remoteObjects,
-          uploads,
-          uiChannel
-        )(localFile)
-        actionCounter <- actionCounterRef.update(_ + 1)
-        bytesCounter <- bytesCounterRef.update(_ + action.size)
-        _ <- uiActionChosen(uiChannel)(action)
-        sequencedAction = SequencedAction(action, actionCounter)
-        event <- archive.update(
-          configuration,
-          uiChannel,
-          sequencedAction,
-          bytesCounter
-        )
-        _ <- eventsRef.update(list => event :: list)
-        _ <- uiActionFinished(uiChannel)(
-          action,
-          actionCounter,
-          bytesCounter,
-          event
-        )
-      } yield ()
+    uploads: Map[MD5Hash, RemoteKey],
+    actionCounter: AtomicInteger,
+    bytesCounter: AtomicLong,
+    events: util.Deque[StorageEvent]
+  ): Listener[LocalFile] = { (localFile: LocalFile) =>
+    {
+      uiFileFound(uiSink)(localFile)
+      val action =
+        chooseAction(configuration, remoteObjects, uploads, uiSink)(localFile)
+      actionCounter.incrementAndGet()
+      bytesCounter.addAndGet(action.size)
+      uiActionChosen(uiSink)(action)
+      val sequencedAction = SequencedAction(action, actionCounter.get())
+      val event = archive
+        .update(configuration, uiSink, sequencedAction, bytesCounter.get)
+      events.addFirst(event)
+      uiActionFinished(uiSink)(
+        action,
+        actionCounter.get,
+        bytesCounter.get,
+        event
+      )
     }
+  }
 
   private def uiActionChosen(
-    uiChannel: MessageChannel.UChannel[Any, UIEvent]
-  )(action: Action) =
-    Message.create(UIEvent.actionChosen(action)) >>=
-      MessageChannel.send(uiChannel)
+    uiSink: Channel.Sink[UIEvent]
+  )(action: Action): Unit =
+    uiSink.accept(UIEvent.actionChosen(action))
 
-  private def uiActionFinished(uiChannel: UChannel[Any, UIEvent])(
+  private def uiActionFinished(uiSink: Channel.Sink[UIEvent])(
     action: Action,
     actionCounter: Int,
     bytesCounter: Long,
     event: StorageEvent
-  ) =
-    Message.create(
+  ): Unit =
+    uiSink.accept(
       UIEvent.actionFinished(action, actionCounter, bytesCounter, event)
-    ) >>=
-      MessageChannel.send(uiChannel)
+    )
 
   private def uiFileFound(
-    uiChannel: UChannel[Any, UIEvent]
-  )(localFile: LocalFile) =
-    Message.create(UIEvent.fileFound(localFile)) >>=
-      MessageChannel.send(uiChannel)
+    uiSink: Channel.Sink[UIEvent]
+  )(localFile: LocalFile): Unit =
+    uiSink.accept(UIEvent.fileFound(localFile))
 
-  private def chooseAction(
-    configuration: Configuration,
-    remoteObjects: RemoteObjects,
-    uploads: Ref[Map[MD5Hash, Promise[Throwable, RemoteKey]]],
-    uiChannel: UChannel[Any, UIEvent],
-  )(localFile: LocalFile): ZIO[Clock, Nothing, Action] = {
-    for {
-      remoteExists <- UIO(remoteObjects.remoteKeyExists(localFile.remoteKey))
-      remoteMatches <- UIO(remoteObjects.remoteMatchesLocalFile(localFile))
-      remoteForHash <- UIO(
-        remoteObjects.remoteHasHash(localFile.hashes).toScala
-      )
-      previous <- uploads.get
-      bucket = configuration.bucket
-      action <- if (remoteExists && remoteMatches)
-        doNothing(localFile, bucket)
-      else {
-        remoteForHash match {
-          case pair: Some[Tuple[RemoteKey, MD5Hash]] =>
-            val sourceKey = pair.value.a
-            val hash = pair.value.b
-            doCopy(localFile, bucket, sourceKey, hash)
-          case _ if matchesPreviousUpload(previous, localFile.hashes) =>
-            doCopyWithPreviousUpload(localFile, bucket, previous, uiChannel)
-          case _ =>
-            doUpload(localFile, bucket)
-        }
+  private def chooseAction(configuration: Configuration,
+                           remoteObjects: RemoteObjects,
+                           uploads: Map[MD5Hash, RemoteKey],
+                           uiSink: Channel.Sink[UIEvent],
+  )(localFile: LocalFile): Action = {
+    val remoteExists = remoteObjects.remoteKeyExists(localFile.remoteKey)
+    val remoteMatches = remoteObjects.remoteMatchesLocalFile(localFile)
+    val remoteForHash = remoteObjects.remoteHasHash(localFile.hashes).toScala
+    val previous = uploads
+    val bucket = configuration.bucket
+    val action = if (remoteExists && remoteMatches) {
+      doNothing(localFile, bucket)
+    } else {
+      remoteForHash match {
+        case pair: Some[Tuple[RemoteKey, MD5Hash]] =>
+          val sourceKey = pair.value.a
+          val hash = pair.value.b
+          doCopy(localFile, bucket, sourceKey, hash)
+        case _ if matchesPreviousUpload(previous, localFile.hashes) =>
+          doCopyWithPreviousUpload(localFile, bucket, previous, uiSink)
+        case _ =>
+          doUpload(localFile, bucket)
       }
-    } yield action
+    }
+    action
   }
 
-  private def matchesPreviousUpload(
-    previous: Map[MD5Hash, Promise[Throwable, RemoteKey]],
-    hashes: Hashes
-  ): Boolean =
+  private def matchesPreviousUpload(previous: Map[MD5Hash, RemoteKey],
+                                    hashes: Hashes) =
     hashes
       .values()
       .stream()
@@ -192,25 +181,21 @@ object LocalFileSystem extends LocalFileSystem {
         previous.contains(hash)
       })
 
-  private def doNothing(localFile: LocalFile, bucket: Bucket): UIO[Action] =
-    UIO {
-      Action.doNothing(bucket, localFile.remoteKey, localFile.length)
-    }
+  private def doNothing(localFile: LocalFile, bucket: Bucket) =
+    Action.doNothing(bucket, localFile.remoteKey, localFile.length)
 
   private def doCopy(localFile: LocalFile,
                      bucket: Bucket,
                      sourceKey: RemoteKey,
-                     hash: MD5Hash): UIO[Action] = UIO {
+                     hash: MD5Hash) =
     Action
       .toCopy(bucket, sourceKey, hash, localFile.remoteKey, localFile.length)
-  }
 
-  private def doCopyWithPreviousUpload(
-    localFile: LocalFile,
-    bucket: Bucket,
-    previous: Map[MD5Hash, Promise[Throwable, RemoteKey]],
-    uiChannel: UChannel[Any, UIEvent],
-  ): ZIO[Clock, Nothing, Action] = {
+  private def doCopyWithPreviousUpload(localFile: LocalFile,
+                                       bucket: Bucket,
+                                       previous: Map[MD5Hash, RemoteKey],
+                                       uiSink: Channel.Sink[UIEvent],
+  ) = {
     localFile.hashes
       .values()
       .stream()
@@ -220,91 +205,58 @@ object LocalFileSystem extends LocalFileSystem {
       .findFirst()
       .toScala
       .map({ hash =>
-        for {
-          awaitingMessage <- Message.create(
-            UIEvent.awaitingAnotherUpload(localFile.remoteKey, hash)
+        {
+          uiSink
+            .accept(UIEvent.awaitingAnotherUpload(localFile.remoteKey, hash))
+          val action = Action.toCopy(
+            bucket,
+            previous(hash),
+            hash,
+            localFile.remoteKey,
+            localFile.length
           )
-          _ <- MessageChannel.send(uiChannel)(awaitingMessage)
-          action <- previous(hash).await.map(
-            remoteKey =>
-              Action.toCopy(
-                bucket,
-                remoteKey,
-                hash,
-                localFile.remoteKey,
-                localFile.length
-            )
-          )
-          waitFinishedMessage <- Message.create(
-            UIEvent.anotherUploadWaitComplete(action)
-          )
-          _ <- MessageChannel.send(uiChannel)(waitFinishedMessage)
-        } yield action
+          uiSink.accept(UIEvent.anotherUploadWaitComplete(action))
+          action
+        }
       })
       .getOrElse(doUpload(localFile, bucket))
-      .refineToOrDie[Nothing]
   }
 
-  private def doUpload(localFile: LocalFile, bucket: Bucket): UIO[Action] = {
-    UIO(Action.toUpload(bucket, localFile, localFile.length))
-  }
+  private def doUpload(localFile: LocalFile, bucket: Bucket) =
+    Action.toUpload(bucket, localFile, localFile.length)
 
-  def keySender(
-    keys: Iterable[RemoteKey]
-  ): UIO[MessageChannel.Sender[Clock, RemoteKey]] =
-    UIO { channel =>
-      ZIO.foreach(keys) { key =>
-        Message.create(key) >>= MessageChannel.send(channel)
-      } *> MessageChannel.endChannel(channel)
-    }
-
-  def keyReceiver(
-    configuration: Configuration,
-    uiChannel: UChannel[Any, UIEvent],
-    archive: ThorpArchive,
-    actionCounterRef: Ref[Int],
-    bytesCounterRef: Ref[Long],
-    eventsRef: Ref[List[StorageEvent]]
-  ): UIO[MessageChannel.UReceiver[Clock, RemoteKey]] =
-    UIO { message =>
+  def keyReceiver(configuration: Configuration,
+                  uiSink: Channel.Sink[UIEvent],
+                  archive: ThorpArchive,
+                  actionCounter: AtomicInteger,
+                  bytesCounter: AtomicLong,
+                  events: util.Deque[StorageEvent]): Listener[RemoteKey] = {
+    (remoteKey: RemoteKey) =>
       {
-        val remoteKey = message.body
-        for {
-          _ <- uiKeyFound(uiChannel)(remoteKey)
-          sources = configuration.sources
-          prefix = configuration.prefix
-          exists = FileSystem.hasLocalFile(sources, prefix, remoteKey)
-          _ <- ZIO.when(!exists) {
-            for {
-              actionCounter <- actionCounterRef.update(_ + 1)
-              bucket = configuration.bucket
-              action = Action.toDelete(bucket, remoteKey, 0L)
-              _ <- uiActionChosen(uiChannel)(action)
-              bytesCounter <- bytesCounterRef.update(_ + action.size)
-              sequencedAction = SequencedAction(action, actionCounter)
-              event <- archive.update(
-                configuration,
-                uiChannel,
-                sequencedAction,
-                0L
-              )
-              _ <- eventsRef.update(list => event :: list)
-              _ <- uiActionFinished(uiChannel)(
-                action,
-                actionCounter,
-                bytesCounter,
-                event
-              )
-            } yield ()
-          }
-        } yield ()
+        uiKeyFound(uiSink)(remoteKey)
+        val sources = configuration.sources
+        val prefix = configuration.prefix
+        val exists = FileSystem.hasLocalFile(sources, prefix, remoteKey)
+        if (!exists) {
+          actionCounter.incrementAndGet()
+          val bucket = configuration.bucket
+          val action = Action.toDelete(bucket, remoteKey, 0L)
+          uiActionChosen(uiSink)(action)
+          bytesCounter.addAndGet(action.size)
+          val sequencedAction = SequencedAction(action, actionCounter.get())
+          val event = archive.update(configuration, uiSink, sequencedAction, 0L)
+          events.addFirst(event)
+          uiActionFinished(uiSink)(
+            action,
+            actionCounter.get(),
+            bytesCounter.get(),
+            event
+          )
+        }
       }
-    }
+  }
 
-  private def uiKeyFound(
-    uiChannel: UChannel[Any, UIEvent]
-  )(remoteKey: RemoteKey) =
-    Message.create(UIEvent.keyFound(remoteKey)) >>=
-      MessageChannel.send(uiChannel)
+  private def uiKeyFound(uiSink: Sink[UIEvent])(remoteKey: RemoteKey): Unit =
+    uiSink.accept(UIEvent.keyFound(remoteKey))
 
 }

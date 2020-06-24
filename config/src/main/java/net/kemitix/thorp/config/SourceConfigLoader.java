@@ -15,9 +15,8 @@ public interface SourceConfigLoader {
                 ConfigOptions.create(
                         sources.paths()
                                 .stream()
-                                .peek(path -> {
-                                    System.out.println("Using source: " + path);
-                                })
+                                .peek(path ->
+                                        System.out.println("Using source: " + path))
                                 .map(ConfigOption::source)
                                 .collect(Collectors.toList()));
         // add settings from each source as options

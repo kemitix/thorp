@@ -25,7 +25,6 @@
         <junit.version>5.6.2</junit.version>
         <assertj.version>3.16.1</assertj.version>
         <mockito.version>3.3.3</mockito.version>
-        <zio.version>1.0.0-RC16</zio.version>
     </properties>
 
     <dependencyManagement>
@@ -118,23 +117,6 @@
                 <groupId>org.scala-lang</groupId>
                 <artifactId>scala-library</artifactId>
                 <version>${scala-library.version}</version>
-            </dependency>
-            <!-- scala - zio -->
-            <dependency>
-                <groupId>dev.zio</groupId>
-                <artifactId>zio_2.13</artifactId>
-                <version>${zio.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.zio</groupId>
-                <artifactId>zio-streams_2.13</artifactId>
-                <version>${zio.version}</version>
-            </dependency>
-            <!-- scala - eip-zio -->
-            <dependency>
-                <groupId>net.kemitix</groupId>
-                <artifactId>eip-zio_2.13</artifactId>
-                <version>0.3.2</version>
             </dependency>
             <!-- scala - command line parsing -->
             <dependency>
