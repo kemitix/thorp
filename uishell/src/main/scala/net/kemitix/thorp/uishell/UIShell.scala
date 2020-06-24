@@ -112,10 +112,10 @@ object UIShell {
     }
   }
 
-  def actionChosen(configuration: Configuration, action: Action): Unit = {
-    val message = trimHead(action.asString()) + eraseLineForward
-    if (configuration.batchMode) Console.putStr(message + "\r")
-    else Console.putStrLn(message)
-  }
+  def actionChosen(configuration: Configuration, action: Action): Unit =
+    if (configuration.batchMode)
+      Console.putStr(action.asString())
+    else
+      Console.putStrLn(action.asString() + eraseLineForward + "\r")
 
 }
