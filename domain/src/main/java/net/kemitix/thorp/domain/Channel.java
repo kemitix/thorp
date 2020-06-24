@@ -82,7 +82,6 @@ public interface Channel<T> {
                     }
                 }
             }, name);
-            thread.setDaemon(true);
             thread.start();
             return this;
         }
@@ -111,9 +110,11 @@ public interface Channel<T> {
         private final AtomicBoolean shutdown = new AtomicBoolean(false);
         private final List<Listener<T>> listeners = new ArrayList<>();
         private final CountDownLatch shutdownLatch = new CountDownLatch(1);
+        private Thread runnerThread;
 
         @Override
         public void run() {
+            runnerThread = Thread.currentThread();
             while(isRunning()) {
                 takeItem()
                         .ifPresent(item -> {
@@ -157,7 +158,12 @@ public interface Channel<T> {
 
         @Override
         public void shutdown() {
-            shutdown.set(true);
+            if (isRunning()) {
+                shutdown.set(true);
+            }
+            if (queue.isEmpty() && runnerThread != null) {
+                runnerThread.interrupt();
+            }
         }
 
         public void shutdownNow() throws InterruptedException {
