@@ -12,6 +12,7 @@ import java.util.concurrent.LinkedTransferQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+@Deprecated
 public class MessageChannel<T> {
 
     private final MessageSupplier<T> messageSupplier;
