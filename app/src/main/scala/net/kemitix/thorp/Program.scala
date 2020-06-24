@@ -38,6 +38,7 @@ trait Program {
     val uiChannel: Channel[UIEvent] = Channel.create("thorp-ui")
     uiChannel.addListener(UIShell.receiver(configuration))
     uiChannel.run(sink => execute(configuration, sink), "thorp-main")
+    uiChannel.start()
     uiChannel.waitForShutdown()
   }
 
