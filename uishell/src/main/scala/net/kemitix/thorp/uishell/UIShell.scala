@@ -115,11 +115,11 @@ object UIShell {
 
   def actionChosen(configuration: Configuration, action: Action): Unit =
     if (configuration.batchMode)
-      Console.putStr(action.asString())
+      Console.putStrLn(action.asString())
     else
       action match {
         case _: DoNothing => ()
-        case _            => Console.putStrLn(action.asString() + eraseLineForward + "\r")
+        case _            => Console.putStr(action.asString() + eraseLineForward + "\r")
       }
 
 }
