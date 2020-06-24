@@ -10,6 +10,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedTransferQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 public interface Channel<T> {
     static <T> Channel<T> create(String name) {
@@ -19,14 +20,18 @@ public interface Channel<T> {
     void start();
     Channel<T> add(T item);
     Channel<T> addAll(Collection<T> items);
+    Channel<T> addListener(Listener<T> listener);
+    Channel<T> removeListener(Listener<T> listener);
+    Channel<T> run(Consumer<Sink<T>> program, String name);
     void shutdown();
     void shutdownNow() throws InterruptedException;
     void waitForShutdown() throws InterruptedException;
 
     class ChannelImpl<T> implements Channel<T> {
         private final BlockingQueue<T> queue = new LinkedTransferQueue<>();
-        private final ChannelRunner<T> runner = new ChannelRunner<T>(queue);
+        private final Runner<T> runner = new Runner<T>(queue);
         private final Thread thread;
+        private List<Thread> threads = new ArrayList<>();
 
         public ChannelImpl(String name) {
             thread = new Thread(runner, name);
@@ -35,6 +40,7 @@ public interface Channel<T> {
         @Override
         public void start() {
             thread.start();
+            threads.add(thread);
         }
 
         @Override
@@ -50,6 +56,30 @@ public interface Channel<T> {
         }
 
         @Override
+        public Channel<T> addListener(Listener<T> listener) {
+            runner.addListener(listener);
+            return this;
+        }
+
+        @Override
+        public Channel<T> removeListener(Listener<T> listener) {
+            runner.removeListener(listener);
+            return this;
+        }
+
+        @Override
+        public Channel<T> run(Consumer<Sink<T>> program, String name) {
+            return spawn(() -> program.accept(runner), name);
+        }
+
+        private Channel<T> spawn(Runnable runnable, String name) {
+            Thread thread = new Thread(runnable, name);
+            threads.add(thread);
+            thread.start();
+            return this;
+        }
+
+        @Override
         public void shutdown() {
             runner.shutdown();
         }
@@ -57,6 +87,7 @@ public interface Channel<T> {
         @Override
         public void shutdownNow() throws InterruptedException {
             runner.shutdownNow();
+            threads.forEach(Thread::interrupt);
         }
 
         @Override
@@ -67,10 +98,10 @@ public interface Channel<T> {
     }
 
     @RequiredArgsConstructor
-    class ChannelRunner<T> implements Runnable {
+    class Runner<T> implements Runnable, Sink<T> {
         private final BlockingQueue<T> queue;
         private final AtomicBoolean shutdown = new AtomicBoolean(false);
-        private final List<ChannelListener<T>> listeners = new ArrayList<>();
+        private final List<Listener<T>> listeners = new ArrayList<>();
         private final CountDownLatch shutdownLatch = new CountDownLatch(1);
 
         @Override
@@ -86,11 +117,11 @@ public interface Channel<T> {
             shutdownLatch.countDown();
         }
 
-        public void addListener(ChannelListener<T> listener) {
+        public void addListener(Listener<T> listener) {
             listeners.add(listener);
         }
 
-        public void removeListener(ChannelListener<T> listener) {
+        public void removeListener(Listener<T> listener) {
             listeners.remove(listener);
         }
 
@@ -107,6 +138,12 @@ public interface Channel<T> {
             return !shutdown.get();
         }
 
+        @Override
+        public void accept(T item) {
+            queue.add(item);
+        }
+
+        @Override
         public void shutdown() {
             shutdown.set(true);
         }
@@ -121,7 +158,12 @@ public interface Channel<T> {
         }
     }
 
-    interface ChannelListener<T> {
+    interface Listener<T> {
         void accept(T item);
+    }
+
+    interface Sink<T> {
+        void accept(T item);
+        void shutdown();
     }
 }

@@ -10,46 +10,41 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedTransferQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public interface FileScanner {
-    static MessageChannel.MessageSupplier<LocalFile> scanSources(
-            Configuration configuration
+    static void scanSources(
+            Configuration configuration,
+            Channel.Sink<LocalFile> fileSink
     ) {
-        FileScannerFileSupplier fileSupplier =
-                new FileScannerFileSupplier();
         configuration.sources.paths()
                 .forEach(path ->
-                        scanSource(configuration, fileSupplier, path));;
-        return fileSupplier;
+                        scanSource(configuration, fileSink, path));
     }
 
     static void scanSource(
             Configuration configuration,
-            FileScannerFileSupplier fileSupplier,
+            Channel.Sink<LocalFile> fileSink,
             Path sourcePath
     ) {
-        scanPath(configuration, fileSupplier, sourcePath);
+        scanPath(configuration, fileSink, sourcePath);
     }
 
     static void scanPath(
             Configuration configuration,
-            FileScannerFileSupplier fileSupplier,
+            Channel.Sink<LocalFile> fileSink,
             Path path
     ) {
         // dirs
         FileSystem.listDirs(path).forEach(dir ->
-                scanPath(configuration, fileSupplier, dir));
+                scanPath(configuration, fileSink, dir));
         // files
         List<File> files = FileSystem.listFiles(path);
-        files.forEach(file -> handleFile(configuration, fileSupplier, file));
+        files.forEach(file -> handleFile(configuration, fileSink, file));
     }
 
     static void handleFile(
             Configuration configuration,
-            FileScannerFileSupplier fileSupplier,
+            Channel.Sink<LocalFile> fileSink,
             File file
     ) {
         boolean isIncluded = Filters.isIncluded(configuration, file);
@@ -61,7 +56,7 @@ public interface FileScanner {
             LocalFile localFile =
                     LocalFile.create(
                             file, source, hashes, remoteKey, file.length());
-            fileSupplier.offer(localFile);
+            fileSink.accept(localFile);
         }
     }
 
@@ -79,26 +74,6 @@ public interface FileScanner {
         } catch (IOException e) {
             throw new RuntimeException(
                     "Error finding source cache for source: " + sourcePath, e);
-        }
-    }
-
-    class FileScannerFileSupplier implements MessageChannel.MessageSupplier<LocalFile> {
-        private final BlockingQueue<LocalFile> queue = new LinkedTransferQueue<>();
-        private final AtomicBoolean completed = new AtomicBoolean(false);
-        void offer(LocalFile localFile) {
-            queue.add(localFile);
-        }
-        void setCompleted() {
-            completed.set(true);
-        }
-        @Override
-        public LocalFile take() throws InterruptedException {
-            return queue.take();
-        }
-
-        @Override
-        public boolean isComplete() {
-            return completed.get();
         }
     }
 }

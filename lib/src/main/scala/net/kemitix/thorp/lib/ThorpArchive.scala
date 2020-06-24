@@ -2,15 +2,14 @@ package net.kemitix.thorp.lib
 
 import net.kemitix.thorp.config.Configuration
 import net.kemitix.thorp.console._
-import net.kemitix.thorp.domain.MessageChannel.MessageConsumer
-import net.kemitix.thorp.domain.StorageEvent
 import net.kemitix.thorp.domain.StorageEvent._
+import net.kemitix.thorp.domain.{Channel, StorageEvent}
 import net.kemitix.thorp.uishell.UIEvent
 
 trait ThorpArchive {
 
   def update(configuration: Configuration,
-             uiChannel: MessageConsumer[UIEvent],
+             uiSink: Channel.Sink[UIEvent],
              sequencedAction: SequencedAction,
              totalBytesSoFar: Long): StorageEvent
 

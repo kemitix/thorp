@@ -20,6 +20,7 @@ public class MessageChannel<T> {
     private final ChannelRunner<T> channelRunner;
     private Thread channelThread;
 
+    @Deprecated
     public static <T> MessageChannel<T> create(MessageSupplier<T> supplier) {
         List<MessageConsumer<T>> consumers = new ArrayList<>();
         return new MessageChannel<T>(supplier, consumers,
@@ -42,37 +43,61 @@ public class MessageChannel<T> {
         };
     }
 
-    public static <T> MessageSink<T> createSink() {
-        MessageSink<T> sink = new MessageSink<T>(){
-            private final BlockingQueue<T> queue = new LinkedTransferQueue<>();
-            private final AtomicBoolean completed = new AtomicBoolean(false);
-            @Override
-            public void accept(T message) {
-                queue.add(message);
-            }
-            @Override
-            public T take() throws InterruptedException {
-                return queue.take();
-            }
-            @Override
-            public boolean isComplete() {
-                return queue.isEmpty() && completed.get();
-            }
-            @Override
-            public void shutdown() {
-                completed.set(true);
-            }
-        };
+    public static <T> MessageSink<T> createRunningSinkFromSource(
+            MessageChannel.MessageSource<T> source,
+            String name
+    ) {
+        DefaultMessageSink<T> sink = new DefaultMessageSink<>();
+        new Thread(() -> source.run(sink), "thorp-sink-" + name);
         return sink;
+    }
+
+    public static <T> MessageSink<T> createSink() {
+        return new DefaultMessageSink<>();
+    }
+
+    public static <T> MessageSink<T> createChannelRunner(
+            MessageConsumer<T> consumer,
+            String name
+    ) {
+        MessageSink<T> sink = new DefaultMessageSink<T>();
+        new Thread(new SinkRunner<T>(sink, consumer), "thorp-channel-" + name)
+                .start();
+        return sink;
+    }
+
+    private static class DefaultMessageSink<T> implements MessageSink<T> {
+        private final BlockingQueue<T> queue = new LinkedTransferQueue<>();
+        private final AtomicBoolean completed = new AtomicBoolean(false);
+        @Override
+        public void accept(T message) {
+            queue.add(message);
+        }
+        @Override
+        public T take() throws InterruptedException {
+            return queue.take();
+        }
+        @Override
+        public boolean isComplete() {
+            return queue.isEmpty() || completed.get();
+        }
+        @Override
+        public void shutdown() {
+            completed.set(true);
+        }
     }
 
     public void addMessageConsumer(MessageConsumer<T> consumer) {
         messageConsumers.add(consumer);
     }
 
+    private static int threadInitNumber;
+    private static synchronized int nextThreadNum() {
+        return threadInitNumber++;
+    }
     public void startChannel() {
         if (channelThread == null) {
-            channelThread = new Thread(channelRunner);
+            channelThread = new Thread(channelRunner, "thorp-channel-" + nextThreadNum());
             channelThread.start();
         }
     }
@@ -120,5 +145,27 @@ public class MessageChannel<T> {
         public void shutdown() {
             shutdownTrigger.set(true);
         }
+    }
+
+    @RequiredArgsConstructor
+    private static class SinkRunner<T> implements Runnable {
+        private final MessageSink<T> sink;
+        private final MessageConsumer<T> consumer;
+
+        @Override
+        public void run() {
+            while (!sink.isComplete()) {
+                try {
+                    consumer.accept(sink.take());
+                } catch (InterruptedException e) {
+                    System.out.println("SinkRunner interrupted: " + e);
+                    sink.shutdown();
+                }
+            }
+        }
+    }
+
+    public interface MessageSource<T> {
+        void run(MessageSink<T> sink);
     }
 }

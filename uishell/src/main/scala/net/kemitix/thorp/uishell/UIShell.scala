@@ -2,47 +2,35 @@ package net.kemitix.thorp.uishell
 
 import net.kemitix.thorp.config.Configuration
 import net.kemitix.thorp.console.{Console, ConsoleOut}
-import net.kemitix.thorp.domain.MessageChannel.MessageConsumer
+import net.kemitix.thorp.domain.Channel.Listener
 import net.kemitix.thorp.domain.Terminal.{eraseLineForward, eraseToEndOfScreen}
 import net.kemitix.thorp.domain._
 
 object UIShell {
 
-  def receiver(configuration: Configuration): MessageConsumer[UIEvent] = {
-    val uiEventSource: MessageChannel.MessageSink[UIEvent] =
-      MessageChannel.createSink()
-    new Thread(new Runnable {
-      override def run(): Unit = {
-        while (!uiEventSource.isComplete) {
-          val uie = uiEventSource.take()
-          uie match {
-            case _: UIEvent.ShowValidConfig     => showValidConfig(configuration)
-            case uie: UIEvent.RemoteDataFetched => remoteDataFetched(uie.size)
-            case uie: UIEvent.ShowSummary       => showSummary(uie.counters)
-            case uie: UIEvent.FileFound =>
-              fileFound(configuration, uie.localFile)
-            case uie: UIEvent.ActionChosen =>
-              actionChosen(configuration, uie.action)
-            case uie: UIEvent.AwaitingAnotherUpload =>
-              awaitingUpload(uie.remoteKey, uie.hash)
-            case uie: UIEvent.AnotherUploadWaitComplete =>
-              uploadWaitComplete(uie.action)
-            case uie: UIEvent.ActionFinished =>
-              actionFinished(configuration, uie.event)
-            case _: UIEvent.KeyFound => ()
-            case uie: UIEvent.RequestCycle =>
-              ProgressUI.requestCycle(
-                configuration,
-                uie.localFile,
-                uie.bytesTransferred,
-                uie.index,
-                uie.totalBytesSoFar
-              )
-          }
-        }
-      }
-    })
-    uiEventSource
+  def receiver(configuration: Configuration): Listener[UIEvent] = {
+    case _: UIEvent.ShowValidConfig     => showValidConfig(configuration)
+    case uie: UIEvent.RemoteDataFetched => remoteDataFetched(uie.size)
+    case uie: UIEvent.ShowSummary       => showSummary(uie.counters)
+    case uie: UIEvent.FileFound =>
+      fileFound(configuration, uie.localFile)
+    case uie: UIEvent.ActionChosen =>
+      actionChosen(configuration, uie.action)
+    case uie: UIEvent.AwaitingAnotherUpload =>
+      awaitingUpload(uie.remoteKey, uie.hash)
+    case uie: UIEvent.AnotherUploadWaitComplete =>
+      uploadWaitComplete(uie.action)
+    case uie: UIEvent.ActionFinished =>
+      actionFinished(configuration, uie.event)
+    case _: UIEvent.KeyFound => ()
+    case uie: UIEvent.RequestCycle =>
+      ProgressUI.requestCycle(
+        configuration,
+        uie.localFile,
+        uie.bytesTransferred,
+        uie.index,
+        uie.totalBytesSoFar
+      )
   }
 
   private def actionFinished(configuration: Configuration,

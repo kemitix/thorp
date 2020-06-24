@@ -3,18 +3,13 @@ package net.kemitix.thorp
 import net.kemitix.thorp.cli.CliArgs
 import net.kemitix.thorp.config._
 import net.kemitix.thorp.console._
-import net.kemitix.thorp.domain.MessageChannel.{
-  MessageConsumer,
-  MessageSink,
-  MessageSupplier
-}
 import net.kemitix.thorp.domain.StorageEvent.{
   CopyEvent,
   DeleteEvent,
   ErrorEvent,
   UploadEvent
 }
-import net.kemitix.thorp.domain.{Counters, MessageChannel, StorageEvent}
+import net.kemitix.thorp.domain.{Channel, Counters, StorageEvent}
 import net.kemitix.thorp.lib.{LocalFileSystem, UnversionedMirrorArchive}
 import net.kemitix.thorp.storage.Storage
 import net.kemitix.thorp.uishell.{UIEvent, UIShell}
@@ -40,39 +35,35 @@ trait Program {
     cli => ConfigQuery.showVersion(cli)
 
   private def executeWithUI(configuration: Configuration): Unit = {
-    val executingProgram: MessageSupplier[UIEvent] = execute(configuration)
-    val uiChannel = MessageChannel.create(executingProgram)
-    uiChannel.addMessageConsumer(UIShell.receiver(configuration))
-    uiChannel.startChannel()
+    val uiChannel: Channel[UIEvent] = Channel.create("thorp-ui")
+    uiChannel.addListener(UIShell.receiver(configuration))
+    uiChannel.run(sink => execute(configuration, sink), "thorp-main")
     uiChannel.waitForShutdown()
   }
 
-  private def execute(configuration: Configuration) = {
-    val uiChannel: MessageSink[UIEvent] = MessageChannel.createSink()
-    new Thread(() => {
-      showValidConfig(uiChannel)
-      val remoteObjects =
-        fetchRemoteData(configuration, uiChannel)
-      val archive = UnversionedMirrorArchive
-      val storageEvents = LocalFileSystem
-        .scanCopyUpload(configuration, uiChannel, remoteObjects, archive)
-      val deleteEvents = LocalFileSystem
-        .scanDelete(configuration, uiChannel, remoteObjects, archive)
-      showSummary(uiChannel)(storageEvents ++ deleteEvents)
-      uiChannel.shutdown()
-    }).start()
-    uiChannel
+  private def execute(configuration: Configuration,
+                      uiSink: Channel.Sink[UIEvent]) = {
+    showValidConfig(uiSink)
+    val remoteObjects =
+      fetchRemoteData(configuration, uiSink)
+    val archive = UnversionedMirrorArchive
+    val storageEvents = LocalFileSystem
+      .scanCopyUpload(configuration, uiSink, remoteObjects, archive)
+    val deleteEvents = LocalFileSystem
+      .scanDelete(configuration, uiSink, remoteObjects, archive)
+    showSummary(uiSink)(storageEvents ++ deleteEvents)
+    uiSink.shutdown();
   }
 
-  private def showValidConfig(uiChannel: MessageConsumer[UIEvent]): Unit =
-    uiChannel.accept(UIEvent.showValidConfig)
+  private def showValidConfig(uiSink: Channel.Sink[UIEvent]): Unit =
+    uiSink.accept(UIEvent.showValidConfig)
 
   private def fetchRemoteData(configuration: Configuration,
-                              uiChannel: MessageConsumer[UIEvent]) = {
+                              uiSink: Channel.Sink[UIEvent]) = {
     val bucket = configuration.bucket
     val prefix = configuration.prefix
     val objects = Storage.getInstance().list(bucket, prefix)
-    uiChannel.accept(UIEvent.remoteDataFetched(objects.byKey.size))
+    uiSink.accept(UIEvent.remoteDataFetched(objects.byKey.size))
     objects
   }
 
@@ -85,10 +76,10 @@ trait Program {
     }
 
   private def showSummary(
-    uiChannel: MessageConsumer[UIEvent]
+    uiSink: Channel.Sink[UIEvent]
   )(events: Seq[StorageEvent]): Unit = {
     val counters = events.foldLeft(Counters.empty)(countActivities)
-    uiChannel.accept(UIEvent.showSummary(counters))
+    uiSink.accept(UIEvent.showSummary(counters))
   }
 
   private def countActivities =
@@ -101,7 +92,6 @@ trait Program {
         case _              => counters
       }
     }
-
 }
 
 object Program extends Program

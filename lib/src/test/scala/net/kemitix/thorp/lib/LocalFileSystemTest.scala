@@ -3,7 +3,6 @@ package net.kemitix.thorp.lib
 import java.util.concurrent.atomic.AtomicReference
 
 import net.kemitix.thorp.config.{ConfigOption, ConfigOptions, Configuration}
-import net.kemitix.thorp.domain.MessageChannel.MessageConsumer
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.filesystem.Resource
 import net.kemitix.thorp.uishell.UIEvent
@@ -38,7 +37,7 @@ class LocalFileSystemTest extends FreeSpec {
 
   private def archive: ThorpArchive = new ThorpArchive {
     override def update(configuration: Configuration,
-                        uiChannel: MessageConsumer[UIEvent],
+                        uiSink: Channel.Sink[UIEvent],
                         sequencedAction: SequencedAction,
                         totalBytesSoFar: Long): StorageEvent = {
       actions.updateAndGet(l => sequencedAction :: l)

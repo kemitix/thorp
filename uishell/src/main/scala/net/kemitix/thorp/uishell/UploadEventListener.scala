@@ -2,13 +2,12 @@ package net.kemitix.thorp.uishell
 
 import java.util.concurrent.atomic.AtomicLong
 
-import net.kemitix.thorp.domain.LocalFile
-import net.kemitix.thorp.domain.MessageChannel.MessageConsumer
+import net.kemitix.thorp.domain.{Channel, LocalFile}
 import net.kemitix.thorp.uishell.UploadProgressEvent.RequestEvent
 
 object UploadEventListener {
 
-  final case class Settings(uiChannel: MessageConsumer[UIEvent],
+  final case class Settings(uiSink: Channel.Sink[UIEvent],
                             localFile: LocalFile,
                             index: Int,
                             totalBytesSoFar: Long,
@@ -20,7 +19,7 @@ object UploadEventListener {
       {
         event match {
           case e: RequestEvent =>
-            settings.uiChannel.accept(
+            settings.uiSink.accept(
               UIEvent.requestCycle(
                 settings.localFile,
                 bytesTransferred.addAndGet(e.transferred),
