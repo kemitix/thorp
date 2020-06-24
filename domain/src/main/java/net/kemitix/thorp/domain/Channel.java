@@ -169,7 +169,8 @@ public interface Channel<T> {
         }
 
         public void waitForShutdown() throws InterruptedException {
-            shutdownLatch.await();
+            if (isRunning())
+                shutdownLatch.await();
         }
     }
 
