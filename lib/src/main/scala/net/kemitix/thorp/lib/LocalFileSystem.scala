@@ -4,8 +4,9 @@ import java.util
 import java.util.concurrent.atomic.{AtomicInteger, AtomicLong}
 
 import net.kemitix.thorp.config.Configuration
-import net.kemitix.thorp.domain.Channel.Listener
+import net.kemitix.thorp.domain.Channel.{Listener, Sink}
 import net.kemitix.thorp.domain.{RemoteObjects, _}
+import net.kemitix.thorp.filesystem.FileSystem
 import net.kemitix.thorp.uishell.UIEvent
 
 import scala.jdk.CollectionConverters._
@@ -65,30 +66,34 @@ object LocalFileSystem extends LocalFileSystem {
   override def scanDelete(configuration: Configuration,
                           uiSink: Channel.Sink[UIEvent],
                           remoteData: RemoteObjects,
-                          archive: ThorpArchive): Seq[StorageEvent] = List.empty
-  ///???
+                          archive: ThorpArchive): Seq[StorageEvent] = {
+    val deletionsChannel: Channel[RemoteKey] = Channel.create("deletions")
 
-  //  {
-  //    val kSender = keySender(remoteData.byKey.keys.asScala)
-  //    for {
-  //      actionCounter <- Ref.make(0)
-  //      bytesCounter <- Ref.make(0L)
-  //      eventsRef <- Ref.make(List.empty[StorageEvent])
-  //      //      keyReceiver <- keyReceiver(
-  //      //        configuration,
-  //      //        uiChannel,
-  //      //        archive,
-  //      //        actionCounter,
-  //      //        bytesCounter,
-  //      //        eventsRef
-  //      //      )
-  //      parallel = configuration.parallel
-  //      //      _ <- MessageChannel
-  //      //        .pointToPointPar(parallel)(kSender)(keyReceiver)
-  //      //        .runDrain
-  //      events <- eventsRef.get
-  //    } yield events
-  //  }
+    // state for the file receiver
+    val actionCounter = new AtomicInteger()
+    val bytesCounter = new AtomicLong()
+    val events = new util.LinkedList[StorageEvent]
+
+    deletionsChannel.addListener(
+      keyReceiver(
+        configuration,
+        uiSink,
+        archive,
+        actionCounter,
+        bytesCounter,
+        events
+      )
+    )
+
+    deletionsChannel.run(
+      sink => remoteData.byKey.keys().forEach(key => sink.accept(key)),
+      "delete-source"
+    )
+
+    deletionsChannel.start()
+    deletionsChannel.waitForShutdown()
+    events.asScala.toList
+  }
 
   private def fileReceiver(
     configuration: Configuration,
@@ -220,58 +225,38 @@ object LocalFileSystem extends LocalFileSystem {
   private def doUpload(localFile: LocalFile, bucket: Bucket) =
     Action.toUpload(bucket, localFile, localFile.length)
 
-//  def keySender(
-//    keys: Iterable[RemoteKey]
-//  ): MessageChannel.MessageSupplier[RemoteKey] =
-//    MessageChannel.createMessageSupplier(keys.asJavaCollection)
+  def keyReceiver(configuration: Configuration,
+                  uiSink: Channel.Sink[UIEvent],
+                  archive: ThorpArchive,
+                  actionCounter: AtomicInteger,
+                  bytesCounter: AtomicLong,
+                  events: util.Deque[StorageEvent]): Listener[RemoteKey] = {
+    (remoteKey: RemoteKey) =>
+      {
+        uiKeyFound(uiSink)(remoteKey)
+        val sources = configuration.sources
+        val prefix = configuration.prefix
+        val exists = FileSystem.hasLocalFile(sources, prefix, remoteKey)
+        if (!exists) {
+          actionCounter.incrementAndGet()
+          val bucket = configuration.bucket
+          val action = Action.toDelete(bucket, remoteKey, 0L)
+          uiActionChosen(uiSink)(action)
+          bytesCounter.addAndGet(action.size)
+          val sequencedAction = SequencedAction(action, actionCounter.get())
+          val event = archive.update(configuration, uiSink, sequencedAction, 0L)
+          events.addFirst(event)
+          uiActionFinished(uiSink)(
+            action,
+            actionCounter.get(),
+            bytesCounter.get(),
+            event
+          )
+        }
+      }
+  }
 
-//  def keyReceiver(
-//    configuration: Configuration,
-//    uiChannel: MessageConsumer[UIEvent],
-//    archive: ThorpArchive,
-//    actionCounter: Int,
-//    bytesCounter: Long,
-//    events: List[StorageEvent]
-//  ): MessageChannel.MessageConsumer[RemoteKey] =
-//    ??? //TODO
-  //    UIO { message =>
-  //      {
-  //        val remoteKey = message.body
-  //        for {
-  //          _ <- uiKeyFound(uiChannel)(remoteKey)
-  //          sources = configuration.sources
-  //          prefix = configuration.prefix
-  //          exists = FileSystem.hasLocalFile(sources, prefix, remoteKey)
-  //          _ <- ZIO.when(!exists) {
-  //            for {
-  //              actionCounter <- actionCounterRef.update(_ + 1)
-  //              bucket = configuration.bucket
-  //              action = Action.toDelete(bucket, remoteKey, 0L)
-  //              _ <- uiActionChosen(uiChannel)(action)
-  //              bytesCounter <- bytesCounterRef.update(_ + action.size)
-  //              sequencedAction = SequencedAction(action, actionCounter)
-  //              event <- archive.update(
-  //                configuration,
-  //                uiChannel,
-  //                sequencedAction,
-  //                0L
-  //              )
-  //              _ <- eventsRef.update(list => event :: list)
-  //              _ <- uiActionFinished(uiChannel)(
-  //                action,
-  //                actionCounter,
-  //                bytesCounter,
-  //                event
-  //              )
-  //            } yield ()
-  //          }
-  //        } yield ()
-  //      }
-  //    }
-
-//  private def uiKeyFound(
-//    uiChannel: MessageConsumer[UIEvent]
-//  )(remoteKey: RemoteKey): Unit =
-//    uiChannel.accept(UIEvent.keyFound(remoteKey))
+  private def uiKeyFound(uiSink: Sink[UIEvent])(remoteKey: RemoteKey): Unit =
+    uiSink.accept(UIEvent.keyFound(remoteKey))
 
 }
