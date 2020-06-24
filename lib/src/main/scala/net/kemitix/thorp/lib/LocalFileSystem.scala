@@ -32,15 +32,13 @@ object LocalFileSystem extends LocalFileSystem {
                               archive: ThorpArchive): Seq[StorageEvent] = {
 
     val fileChannel: Channel[LocalFile] = Channel.create("files")
-    fileChannel.run(
-      sink => FileScanner.scanSources(configuration, sink),
-      "scan-sources"
-    )
 
+    // state for the file receiver
     val actionCounter = new AtomicInteger()
     val bytesCounter = new AtomicLong()
     val uploads = Map.empty[MD5Hash, RemoteKey]
     val events = new util.LinkedList[StorageEvent]
+
     fileChannel.addListener(
       fileReceiver(
         configuration,
@@ -53,6 +51,12 @@ object LocalFileSystem extends LocalFileSystem {
         events
       )
     )
+
+    fileChannel.run(
+      sink => FileScanner.scanSources(configuration, sink),
+      "scan-sources"
+    )
+
     fileChannel.start()
     fileChannel.waitForShutdown()
     events.asScala.toList
