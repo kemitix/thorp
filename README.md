@@ -2,7 +2,7 @@
 
 Synchronisation of files with S3 using the hash of the file contents.
 
-[![Maven Central](https://img.shields.io/maven-central/v/net.kemitix.thorp/thorp_2.12.svg?style=for-the-badge)](https://search.maven.org/search?q=net.kemitix.thorp)
+![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/kemitix/thorp?sort=semver&style=for-the-badge)
 
 Originally based on Alex Kudlick's [aws-s3-sync-by-hash](https://github.com/akud/aws-s3-sync-by-hash).
 
