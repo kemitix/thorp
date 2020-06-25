@@ -69,7 +69,7 @@ trait UnversionedMirrorArchive extends ThorpArchive {
                                totalBytesSoFar: Long,
                                bucket: Bucket,
                                localFile: LocalFile) =
-    UploadEventListener.Settings(
+    UploadEventListener.settings(
       uiSink,
       localFile,
       index,

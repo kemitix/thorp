@@ -30,6 +30,8 @@ public interface Storage {
             RemoteKey remoteKey
     );
 
+    void shutdown();
+
     static Storage getInstance() {
         return ServiceLoader.load(Storage.class).iterator().next();
     }

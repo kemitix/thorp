@@ -62,4 +62,9 @@ public class S3Storage implements Storage {
     ) {
         return deleter.apply(S3Deleter.request(bucket, remoteKey));
     }
+
+    @Override
+    public void shutdown() {
+        transferManager.shutdownNow(true);
+    }
 }
