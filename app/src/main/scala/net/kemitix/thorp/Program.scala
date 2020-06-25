@@ -52,6 +52,7 @@ trait Program {
       .scanCopyUpload(configuration, uiSink, remoteObjects, archive)
     val deleteEvents = LocalFileSystem
       .scanDelete(configuration, uiSink, remoteObjects, archive)
+    Storage.getInstance().shutdown();
     showSummary(uiSink)(storageEvents ++ deleteEvents)
     uiSink.shutdown();
   }
