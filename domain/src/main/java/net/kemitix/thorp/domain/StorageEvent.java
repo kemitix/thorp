@@ -1,6 +1,7 @@
 package net.kemitix.thorp.domain;
 
 import lombok.AccessLevel;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 
@@ -27,6 +28,7 @@ public class StorageEvent {
     public static class DoNothingEvent extends StorageEvent {
         public final RemoteKey remoteKey;
     }
+    @EqualsAndHashCode(callSuper = false)
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
     public static class CopyEvent extends StorageEvent {
         public final RemoteKey sourceKey;
@@ -37,6 +39,7 @@ public class StorageEvent {
         public final RemoteKey remoteKey;
         public final MD5Hash md5Hash;
     }
+    @EqualsAndHashCode(callSuper = false)
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
     public static class DeleteEvent extends StorageEvent {
         public final RemoteKey remoteKey;

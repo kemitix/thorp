@@ -1,11 +1,12 @@
 package net.kemitix.thorp.storage.aws;
 
+import com.amazonaws.SdkClientException;
+import com.amazonaws.services.s3.model.ListObjectsV2Request;
 import com.amazonaws.services.s3.model.ListObjectsV2Result;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import net.kemitix.thorp.domain.*;
 import org.assertj.core.api.WithAssertions;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -18,6 +19,7 @@ import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doThrow;
 
 @ExtendWith(MockitoExtension.class)
 public class ListerTest
@@ -25,6 +27,8 @@ public class ListerTest
 
     private final Bucket bucket = Bucket.named("aBucket");
     private final RemoteKey prefix = RemoteKey.create("aRemoteKey");
+    private final ListObjectsV2Request request = S3Lister.request(bucket, prefix);
+
     private final AmazonS3Client amazonS3Client;
 
     public ListerTest(@Mock AmazonS3Client amazonS3Client) {
@@ -51,7 +55,7 @@ public class ListerTest
         given(amazonS3Client.listObjects(any()))
                 .willReturn(objectResults(nowDate, key, etag, false));
         //when
-        RemoteObjects result = invoke(amazonS3Client, bucket, prefix);
+        RemoteObjects result = S3Lister.lister(amazonS3Client).apply(request);
         //then
         assertThat(result.byHash.asMap()).isEqualTo(expectedHashMap);
         assertThat(result.byKey.asMap()).isEqualTo(expectedKeyMap);
@@ -84,10 +88,24 @@ public class ListerTest
                 .willReturn(objectResults(nowDate, key1, etag1, true))
                 .willReturn(objectResults(nowDate, key2, etag2, false));
         //when
-        RemoteObjects result = invoke(amazonS3Client, bucket, prefix);
+        RemoteObjects result = S3Lister.lister(amazonS3Client).apply(request);
         //then
         assertThat(result.byHash.asMap()).isEqualTo(expectedHashMap);
         assertThat(result.byKey.asMap()).isEqualTo(expectedKeyMap);
+    }
+
+    @Test
+    @DisplayName("when error listing then return an error storage event")
+    public void whenListErrors_thenErrorEvent() {
+        //given
+        doThrow(SdkClientException.class)
+                .when(amazonS3Client)
+                .listObjects(request);
+        //when
+        RemoteObjects result = S3Lister.lister(amazonS3Client).apply(request);
+        //then
+        assertThat(result.byKey.asMap()).isEmpty();
+        assertThat(result.byHash.asMap()).isEmpty();
     }
 
     private ListObjectsV2Result objectResults(
@@ -115,12 +133,4 @@ public class ListerTest
         return summary;
     }
 
-    private RemoteObjects invoke(
-            AmazonS3Client amazonS3Client,
-            Bucket bucket,
-            RemoteKey prefix
-    ) {
-        return S3Lister.lister(amazonS3Client)
-                .apply(S3Lister.request(bucket, prefix));
-    }
 }

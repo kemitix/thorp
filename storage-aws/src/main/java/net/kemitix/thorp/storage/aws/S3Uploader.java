@@ -1,5 +1,6 @@
 package net.kemitix.thorp.storage.aws;
 
+import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.transfer.model.UploadResult;
@@ -29,13 +30,20 @@ public interface S3Uploader {
             S3TransferManager transferManager
     ) {
         return request -> {
-            UploadResult uploadResult =
-                    transferManager.uploader()
-                            .apply(request)
-                            .waitForUploadResult();
-            return StorageEvent.uploadEvent(
-                    RemoteKey.create(uploadResult.getKey()),
-                    MD5Hash.create(uploadResult.getETag()));
+            try {
+                UploadResult uploadResult =
+                        transferManager.uploader()
+                                .apply(request)
+                                .waitForUploadResult();
+                return StorageEvent.uploadEvent(
+                        RemoteKey.create(uploadResult.getKey()),
+                        MD5Hash.create(uploadResult.getETag()));
+            } catch (SdkClientException e) {
+                String key = request.getKey();
+                return StorageEvent.errorEvent(
+                        StorageEvent.ActionSummary.upload(key),
+                        RemoteKey.create(key), e);
+            }
         };
     }
 }
