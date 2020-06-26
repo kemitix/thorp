@@ -53,7 +53,7 @@ trait Program {
     val deleteEvents = LocalFileSystem
       .scanDelete(configuration, uiSink, remoteObjects, archive)
     Storage.getInstance().shutdown();
-    showSummary(uiSink)(storageEvents ++ deleteEvents)
+    showSummary(uiSink)((storageEvents.asScala ++ deleteEvents.asScala).toList)
     uiSink.shutdown();
   }
 
