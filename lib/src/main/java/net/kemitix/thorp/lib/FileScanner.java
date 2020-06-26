@@ -19,7 +19,6 @@ public interface FileScanner {
         configuration.sources.paths()
                 .forEach(path ->
                         scanSource(configuration, fileSink, path));
-        fileSink.shutdown();
     }
 
     static void scanSource(

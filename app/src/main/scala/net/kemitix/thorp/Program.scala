@@ -57,7 +57,6 @@ trait Program {
         (storageEvents.asScala ++ deleteEvents.asScala).toList
       )
     } finally {
-      uiSink.shutdown()
       Storage.getInstance().shutdown()
     }
   }

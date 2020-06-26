@@ -143,10 +143,8 @@ public interface LocalFileSystem {
                 .addListener(deleteListener(
                         configuration, uiSink, archive,
                         actionCounter, bytesCounter, events))
-                .run(sink -> {
-                    remoteData.byKey.keys().forEach(sink::accept);
-                    sink.shutdown();
-                }, "delete-source")
+                .run(sink -> remoteData.byKey.keys().forEach(sink::accept),
+                        "delete-source")
                 .start()
                 .waitForShutdown();
         return new ArrayList<>(events);
