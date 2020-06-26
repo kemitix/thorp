@@ -17,12 +17,12 @@ trait LocalFileSystem {
   def scanCopyUpload(configuration: Configuration,
                      uiSink: Channel.Sink[UIEvent],
                      remoteObjects: RemoteObjects,
-                     archive: ThorpArchive): Seq[StorageEvent]
+                     archive: Archive): Seq[StorageEvent]
 
   def scanDelete(configuration: Configuration,
                  uiSink: Channel.Sink[UIEvent],
                  remoteData: RemoteObjects,
-                 archive: ThorpArchive): Seq[StorageEvent]
+                 archive: Archive): Seq[StorageEvent]
 
 }
 object LocalFileSystem extends LocalFileSystem {
@@ -30,7 +30,7 @@ object LocalFileSystem extends LocalFileSystem {
   override def scanCopyUpload(configuration: Configuration,
                               uiSink: Channel.Sink[UIEvent],
                               remoteObjects: RemoteObjects,
-                              archive: ThorpArchive): Seq[StorageEvent] = {
+                              archive: Archive): Seq[StorageEvent] = {
 
     val fileChannel: Channel[LocalFile] = Channel.create("files")
 
@@ -66,7 +66,7 @@ object LocalFileSystem extends LocalFileSystem {
   override def scanDelete(configuration: Configuration,
                           uiSink: Channel.Sink[UIEvent],
                           remoteData: RemoteObjects,
-                          archive: ThorpArchive): Seq[StorageEvent] = {
+                          archive: Archive): Seq[StorageEvent] = {
     val deletionsChannel: Channel[RemoteKey] = Channel.create("deletions")
 
     // state for the file receiver
@@ -99,7 +99,7 @@ object LocalFileSystem extends LocalFileSystem {
     configuration: Configuration,
     uiSink: Channel.Sink[UIEvent],
     remoteObjects: RemoteObjects,
-    archive: ThorpArchive,
+    archive: Archive,
     uploads: Map[MD5Hash, RemoteKey],
     actionCounter: AtomicInteger,
     bytesCounter: AtomicLong,
@@ -227,7 +227,7 @@ object LocalFileSystem extends LocalFileSystem {
 
   def keyReceiver(configuration: Configuration,
                   uiSink: Channel.Sink[UIEvent],
-                  archive: ThorpArchive,
+                  archive: Archive,
                   actionCounter: AtomicInteger,
                   bytesCounter: AtomicLong,
                   events: util.Deque[StorageEvent]): Listener[RemoteKey] = {

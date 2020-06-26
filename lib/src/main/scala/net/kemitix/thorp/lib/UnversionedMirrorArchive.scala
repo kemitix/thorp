@@ -7,7 +7,7 @@ import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.Storage
 import net.kemitix.thorp.uishell.{UIEvent, UploadEventListener}
 
-trait UnversionedMirrorArchive extends ThorpArchive {
+trait UnversionedMirrorArchive extends Archive {
 
   override def update(configuration: Configuration,
                       uiSink: Channel.Sink[UIEvent],

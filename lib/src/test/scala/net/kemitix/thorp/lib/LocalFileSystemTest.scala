@@ -35,7 +35,7 @@ class LocalFileSystemTest extends FreeSpec {
   private val uiEvents = new AtomicReference[List[UIEvent]](List.empty)
   private val actions = new AtomicReference[List[SequencedAction]](List.empty)
 
-  private def archive: ThorpArchive = new ThorpArchive {
+  private def archive: Archive = new Archive {
     override def update(configuration: Configuration,
                         uiSink: Channel.Sink[UIEvent],
                         sequencedAction: SequencedAction,
