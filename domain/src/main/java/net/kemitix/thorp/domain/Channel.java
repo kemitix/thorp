@@ -106,8 +106,10 @@ public interface Channel<T> {
         private final String name;
         private final BlockingQueue<T> queue;
         private final AtomicBoolean shutdown = new AtomicBoolean(false);
+        private final AtomicBoolean isWaiting = new AtomicBoolean(false);
         private final List<Listener<T>> listeners = new ArrayList<>();
         private final CountDownLatch shutdownLatch = new CountDownLatch(1);
+        private final Object takeLock = new Object();
         private Thread runnerThread;
 
         @Override
@@ -136,7 +138,12 @@ public interface Channel<T> {
         }
 
         public Optional<T> takeItem() throws InterruptedException {
-            return Optional.of(queue.take());
+            synchronized (takeLock) {
+                isWaiting.set(true);
+                T take = queue.take();
+                isWaiting.set(false);
+                return Optional.of(take);
+            }
         }
 
         private boolean isRunning() {
@@ -157,7 +164,7 @@ public interface Channel<T> {
             if (isRunning()) {
                 shutdown.set(true);
             }
-            if (queue.isEmpty() && runnerThread != null) {
+            if (queue.isEmpty() && runnerThread != null && isWaiting.get()) {
                 runnerThread.interrupt();
             }
         }
