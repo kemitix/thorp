@@ -44,17 +44,22 @@ trait Program {
 
   private def execute(configuration: Configuration,
                       uiSink: Channel.Sink[UIEvent]) = {
-    showValidConfig(uiSink)
-    val remoteObjects =
-      fetchRemoteData(configuration, uiSink)
-    val archive = UnversionedMirrorArchive
-    val storageEvents = LocalFileSystem
-      .scanCopyUpload(configuration, uiSink, remoteObjects, archive)
-    val deleteEvents = LocalFileSystem
-      .scanDelete(configuration, uiSink, remoteObjects, archive)
-    Storage.getInstance().shutdown();
-    showSummary(uiSink)((storageEvents.asScala ++ deleteEvents.asScala).toList)
-    uiSink.shutdown();
+    try {
+      showValidConfig(uiSink)
+      val remoteObjects =
+        fetchRemoteData(configuration, uiSink)
+      val archive = UnversionedMirrorArchive
+      val storageEvents = LocalFileSystem
+        .scanCopyUpload(configuration, uiSink, remoteObjects, archive)
+      val deleteEvents = LocalFileSystem
+        .scanDelete(configuration, uiSink, remoteObjects, archive)
+      showSummary(uiSink)(
+        (storageEvents.asScala ++ deleteEvents.asScala).toList
+      )
+    } finally {
+      uiSink.shutdown()
+      Storage.getInstance().shutdown()
+    }
   }
 
   private def showValidConfig(uiSink: Channel.Sink[UIEvent]): Unit =
