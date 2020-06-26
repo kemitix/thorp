@@ -112,16 +112,19 @@ public interface Channel<T> {
 
         @Override
         public void run() {
-            runnerThread = Thread.currentThread();
-            while(isRunning()) {
-                takeItem()
-                        .ifPresent(item -> {
-                            listeners.forEach(listener -> {
-                                listener.accept(item);
-                            });
-                        });
+            try {
+                runnerThread = Thread.currentThread();
+                while (isRunning()) {
+                    takeItem()
+                            .ifPresent(item ->
+                                    listeners.forEach(listener ->
+                                            listener.accept(item)));
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } finally {
+                shutdownLatch.countDown();
             }
-            shutdownLatch.countDown();
         }
 
         public void addListener(Listener<T> listener) {
@@ -132,13 +135,8 @@ public interface Channel<T> {
             listeners.remove(listener);
         }
 
-        public Optional<T> takeItem() {
-            try {
-                return Optional.of(queue.take());
-            } catch (InterruptedException e) {
-                shutdown();
-            }
-            return Optional.empty();
+        public Optional<T> takeItem() throws InterruptedException {
+            return Optional.of(queue.take());
         }
 
         private boolean isRunning() {
