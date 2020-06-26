@@ -13,7 +13,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 public class MD5HashGenerator implements HashGenerator {
-    private static final int maxBufferSize = 8048;
+    private static final int maxBufferSize = 8192;
     private static final byte[] defaultBuffer = new byte[maxBufferSize];
     public static String hex(byte[] in) throws NoSuchAlgorithmException {
         MessageDigest md5 = MessageDigest.getInstance("MD5");

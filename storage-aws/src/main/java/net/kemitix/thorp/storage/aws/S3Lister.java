@@ -1,5 +1,7 @@
 package net.kemitix.thorp.storage.aws;
 
+import com.amazonaws.AmazonServiceException;
+import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.model.ListObjectsV2Request;
 import com.amazonaws.services.s3.model.ListObjectsV2Result;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
@@ -71,10 +73,14 @@ public interface S3Lister {
             AmazonS3Client client,
             ListObjectsV2Request request
     ) {
-        Batch batch = fetchBatch(client, request);
-        List<S3ObjectSummary> more = fetchMore(client, request, batch.more);
-        batch.summaries.addAll(more);
-        return batch.summaries;
+        try {
+            Batch batch = fetchBatch(client, request);
+            List<S3ObjectSummary> more = fetchMore(client, request, batch.more);
+            batch.summaries.addAll(more);
+            return batch.summaries;
+        } catch (SdkClientException e) {
+            return Collections.emptyList();
+        }
     };
 
     static Optional<String> moreToken(ListObjectsV2Result result) {

@@ -2,6 +2,7 @@ package net.kemitix.thorp.lib
 
 import net.kemitix.thorp.config.Configuration
 import net.kemitix.thorp.domain.Action.{ToCopy, ToDelete, ToUpload}
+import net.kemitix.thorp.domain.StorageEvent.ActionSummary
 import net.kemitix.thorp.domain._
 import net.kemitix.thorp.storage.Storage
 import net.kemitix.thorp.uishell.{UIEvent, UploadEventListener}
@@ -35,7 +36,16 @@ trait UnversionedMirrorArchive extends ThorpArchive {
           .copy(bucket, sourceKey, hash, targetKey)
       case toDelete: ToDelete =>
         val remoteKey = toDelete.remoteKey
-        Storage.getInstance().delete(bucket, remoteKey)
+        try {
+          Storage.getInstance().delete(bucket, remoteKey)
+        } catch {
+          case e: Throwable =>
+            StorageEvent.errorEvent(
+              ActionSummary.delete(remoteKey.key()),
+              remoteKey,
+              e
+            );
+        }
       case doNothing: Action.DoNothing =>
         val remoteKey = doNothing.remoteKey
         StorageEvent.doNothingEvent(remoteKey)

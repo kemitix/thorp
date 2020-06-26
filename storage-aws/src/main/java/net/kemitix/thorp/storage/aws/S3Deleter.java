@@ -1,5 +1,6 @@
 package net.kemitix.thorp.storage.aws;
 
+import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import net.kemitix.thorp.domain.Bucket;
 import net.kemitix.thorp.domain.RemoteKey;
@@ -13,9 +14,15 @@ public interface S3Deleter {
     }
     static Function<DeleteObjectRequest, StorageEvent> deleter(AmazonS3Client client) {
         return request -> {
-            client.deleteObject(request);
             RemoteKey remoteKey = RemoteKey.create(request.getKey());
-            return StorageEvent.deleteEvent(remoteKey);
+            try {
+                client.deleteObject(request);
+                return StorageEvent.deleteEvent(remoteKey);
+            } catch (SdkClientException e) {
+                return StorageEvent.errorEvent(
+                        StorageEvent.ActionSummary.delete(remoteKey.key()),
+                        remoteKey, e);
+            }
         };
     }
 }

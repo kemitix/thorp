@@ -42,7 +42,8 @@ public class HashGeneratorTest
             //when
             Hashes result = HashGenerator.hashObject(path);
             //then
-            assertThat(result.get(HashType.MD5)).contains(MD5HashData.rootHash());
+            assertThat(result.get(HashType.MD5))
+                    .contains(MD5Hash.create("a3a6ac11a0eb577b81b3bb5c95cc8a6e"));
         }
         @Test
         @DisplayName("leaf-file")
@@ -52,7 +53,8 @@ public class HashGeneratorTest
             //when
             Hashes result = HashGenerator.hashObject(path);
             //then
-            assertThat(result.get(HashType.MD5)).contains(MD5HashData.leafHash());
+            assertThat(result.get(HashType.MD5))
+                    .contains(MD5Hash.create("208386a650bdec61cfcd7bd8dcb6b542"));
         }
 
         private Path getResource(String s) {

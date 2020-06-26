@@ -7,14 +7,17 @@ import net.kemitix.thorp.domain.HashGenerator;
 import net.kemitix.thorp.domain.HashType;
 import net.kemitix.thorp.domain.Hashes;
 import net.kemitix.thorp.domain.MD5Hash;
+import net.kemitix.thorp.filesystem.MD5HashGenerator;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
+
+import static net.kemitix.thorp.filesystem.MD5HashGenerator.md5FileChunk;
 
 public class S3ETagGenerator implements HashGenerator {
     @Deprecated // Use hashFile
@@ -43,7 +46,7 @@ public class S3ETagGenerator implements HashGenerator {
 
     public List<Long> offsets(long totalFileSizeBytes, long optimalPartSize) {
         return LongStream
-                .range(0, totalFileSizeBytes / optimalPartSize)
+                .rangeClosed(0, totalFileSizeBytes / optimalPartSize)
                 .mapToObj(part -> part * optimalPartSize)
                 .collect(Collectors.toList());
     }
@@ -63,12 +66,11 @@ public class S3ETagGenerator implements HashGenerator {
     }
 
     private String eTagHex(Path path, long partSize, long parts) throws IOException, NoSuchAlgorithmException {
-        HashGenerator hashGenerator = HashGenerator.generatorFor("MD5");
-        MessageDigest md5 = MessageDigest.getInstance("MD5");
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
         for (long i = 0; i < parts ; i++ ){
-            md5.update(hashGenerator.hashChunk(path, i, partSize).digest());
+            bos.write(md5FileChunk(path, i * partSize, partSize).digest());
         }
-        return MD5Hash.digestAsString(md5.digest());
+        return MD5HashGenerator.hex(bos.toByteArray());
     }
     @Override
     public HashType hashType() {

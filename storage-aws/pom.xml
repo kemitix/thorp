@@ -48,11 +48,10 @@
             <artifactId>assertj-core</artifactId>
             <scope>test</scope>
         </dependency>
-
-        <!-- scala -->
         <dependency>
-            <groupId>org.scala-lang</groupId>
-            <artifactId>scala-library</artifactId>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <scope>test</scope>
         </dependency>
 
         <!-- aws-sdk -->
@@ -95,27 +94,5 @@
             <groupId>commons-logging</groupId>
             <version>1.2</version>
         </dependency>
-
-        <!-- scala - testing -->
-        <dependency>
-            <groupId>org.scalatest</groupId>
-            <artifactId>scalatest_2.13</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.scalamock</groupId>
-            <artifactId>scalamock_2.13</artifactId>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>net.alchim31.maven</groupId>
-                <artifactId>scala-maven-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
-
 </project>

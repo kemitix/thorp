@@ -1,5 +1,6 @@
 package net.kemitix.thorp.storage.aws;
 
+import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.model.CopyObjectRequest;
 import net.kemitix.thorp.domain.Bucket;
 import net.kemitix.thorp.domain.MD5Hash;
@@ -24,14 +25,17 @@ public interface S3Copier {
         return request -> {
             RemoteKey sourceKey = RemoteKey.create(request.getSourceKey());
             RemoteKey targetKey = RemoteKey.create(request.getDestinationKey());
-            return client.copyObject(request)
-                    .map(success -> StorageEvent.copyEvent(sourceKey, targetKey))
-                    .orElseGet(() -> errorEvent(sourceKey, targetKey));
+            try {
+                return client.copyObject(request)
+                        .map(success -> StorageEvent.copyEvent(sourceKey, targetKey))
+                        .orElseGet(() -> StorageEvent.errorEvent(
+                                actionSummary(sourceKey, targetKey),
+                                targetKey, S3Exception.hashError()));
+            } catch (SdkClientException e) {
+                return StorageEvent.errorEvent(
+                        actionSummary(sourceKey, targetKey), targetKey, e);
+            }
         };
-    }
-
-    static StorageEvent.ErrorEvent errorEvent(RemoteKey sourceKey, RemoteKey targetKey) {
-        return StorageEvent.errorEvent(actionSummary(sourceKey, targetKey), targetKey, S3Exception.hashError());
     }
 
     static StorageEvent.ActionSummary.Copy actionSummary(RemoteKey sourceKey, RemoteKey targetKey) {
