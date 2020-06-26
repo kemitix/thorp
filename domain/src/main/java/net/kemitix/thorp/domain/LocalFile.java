@@ -1,11 +1,13 @@
 package net.kemitix.thorp.domain;
 
 import lombok.AccessLevel;
+import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 
 import java.io.File;
 import java.util.Optional;
 
+@EqualsAndHashCode
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class LocalFile {
     public final File file;

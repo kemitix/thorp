@@ -17,7 +17,7 @@ public interface Channel<T> {
         return new ChannelImpl<T>(name);
     }
 
-    void start();
+    Channel<T> start();
     Channel<T> add(T item);
     Channel<T> addAll(Collection<T> items);
     Channel<T> addListener(Listener<T> listener);
@@ -38,8 +38,9 @@ public interface Channel<T> {
         }
 
         @Override
-        public void start() {
+        public Channel<T> start() {
             thread.start();
+            return this;
         }
 
         @Override
