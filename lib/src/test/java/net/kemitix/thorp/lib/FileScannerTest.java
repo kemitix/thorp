@@ -27,9 +27,9 @@ public class FileScannerTest
         List<LocalFile> localFiles = new ArrayList<>();
         //when
         Channel.<LocalFile>create("test")
+                .addListener(localFiles::add)
                 .run(sink -> FileScanner.scanSources(configuration, sink),
                         "test-run")
-                .addListener(localFiles::add)
                 .start()
                 .waitForShutdown();
         //then
