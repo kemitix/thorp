@@ -73,14 +73,11 @@ public interface Channel<T> {
         }
 
         private Channel<T> spawn(Runnable runnable, String name) {
-            Thread thread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        runnable.run();
-                    } catch (Exception e) {
-                        shutdown();
-                    }
+            Thread thread = new Thread(() -> {
+                try {
+                    runnable.run();
+                } finally {
+                    shutdown();
                 }
             }, name);
             thread.start();
