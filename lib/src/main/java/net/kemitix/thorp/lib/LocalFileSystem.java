@@ -25,12 +25,11 @@ public interface LocalFileSystem {
         Map<MD5Hash, RemoteKey> uploads = new HashMap<>();
         Deque<StorageEvent> events = new LinkedList<>();
 
-        Channel.<LocalFile>create("files")
+        Channel.<LocalFile>create("file-scanner")
                 .addListener(
                         listener(configuration, uiSink, remoteObjects, archive,
                                 uploads, actionCounter, bytesCounter, events))
-                .run(sink -> FileScanner.scanSources(configuration, sink),
-                        "scan-sources")
+                .run(sink -> FileScanner.scanSources(configuration, sink))
                 .start()
                 .waitForShutdown();
 
@@ -139,12 +138,11 @@ public interface LocalFileSystem {
         AtomicInteger actionCounter = new AtomicInteger();
         AtomicLong bytesCounter = new AtomicLong();
         Deque<StorageEvent> events = new LinkedList<>();
-        Channel.<RemoteKey>create("deletions")
+        Channel.<RemoteKey>create("delete-scan")
                 .addListener(deleteListener(
                         configuration, uiSink, archive,
                         actionCounter, bytesCounter, events))
-                .run(sink -> remoteData.byKey.keys().forEach(sink::accept),
-                        "delete-source")
+                .run(sink -> remoteData.byKey.keys().forEach(sink::accept))
                 .start()
                 .waitForShutdown();
         return new ArrayList<>(events);

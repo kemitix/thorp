@@ -14,7 +14,13 @@ import java.util.function.Consumer;
 
 public interface Channel<T> {
     static <T> Channel<T> create(String name) {
-        return new ChannelImpl<T>(name);
+        return new ChannelImpl<>(name);
+    }
+    static <T> Channel<T> createWithTracing(String name) {
+        ChannelImpl<T> channel = new ChannelImpl<>(name);
+        channel.tracing = true;
+        channel.runner.tracing = true;
+        return channel;
     }
 
     Channel<T> start();
@@ -22,25 +28,34 @@ public interface Channel<T> {
     Channel<T> addAll(Collection<T> items);
     Channel<T> addListener(Listener<T> listener);
     Channel<T> removeListener(Listener<T> listener);
-    Channel<T> run(Consumer<Sink<T>> program, String name);
+    Channel<T> run(Consumer<Sink<T>> program);
     void shutdown();
     void shutdownNow() throws InterruptedException;
     void waitForShutdown() throws InterruptedException;
 
     class ChannelImpl<T> implements Channel<T> {
+        private boolean tracing = false;
         private final BlockingQueue<T> queue = new LinkedTransferQueue<>();
         private final Runner<T> runner;
         private final Thread thread;
+        private final String name;
 
         public ChannelImpl(String name) {
-            runner = new Runner<T>(name, queue);
-            thread = new Thread(runner, name);
+            this.name = name;
+            runner = new Runner<T>(queue);
+            thread = new Thread(runner, String.format("---->-lnr-%s", name));
         }
 
         @Override
         public Channel<T> start() {
+            trace("launching");
             thread.start();
             return this;
+        }
+
+        public void trace(String message) {
+            if (tracing)
+                System.out.printf("[channel:%s] %s%n", Thread.currentThread().getName(), message);
         }
 
         @Override
@@ -68,18 +83,21 @@ public interface Channel<T> {
         }
 
         @Override
-        public Channel<T> run(Consumer<Sink<T>> program, String name) {
-            return spawn(() -> program.accept(runner), name);
+        public Channel<T> run(Consumer<Sink<T>> program) {
+            return spawn(() -> program.accept(runner));
         }
 
-        private Channel<T> spawn(Runnable runnable, String name) {
+        private Channel<T> spawn(Runnable runnable) {
             Thread thread = new Thread(() -> {
+                trace("starting");
                 try {
                     runnable.run();
+                    trace("finishing normally");
                 } finally {
                     shutdown();
+                    trace("stopping");
                 }
-            }, name);
+            }, String.format("channel-src->-----%s", name));
             thread.start();
             return this;
         }
@@ -103,7 +121,7 @@ public interface Channel<T> {
 
     @RequiredArgsConstructor
     class Runner<T> implements Runnable, Sink<T> {
-        private final String name;
+        private boolean tracing = false;
         private final BlockingQueue<T> queue;
         private final AtomicBoolean shutdown = new AtomicBoolean(false);
         private final AtomicBoolean isWaiting = new AtomicBoolean(false);
@@ -112,19 +130,29 @@ public interface Channel<T> {
         private final Object takeLock = new Object();
         private Thread runnerThread;
 
+        public void trace(String message) {
+            if (tracing)
+                System.out.printf("[runner :%s] %s%n", Thread.currentThread().getName(), message);
+        }
+
         @Override
         public void run() {
+            runnerThread = Thread.currentThread();
+            trace("starting");
             try {
-                runnerThread = Thread.currentThread();
                 while (isRunning()) {
                     takeItem()
-                            .ifPresent(item ->
-                                    listeners.forEach(listener ->
-                                            listener.accept(item)));
+                            .ifPresent(item -> {
+                                listeners.forEach(listener ->
+                                        listener.accept(item));
+                            });
                 }
+                trace("finishing");
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                // would have been waiting to take from an empty queue when it was shutdown
+                trace(String.format("interrupted (%d items in queue)", queue.size()));
             } finally {
+                trace("complete");
                 shutdownLatch.countDown();
             }
         }
@@ -161,11 +189,16 @@ public interface Channel<T> {
 
         @Override
         public void shutdown() {
+            String threadName = Thread.currentThread().getName();
             if (isRunning()) {
+                trace("running - marking as shutdown");
                 shutdown.set(true);
             }
-            if (queue.isEmpty() && runnerThread != null && isWaiting.get()) {
+            if (queue.isEmpty() && isWaiting.get() && runnerThread != null) {
+                trace("interrupting waiting runner");
                 runnerThread.interrupt();
+            } else {
+                trace(String.format("NOT interrupting runner (%d items, waiting: %s)", queue.size(), isWaiting.get()));
             }
         }
 

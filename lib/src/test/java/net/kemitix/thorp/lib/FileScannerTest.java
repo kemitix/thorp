@@ -26,10 +26,9 @@ public class FileScannerTest
                                 source.toPath())));
         List<LocalFile> localFiles = new ArrayList<>();
         //when
-        Channel.<LocalFile>create("test")
+        Channel.<LocalFile>create("test-file-scan")
                 .addListener(localFiles::add)
-                .run(sink -> FileScanner.scanSources(configuration, sink),
-                        "test-run")
+                .run(sink -> FileScanner.scanSources(configuration, sink))
                 .start()
                 .waitForShutdown();
         //then
