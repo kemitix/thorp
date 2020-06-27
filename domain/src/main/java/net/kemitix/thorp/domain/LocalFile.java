@@ -14,13 +14,13 @@ public class LocalFile {
     public final File source;
     public final Hashes hashes;
     public final RemoteKey remoteKey;
-    public final Long length;
+    public final long length;
     public static LocalFile create(
             File file,
             File source,
             Hashes hashes,
             RemoteKey remoteKey,
-            Long length
+            long length
     ) {
         return new LocalFile(file, source, hashes, remoteKey, length);
     }

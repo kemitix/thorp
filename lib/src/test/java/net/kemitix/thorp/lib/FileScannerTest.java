@@ -39,8 +39,8 @@ public class FileScannerTest
         Hashes leafHashes = Hashes.create();
         RemoteKey rootKey = RemoteKey.create("root-file");
         RemoteKey leafKey = RemoteKey.create("subdir/leaf-file");
-        Long rootLength = 55L;
-        Long leafLength = 58L;
+        long rootLength = 55L;
+        long leafLength = 58L;
         assertThat(localFiles)
                 .containsExactlyInAnyOrder(
                         LocalFile.create(rootFile, source, rootHashes, rootKey, rootLength),
