@@ -48,7 +48,8 @@ public class ETagGeneratorTest
     @Test
     @DisplayName("create eTag for whole file")
     public void createTagForWholeFile() throws IOException, NoSuchAlgorithmException {
-        String result = generator.hashFile(bigFile.toPath());
+        String result = generator.withMultipartUploadThreshold(5 * 1024 * 1024)
+                .hashFile(bigFile.toPath());
         assertThat(result).isEqualTo(BIG_FILE_ETAG);
     }
 }
