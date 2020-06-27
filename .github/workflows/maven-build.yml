@@ -24,11 +24,3 @@ jobs:
           java-version: ${{ matrix.java }}
       - name: build-jar
         run: mvn -B install
-      - uses: "marvinpinto/action-automatic-releases@latest"
-        with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "latest"
-          prerelease: true
-          title: "Development Build"
-          files: |
-            app/target/thorp-*.jar
