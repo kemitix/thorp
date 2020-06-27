@@ -51,7 +51,7 @@ trait Program {
       showValidConfig(uiSink)
       val remoteObjects =
         fetchRemoteData(configuration, uiSink)
-      val archive = UnversionedMirrorArchive
+      val archive = UnversionedMirrorArchive.create
       val storageEvents = LocalFileSystem
         .scanCopyUpload(configuration, uiSink, remoteObjects, archive)
       val deleteEvents = LocalFileSystem
