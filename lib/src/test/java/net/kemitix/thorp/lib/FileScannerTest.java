@@ -2,6 +2,7 @@ package net.kemitix.thorp.lib;
 
 import net.kemitix.thorp.config.Configuration;
 import net.kemitix.thorp.domain.*;
+import net.kemitix.thorp.domain.channel.Channel;
 import net.kemitix.thorp.filesystem.Resource;
 import org.assertj.core.api.WithAssertions;
 import org.junit.jupiter.api.DisplayName;

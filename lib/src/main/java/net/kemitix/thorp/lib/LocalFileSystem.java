@@ -3,6 +3,9 @@ package net.kemitix.thorp.lib;
 import lombok.val;
 import net.kemitix.thorp.config.Configuration;
 import net.kemitix.thorp.domain.*;
+import net.kemitix.thorp.domain.channel.Channel;
+import net.kemitix.thorp.domain.channel.Listener;
+import net.kemitix.thorp.domain.channel.Sink;
 import net.kemitix.thorp.filesystem.FileSystem;
 import net.kemitix.thorp.uishell.UIEvent;
 
@@ -16,7 +19,7 @@ import java.util.function.Function;
 public interface LocalFileSystem {
     static List<StorageEvent> scanCopyUpload(
             Configuration configuration,
-            Channel.Sink<UIEvent> uiSink,
+            Sink<UIEvent> uiSink,
             RemoteObjects remoteObjects,
             Archive archive
     ) throws InterruptedException {
@@ -36,9 +39,9 @@ public interface LocalFileSystem {
         return new ArrayList<>(events);
     }
 
-    static Channel.Listener<LocalFile> listener(
+    static Listener<LocalFile> listener(
             Configuration configuration,
-            Channel.Sink<UIEvent> uiSink,
+            Sink<UIEvent> uiSink,
             RemoteObjects remoteObjects,
             Archive archive,
             Map<MD5Hash, RemoteKey> uploads,
@@ -65,7 +68,7 @@ public interface LocalFileSystem {
     }
 
     static BiConsumer<Action, StorageEvent> uiActionFinished(
-            Channel.Sink<UIEvent> uiSink,
+            Sink<UIEvent> uiSink,
             AtomicInteger actionCounter,
             AtomicLong bytesCounter
     ) {
@@ -74,7 +77,7 @@ public interface LocalFileSystem {
                         actionCounter.get(), bytesCounter.get(), event));
     }
 
-    static Consumer<Action> uiActionChosen(Channel.Sink<UIEvent> uiSink) {
+    static Consumer<Action> uiActionChosen(Sink<UIEvent> uiSink) {
         return action -> uiSink.accept(UIEvent.actionChosen(action));
     }
 
@@ -82,7 +85,7 @@ public interface LocalFileSystem {
             Configuration configuration,
             RemoteObjects remoteObjects,
             Map<MD5Hash, RemoteKey> uploads,
-            Channel.Sink<UIEvent> uiSink
+            Sink<UIEvent> uiSink
     ) {
         return localFile -> {
             boolean remoteExists = remoteObjects.remoteKeyExists(localFile.remoteKey);
@@ -112,7 +115,7 @@ public interface LocalFileSystem {
             LocalFile localFile,
             Bucket bucket,
             Map<MD5Hash, RemoteKey> uploads,
-            Channel.Sink<UIEvent> uiSink
+            Sink<UIEvent> uiSink
     ) {
         return localFile.hashes
                 .values()
@@ -131,7 +134,7 @@ public interface LocalFileSystem {
 
     static List<StorageEvent> scanDelete(
             Configuration configuration,
-            Channel.Sink<UIEvent> uiSink,
+            Sink<UIEvent> uiSink,
             RemoteObjects remoteData,
             Archive archive
     ) throws InterruptedException {
@@ -148,9 +151,9 @@ public interface LocalFileSystem {
         return new ArrayList<>(events);
     }
 
-    static Channel.Listener<RemoteKey> deleteListener(
+    static Listener<RemoteKey> deleteListener(
             Configuration configuration,
-            Channel.Sink<UIEvent> uiSink,
+            Sink<UIEvent> uiSink,
             Archive archive,
             AtomicInteger actionCounter,
             AtomicLong bytesCounter,

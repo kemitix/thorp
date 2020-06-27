@@ -3,16 +3,16 @@ package net.kemitix.thorp.lib;
 import net.kemitix.thorp.config.Configuration;
 import net.kemitix.thorp.console.Console;
 import net.kemitix.thorp.console.ConsoleOut;
-import net.kemitix.thorp.domain.Channel;
 import net.kemitix.thorp.domain.RemoteKey;
 import net.kemitix.thorp.domain.StorageEvent;
+import net.kemitix.thorp.domain.channel.Sink;
 import net.kemitix.thorp.uishell.UIEvent;
 
 public interface Archive {
 
     StorageEvent update(
             Configuration configuration,
-            Channel.Sink<UIEvent> uiSink,
+            Sink<UIEvent> uiSink,
             SequencedAction sequencedAction,
             long totalBytesSoFar);
 

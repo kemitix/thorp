@@ -4,13 +4,14 @@ import net.kemitix.thorp.config.Configuration
 import net.kemitix.thorp.domain.Action.{ToCopy, ToDelete, ToUpload}
 import net.kemitix.thorp.domain.StorageEvent.ActionSummary
 import net.kemitix.thorp.domain._
+import net.kemitix.thorp.domain.channel.Sink
 import net.kemitix.thorp.storage.Storage
 import net.kemitix.thorp.uishell.{UIEvent, UploadEventListener}
 
 trait UnversionedMirrorArchive extends Archive {
 
   override def update(configuration: Configuration,
-                      uiSink: Channel.Sink[UIEvent],
+                      uiSink: Sink[UIEvent],
                       sequencedAction: SequencedAction,
                       totalBytesSoFar: Long): StorageEvent = {
     val action = sequencedAction.action
@@ -53,7 +54,7 @@ trait UnversionedMirrorArchive extends Archive {
   }
 
   private def doUpload(configuration: Configuration,
-                       uiSink: Channel.Sink[UIEvent],
+                       uiSink: Sink[UIEvent],
                        index: Int,
                        totalBytesSoFar: Long,
                        bucket: Bucket,
@@ -74,7 +75,7 @@ trait UnversionedMirrorArchive extends Archive {
       )
 
   private def listenerSettings(configuration: Configuration,
-                               uiSink: Channel.Sink[UIEvent],
+                               uiSink: Sink[UIEvent],
                                index: Int,
                                totalBytesSoFar: Long,
                                bucket: Bucket,

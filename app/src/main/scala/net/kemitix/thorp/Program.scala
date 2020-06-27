@@ -9,7 +9,8 @@ import net.kemitix.thorp.domain.StorageEvent.{
   ErrorEvent,
   UploadEvent
 }
-import net.kemitix.thorp.domain.{Channel, Counters, StorageEvent}
+import net.kemitix.thorp.domain.channel.{Channel, Sink}
+import net.kemitix.thorp.domain.{Counters, StorageEvent}
 import net.kemitix.thorp.lib.{LocalFileSystem, UnversionedMirrorArchive}
 import net.kemitix.thorp.storage.Storage
 import net.kemitix.thorp.uishell.{UIEvent, UIShell}
@@ -45,7 +46,7 @@ trait Program {
 
   private def execute(
     configuration: Configuration
-  )(uiSink: Channel.Sink[UIEvent]): Unit = {
+  )(uiSink: Sink[UIEvent]): Unit = {
     try {
       showValidConfig(uiSink)
       val remoteObjects =
@@ -63,11 +64,11 @@ trait Program {
     }
   }
 
-  private def showValidConfig(uiSink: Channel.Sink[UIEvent]): Unit =
+  private def showValidConfig(uiSink: Sink[UIEvent]): Unit =
     uiSink.accept(UIEvent.showValidConfig)
 
   private def fetchRemoteData(configuration: Configuration,
-                              uiSink: Channel.Sink[UIEvent]) = {
+                              uiSink: Sink[UIEvent]) = {
     val bucket = configuration.bucket
     val prefix = configuration.prefix
     val objects = Storage.getInstance().list(bucket, prefix)
@@ -84,7 +85,7 @@ trait Program {
     }
 
   private def showSummary(
-    uiSink: Channel.Sink[UIEvent]
+    uiSink: Sink[UIEvent]
   )(events: Seq[StorageEvent]): Unit = {
     val counters = events.foldLeft(Counters.empty)(countActivities)
     uiSink.accept(UIEvent.showSummary(counters))
