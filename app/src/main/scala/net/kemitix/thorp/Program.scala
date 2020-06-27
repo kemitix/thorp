@@ -35,15 +35,17 @@ trait Program {
     cli => ConfigQuery.showVersion(cli)
 
   private def executeWithUI(configuration: Configuration): Unit = {
-    val uiChannel: Channel[UIEvent] = Channel.create("thorp-ui")
-    uiChannel.addListener(UIShell.listener(configuration))
-    uiChannel.run(sink => execute(configuration, sink), "thorp-main")
-    uiChannel.start()
-    uiChannel.waitForShutdown()
+    Channel
+      .create("ui")
+      .addListener(UIShell.listener(configuration))
+      .run(execute(configuration)(_))
+      .start()
+      .waitForShutdown()
   }
 
-  private def execute(configuration: Configuration,
-                      uiSink: Channel.Sink[UIEvent]) = {
+  private def execute(
+    configuration: Configuration
+  )(uiSink: Channel.Sink[UIEvent]): Unit = {
     try {
       showValidConfig(uiSink)
       val remoteObjects =
