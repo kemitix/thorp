@@ -2,6 +2,7 @@ package net.kemitix.thorp.lib;
 
 import net.kemitix.thorp.config.Configuration;
 import net.kemitix.thorp.domain.*;
+import net.kemitix.thorp.domain.channel.Sink;
 import net.kemitix.thorp.filesystem.FileSystem;
 import net.kemitix.thorp.filesystem.PathCache;
 
@@ -14,17 +15,16 @@ import java.util.List;
 public interface FileScanner {
     static void scanSources(
             Configuration configuration,
-            Channel.Sink<LocalFile> fileSink
+            Sink<LocalFile> fileSink
     ) {
         configuration.sources.paths()
                 .forEach(path ->
                         scanSource(configuration, fileSink, path));
-        fileSink.shutdown();
     }
 
     static void scanSource(
             Configuration configuration,
-            Channel.Sink<LocalFile> fileSink,
+            Sink<LocalFile> fileSink,
             Path sourcePath
     ) {
         scanPath(configuration, fileSink, sourcePath);
@@ -32,7 +32,7 @@ public interface FileScanner {
 
     static void scanPath(
             Configuration configuration,
-            Channel.Sink<LocalFile> fileSink,
+            Sink<LocalFile> fileSink,
             Path path
     ) {
         // dirs
@@ -45,7 +45,7 @@ public interface FileScanner {
 
     static void handleFile(
             Configuration configuration,
-            Channel.Sink<LocalFile> fileSink,
+            Sink<LocalFile> fileSink,
             File file
     ) {
         boolean isIncluded = Filters.isIncluded(configuration, file);

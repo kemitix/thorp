@@ -1,0 +1,16 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Main" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="net.kemitix.thorp.Main" />
+    <module name="thorp" />
+    <option name="PROGRAM_PARAMETERS" value="--source $PROJECT_DIR$/../" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="net.kemitix.thorp.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

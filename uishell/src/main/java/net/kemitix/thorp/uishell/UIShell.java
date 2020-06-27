@@ -4,13 +4,14 @@ import net.kemitix.thorp.config.Configuration;
 import net.kemitix.thorp.console.Console;
 import net.kemitix.thorp.console.ConsoleOut;
 import net.kemitix.thorp.domain.*;
+import net.kemitix.thorp.domain.channel.Listener;
 
 import static net.kemitix.thorp.domain.Terminal.eraseLineForward;
 import static net.kemitix.thorp.domain.Terminal.eraseToEndOfScreen;
 
 public interface UIShell {
-    static Channel.Listener<UIEvent> listener(Configuration configuration) {
-        return new Channel.Listener<UIEvent>() {
+    static Listener<UIEvent> listener(Configuration configuration) {
+        return new Listener<UIEvent>() {
             @Override
             public void accept(UIEvent uiEvent) {
                 if (uiEvent instanceof UIEvent.RequestCycle)

@@ -21,7 +21,7 @@ public class Configuration {
     public final boolean batchMode;
     public final int parallel;
     public final Sources sources;
-    static Configuration create() {
+    public static Configuration create() {
         return new Configuration(
                 Bucket.named(""),
                 RemoteKey.create(""),

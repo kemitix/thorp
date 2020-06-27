@@ -1,7 +1,5 @@
 package net.kemitix.thorp.domain;
 
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
 import net.kemitix.mon.TypeAlias;
 
 import java.util.function.Predicate;

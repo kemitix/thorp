@@ -21,6 +21,10 @@ public interface HashGenerator {
         for(HashGenerator hashGenerator: hashGenerators) {
             list.add(hashGenerator);
         }
+        if (list.isEmpty()) {
+            throw new UnsupportedOperationException(
+                    "No HashGenerator implementations available");
+        }
         return list;
     }
     static HashGenerator generatorFor(String label) {

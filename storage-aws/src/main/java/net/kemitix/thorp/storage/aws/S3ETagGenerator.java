@@ -1,8 +1,7 @@
 package net.kemitix.thorp.storage.aws;
 
-import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.transfer.TransferManagerConfiguration;
-import com.amazonaws.services.s3.transfer.internal.TransferManagerUtils;
+import lombok.With;
 import net.kemitix.thorp.domain.HashGenerator;
 import net.kemitix.thorp.domain.HashType;
 import net.kemitix.thorp.domain.Hashes;
@@ -19,14 +18,27 @@ import java.util.stream.LongStream;
 
 import static net.kemitix.thorp.filesystem.MD5HashGenerator.md5FileChunk;
 
+@With
 public class S3ETagGenerator implements HashGenerator {
+
+    private final long multipartUploadThreshold;
+
+    public S3ETagGenerator() {
+        multipartUploadThreshold =
+            new TransferManagerConfiguration().getMultipartUploadThreshold();
+    }
+
+    public S3ETagGenerator(long multipartUploadThreshold) {
+        this.multipartUploadThreshold = multipartUploadThreshold;
+    }
+
     @Deprecated // Use hashFile
     public String eTag(Path path) throws IOException, NoSuchAlgorithmException {
         return hashFile(path);
     }
     @Override
     public String hashFile(Path path) throws IOException, NoSuchAlgorithmException {
-        long partSize = calculatePartSize(path);
+        long partSize = calculatePartSize();
         long parts = numParts(path.toFile().length(), partSize);
         String eTagHex = eTagHex(path, partSize, parts);
         return String.format("%s-%d", eTagHex, parts);
@@ -51,10 +63,8 @@ public class S3ETagGenerator implements HashGenerator {
                 .collect(Collectors.toList());
     }
 
-    private long calculatePartSize(Path path) {
-        return TransferManagerUtils.calculateOptimalPartSize(
-                new PutObjectRequest("", "", path.toFile()),
-                new TransferManagerConfiguration());
+    private long calculatePartSize() {
+        return multipartUploadThreshold;
     }
 
     private long numParts(long length, long partSize) {

@@ -2,8 +2,8 @@ package net.kemitix.thorp.uishell;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import net.kemitix.thorp.domain.Channel;
 import net.kemitix.thorp.domain.LocalFile;
+import net.kemitix.thorp.domain.channel.Sink;
 import net.kemitix.thorp.uishell.UploadProgressEvent.RequestEvent;
 
 import java.util.concurrent.atomic.AtomicLong;
@@ -29,7 +29,7 @@ public class UploadEventListener {
     }
 
     public static Settings settings(
-            Channel.Sink<UIEvent> uiSink,
+            Sink<UIEvent> uiSink,
             LocalFile localFile,
             int index,
             long totalBytesToFar,
@@ -39,7 +39,7 @@ public class UploadEventListener {
     }
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
     public static class Settings {
-        public final Channel.Sink<UIEvent> uiSink;
+        public final Sink<UIEvent> uiSink;
         public final LocalFile localFile;
         public final int index;
         public final long totalBytesSoFar;
