@@ -35,8 +35,8 @@ public class FileScannerTest
         //then
         File rootFile = source.toPath().resolve("root-file").toFile();
         File leafFile = source.toPath().resolve("subdir/leaf-file").toFile();
-        Hashes rootHashes = Hashes.create();
-        Hashes leafHashes = Hashes.create();
+        Hashes rootHashes = Hashes.create(HashType.MD5, MD5HashData.Root.hash);
+        Hashes leafHashes = Hashes.create(HashType.MD5, MD5HashData.Leaf.hash);
         RemoteKey rootKey = RemoteKey.create("root-file");
         RemoteKey leafKey = RemoteKey.create("subdir/leaf-file");
         long rootLength = 55L;
