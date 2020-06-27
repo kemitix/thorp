@@ -66,9 +66,10 @@ public class Terminal {
     public static String enableAlternateBuffer  = csi + "?1049h";
     public static String disableAlternateBuffer = csi + "?1049l";
 
+    public static String reset = "\u001B[0m";
     public static String red = "\u001B[31m";
     public static String green = "\u001B[32m";
-    public static String reset = "\u001B[0m";
+    public static String white = "\u001B[37m";
 
     private static Map<Integer, String> getSubBars() {
         Map<Integer, String> subBars = new HashMap<>();
