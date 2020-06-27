@@ -16,10 +16,8 @@
     <packaging>pom</packaging>
 
     <properties>
-        <scala-maven-plugin.version>4.4.0</scala-maven-plugin.version>
         <tiles-maven-plugin.version>2.17</tiles-maven-plugin.version>
         <kemitix-maven-tiles.version>2.7.0</kemitix-maven-tiles.version>
-        <scala-library.version>2.13.3</scala-library.version>
         <lombok.version>1.18.12</lombok.version>
         <mon.version>2.2.0</mon.version>
         <junit.version>5.6.2</junit.version>
@@ -111,71 +109,10 @@
                 <artifactId>assertj-core</artifactId>
                 <version>${assertj.version}</version>
             </dependency>
-
-            <!-- scala - scala -->
-            <dependency>
-                <groupId>org.scala-lang</groupId>
-                <artifactId>scala-library</artifactId>
-                <version>${scala-library.version}</version>
-            </dependency>
-            <!-- scala - command line parsing -->
-            <dependency>
-                <groupId>com.github.scopt</groupId>
-                <artifactId>scopt_2.13</artifactId>
-                <version>4.0.0-RC2</version>
-            </dependency>
-            <!-- scala - test -->
-            <dependency>
-                <groupId>org.scalatest</groupId>
-                <artifactId>scalatest_2.13</artifactId>
-                <version>3.0.8</version>
-            </dependency>
-            <dependency><!-- only used by storage-aws -->
-                <groupId>org.scalamock</groupId>
-                <artifactId>scalamock_2.13</artifactId>
-                <version>4.4.0</version>
-            </dependency>
         </dependencies>
     </dependencyManagement>
 
     <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>net.alchim31.maven</groupId>
-                    <artifactId>scala-maven-plugin</artifactId>
-                    <version>${scala-maven-plugin.version}</version>
-                    <configuration>
-                        <args>
-                            <arg>-Ywarn-unused:imports</arg>
-                            <arg>-Xfatal-warnings</arg>
-                            <arg>-feature</arg>
-                            <arg>-deprecation</arg>
-                            <arg>-unchecked</arg>
-                            <arg>-language:postfixOps</arg>
-                            <arg>-language:higherKinds</arg>
-                        </args>
-                    </configuration>
-                    <executions>
-                        <execution>
-                            <id>scala-compile-first</id>
-                            <phase>process-resources</phase>
-                            <goals>
-                                <goal>add-source</goal>
-                                <goal>compile</goal>
-                            </goals>
-                        </execution>
-                        <execution>
-                            <id>scala-test-compile</id>
-                            <phase>process-test-resources</phase>
-                            <goals>
-                                <goal>testCompile</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                </plugin>
-            </plugins>
-        </pluginManagement>
         <plugins>
             <plugin>
                 <groupId>io.repaint.maven</groupId>

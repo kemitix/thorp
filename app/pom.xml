@@ -45,20 +45,10 @@
             <groupId>net.kemitix.thorp</groupId>
             <artifactId>thorp-uishell</artifactId>
         </dependency>
-
-        <!-- scala -->
-        <dependency>
-            <groupId>org.scala-lang</groupId>
-            <artifactId>scala-library</artifactId>
-        </dependency>
     </dependencies>
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>net.alchim31.maven</groupId>
-                <artifactId>scala-maven-plugin</artifactId>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
