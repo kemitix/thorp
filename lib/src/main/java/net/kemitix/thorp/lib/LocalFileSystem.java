@@ -59,7 +59,7 @@ public interface LocalFileSystem {
             bytesCounter.addAndGet(action.size);
             uiActionChosen.accept(action);
             SequencedAction sequencedAction =
-                    new SequencedAction(action, actionCounter.get());
+                    SequencedAction.create(action, actionCounter.get());
             StorageEvent event = archive.update(
                     configuration, uiSink, sequencedAction, bytesCounter.get());
             events.addFirst(event);
@@ -171,7 +171,7 @@ public interface LocalFileSystem {
                 uiActionChosen(uiSink).accept(action);
                 bytesCounter.addAndGet(action.size);
                 val sequencedAction =
-                        new SequencedAction(action, actionCounter.get());
+                        SequencedAction.create(action, actionCounter.get());
                 val event = archive.update(configuration, uiSink,
                         sequencedAction, 0L);
                 events.addFirst(event);
