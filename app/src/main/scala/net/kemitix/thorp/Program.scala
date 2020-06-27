@@ -19,7 +19,7 @@ import scala.jdk.CollectionConverters._
 
 trait Program {
 
-  val version = "0.11.0"
+  val version = "1.1.0-SNAPSHOT"
   lazy val versionLabel = s"${WHITE}Thorp v$version$RESET"
 
   def run(args: List[String]): Unit = {
