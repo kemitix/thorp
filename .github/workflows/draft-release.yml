@@ -1,4 +1,4 @@
-name: Update draft release on push to master
+name: draft-release
 
 on:
   push:
