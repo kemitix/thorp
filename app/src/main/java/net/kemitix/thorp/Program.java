@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public interface Program {
 
-    String version = "2.0.0";
+    String version = "2.0.1";
     String versionLabel = String.format("%sThrop v%s%s",
             Terminal.white, version, Terminal.reset);
 
