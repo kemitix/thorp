@@ -22,7 +22,7 @@
         <mon.version>2.2.0</mon.version>
         <junit.version>5.9.1</junit.version>
         <assertj.version>3.23.1</assertj.version>
-        <mockito.version>3.7.7</mockito.version>
+        <mockito.version>4.9.0</mockito.version>
     </properties>
 
     <dependencyManagement>
